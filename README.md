@@ -1,8 +1,8 @@
 # MeepleBook
 *A modern, native Android app for browsing and managing your BoardGameGeek collection.*
 
-<p align="center">
-    <a href="https://boardgamegeek.com">
+<p align="left">
+    <a href="https://boardgamegeek.com" target="_blank">
       <img src="assets/powered_by_BGG.png" alt="Powered by BGG" height="40"/>
     </a>
 </p>
@@ -63,7 +63,7 @@ MeepleBook is designed for long-term maintainability:
 MeepleBook uses the **BoardGameGeek XML API2** for all collection and play data.
 
 <p align="left">
-    <a>
+    <a href="https://boardgamegeek.com" target="_blank">
       <img src="assets/powered_by_BGG.png" alt="Powered by BGG" height="40"/>
     </a>
 </p>
@@ -109,6 +109,8 @@ Open with Android Studio Ladybug or newer.
 ## 🙌 Contributing
 
 (Coming soon) PRs, bug reports, and suggestions will be welcome as MeepleBook expands.
+
+---
 
 ## 📄 License
 
