@@ -115,4 +115,4 @@ Open with Android Studio Ladybug or newer.
 ## 📄 License
 
 This project is released under the **MIT License**.
-See the [LICENSE](LICENSE) file for details.
+See the [LICENSE](LICENSE.md) file for details.
