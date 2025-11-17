@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">MeepleBook</string>
+    <string name="login_title">MeepleBook Login</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="msg_empty_credentials_error">Username and password cannot be empty</string>
+    <string name="msg_invalid_credentials_error">Invalid username or password</string>
+    <string name="msg_login_failed_error">Login failed</string>
 </resources>
