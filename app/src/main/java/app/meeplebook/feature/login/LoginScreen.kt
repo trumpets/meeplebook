@@ -18,7 +18,6 @@ import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
 fun LoginScreen(
-    navController: NavController,
     viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit = {}
 ) {

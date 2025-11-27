@@ -12,8 +12,10 @@ fun AppNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
             LoginScreen(
-                navController = navController,
-                onLoginSuccess = { navController.navigate(Screen.Home.route) }
+                onLoginSuccess = {
+//                    navController.navigate(Screen.Home.route)
+                    android.util.Log.d("Ivo" ,"Login successful!")
+                }
             )
         }
 //        composable(Screen.Home.route) {
