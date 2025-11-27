@@ -13,7 +13,7 @@ fun AppNavHost(navController: NavHostController) {
             LoginScreen(
                 onLoginSuccess = {
 //                    navController.navigate(Home)
-                    android.util.Log.d("Ivo" ,"Login successful!")
+                    android.util.Log.d("Ivo", "Login successful!")
                 }
             )
         }
