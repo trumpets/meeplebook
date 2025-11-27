@@ -1,68 +1,19 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.meeplebook.android.application)
+    alias(libs.plugins.meeplebook.android.application.compose)
+    alias(libs.plugins.meeplebook.android.hilt)
 }
 
 android {
     namespace = "app.meeplebook"
-    compileSdk {
-        version = release(36)
-    }
 
     defaultConfig {
         applicationId = "app.meeplebook"
-        minSdk = 26
-        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
-
-    packaging {
-        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
-    }
-
-    testOptions {
-        animationsDisabled = true
-        unitTests.isReturnDefaultValues = true
-    }
-}
-
-kotlin {
-    jvmToolchain(17) // recommended for Kotlin 2.2
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-        freeCompilerArgs.addAll(
-            "-opt-in=kotlin.RequiresOptIn",
-            "-Xcontext-receivers"
-        )
     }
 }
 
@@ -81,10 +32,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.navigation)
 
-    // Hilt
-    implementation(libs.hilt.android)
+    // Hilt (base dependencies are added by the convention plugin)
     implementation(libs.hilt.navigation.compose)
-    ksp(libs.hilt.compiler)
 
     // Network
     implementation(libs.retrofit)

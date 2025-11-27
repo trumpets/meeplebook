@@ -1,6 +1,6 @@
 [versions]
-agp = "8.13.1"
-kotlin = "2.2.21"
+agp = "8.7.3"
+kotlin = "2.1.0"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -11,7 +11,7 @@ composeBom = "2025.11.00"
 navigationCompose = "2.9.6"
 hilt = "2.57.2"
 hiltCompose = "1.3.0"
-ksp = "2.2.21-2.0.4"
+ksp = "2.1.0-1.0.29"
 kotlinxCoroutines = "1.10.2"
 mockk = "1.14.6"
 retrofit = "3.0.0"
@@ -45,6 +45,12 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
+# Gradle plugins for build-logic
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
+ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -54,7 +60,15 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+# Convention Plugins
+meeplebook-android-application = { id = "meeplebook.android.application", version = "unspecified" }
+meeplebook-android-application-compose = { id = "meeplebook.android.application.compose", version = "unspecified" }
+meeplebook-android-library = { id = "meeplebook.android.library", version = "unspecified" }
+meeplebook-android-library-compose = { id = "meeplebook.android.library.compose", version = "unspecified" }
+meeplebook-android-hilt = { id = "meeplebook.android.hilt", version = "unspecified" }
