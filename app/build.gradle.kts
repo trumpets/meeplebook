@@ -10,14 +10,12 @@ plugins {
 
 android {
     namespace = "app.meeplebook"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "app.meeplebook"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
