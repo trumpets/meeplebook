@@ -5,20 +5,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.meeplebook.feature.login.LoginScreen
-import app.meeplebook.feature.login.LoginViewModel
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Screen.Login.route) {
-        composable(Screen.Login.route) {
+    NavHost(navController = navController, startDestination = Login) {
+        composable<Login> {
             LoginScreen(
                 onLoginSuccess = {
-//                    navController.navigate(Screen.Home.route)
+//                    navController.navigate(Home)
                     android.util.Log.d("Ivo" ,"Login successful!")
                 }
             )
         }
-//        composable(Screen.Home.route) {
+//        composable<Home> {
 //            HomeScreen()
 //        }
     }
