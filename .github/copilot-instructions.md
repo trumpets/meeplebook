@@ -1,0 +1,222 @@
+# Meeple Book
+
+This will be an Android app that will allow for a user to log in to BGG, view his collection, view his plays and record plays.
+
+Those would be the initial functionalities.
+
+It is separate than the existing BGG4Android app. That one is too old, not maintained. We fixed it a bit, but it is just a unnecessary large project.
+
+The app will be written for native Android. Probably Kotlin and Compose although my 20y experience in Android is with Java and XML UI.
+
+It is imperative to have a modern design (you come here a lot), AND TESTS. So many tests. In 10 years time I'll need to verify that changes aren't breaking. If TDD applies well, we'll do TDD.
+
+Future proof as much as possible.
+
+Initially only friends will use it but I will distribute it through Google Play (I already have an account). Need to figure out a unique package name and app name.
+
+Decided on a name: MeepleBook
+Decided on a package: app.meeplebook
+
+Follow Google's NowInAndroid design and code and theming principles:
+
+## 1 — Modules & folders (start single-module, plan multi-module)
+Short-term (one Gradle module :app):
+
+```
+app/
+src/main/java/app/meeplebook/
+core/
+model/             // shared data classes (Game, Play, User, AuthToken)
+network/           // retrofit interfaces, xml parsers
+database/          // Room entities, DAOs, Mappers
+util/              // helpers, date utils, xml utils
+di/                // hilt modules (app-wide)
+feature/
+login/
+LoginScreen.kt
+LoginViewModel.kt
+LoginRepository.kt (interface)
+LoginUiState.kt
+collection/
+CollectionScreen.kt
+CollectionViewModel.kt
+CollectionRepository.kt (interface)
+CollectionUiState.kt
+plays/
+...
+ui/
+components/         // reusable composables (PrimaryButton, ListItem)
+theme/              // MeepleBookTheme, color, typography
+navigation/
+AppNavHost.kt
+Screen.kt
+work/                 // WorkManager workers (sync)
+App.kt                // @HiltAndroidApp
+```
+
+## 2 — Component responsibilities (concrete)
+### UI / Feature layer
+Composable screen: pure UI, no IO or heavy logic. Reads UiState and emits UiEvent.
+
+LoginScreen(state: LoginUiState, onEvent: (LoginEvent)->Unit)
+
+UiState: immutable data class representing all info the screen needs.
+
+UiEvent: sealed class of user actions (object SubmitLogin, data class UsernameChanged(String)).
+
+### ViewModel
+Exposes val uiState: StateFlow<UiState> (read-only).
+
+Accepts events fun onEvent(e: UiEvent) and processes them (validate, call use-cases).
+
+Uses viewModelScope for coroutine work.
+
+Owns ephemeral UI-only flows (e.g., one-shot navigation via SharedFlow if needed).
+
+### Repositories (interfaces in features or core, model classes are samples currently, check code)
+AuthRepository: suspend fun login(username): Result<AuthToken>; fun currentUser(): Flow<User?>
+
+CollectionRepository: fun observeCollection(): Flow<List<Game>>, suspend fun refreshCollection(), suspend fun saveGame(...)
+
+PlaysRepository: similar
+
+Repositories hide data source merging logic (Room + network).
+
+### Data Sources
+LocalDataSource: Room DAOs & Entities. Use Flow for queries.
+
+RemoteDataSource: Retrofit (or OkHttp) clients. BGG provides XML — use Retrofit with a converter (Moshi works for JSON, for XML use SimpleXML or custom parsing). Use suspend methods.
+
+### Mappers
+DTO/Entity/Domain mappers: NetworkGameDto.toEntity() and Entity.toDomain().
+
+### DI
+Hilt modules in core/di provide Retrofit instance, OkHttp client, Room database, DAOs, repositories, coroutine dispatchers.
+
+### Background sync
+WorkManager used for periodic syncs. Worker calls CollectionRepository.refreshCollection() which fetches remote, writes to DB.
+
+Use Constraints (unmetered network if large images).
+
+### Security
+For auth tokens or cookies: use EncryptedSharedPreferences or Android Keystore + symmetric key. Abstract via AuthLocalDataSource.
+
+## 3 — Data flow patterns & rules
+Source of truth: Room database for offline-first features (collection, plays). Remote sync writes to DB.
+
+ViewModels observe Room (via Flow → .stateIn() or combine) and expose UiState.
+
+Network for refreshes and write-through: repository triggers network, then updates DB.
+
+Unidirectional flow:
+
+UI emits events -> ViewModel -> Repository -> DataSource -> DB -> Flow emits -> ViewModel collects/write state -> UI
+
+## 4 — Concrete sequences
+### Login (simple username-based session)
+UI: user types username -> LoginEvent.UsernameChanged.
+
+ViewModel updates _uiState.update { copy(username = ...) }.
+
+On submit: viewModelScope.launch { _uiState.update{loading=true}; val result = repo.login(username); if success -> save token in secure storage, update user in DB, navigate; else error }.
+
+### Collection sync (auto + manual)
+#### Auto (WorkManager):
+
+Periodic Worker calls collectionRepo.refreshCollection() which fetches XML, parses items, upserts into Room.
+
+#### Manual (pull-to-refresh):
+
+UI event -> viewModelScope.launch -> collectionRepo.refreshCollection() -> updates DB -> UI automagically updates.
+
+### Record a Play (local-first)
+User fills play UI, taps Save.
+
+ViewModel validates, calls playRepo.insertPlay(play).
+
+Repository inserts into Room (local source of truth). Mark play syncState = PENDING.
+
+Background sync worker picks up PENDING plays, tries to push to BGG if reachable, updates syncState -> SYNCED or FAILED. UI reads sync state from DB.
+
+## 5 — Persistence: Room schema
+DAOs return Flow<List<...>>.
+
+## 6 — Networking: BGG XML specifics
+BGG has XML endpoints. Use Retrofit with a converter:
+
+Option A: Retrofit + Simple XML converter (if available/compatible).
+
+Option B (recommended for control): Retrofit returning ResponseBody and parse with kotlinx-serialization-xml or a SAX/XmlPull parser to DTOs.
+
+Keep the parsing isolated in core/network/parsers.
+
+Implement rate limiting / caching.
+
+## 7 — State management & concurrency
+For UI state: MutableStateFlow in VM -> _uiState.update{...} -> val uiState = _uiState.asStateFlow().
+
+For DB flows: use .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initialValue) when converting to StateFlow for UI consumption if you need to keep a snapshot. Or collect DB Flow and update _uiState.
+
+Use Dispatchers.IO for DB & network. Provide a @IoDispatcher via DI.
+
+## 8 — DI & qualifiers (Hilt)
+Hilt modules:
+
+NetworkModule: provide OkHttp (logging, timeouts), Retrofit, BggApi
+
+DatabaseModule: provide Room DB, DAOs
+
+RepositoryModule: bind interfaces -> implementations
+
+CoroutineModule: provide @IoDispatcher and @DefaultDispatcher
+
+Mark ViewModels with @HiltViewModel and inject repositories.
+
+## 9 — Error handling & UX rules
+Map technical exceptions into domain errors; surface friendly messages in UI state.
+
+Retry strategies for network; bubble offline status to UI.
+
+Use Result<T> or sealed Either type from repository to differentiate success/failure.
+
+## 10 — Testing strategy
+### Unit tests
+
+ViewModel: provide fake repositories (pure Kotlin). Test state transitions.
+
+Repositories: test mappers & business rules.
+
+### Instrumented tests
+
+Room DAO tests (in-memory database).
+
+### UI tests
+
+Compose UI tests using createComposeRule.
+
+### Integration
+
+Repository + fake network server (MockWebServer) + in-memory DB.
+
+### CI
+
+GitHub Actions -> run ./gradlew test and connectedAndroidTest (or use emulator in CI). Also run lint & ktlint/detekt.
+
+## 11 — CI / Release pipeline
+### CI (GH Actions):
+
+assembleDebug, unit tests, lint, ktlint, detekt
+
+run Compose UI tests with emulator matrix or headless using android-emulator-runner
+
+### CD
+
+On release tag, build release AAB, sign with secrets stored in GitHub Secrets or Artifact Registry; optionally upload to Play.
+
+## 12 — Security & storage
+Tokens: use EncryptedSharedPreferences or Keystore-backed encryption.
+
+Store minimal personal data locally; obfuscate sensitive logs.
+
+## 13 — Metrics & analytics (optional)
+Add optional pluggable analytics interface for events (not baked in core).
