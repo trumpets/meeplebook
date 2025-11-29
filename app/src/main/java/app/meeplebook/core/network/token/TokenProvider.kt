@@ -33,8 +33,9 @@ object TokenProvider {
 
     /**
      * Deobfuscates a hex-encoded XOR'd string using the provided key.
+     * Internal visibility to allow testing without duplication.
      */
-    private fun deobfuscate(obfuscatedHex: String, keyHex: String): String {
+    internal fun deobfuscate(obfuscatedHex: String, keyHex: String): String {
         return try {
             val obfuscatedBytes = obfuscatedHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
             val keyBytes = keyHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
