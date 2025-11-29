@@ -28,19 +28,23 @@ object TokenProvider {
      * Deobfuscates a hex-encoded XOR'd string using the provided key.
      */
     private fun deobfuscate(obfuscatedHex: String, keyHex: String): String {
-        val obfuscatedBytes = obfuscatedHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        val keyBytes = keyHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        return try {
+            val obfuscatedBytes = obfuscatedHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+            val keyBytes = keyHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
-        // Ensure both arrays have the same length
-        if (obfuscatedBytes.size != keyBytes.size) {
-            return ""
+            // Ensure both arrays have the same length
+            if (obfuscatedBytes.size != keyBytes.size) {
+                return ""
+            }
+
+            val originalBytes = ByteArray(obfuscatedBytes.size)
+            for (i in obfuscatedBytes.indices) {
+                originalBytes[i] = (obfuscatedBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
+            }
+
+            String(originalBytes, Charsets.UTF_8)
+        } catch (e: Exception) {
+            ""
         }
-
-        val originalBytes = ByteArray(obfuscatedBytes.size)
-        for (i in obfuscatedBytes.indices) {
-            originalBytes[i] = (obfuscatedBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
-        }
-
-        return String(originalBytes, Charsets.UTF_8)
     }
 }
