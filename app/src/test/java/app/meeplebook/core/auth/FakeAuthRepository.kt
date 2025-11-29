@@ -3,6 +3,7 @@ package app.meeplebook.core.auth
 import app.meeplebook.core.model.AuthCredentials
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * Fake implementation of [AuthRepository] for testing purposes.
@@ -57,5 +58,5 @@ class FakeAuthRepository : AuthRepository {
         return Result.success(Unit)
     }
 
-    override fun isLoggedIn(): Flow<Boolean> = MutableStateFlow(_currentUser.value != null)
+    override fun isLoggedIn(): Flow<Boolean> = _currentUser.map { it != null }
 }
