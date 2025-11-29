@@ -180,6 +180,9 @@ Retry strategies for network; bubble offline status to UI.
 Use Result<T> or sealed Either type from repository to differentiate success/failure.
 
 ## 10 — Testing strategy
+
+Prefer fakes to Mockks!!! Only use Mockks for 3rd party classes. If a class can't be faked, abstract it to an interface so it can be!
+
 ### Unit tests
 
 ViewModel: provide fake repositories (pure Kotlin). Test state transitions.
