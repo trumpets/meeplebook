@@ -7,6 +7,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,5 +50,9 @@ class AuthLocalDataSourceImpl @Inject constructor(
 
     override suspend fun clear() {
         encryptedDs.clear()
+    }
+
+    override fun close() {
+        scope.cancel()
     }
 }
