@@ -25,16 +25,12 @@ class LoginUseCase @Inject constructor(
             return Result.failure(AuthError.EmptyCredentials)
         }
         
-        return authRepository.login(username, password).fold(
-            onSuccess = { Result.success(it) },
-            onFailure = { throwable ->
-                val authError = when (throwable) {
-                    is UnknownHostException -> AuthError.NetworkError
-                    is IllegalStateException -> AuthError.InvalidCredentials(throwable.message ?: "Invalid credentials")
-                    else -> AuthError.Unknown(throwable)
-                }
-                Result.failure(authError)
+        return authRepository.login(username, password).recoverCatching { throwable ->
+            throw when (throwable) {
+                is UnknownHostException -> AuthError.NetworkError
+                is IllegalStateException -> AuthError.InvalidCredentials(throwable.message ?: "Invalid credentials")
+                else -> AuthError.Unknown(throwable)
             }
-        )
+        }
     }
 }

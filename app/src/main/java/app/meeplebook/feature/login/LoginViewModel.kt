@@ -45,7 +45,6 @@ class LoginViewModel @Inject constructor(
                         is AuthError.NetworkError -> R.string.msg_login_failed_error
                         is AuthError.InvalidCredentials -> R.string.msg_invalid_credentials_error
                         is AuthError.Unknown -> R.string.msg_login_failed_error
-                        else -> R.string.msg_login_failed_error
                     }
                     _uiState.update { it.copy(isLoading = false, errorMessageResId = resId) }
                 }
