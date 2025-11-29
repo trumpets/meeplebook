@@ -8,6 +8,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class LoginUseCaseTest {
@@ -87,6 +90,45 @@ class LoginUseCaseTest {
         val username = "testUser"
         val password = "testPass"
         fakeAuthRepository.loginResult = Result.failure(UnknownHostException())
+
+        val result = loginUseCase(username, password)
+
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is AuthError.NetworkError)
+        assertEquals(1, fakeAuthRepository.loginCallCount)
+    }
+
+    @Test
+    fun `invoke when repository returns SocketTimeoutException returns NetworkError`() = runTest {
+        val username = "testUser"
+        val password = "testPass"
+        fakeAuthRepository.loginResult = Result.failure(SocketTimeoutException())
+
+        val result = loginUseCase(username, password)
+
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is AuthError.NetworkError)
+        assertEquals(1, fakeAuthRepository.loginCallCount)
+    }
+
+    @Test
+    fun `invoke when repository returns ConnectException returns NetworkError`() = runTest {
+        val username = "testUser"
+        val password = "testPass"
+        fakeAuthRepository.loginResult = Result.failure(ConnectException())
+
+        val result = loginUseCase(username, password)
+
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is AuthError.NetworkError)
+        assertEquals(1, fakeAuthRepository.loginCallCount)
+    }
+
+    @Test
+    fun `invoke when repository returns IOException returns NetworkError`() = runTest {
+        val username = "testUser"
+        val password = "testPass"
+        fakeAuthRepository.loginResult = Result.failure(IOException("Network failure"))
 
         val result = loginUseCase(username, password)
 

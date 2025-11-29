@@ -2,7 +2,7 @@ package app.meeplebook.core.domain
 
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.model.AuthCredentials
-import java.net.UnknownHostException
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -24,10 +24,10 @@ class LoginUseCase @Inject constructor(
         if (username.isBlank() || password.isBlank()) {
             return Result.failure(AuthError.EmptyCredentials)
         }
-        
+
         return authRepository.login(username, password).recoverCatching { throwable ->
             throw when (throwable) {
-                is UnknownHostException -> AuthError.NetworkError
+                is IOException -> AuthError.NetworkError
                 is IllegalStateException -> AuthError.InvalidCredentials(throwable.message ?: "Invalid credentials")
                 else -> AuthError.Unknown(throwable)
             }

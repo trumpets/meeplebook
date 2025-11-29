@@ -18,7 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.net.UnknownHostException
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
@@ -94,7 +94,7 @@ class LoginViewModelTest {
 
     @Test
     fun `login with network error maps to login failed error`() = runTest {
-        fakeAuthRepository.loginResult = Result.failure(UnknownHostException())
+        fakeAuthRepository.loginResult = Result.failure(IOException("Network failure"))
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
