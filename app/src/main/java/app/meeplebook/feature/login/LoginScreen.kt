@@ -107,6 +107,13 @@ fun LoginScreenContent(
     }
 }
 
+/**
+ * Provides preview parameter states for [LoginScreenContent]:
+ * 1. Default/Empty state
+ * 2. Filled credentials
+ * 3. Loading state
+ * 4. Error state with invalid credentials
+ */
 class LoginUiStatePreviewParameterProvider : PreviewParameterProvider<LoginUiState> {
     override val values: Sequence<LoginUiState> = sequenceOf(
         LoginUiState(),
