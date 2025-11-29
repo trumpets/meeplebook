@@ -29,6 +29,5 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Run tests
-        env:
-          BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
+        # BGG_BEARER_TOKEN is not needed for unit tests. Add it here only if integration tests require it.
         run: ./gradlew test
