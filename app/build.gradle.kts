@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,6 +8,42 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+}
+
+/**
+ * Retrieves the BGG bearer token from local.properties or environment variable.
+ * For local builds: add `bgg.bearer.token=YOUR_TOKEN` to local.properties
+ * For CI builds: set BGG_BEARER_TOKEN environment variable (from GitHub Secrets)
+ */
+fun getBggBearerToken(): String {
+    // First try local.properties
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        val properties = Properties().apply {
+            localPropertiesFile.inputStream().use { load(it) }
+        }
+        properties.getProperty("bgg.bearer.token")?.let { return it }
+    }
+    // Fall back to environment variable (for CI builds)
+    return System.getenv("BGG_BEARER_TOKEN") ?: ""
+}
+
+/**
+ * Obfuscates a token using XOR with a random key.
+ * This makes it harder to extract the token from a decompiled APK.
+ * Returns a pair of (obfuscatedToken, key) as hex strings.
+ */
+fun obfuscateToken(token: String): Pair<String, String> {
+    if (token.isEmpty()) return "" to ""
+    val tokenBytes = token.toByteArray(Charsets.UTF_8)
+    val keyBytes = ByteArray(tokenBytes.size)
+    java.security.SecureRandom().nextBytes(keyBytes)
+    val obfuscatedBytes = ByteArray(tokenBytes.size)
+    for (i in tokenBytes.indices) {
+        obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
+    }
+    return obfuscatedBytes.joinToString("") { "%02x".format(it) } to
+           keyBytes.joinToString("") { "%02x".format(it) }
 }
 
 android {
@@ -24,6 +61,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        // BGG Bearer Token - obfuscated for security
+        val (obfuscatedToken, tokenKey) = obfuscateToken(getBggBearerToken())
+        buildConfigField("String", "BGG_TOKEN_OBFUSCATED", "\"$obfuscatedToken\"")
+        buildConfigField("String", "BGG_TOKEN_KEY", "\"$tokenKey\"")
     }
 
     buildTypes {
