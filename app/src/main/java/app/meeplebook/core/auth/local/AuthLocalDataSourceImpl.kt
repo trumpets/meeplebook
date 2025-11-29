@@ -3,7 +3,7 @@ package app.meeplebook.core.auth.local
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.security.EncryptedPreferencesDataStore
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

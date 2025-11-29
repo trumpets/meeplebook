@@ -3,7 +3,7 @@ package app.meeplebook.core.auth
 import app.meeplebook.core.auth.local.AuthLocalDataSource
 import app.meeplebook.core.auth.remote.BggAuthRemoteDataSource
 import app.meeplebook.core.model.AuthCredentials
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

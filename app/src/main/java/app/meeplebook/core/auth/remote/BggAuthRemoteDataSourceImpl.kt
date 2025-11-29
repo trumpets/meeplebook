@@ -4,7 +4,7 @@ import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.network.BggAuthApi
 import app.meeplebook.core.network.CredentialsPayload
 import app.meeplebook.core.network.LoginPayload
-import jakarta.inject.Inject
+import javax.inject.Inject
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
