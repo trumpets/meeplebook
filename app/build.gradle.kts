@@ -28,31 +28,6 @@ fun getBggBearerToken(): String {
     return System.getenv("BGG_BEARER_TOKEN") ?: ""
 }
 
-/**
- * Obfuscates a token using XOR with a deterministic key derived from the token itself.
- * Uses SHA-256 hash of the token as the key to ensure consistent obfuscation across builds.
- * This prevents unnecessary recompilation when the token hasn't changed.
- * Returns a pair of (obfuscatedToken, key) as hex strings.
- */
-fun obfuscateToken(token: String): Pair<String, String> {
-    if (token.isEmpty()) return "" to ""
-    val tokenBytes = token.toByteArray(Charsets.UTF_8)
-    
-    // Derive key deterministically from token using SHA-256
-    val digest = java.security.MessageDigest.getInstance("SHA-256")
-    val hashBytes = digest.digest(tokenBytes)
-    
-    // Expand hash to match token length if needed
-    val keyBytes = ByteArray(tokenBytes.size) { i -> hashBytes[i % hashBytes.size] }
-    
-    val obfuscatedBytes = ByteArray(tokenBytes.size)
-    for (i in tokenBytes.indices) {
-        obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
-    }
-    return obfuscatedBytes.joinToString("") { "%02x".format(it) } to
-           keyBytes.joinToString("") { "%02x".format(it) }
-}
-
 android {
     namespace = "app.meeplebook"
     compileSdk {
@@ -69,8 +44,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
-        // BGG Bearer Token - obfuscated for security
-        val (obfuscatedToken, tokenKey) = obfuscateToken(getBggBearerToken())
+        // BGG Bearer Token - obfuscated for security using shared TokenObfuscator
+        val (obfuscatedToken, tokenKey) = TokenObfuscator.obfuscate(getBggBearerToken())
         buildConfigField("String", "BGG_TOKEN_OBFUSCATED", "\"$obfuscatedToken\"")
         buildConfigField("String", "BGG_TOKEN_KEY", "\"$tokenKey\"")
     }

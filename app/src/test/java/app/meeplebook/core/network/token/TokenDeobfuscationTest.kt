@@ -4,8 +4,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Tests for the deobfuscation logic used by TokenProvider.
- * Uses TokenProvider.deobfuscate() directly to avoid code duplication.
+ * Tests for the obfuscation/deobfuscation logic used by TokenProvider.
+ * Uses TokenProvider methods directly to avoid code duplication.
+ * The same obfuscation logic is shared with buildSrc/TokenObfuscator.kt for build-time use.
  */
 class TokenDeobfuscationTest {
 
@@ -13,8 +14,8 @@ class TokenDeobfuscationTest {
     fun `deobfuscate correctly reverses XOR obfuscation`() {
         val originalToken = "test_token_123"
 
-        // Simulate obfuscation (same logic as in build.gradle.kts)
-        val (obfuscatedHex, keyHex) = obfuscateToken(originalToken)
+        // Use TokenProvider.obfuscate() - the single source of truth
+        val (obfuscatedHex, keyHex) = TokenProvider.obfuscate(originalToken)
 
         // Deobfuscate using TokenProvider
         val result = TokenProvider.deobfuscate(obfuscatedHex, keyHex)
@@ -31,7 +32,7 @@ class TokenDeobfuscationTest {
     fun `deobfuscate handles special characters`() {
         val originalToken = "token!@#\$%^&*()_+-=[]{}|;':\",./<>?"
 
-        val (obfuscatedHex, keyHex) = obfuscateToken(originalToken)
+        val (obfuscatedHex, keyHex) = TokenProvider.obfuscate(originalToken)
 
         val result = TokenProvider.deobfuscate(obfuscatedHex, keyHex)
 
@@ -49,34 +50,38 @@ class TokenDeobfuscationTest {
     fun `deobfuscate handles long tokens`() {
         val originalToken = "this_is_a_very_long_bearer_token_that_might_be_used_in_production_12345678901234567890"
 
-        val (obfuscatedHex, keyHex) = obfuscateToken(originalToken)
+        val (obfuscatedHex, keyHex) = TokenProvider.obfuscate(originalToken)
         val result = TokenProvider.deobfuscate(obfuscatedHex, keyHex)
 
         assertEquals(originalToken, result)
     }
 
-    /**
-     * Simulates the obfuscation logic from build.gradle.kts for testing purposes.
-     * Uses SHA-256 hash of the token as the key (same as build.gradle.kts).
-     */
-    private fun obfuscateToken(token: String): Pair<String, String> {
-        if (token.isEmpty()) return "" to ""
+    @Test
+    fun `obfuscate handles empty string`() {
+        val (obfuscated, key) = TokenProvider.obfuscate("")
+        assertEquals("", obfuscated)
+        assertEquals("", key)
+    }
 
-        val tokenBytes = token.toByteArray(Charsets.UTF_8)
-        
-        // Derive key deterministically from token using SHA-256 (matches build.gradle.kts)
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
-        val hashBytes = digest.digest(tokenBytes)
-        
-        // Expand hash to match token length if needed
-        val keyBytes = ByteArray(tokenBytes.size) { i -> hashBytes[i % hashBytes.size] }
+    @Test
+    fun `obfuscate produces deterministic output`() {
+        val token = "test_token"
+        val (obfuscated1, key1) = TokenProvider.obfuscate(token)
+        val (obfuscated2, key2) = TokenProvider.obfuscate(token)
 
-        val obfuscatedBytes = ByteArray(tokenBytes.size)
-        for (i in tokenBytes.indices) {
-            obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
-        }
+        assertEquals(obfuscated1, obfuscated2)
+        assertEquals(key1, key2)
+    }
 
-        return obfuscatedBytes.joinToString("") { "%02x".format(it) } to
-               keyBytes.joinToString("") { "%02x".format(it) }
+    @Test
+    fun `deobfuscate returns empty string for invalid hex characters`() {
+        val result = TokenProvider.deobfuscate("gg11zz", "aabbcc")
+        assertEquals("", result)
+    }
+
+    @Test
+    fun `deobfuscate returns empty string for odd-length hex string`() {
+        val result = TokenProvider.deobfuscate("abc", "def")
+        assertEquals("", result)
     }
 }
