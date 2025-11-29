@@ -1,16 +1,13 @@
 package app.meeplebook.core.network.interceptor
 
+import app.meeplebook.core.network.token.FakeTokenProvider
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.slot
-import io.mockk.unmockkObject
 import io.mockk.verify
-import app.meeplebook.core.network.token.TokenProvider
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -18,26 +15,22 @@ import org.junit.Test
 
 class BearerInterceptorTest {
 
+    private lateinit var fakeTokenProvider: FakeTokenProvider
     private lateinit var interceptor: BearerInterceptor
     private lateinit var chain: Interceptor.Chain
 
     @Before
     fun setUp() {
-        interceptor = BearerInterceptor()
+        fakeTokenProvider = FakeTokenProvider()
+        interceptor = BearerInterceptor(fakeTokenProvider)
         chain = mockk(relaxed = true)
-        mockkObject(TokenProvider)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkObject(TokenProvider)
     }
 
     @Test
     fun `intercept adds bearer token header when token is available`() {
         // Given
         val testToken = "test_bearer_token"
-        every { TokenProvider.getBggToken() } returns testToken
+        fakeTokenProvider.setToken(testToken)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -59,7 +52,7 @@ class BearerInterceptorTest {
     @Test
     fun `intercept does not add bearer token header when token is empty`() {
         // Given
-        every { TokenProvider.getBggToken() } returns ""
+        fakeTokenProvider.setToken("")
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -82,7 +75,7 @@ class BearerInterceptorTest {
     fun `intercept proceeds with modified request`() {
         // Given
         val testToken = "test_token"
-        every { TokenProvider.getBggToken() } returns testToken
+        fakeTokenProvider.setToken(testToken)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")

@@ -1,7 +1,6 @@
 package app.meeplebook.core.network.token
 
 import app.meeplebook.BuildConfig
-import java.security.MessageDigest
 import java.security.SecureRandom
 
 /**
@@ -9,7 +8,7 @@ import java.security.SecureRandom
  * The token is stored in obfuscated form (XOR with a random or env-provided key) in BuildConfig
  * to make it harder to extract via APK decompilation.
  */
-object TokenProvider {
+object TokenProvider : TokenProviding {
 
     /**
      * Cached token value to avoid repeated deobfuscation on every HTTP request.
@@ -31,7 +30,7 @@ object TokenProvider {
      * The token is deobfuscated once and cached for subsequent calls.
      * Returns empty string if token is not configured.
      */
-    fun getBggToken(): String = cachedToken
+    override fun getBggToken(): String = cachedToken
 
     /**
      * Obfuscates a token using XOR with a random key (for testing purposes).
