@@ -1,6 +1,9 @@
 package app.meeplebook.navigation
 
-sealed class Screen(val route: String) {
-    object Login : Screen("login")
-    object Home : Screen("home")
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+object Login
+
+@Serializable
+object Home
