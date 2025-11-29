@@ -1,6 +1,7 @@
 package app.meeplebook.feature.login
 
 import app.meeplebook.R
+import app.meeplebook.core.domain.AuthError
 import app.meeplebook.core.domain.LoginUseCase
 import app.meeplebook.core.model.AuthCredentials
 import io.mockk.coEvery
@@ -19,7 +20,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
@@ -79,10 +79,8 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with IllegalArgumentException maps to empty credentials error`() = runTest {
-        coEvery { loginUseCase("", "") } returns Result.failure(
-            IllegalArgumentException("Username and password must not be blank")
-        )
+    fun `login with EmptyCredentials error maps to empty credentials error`() = runTest {
+        coEvery { loginUseCase("", "") } returns Result.failure(AuthError.EmptyCredentials)
 
         viewModel.login()
         advanceUntilIdle()
@@ -94,8 +92,8 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with UnknownHostException maps to login failed error`() = runTest {
-        coEvery { loginUseCase("user", "pass") } returns Result.failure(UnknownHostException())
+    fun `login with NetworkError maps to login failed error`() = runTest {
+        coEvery { loginUseCase("user", "pass") } returns Result.failure(AuthError.NetworkError)
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -109,23 +107,10 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with IllegalStateException maps to login failed error`() = runTest {
-        coEvery { loginUseCase("user", "pass") } returns Result.failure(IllegalStateException())
-
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoggedIn)
-        assertFalse(state.isLoading)
-        assertEquals(R.string.msg_login_failed_error, state.errorMessageResId)
-    }
-
-    @Test
-    fun `login with other exceptions maps to invalid credentials error`() = runTest {
-        coEvery { loginUseCase("user", "pass") } returns Result.failure(RuntimeException("Auth error"))
+    fun `login with InvalidCredentials error maps to invalid credentials error`() = runTest {
+        coEvery { loginUseCase("user", "pass") } returns Result.failure(
+            AuthError.InvalidCredentials("Wrong password")
+        )
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -136,6 +121,23 @@ class LoginViewModelTest {
         assertFalse(state.isLoggedIn)
         assertFalse(state.isLoading)
         assertEquals(R.string.msg_invalid_credentials_error, state.errorMessageResId)
+    }
+
+    @Test
+    fun `login with Unknown error maps to login failed error`() = runTest {
+        coEvery { loginUseCase("user", "pass") } returns Result.failure(
+            AuthError.Unknown(RuntimeException("Unexpected"))
+        )
+
+        viewModel.onUsernameChange("user")
+        viewModel.onPasswordChange("pass")
+        viewModel.login()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoggedIn)
+        assertFalse(state.isLoading)
+        assertEquals(R.string.msg_login_failed_error, state.errorMessageResId)
     }
 
     @Test
@@ -158,9 +160,7 @@ class LoginViewModelTest {
     @Test
     fun `login clears previous error before attempting login`() = runTest {
         // First login fails
-        coEvery { loginUseCase("", "") } returns Result.failure(
-            IllegalArgumentException("Username and password must not be blank")
-        )
+        coEvery { loginUseCase("", "") } returns Result.failure(AuthError.EmptyCredentials)
         viewModel.login()
         advanceUntilIdle()
         assertEquals(R.string.msg_empty_credentials_error, viewModel.uiState.value.errorMessageResId)

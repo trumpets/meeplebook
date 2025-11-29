@@ -2,6 +2,7 @@ package app.meeplebook.core.domain
 
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.model.AuthCredentials
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 /**
@@ -17,13 +18,23 @@ class LoginUseCase @Inject constructor(
      * @param username The user's username
      * @param password The user's password
      * @return [Result.success] with [AuthCredentials] if login succeeds,
-     *         [Result.failure] with [IllegalArgumentException] if credentials are blank,
-     *         or [Result.failure] with the underlying error if login fails
+     *         [Result.failure] with [AuthError] if validation or authentication fails
      */
     suspend operator fun invoke(username: String, password: String): Result<AuthCredentials> {
         if (username.isBlank() || password.isBlank()) {
-            return Result.failure(IllegalArgumentException("Username and password must not be blank"))
+            return Result.failure(AuthError.EmptyCredentials)
         }
-        return authRepository.login(username, password)
+        
+        return authRepository.login(username, password).fold(
+            onSuccess = { Result.success(it) },
+            onFailure = { throwable ->
+                val authError = when (throwable) {
+                    is UnknownHostException -> AuthError.NetworkError
+                    is IllegalStateException -> AuthError.InvalidCredentials(throwable.message ?: "Invalid credentials")
+                    else -> AuthError.Unknown(throwable)
+                }
+                Result.failure(authError)
+            }
+        )
     }
 }
