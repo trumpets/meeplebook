@@ -29,15 +29,22 @@ fun getBggBearerToken(): String {
 }
 
 /**
- * Obfuscates a token using XOR with a random key.
- * This makes it harder to extract the token from a decompiled APK.
+ * Obfuscates a token using XOR with a deterministic key derived from the token itself.
+ * Uses SHA-256 hash of the token as the key to ensure consistent obfuscation across builds.
+ * This prevents unnecessary recompilation when the token hasn't changed.
  * Returns a pair of (obfuscatedToken, key) as hex strings.
  */
 fun obfuscateToken(token: String): Pair<String, String> {
     if (token.isEmpty()) return "" to ""
     val tokenBytes = token.toByteArray(Charsets.UTF_8)
-    val keyBytes = ByteArray(tokenBytes.size)
-    java.security.SecureRandom().nextBytes(keyBytes)
+    
+    // Derive key deterministically from token using SHA-256
+    val digest = java.security.MessageDigest.getInstance("SHA-256")
+    val hashBytes = digest.digest(tokenBytes)
+    
+    // Expand hash to match token length if needed
+    val keyBytes = ByteArray(tokenBytes.size) { i -> hashBytes[i % hashBytes.size] }
+    
     val obfuscatedBytes = ByteArray(tokenBytes.size)
     for (i in tokenBytes.indices) {
         obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()

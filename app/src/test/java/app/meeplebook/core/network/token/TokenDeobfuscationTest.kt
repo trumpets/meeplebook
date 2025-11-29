@@ -57,15 +57,19 @@ class TokenDeobfuscationTest {
 
     /**
      * Simulates the obfuscation logic from build.gradle.kts for testing purposes.
-     * Note: The obfuscation logic in build.gradle.kts uses SecureRandom for the key,
-     * but we use a deterministic key here for reproducible tests.
+     * Uses SHA-256 hash of the token as the key (same as build.gradle.kts).
      */
     private fun obfuscateToken(token: String): Pair<String, String> {
         if (token.isEmpty()) return "" to ""
 
         val tokenBytes = token.toByteArray(Charsets.UTF_8)
-        // Use a deterministic key for testing (in production, random key is used)
-        val keyBytes = ByteArray(tokenBytes.size) { i -> ((i * 17 + 5) and 0xFF).toByte() }
+        
+        // Derive key deterministically from token using SHA-256 (matches build.gradle.kts)
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(tokenBytes)
+        
+        // Expand hash to match token length if needed
+        val keyBytes = ByteArray(tokenBytes.size) { i -> hashBytes[i % hashBytes.size] }
 
         val obfuscatedBytes = ByteArray(tokenBytes.size)
         for (i in tokenBytes.indices) {
