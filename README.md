@@ -95,7 +95,7 @@ cd meeplebook
 
 ### BGG Bearer Token Configuration
 
-MeepleBook requires a BGG bearer token for API authentication. The token is stored securely using XOR obfuscation to protect against APK decompilation.
+MeepleBook requires a BGG bearer token for API authentication. The token is stored using XOR obfuscation with a random key to make casual extraction from decompiled APKs harder.
 
 #### Local Development
 
@@ -116,6 +116,17 @@ Set the `BGG_BEARER_TOKEN` secret in your repository settings:
 The build will automatically use the secret when building in GitHub Actions.
 
 **Note:** If no token is configured, the bearer interceptor will skip adding the Authorization header.
+
+#### Deterministic Builds (Optional)
+
+By default, the obfuscation uses a random key which provides stronger security but causes BuildConfig to change on every build. For deterministic builds (e.g., to avoid unnecessary recompilation), set the `BGG_OBFUSCATION_KEY` environment variable:
+
+```bash
+export BGG_OBFUSCATION_KEY="your-constant-key-here"
+./gradlew assembleDebug
+```
+
+**Security Note:** XOR obfuscation makes casual token extraction harder, but a determined attacker can still reconstruct the token from a decompiled APK. The primary security benefit is keeping the token out of source control. For truly sensitive tokens, consider server-side token exchange or hardware-backed storage.
 
 ### Building the App
 

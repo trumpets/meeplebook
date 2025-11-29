@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
+import java.security.SecureRandom
 
 plugins {
     alias(libs.plugins.android.application)
@@ -28,6 +29,49 @@ fun getBggBearerToken(): String {
     return System.getenv("BGG_BEARER_TOKEN") ?: ""
 }
 
+/**
+ * Gets or generates the obfuscation key.
+ * If BGG_OBFUSCATION_KEY environment variable is set, uses that for deterministic builds.
+ * Otherwise, generates a random key (stronger security but triggers recompilation).
+ * 
+ * For CI builds where you want deterministic builds, set BGG_OBFUSCATION_KEY to a constant value.
+ */
+fun getOrGenerateObfuscationKey(tokenLength: Int): ByteArray {
+    val envKey = System.getenv("BGG_OBFUSCATION_KEY")
+    return if (envKey != null && envKey.isNotEmpty()) {
+        // Use provided key, expand with SHA-256 if needed to match token length
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(envKey.toByteArray(Charsets.UTF_8))
+        ByteArray(tokenLength) { i -> hashBytes[i % hashBytes.size] }
+    } else {
+        // Generate random key for stronger obfuscation
+        ByteArray(tokenLength).also { SecureRandom().nextBytes(it) }
+    }
+}
+
+/**
+ * Obfuscates a token using XOR with a random or environment-provided key.
+ * 
+ * Security note: When using a random key, BuildConfig changes on every build,
+ * triggering recompilation but providing stronger obfuscation. Set BGG_OBFUSCATION_KEY
+ * environment variable for deterministic builds with slightly weaker obfuscation.
+ *
+ * @param token The plaintext token to obfuscate
+ * @return A pair of (obfuscatedToken, key) as hex strings
+ */
+fun obfuscateToken(token: String): Pair<String, String> {
+    if (token.isEmpty()) return "" to ""
+    val tokenBytes = token.toByteArray(Charsets.UTF_8)
+    val keyBytes = getOrGenerateObfuscationKey(tokenBytes.size)
+    
+    val obfuscatedBytes = ByteArray(tokenBytes.size)
+    for (i in tokenBytes.indices) {
+        obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
+    }
+    return obfuscatedBytes.joinToString("") { "%02x".format(it) } to
+           keyBytes.joinToString("") { "%02x".format(it) }
+}
+
 android {
     namespace = "app.meeplebook"
     compileSdk {
@@ -44,8 +88,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
-        // BGG Bearer Token - obfuscated for security using shared TokenObfuscator
-        val (obfuscatedToken, tokenKey) = TokenObfuscator.obfuscate(getBggBearerToken())
+        // BGG Bearer Token - obfuscated for security
+        val (obfuscatedToken, tokenKey) = obfuscateToken(getBggBearerToken())
         buildConfigField("String", "BGG_TOKEN_OBFUSCATED", "\"$obfuscatedToken\"")
         buildConfigField("String", "BGG_TOKEN_KEY", "\"$tokenKey\"")
     }

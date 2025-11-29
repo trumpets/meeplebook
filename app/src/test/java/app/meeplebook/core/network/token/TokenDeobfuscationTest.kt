@@ -1,12 +1,14 @@
 package app.meeplebook.core.network.token
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 /**
  * Tests for the obfuscation/deobfuscation logic used by TokenProvider.
  * Uses TokenProvider methods directly to avoid code duplication.
- * The same obfuscation logic is shared with buildSrc/TokenObfuscator.kt for build-time use.
+ * The build-time obfuscation uses a matching algorithm with optional deterministic keys
+ * via BGG_OBFUSCATION_KEY environment variable.
  */
 class TokenDeobfuscationTest {
 
@@ -64,13 +66,14 @@ class TokenDeobfuscationTest {
     }
 
     @Test
-    fun `obfuscate produces deterministic output`() {
+    fun `obfuscate produces different output each time with random key`() {
         val token = "test_token"
         val (obfuscated1, key1) = TokenProvider.obfuscate(token)
         val (obfuscated2, key2) = TokenProvider.obfuscate(token)
 
-        assertEquals(obfuscated1, obfuscated2)
-        assertEquals(key1, key2)
+        // Random keys means different obfuscated output each time
+        assertNotEquals(obfuscated1, obfuscated2)
+        assertNotEquals(key1, key2)
     }
 
     @Test

@@ -2,10 +2,11 @@ package app.meeplebook.core.network.token
 
 import app.meeplebook.BuildConfig
 import java.security.MessageDigest
+import java.security.SecureRandom
 
 /**
  * Provides the BGG bearer token by deobfuscating the BuildConfig values.
- * The token is stored in obfuscated form (XOR with a deterministic key) in BuildConfig
+ * The token is stored in obfuscated form (XOR with a random or env-provided key) in BuildConfig
  * to make it harder to extract via APK decompilation.
  */
 object TokenProvider {
@@ -33,10 +34,11 @@ object TokenProvider {
     fun getBggToken(): String = cachedToken
 
     /**
-     * Obfuscates a token using XOR with a deterministic key derived from the token itself.
-     * Uses SHA-256 hash of the token as the key to ensure consistent obfuscation across builds.
+     * Obfuscates a token using XOR with a random key (for testing purposes).
      * 
-     * This method is the single source of truth for obfuscation logic, shared with buildSrc/TokenObfuscator.kt.
+     * This method is the single source of truth for obfuscation logic testing.
+     * The build-time obfuscation in build.gradle.kts uses a matching algorithm
+     * with support for deterministic keys via BGG_OBFUSCATION_KEY environment variable.
      * Internal visibility to allow testing without duplication.
      *
      * @param token The plaintext token to obfuscate
@@ -46,12 +48,8 @@ object TokenProvider {
         if (token.isEmpty()) return "" to ""
         val tokenBytes = token.toByteArray(Charsets.UTF_8)
 
-        // Derive key deterministically from token using SHA-256
-        val digest = MessageDigest.getInstance("SHA-256")
-        val hashBytes = digest.digest(tokenBytes)
-
-        // Expand hash to match token length if needed
-        val keyBytes = ByteArray(tokenBytes.size) { i -> hashBytes[i % hashBytes.size] }
+        // Generate random key for testing
+        val keyBytes = ByteArray(tokenBytes.size).also { SecureRandom().nextBytes(it) }
 
         val obfuscatedBytes = ByteArray(tokenBytes.size)
         for (i in tokenBytes.indices) {
@@ -64,9 +62,6 @@ object TokenProvider {
     /**
      * Deobfuscates a hex-encoded XOR'd string using the provided key.
      * Internal visibility to allow testing without duplication.
-     *
-     * @return The deobfuscated string, or empty string if deobfuscation fails
-     *         (e.g., invalid hex format, length mismatch, or encoding errors)
      *
      * @return The deobfuscated string, or empty string if deobfuscation fails
      *         (e.g., invalid hex format, length mismatch, or encoding errors)
