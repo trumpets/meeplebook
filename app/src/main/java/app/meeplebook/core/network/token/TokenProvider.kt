@@ -31,6 +31,11 @@ object TokenProvider {
         val obfuscatedBytes = obfuscatedHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
         val keyBytes = keyHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
+        // Ensure both arrays have the same length
+        if (obfuscatedBytes.size != keyBytes.size) {
+            return ""
+        }
+
         val originalBytes = ByteArray(obfuscatedBytes.size)
         for (i in obfuscatedBytes.indices) {
             originalBytes[i] = (obfuscatedBytes[i].toInt() xor keyBytes[i].toInt()).toByte()

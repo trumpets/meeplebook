@@ -16,17 +16,7 @@ class TokenDeobfuscationTest {
         val originalToken = "test_token_123"
 
         // Simulate obfuscation (same logic as in build.gradle.kts)
-        val tokenBytes = originalToken.toByteArray(Charsets.UTF_8)
-        val keyBytes = byteArrayOf(0x12, 0x34, 0x56, 0x78, 0x9A.toByte(), 0xBC.toByte(),
-            0xDE.toByte(), 0xF0.toByte(), 0x11, 0x22, 0x33, 0x44, 0x55, 0x66)
-
-        val obfuscatedBytes = ByteArray(tokenBytes.size)
-        for (i in tokenBytes.indices) {
-            obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
-        }
-
-        val obfuscatedHex = obfuscatedBytes.joinToString("") { "%02x".format(it) }
-        val keyHex = keyBytes.joinToString("") { "%02x".format(it) }
+        val (obfuscatedHex, keyHex) = obfuscateToken(originalToken)
 
         // Deobfuscate
         val result = deobfuscate(obfuscatedHex, keyHex)
@@ -43,20 +33,47 @@ class TokenDeobfuscationTest {
     fun `deobfuscate handles special characters`() {
         val originalToken = "token!@#\$%^&*()_+-=[]{}|;':\",./<>?"
 
-        val tokenBytes = originalToken.toByteArray(Charsets.UTF_8)
-        val keyBytes = ByteArray(tokenBytes.size) { i -> (i * 17 + 5).toByte() }
+        val (obfuscatedHex, keyHex) = obfuscateToken(originalToken)
+
+        val result = deobfuscate(obfuscatedHex, keyHex)
+
+        assertEquals(originalToken, result)
+    }
+
+    @Test
+    fun `deobfuscate returns empty string when lengths mismatch`() {
+        // Mismatched lengths should return empty string
+        val result = deobfuscate("aabbcc", "1122")
+        assertEquals("", result)
+    }
+
+    @Test
+    fun `deobfuscate handles long tokens`() {
+        val originalToken = "this_is_a_very_long_bearer_token_that_might_be_used_in_production_12345678901234567890"
+
+        val (obfuscatedHex, keyHex) = obfuscateToken(originalToken)
+        val result = deobfuscate(obfuscatedHex, keyHex)
+
+        assertEquals(originalToken, result)
+    }
+
+    /**
+     * Simulates the obfuscation logic from build.gradle.kts for testing purposes.
+     */
+    private fun obfuscateToken(token: String): Pair<String, String> {
+        if (token.isEmpty()) return "" to ""
+
+        val tokenBytes = token.toByteArray(Charsets.UTF_8)
+        // Use a deterministic key for testing (in production, random key is used)
+        val keyBytes = ByteArray(tokenBytes.size) { i -> ((i * 17 + 5) and 0xFF).toByte() }
 
         val obfuscatedBytes = ByteArray(tokenBytes.size)
         for (i in tokenBytes.indices) {
             obfuscatedBytes[i] = (tokenBytes[i].toInt() xor keyBytes[i].toInt()).toByte()
         }
 
-        val obfuscatedHex = obfuscatedBytes.joinToString("") { "%02x".format(it) }
-        val keyHex = keyBytes.joinToString("") { "%02x".format(it) }
-
-        val result = deobfuscate(obfuscatedHex, keyHex)
-
-        assertEquals(originalToken, result)
+        return obfuscatedBytes.joinToString("") { "%02x".format(it) } to
+               keyBytes.joinToString("") { "%02x".format(it) }
     }
 
     /**
@@ -70,6 +87,11 @@ class TokenDeobfuscationTest {
 
         val obfuscatedBytes = obfuscatedHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
         val keyBytes = keyHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+
+        // Ensure both arrays have the same length
+        if (obfuscatedBytes.size != keyBytes.size) {
+            return ""
+        }
 
         val originalBytes = ByteArray(obfuscatedBytes.size)
         for (i in obfuscatedBytes.indices) {
