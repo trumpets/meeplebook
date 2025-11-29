@@ -67,6 +67,9 @@ object TokenProvider {
      *
      * @return The deobfuscated string, or empty string if deobfuscation fails
      *         (e.g., invalid hex format, length mismatch, or encoding errors)
+     *
+     * @return The deobfuscated string, or empty string if deobfuscation fails
+     *         (e.g., invalid hex format, length mismatch, or encoding errors)
      */
     internal fun deobfuscate(obfuscatedHex: String, keyHex: String): String {
         return try {
