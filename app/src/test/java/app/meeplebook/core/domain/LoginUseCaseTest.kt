@@ -1,12 +1,10 @@
 package app.meeplebook.core.domain
 
-import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.model.AuthCredentials
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -14,13 +12,13 @@ import java.net.UnknownHostException
 
 class LoginUseCaseTest {
 
-    private lateinit var authRepository: AuthRepository
+    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var loginUseCase: LoginUseCase
 
     @Before
     fun setUp() {
-        authRepository = mockk()
-        loginUseCase = LoginUseCase(authRepository)
+        fakeAuthRepository = FakeAuthRepository()
+        loginUseCase = LoginUseCase(fakeAuthRepository)
     }
 
     @Test
@@ -28,14 +26,15 @@ class LoginUseCaseTest {
         val username = "testUser"
         val password = "testPass"
         val expectedCredentials = AuthCredentials(username, password)
-
-        coEvery { authRepository.login(username, password) } returns Result.success(expectedCredentials)
+        fakeAuthRepository.loginResult = Result.success(expectedCredentials)
 
         val result = loginUseCase(username, password)
 
         assertTrue(result.isSuccess)
         assertEquals(expectedCredentials, result.getOrNull())
-        coVerify { authRepository.login(username, password) }
+        assertEquals(1, fakeAuthRepository.loginCallCount)
+        assertEquals(username, fakeAuthRepository.lastLoginUsername)
+        assertEquals(password, fakeAuthRepository.lastLoginPassword)
     }
 
     @Test
@@ -44,7 +43,7 @@ class LoginUseCaseTest {
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is AuthError.EmptyCredentials)
-        coVerify(exactly = 0) { authRepository.login(any(), any()) }
+        assertEquals(0, fakeAuthRepository.loginCallCount)
     }
 
     @Test
@@ -53,7 +52,7 @@ class LoginUseCaseTest {
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is AuthError.EmptyCredentials)
-        coVerify(exactly = 0) { authRepository.login(any(), any()) }
+        assertEquals(0, fakeAuthRepository.loginCallCount)
     }
 
     @Test
@@ -62,7 +61,7 @@ class LoginUseCaseTest {
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is AuthError.EmptyCredentials)
-        coVerify(exactly = 0) { authRepository.login(any(), any()) }
+        assertEquals(0, fakeAuthRepository.loginCallCount)
     }
 
     @Test
@@ -71,7 +70,7 @@ class LoginUseCaseTest {
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is AuthError.EmptyCredentials)
-        coVerify(exactly = 0) { authRepository.login(any(), any()) }
+        assertEquals(0, fakeAuthRepository.loginCallCount)
     }
 
     @Test
@@ -80,29 +79,27 @@ class LoginUseCaseTest {
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is AuthError.EmptyCredentials)
-        coVerify(exactly = 0) { authRepository.login(any(), any()) }
+        assertEquals(0, fakeAuthRepository.loginCallCount)
     }
 
     @Test
     fun `invoke when repository returns UnknownHostException returns NetworkError`() = runTest {
         val username = "testUser"
         val password = "testPass"
-
-        coEvery { authRepository.login(username, password) } returns Result.failure(UnknownHostException())
+        fakeAuthRepository.loginResult = Result.failure(UnknownHostException())
 
         val result = loginUseCase(username, password)
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is AuthError.NetworkError)
-        coVerify { authRepository.login(username, password) }
+        assertEquals(1, fakeAuthRepository.loginCallCount)
     }
 
     @Test
     fun `invoke when repository returns IllegalStateException returns InvalidCredentials`() = runTest {
         val username = "testUser"
         val password = "testPass"
-
-        coEvery { authRepository.login(username, password) } returns Result.failure(IllegalStateException("Bad credentials"))
+        fakeAuthRepository.loginResult = Result.failure(IllegalStateException("Bad credentials"))
 
         val result = loginUseCase(username, password)
 
@@ -110,7 +107,7 @@ class LoginUseCaseTest {
         val error = result.exceptionOrNull()
         assertTrue(error is AuthError.InvalidCredentials)
         assertEquals("Bad credentials", (error as AuthError.InvalidCredentials).message)
-        coVerify { authRepository.login(username, password) }
+        assertEquals(1, fakeAuthRepository.loginCallCount)
     }
 
     @Test
@@ -118,8 +115,7 @@ class LoginUseCaseTest {
         val username = "testUser"
         val password = "testPass"
         val originalException = RuntimeException("Unexpected error")
-
-        coEvery { authRepository.login(username, password) } returns Result.failure(originalException)
+        fakeAuthRepository.loginResult = Result.failure(originalException)
 
         val result = loginUseCase(username, password)
 
@@ -127,6 +123,17 @@ class LoginUseCaseTest {
         val error = result.exceptionOrNull()
         assertTrue(error is AuthError.Unknown)
         assertEquals(originalException, (error as AuthError.Unknown).throwable)
-        coVerify { authRepository.login(username, password) }
+        assertEquals(1, fakeAuthRepository.loginCallCount)
+    }
+
+    @Test
+    fun `invoke does not call repository when credentials are blank`() = runTest {
+        loginUseCase("", "")
+        loginUseCase("   ", "pass")
+        loginUseCase("user", "   ")
+
+        assertEquals(0, fakeAuthRepository.loginCallCount)
+        assertNull(fakeAuthRepository.lastLoginUsername)
+        assertNull(fakeAuthRepository.lastLoginPassword)
     }
 }
