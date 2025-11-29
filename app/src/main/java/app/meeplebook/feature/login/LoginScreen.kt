@@ -1,5 +1,6 @@
 package app.meeplebook.feature.login
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -10,6 +11,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import app.meeplebook.R
@@ -104,123 +107,35 @@ fun LoginScreenContent(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview_Default() {
-    MeepleBookTheme {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Default / Empty", style = MaterialTheme.typography.titleMedium)
-            LoginScreenContent(
-                uiState = LoginUiState(),
-                onUsernameChange = {},
-                onPasswordChange = {},
-                onLoginClick = {}
-            )
-        }
-    }
+class LoginUiStatePreviewParameterProvider : PreviewParameterProvider<LoginUiState> {
+    override val values: Sequence<LoginUiState> = sequenceOf(
+        LoginUiState(),
+        LoginUiState(username = "user123", password = "password"),
+        LoginUiState(
+            username = "loadingUser",
+            password = "********",
+            isLoading = true
+        ),
+        LoginUiState(
+            username = "wrongUser",
+            password = "1234",
+            errorMessageResId = R.string.msg_invalid_credentials_error
+        )
+    )
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun LoginScreenPreview_Filled() {
+fun LoginScreenPreview(
+    @PreviewParameter(LoginUiStatePreviewParameterProvider::class) uiState: LoginUiState
+) {
     MeepleBookTheme {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Filled Credentials", style = MaterialTheme.typography.titleMedium)
-            LoginScreenContent(
-                uiState = LoginUiState(username = "user123", password = "password"),
-                onUsernameChange = {},
-                onPasswordChange = {},
-                onLoginClick = {}
-            )
-        }
+        LoginScreenContent(
+            uiState = uiState,
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onLoginClick = {}
+        )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview_Loading() {
-    MeepleBookTheme {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Loading", style = MaterialTheme.typography.titleMedium)
-            LoginScreenContent(
-                uiState = LoginUiState(
-                    username = "loadingUser",
-                    password = "********",
-                    isLoading = true
-                ),
-                onUsernameChange = {},
-                onPasswordChange = {},
-                onLoginClick = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview_Error() {
-    MeepleBookTheme {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Error", style = MaterialTheme.typography.titleMedium)
-            LoginScreenContent(
-                uiState = LoginUiState(
-                    username = "wrongUser",
-                    password = "1234",
-                    errorMessageResId = R.string.msg_invalid_credentials_error
-                ),
-                onUsernameChange = {},
-                onPasswordChange = {},
-                onLoginClick = {}
-            )
-        }
-    }
-}
-
-
-@Preview(
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun LoginScreenPreview_DefaultDark() {
-    LoginScreenPreview_Default()
-}
-
-@Preview(
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun LoginScreenPreview_FilledDark() {
-    LoginScreenPreview_Filled()
-}
-
-@Preview(
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun LoginScreenPreview_LoadingDark() {
-    LoginScreenPreview_Loading()
-}
-
-@Preview(
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun LoginScreenPreview_ErrorDark() {
-    LoginScreenPreview_Error()
 }
