@@ -10,19 +10,26 @@ import app.meeplebook.BuildConfig
 object TokenProvider {
 
     /**
-     * Retrieves and deobfuscates the BGG bearer token.
-     * Returns empty string if token is not configured.
+     * Cached token value to avoid repeated deobfuscation on every HTTP request.
+     * Computed lazily on first access.
      */
-    fun getBggToken(): String {
+    private val cachedToken: String by lazy {
         val obfuscated = BuildConfig.BGG_TOKEN_OBFUSCATED
         val key = BuildConfig.BGG_TOKEN_KEY
 
         if (obfuscated.isEmpty() || key.isEmpty()) {
-            return ""
+            ""
+        } else {
+            deobfuscate(obfuscated, key)
         }
-
-        return deobfuscate(obfuscated, key)
     }
+
+    /**
+     * Retrieves the BGG bearer token.
+     * The token is deobfuscated once and cached for subsequent calls.
+     * Returns empty string if token is not configured.
+     */
+    fun getBggToken(): String = cachedToken
 
     /**
      * Deobfuscates a hex-encoded XOR'd string using the provided key.
