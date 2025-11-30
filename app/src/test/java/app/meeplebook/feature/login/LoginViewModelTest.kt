@@ -1,9 +1,11 @@
 package app.meeplebook.feature.login
 
 import app.meeplebook.R
+import app.meeplebook.core.auth.AuthError
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.domain.LoginUseCase
 import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -18,7 +20,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
@@ -66,7 +67,7 @@ class LoginViewModelTest {
     @Test
     fun `login success sets isLoggedIn to true`() = runTest {
         val credentials = AuthCredentials("user", "pass")
-        fakeAuthRepository.loginResult = Result.success(credentials)
+        fakeAuthRepository.loginResult = AppResult.Success(credentials)
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -94,7 +95,7 @@ class LoginViewModelTest {
 
     @Test
     fun `login with network error maps to login failed error`() = runTest {
-        fakeAuthRepository.loginResult = Result.failure(IOException("Network failure"))
+        fakeAuthRepository.loginResult = AppResult.Failure(AuthError.NetworkError)
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -109,7 +110,7 @@ class LoginViewModelTest {
 
     @Test
     fun `login with invalid credentials maps to invalid credentials error`() = runTest {
-        fakeAuthRepository.loginResult = Result.failure(IllegalStateException("Wrong password"))
+        fakeAuthRepository.loginResult = AppResult.Failure(AuthError.InvalidCredentials)
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -124,7 +125,7 @@ class LoginViewModelTest {
 
     @Test
     fun `login with unknown error maps to login failed error`() = runTest {
-        fakeAuthRepository.loginResult = Result.failure(RuntimeException("Unexpected"))
+        fakeAuthRepository.loginResult = AppResult.Failure(AuthError.Unknown(RuntimeException("Unexpected")))
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -139,7 +140,7 @@ class LoginViewModelTest {
 
     @Test
     fun `login sets isLoading to true during operation`() = runTest {
-        fakeAuthRepository.loginResult = Result.success(AuthCredentials("user", "pass"))
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("user", "pass"))
 
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
@@ -162,7 +163,7 @@ class LoginViewModelTest {
         assertEquals(R.string.msg_empty_credentials_error, viewModel.uiState.value.errorMessageResId)
 
         // Second login attempt should clear the error
-        fakeAuthRepository.loginResult = Result.success(AuthCredentials("user", "pass"))
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("user", "pass"))
         viewModel.onUsernameChange("user")
         viewModel.onPasswordChange("pass")
         viewModel.login()
@@ -174,7 +175,7 @@ class LoginViewModelTest {
 
     @Test
     fun `login passes correct credentials to repository`() = runTest {
-        fakeAuthRepository.loginResult = Result.success(AuthCredentials("myUser", "myPass"))
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("myUser", "myPass"))
 
         viewModel.onUsernameChange("myUser")
         viewModel.onPasswordChange("myPass")

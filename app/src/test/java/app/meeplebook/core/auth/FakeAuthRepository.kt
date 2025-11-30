@@ -1,6 +1,7 @@
 package app.meeplebook.core.auth
 
 import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -12,24 +13,24 @@ import kotlinx.coroutines.flow.map
 class FakeAuthRepository : AuthRepository {
 
     private val _currentUser = MutableStateFlow<AuthCredentials?>(null)
-    
+
     /**
      * Configure this to control the result of [login] calls.
      */
-    var loginResult: Result<AuthCredentials> = Result.success(AuthCredentials("", ""))
-    
+    var loginResult: AppResult<AuthCredentials, AuthError> = AppResult.Success(AuthCredentials("", ""))
+
     /**
      * Tracks the number of times [login] was called.
      */
     var loginCallCount = 0
         private set
-    
+
     /**
      * Stores the last username passed to [login].
      */
     var lastLoginUsername: String? = null
         private set
-    
+
     /**
      * Stores the last password passed to [login].
      */
@@ -38,24 +39,20 @@ class FakeAuthRepository : AuthRepository {
 
     override fun currentUser(): Flow<AuthCredentials?> = _currentUser
 
-    override suspend fun login(username: String, password: String): Result<AuthCredentials> {
+    override suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError> {
         loginCallCount++
         lastLoginUsername = username
         lastLoginPassword = password
-        
-        loginResult.onSuccess { credentials ->
-            _currentUser.value = credentials
+
+        if (loginResult is AppResult.Success) {
+            _currentUser.value = (loginResult as AppResult.Success).data
         }
-        
+
         return loginResult
     }
 
     override suspend fun logout() {
         _currentUser.value = null
-    }
-
-    override suspend fun refreshUser(): Result<Unit> {
-        return Result.success(Unit)
     }
 
     override fun isLoggedIn(): Flow<Boolean> = _currentUser.map { it != null }
