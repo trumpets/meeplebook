@@ -3,7 +3,9 @@ package app.meeplebook.feature.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
-import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.auth.AuthError
+import app.meeplebook.core.domain.LoginUseCase
+import app.meeplebook.core.result.fold
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,11 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.net.UnknownHostException
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val loginUseCase: LoginUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -31,37 +32,24 @@ class LoginViewModel @Inject constructor(
 
     fun login() {
         val currentState = _uiState.value
-        if (currentState.username.isBlank() || currentState.password.isBlank()) {
-            _uiState.update { it.copy(errorMessageResId = R.string.msg_empty_credentials_error) }
-            return
-        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessageResId = null) }
 
-            try {
-                val result = authRepository.login(currentState.username, currentState.password)
-
-                result.fold(
-                    onSuccess = {
-                        _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
-                    },
-                    onFailure = { throwable ->
-                        val resId = when (throwable) {
-                            is UnknownHostException, is IllegalStateException -> R.string.msg_login_failed_error
-                            else -> R.string.msg_invalid_credentials_error
-                        }
-                        _uiState.update { it.copy(isLoading = false, errorMessageResId = resId) }
+            loginUseCase(currentState.username, currentState.password).fold(
+                onSuccess = {
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                },
+                onFailure = { error ->
+                    val resId = when (error) {
+                        is AuthError.EmptyCredentials -> R.string.msg_empty_credentials_error
+                        is AuthError.NetworkError -> R.string.msg_login_failed_error
+                        is AuthError.InvalidCredentials -> R.string.msg_invalid_credentials_error
+                        is AuthError.Unknown -> R.string.msg_login_failed_error
                     }
-                )
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessageResId = R.string.msg_login_failed_error
-                    )
+                    _uiState.update { it.copy(isLoading = false, errorMessageResId = resId) }
                 }
-            }
+            )
         }
     }
 }
