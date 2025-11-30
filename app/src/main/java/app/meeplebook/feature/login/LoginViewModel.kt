@@ -3,8 +3,8 @@ package app.meeplebook.feature.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
-import app.meeplebook.core.auth.AuthError
-import app.meeplebook.core.domain.LoginUseCase
+import app.meeplebook.core.auth.model.AuthError
+import app.meeplebook.core.auth.domain.LoginUseCase
 import app.meeplebook.core.result.fold
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

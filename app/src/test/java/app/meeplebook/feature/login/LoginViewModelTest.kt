@@ -1,9 +1,9 @@
 package app.meeplebook.feature.login
 
 import app.meeplebook.R
-import app.meeplebook.core.auth.AuthError
+import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.auth.FakeAuthRepository
-import app.meeplebook.core.domain.LoginUseCase
+import app.meeplebook.core.auth.domain.LoginUseCase
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.Dispatchers

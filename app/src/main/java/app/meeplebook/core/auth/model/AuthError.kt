@@ -1,4 +1,4 @@
-package app.meeplebook.core.auth
+package app.meeplebook.core.auth.model
 
 /**
  * Sealed class representing authentication errors in the domain layer.
