@@ -44,8 +44,9 @@ class FakeAuthRepository : AuthRepository {
         lastLoginUsername = username
         lastLoginPassword = password
 
-        if (loginResult is AppResult.Success) {
-            _currentUser.value = (loginResult as AppResult.Success).data
+        val result = loginResult
+        if (result is AppResult.Success) {
+            _currentUser.value = result.data
         }
 
         return loginResult
