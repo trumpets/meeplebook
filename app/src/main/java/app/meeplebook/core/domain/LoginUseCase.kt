@@ -1,8 +1,9 @@
 package app.meeplebook.core.domain
 
+import app.meeplebook.core.auth.AuthError
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.model.AuthCredentials
-import java.io.IOException
+import app.meeplebook.core.result.AppResult
 import javax.inject.Inject
 
 /**
@@ -17,20 +18,14 @@ class LoginUseCase @Inject constructor(
      *
      * @param username The user's username
      * @param password The user's password
-     * @return [Result.success] with [AuthCredentials] if login succeeds,
-     *         [Result.failure] with [AuthError] if validation or authentication fails
+     * @return [AppResult.Success] with [AuthCredentials] if login succeeds,
+     *         [AppResult.Failure] with [AuthError] if validation or authentication fails
      */
-    suspend operator fun invoke(username: String, password: String): Result<AuthCredentials> {
+    suspend operator fun invoke(username: String, password: String): AppResult<AuthCredentials, AuthError> {
         if (username.isBlank() || password.isBlank()) {
-            return Result.failure(AuthError.EmptyCredentials)
+            return AppResult.Failure(AuthError.EmptyCredentials)
         }
 
-        return authRepository.login(username, password).recoverCatching { throwable ->
-            throw when (throwable) {
-                is IOException -> AuthError.NetworkError
-                is IllegalStateException -> AuthError.InvalidCredentials(throwable.message ?: "Invalid credentials")
-                else -> AuthError.Unknown(throwable)
-            }
-        }
+        return authRepository.login(username, password)
     }
 }

@@ -3,9 +3,11 @@ package app.meeplebook.core.auth
 import app.meeplebook.core.auth.local.AuthLocalDataSource
 import app.meeplebook.core.auth.remote.BggAuthRemoteDataSource
 import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.result.AppResult
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.net.UnknownHostException
 
 class AuthRepositoryImpl @Inject constructor(
     private val local: AuthLocalDataSource,
@@ -16,22 +18,23 @@ class AuthRepositoryImpl @Inject constructor(
         return local.observeCredentials()
     }
 
-    override suspend fun login(username: String, password: String): Result<AuthCredentials> {
+    override suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError> {
         try {
             val authCredentials = remote.login(username, password)
             local.saveCredentials(authCredentials)
-            return Result.success(authCredentials)
+
+            return AppResult.Success(authCredentials)
         } catch (e: Exception) {
-            return Result.failure(e)
+            return when (e) {
+                is IllegalArgumentException -> AppResult.Failure(AuthError.EmptyCredentials)
+                is UnknownHostException, is IllegalStateException -> AppResult.Failure(AuthError.NetworkError)
+                else -> AppResult.Failure(AuthError.Unknown(e))
+            }
         }
     }
 
     override suspend fun logout() {
         local.clear()
-    }
-
-    override suspend fun refreshUser(): Result<Unit> {
-        TODO("Not yet implemented")
     }
 
     override fun isLoggedIn(): Flow<Boolean> {
