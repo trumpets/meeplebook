@@ -1,5 +1,6 @@
 package app.meeplebook.core.auth
 
+import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow

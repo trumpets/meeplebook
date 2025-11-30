@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Surface
 import androidx.navigation.compose.rememberNavController
-import app.meeplebook.navigation.AppNavHost
+import app.meeplebook.ui.navigation.AppNavHost
 import app.meeplebook.ui.theme.MeepleBookTheme
 import dagger.hilt.android.AndroidEntryPoint
 

@@ -1,4 +1,4 @@
-package app.meeplebook.navigation
+package app.meeplebook.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController

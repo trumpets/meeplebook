@@ -1,6 +1,7 @@
 package app.meeplebook.core.auth
 
 import app.meeplebook.core.auth.local.AuthLocalDataSource
+import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.auth.remote.AuthenticationException
 import app.meeplebook.core.auth.remote.BggAuthRemoteDataSource
 import app.meeplebook.core.model.AuthCredentials

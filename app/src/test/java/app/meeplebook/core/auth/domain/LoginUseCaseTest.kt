@@ -1,7 +1,7 @@
-package app.meeplebook.core.domain
+package app.meeplebook.core.auth.domain
 
-import app.meeplebook.core.auth.AuthError
 import app.meeplebook.core.auth.FakeAuthRepository
+import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.test.runTest

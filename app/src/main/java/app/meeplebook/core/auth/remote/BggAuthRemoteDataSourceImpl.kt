@@ -1,9 +1,6 @@
 package app.meeplebook.core.auth.remote
 
 import app.meeplebook.core.model.AuthCredentials
-import app.meeplebook.core.network.BggAuthApi
-import app.meeplebook.core.network.CredentialsPayload
-import app.meeplebook.core.network.LoginPayload
 import javax.inject.Inject
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

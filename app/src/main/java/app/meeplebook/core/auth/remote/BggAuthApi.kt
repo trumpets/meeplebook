@@ -1,4 +1,4 @@
-package app.meeplebook.core.network
+package app.meeplebook.core.auth.remote
 
 import com.squareup.moshi.JsonClass
 import okhttp3.ResponseBody
