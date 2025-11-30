@@ -26,12 +26,6 @@ object OkHttpModule {
 
     @Provides
     @Singleton
-    fun provideBearerInterceptor(): BearerInterceptor {
-        return BearerInterceptor()
-    }
-
-    @Provides
-    @Singleton
     fun provideUserAgentInterceptor(@ApplicationContext context: Context?): UserAgentInterceptor {
         return UserAgentInterceptor(context)
     }

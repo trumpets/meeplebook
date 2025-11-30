@@ -1,19 +1,18 @@
 package app.meeplebook.core.network.interceptor
 
-import app.meeplebook.core.network.token.TokenProvider
 import app.meeplebook.core.network.token.TokenProviding
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
 
 /**
  * Interceptor that adds the BGG bearer token to requests.
  * The token is retrieved from TokenProvider which deobfuscates it from BuildConfig.
  *
- * @param tokenProvider The token provider to use. Defaults to [TokenProvider].
- *                      Inject a fake implementation for testing.
+ * @param tokenProvider The token provider to use, injected by Hilt.
  */
-class BearerInterceptor(
-    private val tokenProvider: TokenProviding = TokenProvider
+class BearerInterceptor @Inject constructor(
+    private val tokenProvider: TokenProviding
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
