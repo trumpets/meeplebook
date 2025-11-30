@@ -1,6 +1,7 @@
 package app.meeplebook.core.network
 
 import android.content.Context
+import app.meeplebook.BuildConfig
 import app.meeplebook.core.network.interceptor.BearerInterceptor
 import app.meeplebook.core.network.interceptor.UserAgentInterceptor
 import dagger.Module
@@ -8,7 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Singleton
+import javax.inject.Singleton
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
@@ -27,7 +28,7 @@ object OkHttpModule {
     @Provides
     @Singleton
     fun provideBearerInterceptor(): BearerInterceptor {
-        return BearerInterceptor()
+        return BearerInterceptor(BuildConfig.BGG_TOKEN)
     }
 
     @Provides

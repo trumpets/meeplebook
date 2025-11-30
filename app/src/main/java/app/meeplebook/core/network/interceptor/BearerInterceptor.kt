@@ -3,11 +3,21 @@ package app.meeplebook.core.network.interceptor
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class BearerInterceptor : Interceptor {
+/**
+ * Interceptor that adds the BGG bearer token to requests.
+ */
+class BearerInterceptor (
+    private val token: String?
+) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = "INSERT_TOKEN_HERE_SAFELY" // Replace with secure token retrieval
         val originalRequest = chain.request()
+
+        // Skip adding header if token is not configured
+        if (token.isNullOrBlank()) {
+            return chain.proceed(originalRequest)
+        }
+
         val requestWithBearer = originalRequest.newBuilder()
             .header("Authorization", "Bearer $token")
             .build()

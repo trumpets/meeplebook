@@ -4,7 +4,7 @@ import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.network.BggAuthApi
 import app.meeplebook.core.network.CredentialsPayload
 import app.meeplebook.core.network.LoginPayload
-import jakarta.inject.Inject
+import javax.inject.Inject
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -14,6 +14,10 @@ class BggAuthRemoteDataSourceImpl @Inject constructor(
 ) : BggAuthRemoteDataSource {
 
     override suspend fun login(username: String, password: String): AuthCredentials {
+        if (username.isBlank() || password.isBlank()) {
+            throw IllegalArgumentException("Username and password must not be empty")
+        }
+
         var capturedToken: String? = null
 
         // Build a temp client that intercepts ONLY THIS CALL
@@ -45,11 +49,11 @@ class BggAuthRemoteDataSourceImpl @Inject constructor(
         )
 
         if (!res.isSuccessful || res.code() != 204) {
-            throw IllegalStateException("Login failed: HTTP ${res.code()}")
+            throw AuthenticationException("Login failed: HTTP ${res.code()}")
         }
 
         if (capturedToken == null) {
-            throw IllegalStateException("Login failed: bggpassword cookie not found")
+            throw AuthenticationException("Login failed: bggpassword cookie not found")
         }
 
         return AuthCredentials(username, password)

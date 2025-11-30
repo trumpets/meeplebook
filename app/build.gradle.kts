@@ -1,11 +1,37 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+}
+
+/**
+ * Retrieves the BGG bearer token from local.properties or environment variable.
+ * For local builds: add `bgg.bearer.token=YOUR_TOKEN` to local.properties
+ * For CI builds: set BGG_BEARER_TOKEN environment variable (from GitHub Secrets)
+ */
+fun getBggBearerToken(): String {
+    // First try local.properties
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        val properties = Properties().apply {
+            localPropertiesFile.inputStream().use { load(it) }
+        }
+        properties.getProperty("bgg.bearer.token")?.let { return it }
+    }
+
+    // Fall back to environment variable (for CI builds)
+    val env = System.getenv("BGG_BEARER_TOKEN")
+    if (env.isNullOrBlank()) {
+        throw GradleException("BGG_BEARER_TOKEN environment variable is not set; aborting build.")
+    }
+
+    return env
 }
 
 android {
@@ -23,6 +49,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        val token = getBggBearerToken() // from local.properties or env
+        buildConfigField("String", "BGG_TOKEN", "\"$token\"")
     }
 
     buildTypes {
@@ -71,6 +100,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.json)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
