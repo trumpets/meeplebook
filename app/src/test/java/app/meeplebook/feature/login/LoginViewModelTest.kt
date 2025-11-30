@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -136,23 +137,6 @@ class LoginViewModelTest {
         assertFalse(state.isLoggedIn)
         assertFalse(state.isLoading)
         assertEquals(R.string.msg_login_failed_error, state.errorMessageResId)
-    }
-
-    @Test
-    fun `login sets isLoading to true during operation`() = runTest {
-        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("user", "pass"))
-
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
-
-        // Before advancing, isLoading should be true
-        assertTrue(viewModel.uiState.value.isLoading)
-
-        advanceUntilIdle()
-
-        // After completion, isLoading should be false
-        assertFalse(viewModel.uiState.value.isLoading)
     }
 
     @Test

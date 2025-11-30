@@ -17,7 +17,7 @@ class FakeAuthRepository : AuthRepository {
     /**
      * Configure this to control the result of [login] calls.
      */
-    var loginResult: AppResult<AuthCredentials, AuthError> = AppResult.Success(AuthCredentials("", ""))
+    var loginResult: AppResult<AuthCredentials, AuthError> = AppResult.Failure(AuthError.Unknown(IllegalStateException("FakeAuthRepository not configured")))
 
     /**
      * Tracks the number of times [login] was called.

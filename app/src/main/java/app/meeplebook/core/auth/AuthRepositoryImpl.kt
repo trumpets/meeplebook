@@ -1,12 +1,14 @@
 package app.meeplebook.core.auth
 
 import app.meeplebook.core.auth.local.AuthLocalDataSource
+import app.meeplebook.core.auth.remote.AuthenticationException
 import app.meeplebook.core.auth.remote.BggAuthRemoteDataSource
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 import java.net.UnknownHostException
 
 class AuthRepositoryImpl @Inject constructor(
@@ -27,7 +29,8 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             return when (e) {
                 is IllegalArgumentException -> AppResult.Failure(AuthError.EmptyCredentials)
-                is UnknownHostException, is IllegalStateException -> AppResult.Failure(AuthError.NetworkError)
+                is IOException, is IllegalStateException -> AppResult.Failure(AuthError.NetworkError)
+                is AuthenticationException -> AppResult.Failure(AuthError.InvalidCredentials)
                 else -> AppResult.Failure(AuthError.Unknown(e))
             }
         }
