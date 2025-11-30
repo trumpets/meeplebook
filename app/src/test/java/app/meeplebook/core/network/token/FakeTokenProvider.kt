@@ -1,12 +1,12 @@
 package app.meeplebook.core.network.token
 
 /**
- * Fake implementation of [TokenProviding] for testing.
+ * Fake implementation of [TokenProvider] for testing.
  * Allows tests to control the returned token value.
  */
 class FakeTokenProvider(
     private var token: String = ""
-) : TokenProviding {
+) : TokenProvider {
 
     override fun getBggToken(): String = token
 

@@ -1,7 +1,7 @@
 package app.meeplebook.core.network.token
 
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -11,13 +11,13 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-object TokenModule {
+abstract class TokenModule {
 
     /**
-     * Provides the [TokenProviding] implementation.
+     * Provides the [TokenProvider] implementation.
      * Uses [TokenProvider] which deobfuscates the token from BuildConfig.
      */
-    @Provides
+    @Binds
     @Singleton
-    fun provideTokenProviding(): TokenProviding = TokenProvider
+    abstract fun bindTokenProviding(impl: TokenProviderImpl): TokenProvider
 }

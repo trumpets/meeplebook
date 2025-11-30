@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 import java.security.SecureRandom
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.android.application)
@@ -40,7 +41,7 @@ fun getOrGenerateObfuscationKey(tokenLength: Int): ByteArray {
     val envKey = System.getenv("BGG_OBFUSCATION_KEY")
     return if (envKey != null && envKey.isNotEmpty()) {
         // Use provided key, expand with SHA-256 if needed to match token length
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
         val hashBytes = digest.digest(envKey.toByteArray(Charsets.UTF_8))
         ByteArray(tokenLength) { i -> hashBytes[i % hashBytes.size] }
     } else {

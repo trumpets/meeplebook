@@ -1,6 +1,6 @@
 package app.meeplebook.core.network.interceptor
 
-import app.meeplebook.core.network.token.TokenProviding
+import app.meeplebook.core.network.token.TokenProvider
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
@@ -12,7 +12,7 @@ import javax.inject.Inject
  * @param tokenProvider The token provider to use, injected by Hilt.
  */
 class BearerInterceptor @Inject constructor(
-    private val tokenProvider: TokenProviding
+    private val tokenProvider: TokenProvider
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
