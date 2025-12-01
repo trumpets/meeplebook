@@ -68,8 +68,9 @@ class BggAuthRemoteDataSourceIntegrationTest {
         val request = mockWebServer.takeRequest()
         assertEquals("POST", request.method)
         assertEquals("/login/api/v1", request.path)
-        assertTrue(request.body.readUtf8().contains("testuser"))
-        assertTrue(request.body.readUtf8().isEmpty().not()) // Body was consumed above
+        val requestBody = request.body.readUtf8()
+        assertTrue(requestBody.contains("testuser"))
+        assertTrue(requestBody.isNotEmpty())
     }
 
     @Test
