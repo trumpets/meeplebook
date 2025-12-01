@@ -36,12 +36,14 @@ fun getBggBearerToken(): String {
 
 android {
     namespace = "app.meeplebook"
-    compileSdk = 35
+    compileSdk {
+        version = release(36)
+    }
 
     defaultConfig {
         applicationId = "app.meeplebook"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
