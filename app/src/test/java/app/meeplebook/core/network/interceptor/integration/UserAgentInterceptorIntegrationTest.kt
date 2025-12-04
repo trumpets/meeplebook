@@ -1,5 +1,6 @@
 package app.meeplebook.core.network.interceptor.integration
 
+import app.meeplebook.core.network.interceptor.BearerInterceptor
 import app.meeplebook.core.network.interceptor.UserAgentInterceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -9,8 +10,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.TimeUnit
@@ -140,7 +139,7 @@ class UserAgentInterceptorIntegrationTest {
         // Given - both interceptors in the chain
         val client = OkHttpClient.Builder()
             .addInterceptor(UserAgentInterceptor(null))
-            .addInterceptor(app.meeplebook.core.network.interceptor.BearerInterceptor("test-token"))
+            .addInterceptor(BearerInterceptor("test-token"))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
