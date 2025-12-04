@@ -15,6 +15,10 @@ object NetworkModule {
     private const val BASE_URL = "https://boardgamegeek.com/"
 
     @Provides
+    @BggBaseUrl
+    fun provideBggBaseUrl(): String = BASE_URL
+
+    @Provides
     @Singleton
     fun provideRetrofit(
         okHttp: OkHttpClient
