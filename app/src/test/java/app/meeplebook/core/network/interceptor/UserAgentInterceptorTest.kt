@@ -27,12 +27,11 @@ class UserAgentInterceptorTest {
         // Given
         val mockContext = mockk<Context>()
         val mockPackageManager = mockk<PackageManager>()
-        val mockPackageInfo = mockk<PackageInfo>()
+        val mockPackageInfo = PackageInfo().apply { versionName = "1.0.0" }
 
         every { mockContext.packageName } returns "app.meeplebook"
         every { mockContext.packageManager } returns mockPackageManager
         every { mockPackageManager.getPackageInfo("app.meeplebook", 0) } returns mockPackageInfo
-        every { mockPackageInfo.versionName } returns "1.0.0"
 
         val interceptor = UserAgentInterceptor(mockContext)
 
@@ -109,12 +108,11 @@ class UserAgentInterceptorTest {
         // Given
         val mockContext = mockk<Context>()
         val mockPackageManager = mockk<PackageManager>()
-        val mockPackageInfo = mockk<PackageInfo>()
+        val mockPackageInfo = PackageInfo().apply { versionName = null }
 
         every { mockContext.packageName } returns "app.meeplebook"
         every { mockContext.packageManager } returns mockPackageManager
         every { mockPackageManager.getPackageInfo("app.meeplebook", 0) } returns mockPackageInfo
-        every { mockPackageInfo.versionName } returns null
 
         val interceptor = UserAgentInterceptor(mockContext)
 
@@ -169,12 +167,11 @@ class UserAgentInterceptorTest {
         // Given
         val mockContext = mockk<Context>()
         val mockPackageManager = mockk<PackageManager>()
-        val mockPackageInfo = mockk<PackageInfo>()
+        val mockPackageInfo = PackageInfo().apply { versionName = "2.5.0" }
 
         every { mockContext.packageName } returns "app.meeplebook"
         every { mockContext.packageManager } returns mockPackageManager
         every { mockPackageManager.getPackageInfo("app.meeplebook", 0) } returns mockPackageInfo
-        every { mockPackageInfo.versionName } returns "2.5.0"
 
         val interceptor = UserAgentInterceptor(mockContext)
 

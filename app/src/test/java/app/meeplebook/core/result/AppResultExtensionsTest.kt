@@ -53,13 +53,14 @@ class AppResultExtensionsTest {
         assertEquals(-1, folded)
     }
 
+    sealed class Error {
+        data object NotFound : Error()
+        data class NetworkError(val message: String) : Error()
+    }
+
     @Test
     fun `fold with complex types`() {
         data class User(val name: String)
-        sealed class Error {
-            data object NotFound : Error()
-            data class NetworkError(val message: String) : Error()
-        }
 
         val successResult: AppResult<User, Error> = AppResult.Success(User("John"))
         val failureResult: AppResult<User, Error> = AppResult.Failure(Error.NotFound)
