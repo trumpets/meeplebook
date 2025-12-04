@@ -4,12 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
 import app.meeplebook.ui.theme.MeepleBookTheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -195,12 +197,11 @@ class LoginScreenContentTest {
             }
         }
 
-        // Type in the username field (click on the label text first to focus)
-        composeTestRule.onNodeWithText("Username").performClick()
-        composeTestRule.onNodeWithText("Username").performTextInput("newUser")
+        // Type in the username field using test tag
+        composeTestRule.onNodeWithTag("usernameField").performTextInput("newUser")
 
         // Verify callback was triggered with the correct value
-        assertTrue(capturedUsername.contains("newUser"))
+        assertEquals("newUser", capturedUsername)
     }
 
     @Test
@@ -218,12 +219,11 @@ class LoginScreenContentTest {
             }
         }
 
-        // Type in the password field
-        composeTestRule.onNodeWithText("Password").performClick()
-        composeTestRule.onNodeWithText("Password").performTextInput("newPassword")
+        // Type in the password field using test tag
+        composeTestRule.onNodeWithTag("passwordField").performTextInput("newPassword")
 
         // Verify callback was triggered with the correct value
-        assertTrue(capturedPassword.contains("newPassword"))
+        assertEquals("newPassword", capturedPassword)
     }
 
     @Test
