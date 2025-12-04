@@ -1,8 +1,10 @@
 package app.meeplebook.core.network.interceptor.integration
 
 import app.meeplebook.core.network.interceptor.UserAgentInterceptor
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -195,7 +197,7 @@ class UserAgentInterceptorIntegrationTest {
         // When
         val request = Request.Builder()
             .url(mockWebServer.url("/api/test"))
-            .post(okhttp3.RequestBody.create(null, """{"test": "data"}"""))
+            .post("""{"test": "data"}""".toRequestBody("application/json".toMediaType()))
             .build()
         client.newCall(request).execute()
 

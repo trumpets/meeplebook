@@ -1,13 +1,15 @@
 package app.meeplebook.core.auth.remote
 
 import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.network.BggBaseUrl
 import javax.inject.Inject
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 class BggAuthRemoteDataSourceImpl @Inject constructor(
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    @BggBaseUrl private val baseUrl: String
 ) : BggAuthRemoteDataSource {
 
     override suspend fun login(username: String, password: String): AuthCredentials {
@@ -33,7 +35,7 @@ class BggAuthRemoteDataSourceImpl @Inject constructor(
             .build()
 
         val tempApi = Retrofit.Builder()
-            .baseUrl("https://boardgamegeek.com/")
+            .baseUrl(baseUrl)
             .client(client)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()

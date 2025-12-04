@@ -25,7 +25,7 @@ class BggAuthRemoteDataSourceIntegrationTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var okHttpClient: OkHttpClient
-    private lateinit var dataSource: BggAuthRemoteDataSourceTestable
+    private lateinit var dataSource: BggAuthRemoteDataSourceImpl
 
     @Before
     fun setUp() {
@@ -37,7 +37,7 @@ class BggAuthRemoteDataSourceIntegrationTest {
             .readTimeout(5, TimeUnit.SECONDS)
             .build()
 
-        dataSource = BggAuthRemoteDataSourceTestable(okHttpClient, mockWebServer.url("/").toString())
+        dataSource = BggAuthRemoteDataSourceImpl(okHttpClient, mockWebServer.url("/").toString())
     }
 
     @After

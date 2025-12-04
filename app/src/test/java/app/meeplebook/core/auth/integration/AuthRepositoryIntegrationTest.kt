@@ -3,7 +3,7 @@ package app.meeplebook.core.auth.integration
 import app.meeplebook.core.auth.AuthRepositoryImpl
 import app.meeplebook.core.auth.local.FakeAuthLocalDataSource
 import app.meeplebook.core.auth.model.AuthError
-import app.meeplebook.core.auth.remote.integration.BggAuthRemoteDataSourceTestable
+import app.meeplebook.core.auth.remote.BggAuthRemoteDataSourceImpl
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -30,7 +30,7 @@ class AuthRepositoryIntegrationTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var fakeLocalDataSource: FakeAuthLocalDataSource
-    private lateinit var remoteDataSource: BggAuthRemoteDataSourceTestable
+    private lateinit var remoteDataSource: BggAuthRemoteDataSourceImpl
     private lateinit var repository: AuthRepositoryImpl
 
     @Before
@@ -44,7 +44,7 @@ class AuthRepositoryIntegrationTest {
             .build()
 
         fakeLocalDataSource = FakeAuthLocalDataSource()
-        remoteDataSource = BggAuthRemoteDataSourceTestable(
+        remoteDataSource = BggAuthRemoteDataSourceImpl(
             okHttpClient,
             mockWebServer.url("/").toString()
         )
