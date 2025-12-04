@@ -1,6 +1,5 @@
 package app.meeplebook.core.plays.remote
 
-import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.util.xml.PlaysXmlParser
 
 /**
