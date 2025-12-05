@@ -43,13 +43,13 @@ object CollectionXmlParser {
                             }
                         }
                         "name" -> {
-                            currentItem?.name = parser.nextText()
+                            currentItem?.name = safeNextText(parser)
                         }
                         "yearpublished" -> {
-                            currentItem?.yearPublished = parser.nextText().toIntOrNull()
+                            currentItem?.yearPublished = safeNextText(parser)?.toIntOrNull()
                         }
                         "thumbnail" -> {
-                            currentItem?.thumbnail = parser.nextText()
+                            currentItem?.thumbnail = safeNextText(parser)
                         }
                     }
                 }
@@ -64,6 +64,18 @@ object CollectionXmlParser {
         }
 
         return items
+    }
+
+    /**
+     * Safely extracts text content from the current XML element.
+     * Returns null if the text cannot be extracted or an error occurs.
+     */
+    private fun safeNextText(parser: XmlPullParser): String? {
+        return try {
+            parser.nextText()
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun parseSubtype(subtype: String?): GameSubtype {

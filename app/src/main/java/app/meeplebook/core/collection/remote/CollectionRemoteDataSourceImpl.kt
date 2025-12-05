@@ -72,15 +72,18 @@ class CollectionRemoteDataSourceImpl @Inject constructor(
                 200 -> {
                     val body = response.body()
                         ?: throw CollectionFetchException("Empty response body")
-                    // Use 'use' to ensure the body is closed after reading
-                    val xml = body.use { it.string() }
+                    val xml = body.string()
+                    body.close()
                     return CollectionXmlParser.parse(xml, subtypeOverride)
                 }
                 202 -> {
                     // BGG is preparing the data, retry after delay
                     attempts++
                     delay(delayMs)
-                    delayMs = (delayMs * BACKOFF_MULTIPLIER).toLong().coerceAtMost(MAX_RETRY_DELAY_MS)
+                    delayMs = minOf(
+                        (delayMs * BACKOFF_MULTIPLIER).toLong(),
+                        MAX_RETRY_DELAY_MS
+                    )
                 }
                 in 500..599 -> {
                     // Server error, likely rate limiting
