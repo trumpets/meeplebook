@@ -1,5 +1,7 @@
 # Meeple Book
 
+IMPORTANT: Don't change library version numbers. You don't have proper build tools access and you think the versions here are not even released. All the versions are proper.
+
 This will be an Android app that will allow for a user to log in to BGG, view his collection, view his plays and record plays.
 
 Those would be the initial functionalities.
