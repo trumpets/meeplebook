@@ -8,4 +8,8 @@
     <string name="msg_empty_credentials_error">Username and password cannot be empty</string>
     <string name="msg_invalid_credentials_error">Invalid username or password</string>
     <string name="msg_login_failed_error">Login failed</string>
+    <string name="msg_not_logged_in">Please log in to continue</string>
+    <string name="msg_network_error">Network error. Please check your connection.</string>
+    <string name="msg_collection_timeout">Collection is still being prepared. Please try again.</string>
+    <string name="msg_unknown_error">An unexpected error occurred</string>
 </resources>
