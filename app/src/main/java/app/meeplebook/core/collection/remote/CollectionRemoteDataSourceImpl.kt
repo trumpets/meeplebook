@@ -19,11 +19,11 @@ import javax.inject.Inject
  */
 class CollectionRemoteDataSourceImpl @Inject constructor(
     okHttpClient: OkHttpClient,
-    @BggBaseUrl baseUrl: String
+    @BggBaseUrl bggBaseUrl: String
 ) : CollectionRemoteDataSource {
 
     private val api: BggApi = Retrofit.Builder()
-        .baseUrl(baseUrl)
+        .baseUrl(bggBaseUrl)
         .client(okHttpClient)
         .build()
         .create(BggApi::class.java)
@@ -70,8 +70,10 @@ class CollectionRemoteDataSourceImpl @Inject constructor(
 
             when (response.code()) {
                 200 -> {
-                    val xml = response.body()?.string()
+                    val body = response.body()
                         ?: throw CollectionFetchException("Empty response body")
+                    // Use 'use' to ensure the body is closed after reading
+                    val xml = body.use { it.string() }
                     return CollectionXmlParser.parse(xml, subtypeOverride)
                 }
                 202 -> {

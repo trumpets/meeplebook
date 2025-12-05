@@ -1,16 +1,17 @@
 package app.meeplebook.core.database
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 
 /**
  * Room entity representing a collection item stored locally.
  */
-@Entity(tableName = "collection_items")
+@Entity(
+    tableName = "collection_items",
+    primaryKeys = ["gameId", "username"]
+)
 data class CollectionItemEntity(
-    @PrimaryKey
     val gameId: Int,
     val subtype: String,
     val name: String,
