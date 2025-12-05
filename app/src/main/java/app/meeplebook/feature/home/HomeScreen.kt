@@ -20,8 +20,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CollectionsBookmark
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,14 +55,21 @@ import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.ui.theme.MeepleBookTheme
 
+/** Aspect ratio for game thumbnail images (16:9). */
+private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f
+
 /**
  * Represents a navigation destination in the bottom navigation bar.
  */
-enum class HomeNavigationDestination(val labelResId: Int, val icon: @Composable () -> Unit) {
-    HOME(R.string.nav_home, { Text("🏠") }),
-    COLLECTION(R.string.nav_collection, { Text("📚") }),
-    PLAYS(R.string.nav_plays, { Text("📊") }),
-    PROFILE(R.string.nav_profile, { Text("👤") })
+enum class HomeNavigationDestination(
+    val labelResId: Int,
+    val icon: ImageVector,
+    val contentDescriptionResId: Int
+) {
+    HOME(R.string.nav_home, Icons.Default.Home, R.string.nav_home),
+    COLLECTION(R.string.nav_collection, Icons.Default.CollectionsBookmark, R.string.nav_collection),
+    PLAYS(R.string.nav_plays, Icons.Default.BarChart, R.string.nav_plays),
+    PROFILE(R.string.nav_profile, Icons.Default.Person, R.string.nav_profile)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +133,12 @@ fun HomeScreenContent(
                     NavigationBarItem(
                         selected = selectedNavItem == destination,
                         onClick = { onNavItemClick(destination) },
-                        icon = destination.icon,
+                        icon = {
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = stringResource(destination.contentDescriptionResId)
+                            )
+                        },
                         label = { Text(stringResource(destination.labelResId)) }
                     )
                 }
@@ -304,9 +321,11 @@ private fun RecentPlayCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "🎲",
-                    style = MaterialTheme.typography.titleLarge
+                Icon(
+                    imageVector = Icons.Outlined.Casino,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(32.dp)
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
@@ -355,14 +374,16 @@ private fun GameHighlightCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
+                    .aspectRatio(GAME_THUMBNAIL_ASPECT_RATIO)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "🎯",
-                    style = MaterialTheme.typography.headlineMedium
+                Icon(
+                    imageVector = Icons.Outlined.Casino,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(32.dp)
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
