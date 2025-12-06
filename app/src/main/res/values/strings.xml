@@ -8,4 +8,21 @@
     <string name="msg_empty_credentials_error">Username and password cannot be empty</string>
     <string name="msg_invalid_credentials_error">Invalid username or password</string>
     <string name="msg_login_failed_error">Login failed</string>
+
+    <!-- Home Screen -->
+    <string name="nav_home">Home</string>
+    <string name="nav_collection">Collection</string>
+    <string name="nav_plays">Plays</string>
+    <string name="nav_profile">Profile</string>
+    <string name="profile_action_description">Profile</string>
+    <string name="more_options_description">More options</string>
+    <string name="log_play_description">Log a play</string>
+    <string name="your_stats_title">Your Stats</string>
+    <string name="stat_games">Games</string>
+    <string name="stat_total_plays">Total Plays</string>
+    <string name="stat_this_month">This Month</string>
+    <string name="stat_unplayed">Unplayed</string>
+    <string name="recent_activity_title">Recent Activity</string>
+    <string name="collection_highlights_title">Collection Highlights</string>
+    <string name="play_date_players">%1$s • %2$d players</string>
 </resources>
