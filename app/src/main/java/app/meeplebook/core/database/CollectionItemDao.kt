@@ -16,14 +16,14 @@ interface CollectionItemDao {
     /**
      * Observes all collection items for a specific user.
      */
-    @Query("SELECT * FROM collection_items WHERE username = :username ORDER BY name ASC")
-    fun observeCollectionByUsername(username: String): Flow<List<CollectionItemEntity>>
+    @Query("SELECT * FROM collection_items ORDER BY name ASC")
+    fun observeCollection(): Flow<List<CollectionItemEntity>>
 
     /**
      * Gets all collection items for a specific user.
      */
-    @Query("SELECT * FROM collection_items WHERE username = :username ORDER BY name ASC")
-    suspend fun getCollectionByUsername(username: String): List<CollectionItemEntity>
+    @Query("SELECT * FROM collection_items ORDER BY name ASC")
+    suspend fun getCollection(): List<CollectionItemEntity>
 
     /**
      * Inserts a collection item, replacing on conflict.
@@ -40,15 +40,15 @@ interface CollectionItemDao {
     /**
      * Deletes all collection items for a specific user.
      */
-    @Query("DELETE FROM collection_items WHERE username = :username")
-    suspend fun deleteByUsername(username: String)
+    @Query("DELETE FROM collection_items")
+    suspend fun deleteAll()
 
     /**
      * Replaces the entire collection for a user with new items.
      */
     @Transaction
-    suspend fun replaceCollection(username: String, items: List<CollectionItemEntity>) {
-        deleteByUsername(username)
+    suspend fun replaceCollection(items: List<CollectionItemEntity>) {
+        deleteAll()
         insertAll(items)
     }
 }

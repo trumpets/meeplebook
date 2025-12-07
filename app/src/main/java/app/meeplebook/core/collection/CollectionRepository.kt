@@ -11,20 +11,18 @@ import kotlinx.coroutines.flow.Flow
 interface CollectionRepository {
 
     /**
-     * Observes the collection for a specific user from local storage.
+     * Observes the collection from local storage.
      *
-     * @param username The BGG username.
      * @return Flow emitting the user's collection.
      */
-    fun observeCollection(username: String): Flow<List<CollectionItem>>
+    fun observeCollection(): Flow<List<CollectionItem>>
 
     /**
-     * Gets the collection for a specific user from local storage.
+     * Gets the collection from local storage.
      *
-     * @param username The BGG username.
      * @return The user's collection.
      */
-    suspend fun getCollection(username: String): List<CollectionItem>
+    suspend fun getCollection(): List<CollectionItem>
 
     /**
      * Syncs the collection for a specific user from BGG.
@@ -37,9 +35,8 @@ interface CollectionRepository {
     suspend fun syncCollection(username: String): AppResult<List<CollectionItem>, CollectionError>
 
     /**
-     * Clears the collection for a specific user from local storage.
+     * Clears the collection from local storage.
      *
-     * @param username The BGG username.
      */
-    suspend fun clearCollection(username: String)
+    suspend fun clearCollection()
 }

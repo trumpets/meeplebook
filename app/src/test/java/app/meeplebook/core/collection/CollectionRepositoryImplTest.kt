@@ -4,8 +4,8 @@ import app.meeplebook.core.collection.local.FakeCollectionLocalDataSource
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
-import app.meeplebook.core.collection.remote.CollectionFetchException
 import app.meeplebook.core.collection.remote.FakeCollectionRemoteDataSource
+import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -33,16 +33,16 @@ class CollectionRepositoryImplTest {
     @Test
     fun `observeCollection returns flow from local data source`() = runTest {
         val items = listOf(createTestItem(1, "Game 1"))
-        fakeLocalDataSource.setCollection("testuser", items)
+        fakeLocalDataSource.setCollection(items)
 
-        val result = repository.observeCollection("testuser").first()
+        val result = repository.observeCollection().first()
 
         assertEquals(items, result)
     }
 
     @Test
     fun `observeCollection returns empty list when no collection`() = runTest {
-        val result = repository.observeCollection("testuser").first()
+        val result = repository.observeCollection().first()
 
         assertTrue(result.isEmpty())
     }
@@ -52,9 +52,9 @@ class CollectionRepositoryImplTest {
     @Test
     fun `getCollection returns items from local data source`() = runTest {
         val items = listOf(createTestItem(1, "Game 1"), createTestItem(2, "Game 2"))
-        fakeLocalDataSource.setCollection("testuser", items)
+        fakeLocalDataSource.setCollection(items)
 
-        val result = repository.getCollection("testuser")
+        val result = repository.getCollection()
 
         assertEquals(items, result)
     }
@@ -73,7 +73,6 @@ class CollectionRepositoryImplTest {
         assertEquals(1, fakeRemoteDataSource.fetchCallCount)
         assertEquals("testuser", fakeRemoteDataSource.lastFetchUsername)
         assertEquals(1, fakeLocalDataSource.saveCollectionCallCount)
-        assertEquals("testuser", fakeLocalDataSource.lastSaveUsername)
         assertEquals(items, fakeLocalDataSource.lastSaveItems)
     }
 
@@ -101,24 +100,20 @@ class CollectionRepositoryImplTest {
 
     @Test
     fun `syncCollection with max retry CollectionFetchException returns MaxRetriesExceeded error`() = runTest {
-        fakeRemoteDataSource.fetchException = CollectionFetchException("Max retry attempts exceeded")
+        fakeRemoteDataSource.fetchException = RetryException(
+            message = "Retry attempts exceeded",
+            username = "testuser",
+            lastHttpCode = 202,
+            attempts = 10,
+            lastDelayMs = 15000L
+        )
 
         val result = repository.syncCollection("testuser")
 
         assertTrue(result is AppResult.Failure)
         assertTrue((result as AppResult.Failure).error is CollectionError.MaxRetriesExceeded)
         assertEquals(0, fakeLocalDataSource.saveCollectionCallCount)
-    }
-
-    @Test
-    fun `syncCollection with server error CollectionFetchException returns RateLimitError`() = runTest {
-        fakeRemoteDataSource.fetchException = CollectionFetchException("Server error: 503")
-
-        val result = repository.syncCollection("testuser")
-
-        assertTrue(result is AppResult.Failure)
-        assertTrue((result as AppResult.Failure).error is CollectionError.RateLimitError)
-        assertEquals(0, fakeLocalDataSource.saveCollectionCallCount)
+        assertEquals((result.error as CollectionError.MaxRetriesExceeded).exception.username, "testuser")
     }
 
     @Test
@@ -140,9 +135,9 @@ class CollectionRepositoryImplTest {
     @Test
     fun `clearCollection clears local data source`() = runTest {
         val items = listOf(createTestItem(1, "Game 1"))
-        fakeLocalDataSource.setCollection("testuser", items)
+        fakeLocalDataSource.setCollection(items)
 
-        repository.clearCollection("testuser")
+        repository.clearCollection()
 
         assertEquals(1, fakeLocalDataSource.clearCollectionCallCount)
     }

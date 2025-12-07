@@ -9,15 +9,14 @@ import app.meeplebook.core.collection.model.GameSubtype
  */
 @Entity(
     tableName = "collection_items",
-    primaryKeys = ["gameId", "username"]
+    primaryKeys = ["gameId"]
 )
 data class CollectionItemEntity(
     val gameId: Int,
-    val subtype: String,
+    val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,
-    val thumbnail: String?,
-    val username: String
+    val thumbnail: String?
 )
 
 /**
@@ -26,10 +25,7 @@ data class CollectionItemEntity(
 fun CollectionItemEntity.toCollectionItem(): CollectionItem {
     return CollectionItem(
         gameId = gameId,
-        subtype = when (subtype) {
-            "boardgameexpansion" -> GameSubtype.BOARDGAME_EXPANSION
-            else -> GameSubtype.BOARDGAME
-        },
+        subtype = subtype,
         name = name,
         yearPublished = yearPublished,
         thumbnail = thumbnail
@@ -39,16 +35,12 @@ fun CollectionItemEntity.toCollectionItem(): CollectionItem {
 /**
  * Maps a [CollectionItem] to a [CollectionItemEntity] for storage.
  */
-fun CollectionItem.toEntity(username: String): CollectionItemEntity {
+fun CollectionItem.toEntity(): CollectionItemEntity {
     return CollectionItemEntity(
         gameId = gameId,
-        subtype = when (subtype) {
-            GameSubtype.BOARDGAME -> "boardgame"
-            GameSubtype.BOARDGAME_EXPANSION -> "boardgameexpansion"
-        },
+        subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail,
-        username = username
+        thumbnail = thumbnail
     )
 }

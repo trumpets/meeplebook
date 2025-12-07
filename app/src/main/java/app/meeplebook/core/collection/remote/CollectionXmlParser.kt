@@ -1,29 +1,32 @@
 package app.meeplebook.core.collection.remote
 
+import android.util.Xml
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
-import java.io.StringReader
+import java.io.Reader
 
 /**
  * Parses BGG collection XML responses into domain models.
  */
 object CollectionXmlParser {
 
+    private val parserFactory: XmlPullParserFactory by lazy {
+        XmlPullParserFactory.newInstance()
+    }
+
     /**
      * Parses the BGG collection XML response.
      *
      * @param xml The XML string from BGG.
-     * @param subtypeOverride Optional subtype to override the one in XML (useful for expansion calls).
      * @return List of [CollectionItem]s parsed from the XML.
      */
-    fun parse(xml: String, subtypeOverride: GameSubtype? = null): List<CollectionItem> {
+    fun parse(reader: Reader): List<CollectionItem> {
         val items = mutableListOf<CollectionItem>()
 
-        val factory = XmlPullParserFactory.newInstance()
-        val parser = factory.newPullParser()
-        parser.setInput(StringReader(xml))
+        val parser = parserFactory.newPullParser()
+        parser.setInput(reader)
 
         var eventType = parser.eventType
         var currentItem: CollectionItemBuilder? = null
@@ -38,7 +41,7 @@ object CollectionXmlParser {
                             if (gameId != null) {
                                 currentItem = CollectionItemBuilder(
                                     gameId = gameId,
-                                    subtype = subtypeOverride ?: parseSubtype(subtype)
+                                    subtype = parseSubtype(subtype)
                                 )
                             }
                         }
@@ -60,6 +63,7 @@ object CollectionXmlParser {
                     }
                 }
             }
+
             eventType = parser.next()
         }
 

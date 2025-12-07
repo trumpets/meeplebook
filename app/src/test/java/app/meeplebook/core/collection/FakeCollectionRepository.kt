@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 class FakeCollectionRepository : CollectionRepository {
 
-    private val collections = mutableMapOf<String, MutableStateFlow<List<CollectionItem>>>()
+    private val collection = MutableStateFlow<List<CollectionItem>>(emptyList())
 
     /**
      * Configure this to control the result of [syncCollection] calls.
@@ -25,51 +25,40 @@ class FakeCollectionRepository : CollectionRepository {
         private set
 
     /**
-     * Stores the last username passed to [syncCollection].
-     */
-    var lastSyncUsername: String? = null
-        private set
-
-    /**
      * Tracks the number of times [clearCollection] was called.
      */
     var clearCallCount = 0
         private set
 
-    override fun observeCollection(username: String): Flow<List<CollectionItem>> {
-        return getOrCreateFlow(username)
+    override fun observeCollection(): Flow<List<CollectionItem>> {
+        return collection
     }
 
-    override suspend fun getCollection(username: String): List<CollectionItem> {
-        return collections[username]?.value ?: emptyList()
+    override suspend fun getCollection(): List<CollectionItem> {
+        return collection.value
     }
 
     override suspend fun syncCollection(username: String): AppResult<List<CollectionItem>, CollectionError> {
         syncCallCount++
-        lastSyncUsername = username
 
         val result = syncResult ?: throw IllegalStateException("FakeCollectionRepository not configured")
 
         if (result is AppResult.Success) {
-            getOrCreateFlow(username).value = result.data
+            collection.value = result.data
         }
 
         return result
     }
 
-    override suspend fun clearCollection(username: String) {
+    override suspend fun clearCollection() {
         clearCallCount++
-        collections[username]?.value = emptyList()
+        collection.value = emptyList()
     }
 
     /**
-     * Sets the collection for a user directly for testing.
+     * Sets the collection directly for testing.
      */
-    fun setCollection(username: String, items: List<CollectionItem>) {
-        getOrCreateFlow(username).value = items
-    }
-
-    private fun getOrCreateFlow(username: String): MutableStateFlow<List<CollectionItem>> {
-        return collections.getOrPut(username) { MutableStateFlow(emptyList()) }
+    fun setCollection(items: List<CollectionItem>) {
+        collection.value = items
     }
 }

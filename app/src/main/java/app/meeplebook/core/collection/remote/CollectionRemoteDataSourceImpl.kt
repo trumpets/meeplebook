@@ -1,12 +1,11 @@
 package app.meeplebook.core.collection.remote
 
 import app.meeplebook.core.collection.model.CollectionItem
-import app.meeplebook.core.collection.model.GameSubtype
-import app.meeplebook.core.network.BggBaseUrl
+import app.meeplebook.core.network.BggApi
+import app.meeplebook.core.network.RetryException
+import app.meeplebook.core.network.RetrySignal
+import app.meeplebook.core.network.retryWithBackoff
 import kotlinx.coroutines.delay
-import okhttp3.OkHttpClient
-import retrofit2.Response
-import retrofit2.Retrofit
 import javax.inject.Inject
 
 /**
@@ -18,15 +17,13 @@ import javax.inject.Inject
  * - Fetching both boardgames and expansions separately
  */
 class CollectionRemoteDataSourceImpl @Inject constructor(
-    okHttpClient: OkHttpClient,
-    @BggBaseUrl bggBaseUrl: String
+    private val api: BggApi
 ) : CollectionRemoteDataSource {
 
-    private val api: BggApi = Retrofit.Builder()
-        .baseUrl(bggBaseUrl)
-        .client(okHttpClient)
-        .build()
-        .create(BggApi::class.java)
+    companion object {
+        /** Delay between requests to avoid rate limiting */
+        private const val RATE_LIMIT_DELAY_MS = 5000L
+    }
 
     override suspend fun fetchCollection(username: String): List<CollectionItem> {
         if (username.isBlank()) {
@@ -42,8 +39,7 @@ class CollectionRemoteDataSourceImpl @Inject constructor(
         // Fetch expansions
         val expansions = fetchWithRetry(
             username = username,
-            subtype = "boardgameexpansion",
-            subtypeOverride = GameSubtype.BOARDGAME_EXPANSION
+            subtype = "boardgameexpansion"
         )
 
         return boardgames + expansions
@@ -55,63 +51,51 @@ class CollectionRemoteDataSourceImpl @Inject constructor(
     private suspend fun fetchWithRetry(
         username: String,
         excludeSubtype: String? = null,
-        subtype: String? = null,
-        subtypeOverride: GameSubtype? = null
+        subtype: String? = null
     ): List<CollectionItem> {
-        var attempts = 0
-        var delayMs = INITIAL_RETRY_DELAY_MS
 
-        while (attempts < MAX_RETRY_ATTEMPTS) {
+        return retryWithBackoff(
+            username = username
+        ) { attempt ->
             val response = api.getCollection(
                 username = username,
                 excludeSubtype = excludeSubtype,
                 subtype = subtype
             )
 
-            when (response.code()) {
-                200 -> {
-                    val body = response.body()
-                        ?: throw CollectionFetchException("Empty response body")
-                    val xml = body.string()
-                    body.close()
-                    return CollectionXmlParser.parse(xml, subtypeOverride)
+            val code = response.code()
+
+            if (code == 202 || code == 429 || code in 500..599) {
+                response.body()?.close()
+                throw RetrySignal(code)
+            }
+
+            if (code != 200) {
+                response.body()?.close()
+                throw RetryException(
+                    message = "Unexpected HTTP $code",
+                    username = username,
+                    lastHttpCode = code,
+                    attempts = attempt,
+                    lastDelayMs = 0L
+                )
+            }
+
+            val body = response.body() ?: throw RetrySignal(code)
+
+            // STREAM reader instead of body.string()
+            body.charStream().use { reader ->
+
+                // Check for disguised queued response BEFORE parsing
+                val peek = reader.buffered(2048).readText()
+
+                if (peek.contains("totalitems=\"0\"") && !peek.contains("<item ")) {
+                    throw RetrySignal(code)
                 }
-                202 -> {
-                    // BGG is preparing the data, retry after delay
-                    attempts++
-                    delay(delayMs)
-                    delayMs = minOf(
-                        (delayMs * BACKOFF_MULTIPLIER).toLong(),
-                        MAX_RETRY_DELAY_MS
-                    )
-                }
-                in 500..599 -> {
-                    // Server error, likely rate limiting
-                    throw CollectionFetchException("Server error: ${response.code()}")
-                }
-                else -> {
-                    throw CollectionFetchException("Unexpected response: ${response.code()}")
-                }
+
+                // Need a fresh Reader for actual parsing
+                return@retryWithBackoff CollectionXmlParser.parse(peek.reader())
             }
         }
-
-        throw CollectionFetchException("Max retry attempts exceeded while waiting for collection")
-    }
-
-    companion object {
-        /** Initial delay between retry attempts in milliseconds */
-        const val INITIAL_RETRY_DELAY_MS = 5000L
-
-        /** Maximum delay between retry attempts in milliseconds */
-        const val MAX_RETRY_DELAY_MS = 30000L
-
-        /** Backoff multiplier for retry delays */
-        const val BACKOFF_MULTIPLIER = 1.5
-
-        /** Maximum number of retry attempts */
-        const val MAX_RETRY_ATTEMPTS = 10
-
-        /** Delay between requests to avoid rate limiting */
-        const val RATE_LIMIT_DELAY_MS = 5000L
     }
 }

@@ -9,14 +9,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 class FakeCollectionLocalDataSource : CollectionLocalDataSource {
 
-    private val collections = mutableMapOf<String, MutableStateFlow<List<CollectionItem>>>()
+    private val collection = MutableStateFlow<List<CollectionItem>>(emptyList())
 
     /** Tracks the number of times [saveCollection] was called. */
     var saveCollectionCallCount = 0
-        private set
-
-    /** Stores the last username passed to [saveCollection]. */
-    var lastSaveUsername: String? = null
         private set
 
     /** Stores the last items passed to [saveCollection]. */
@@ -27,34 +23,29 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
     var clearCollectionCallCount = 0
         private set
 
-    override fun observeCollection(username: String): Flow<List<CollectionItem>> {
-        return getOrCreateFlow(username)
+    override fun observeCollection(): Flow<List<CollectionItem>> {
+        return collection
     }
 
-    override suspend fun getCollection(username: String): List<CollectionItem> {
-        return collections[username]?.value ?: emptyList()
+    override suspend fun getCollection(): List<CollectionItem> {
+        return collection.value
     }
 
-    override suspend fun saveCollection(username: String, items: List<CollectionItem>) {
+    override suspend fun saveCollection(items: List<CollectionItem>) {
         saveCollectionCallCount++
-        lastSaveUsername = username
         lastSaveItems = items
-        getOrCreateFlow(username).value = items
+        collection.value = items
     }
 
-    override suspend fun clearCollection(username: String) {
+    override suspend fun clearCollection() {
         clearCollectionCallCount++
-        collections[username]?.value = emptyList()
+        collection.value = emptyList()
     }
 
     /**
      * Sets the collection for a user directly for testing.
      */
-    fun setCollection(username: String, items: List<CollectionItem>) {
-        getOrCreateFlow(username).value = items
-    }
-
-    private fun getOrCreateFlow(username: String): MutableStateFlow<List<CollectionItem>> {
-        return collections.getOrPut(username) { MutableStateFlow(emptyList()) }
+    fun setCollection(items: List<CollectionItem>) {
+        collection.value = items
     }
 }

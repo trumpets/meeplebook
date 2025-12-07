@@ -16,7 +16,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertTrue(result.isEmpty())
     }
@@ -34,7 +34,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
         val item = result[0]
@@ -58,7 +58,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
         val item = result[0]
@@ -66,25 +66,6 @@ class CollectionXmlParserTest {
         assertEquals(GameSubtype.BOARDGAME_EXPANSION, item.subtype)
         assertEquals("Gloomhaven: Forgotten Circles", item.name)
         assertEquals(2019, item.yearPublished)
-    }
-
-    @Test
-    fun `parse with subtype override`() {
-        val xml = """
-            <?xml version="1.0" encoding="utf-8"?>
-            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
-                <item objecttype="thing" objectid="220308" subtype="boardgame" collid="67890">
-                    <name sortindex="1">Some Expansion</name>
-                    <yearpublished>2019</yearpublished>
-                </item>
-            </items>
-        """.trimIndent()
-
-        // BGG incorrectly returns boardgame for expansions, so we override
-        val result = CollectionXmlParser.parse(xml, GameSubtype.BOARDGAME_EXPANSION)
-
-        assertEquals(1, result.size)
-        assertEquals(GameSubtype.BOARDGAME_EXPANSION, result[0].subtype)
     }
 
     @Test
@@ -107,7 +88,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(3, result.size)
         assertEquals(1, result[0].gameId)
@@ -127,7 +108,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
         assertNull(result[0].yearPublished)
@@ -145,7 +126,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
         assertNull(result[0].thumbnail)
@@ -166,7 +147,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
         assertEquals(2, result[0].gameId)
@@ -189,7 +170,7 @@ class CollectionXmlParserTest {
             </items>
         """.trimIndent()
 
-        val result = CollectionXmlParser.parse(xml)
+        val result = CollectionXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
         assertEquals(2, result[0].gameId)

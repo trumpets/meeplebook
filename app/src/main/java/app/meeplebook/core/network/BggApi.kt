@@ -1,4 +1,4 @@
-package app.meeplebook.core.collection.remote
+package app.meeplebook.core.network
 
 import okhttp3.ResponseBody
 import retrofit2.Response

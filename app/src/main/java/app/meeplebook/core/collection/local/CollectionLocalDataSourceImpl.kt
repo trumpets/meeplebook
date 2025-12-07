@@ -15,22 +15,22 @@ class CollectionLocalDataSourceImpl @Inject constructor(
     private val dao: CollectionItemDao
 ) : CollectionLocalDataSource {
 
-    override fun observeCollection(username: String): Flow<List<CollectionItem>> {
-        return dao.observeCollectionByUsername(username).map { entities ->
+    override fun observeCollection(): Flow<List<CollectionItem>> {
+        return dao.observeCollection().map { entities ->
             entities.map { it.toCollectionItem() }
         }
     }
 
-    override suspend fun getCollection(username: String): List<CollectionItem> {
-        return dao.getCollectionByUsername(username).map { it.toCollectionItem() }
+    override suspend fun getCollection(): List<CollectionItem> {
+        return dao.getCollection().map { it.toCollectionItem() }
     }
 
-    override suspend fun saveCollection(username: String, items: List<CollectionItem>) {
-        val entities = items.map { it.toEntity(username) }
-        dao.replaceCollection(username, entities)
+    override suspend fun saveCollection(items: List<CollectionItem>) {
+        val entities = items.map { it.toEntity() }
+        dao.replaceCollection(entities)
     }
 
-    override suspend fun clearCollection(username: String) {
-        dao.deleteByUsername(username)
+    override suspend fun clearCollection() {
+        dao.deleteAll()
     }
 }

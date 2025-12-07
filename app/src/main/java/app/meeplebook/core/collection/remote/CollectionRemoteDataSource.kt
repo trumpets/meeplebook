@@ -20,8 +20,3 @@ interface CollectionRemoteDataSource {
      */
     suspend fun fetchCollection(username: String): List<CollectionItem>
 }
-
-/**
- * Exception thrown when collection fetching fails.
- */
-class CollectionFetchException(message: String, cause: Throwable? = null) : Exception(message, cause)
