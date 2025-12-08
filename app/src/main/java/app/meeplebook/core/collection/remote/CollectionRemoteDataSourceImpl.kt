@@ -6,6 +6,7 @@ import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.network.RetrySignal
 import app.meeplebook.core.network.retryWithBackoff
 import kotlinx.coroutines.delay
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -82,7 +83,7 @@ class CollectionRemoteDataSourceImpl @Inject constructor(
             }
 
             val body = response.body()
-                ?: throw java.io.IOException("Empty response body on HTTP $code")
+                ?: throw IOException("Empty response body on HTTP $code")
 
             // STREAM reader instead of body.string()
             body.charStream().use { reader ->
