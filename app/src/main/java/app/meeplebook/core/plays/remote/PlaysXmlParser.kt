@@ -38,9 +38,9 @@ object PlaysXmlParser {
                             val id = parser.getAttributeValue(null, "id")?.toIntOrNull()
                             val date = parser.getAttributeValue(null, "date")
                             val quantity = parser.getAttributeValue(null, "quantity")?.toIntOrNull() ?: 1
-                            val length = parser.getAttributeValue(null, "length")?.toIntOrNull()
+                            val length = parser.getAttributeValue(null, "length")?.toIntOrNull()?.takeIf { it > 0 }
                             val incomplete = parser.getAttributeValue(null, "incomplete")?.toIntOrNull() == 1
-                            val location = parser.getAttributeValue(null, "location")
+                            val location = parser.getAttributeValue(null, "location")?.takeIf { it.isNotBlank() }
 
                             if (id != null && date != null) {
                                 currentPlay = PlayBuilder(
@@ -61,7 +61,7 @@ object PlaysXmlParser {
                             }
                         }
                         "comments" -> {
-                            currentPlay?.comments = safeNextText(parser)
+                            currentPlay?.comments = safeNextText(parser)?.takeIf { it.isNotBlank() }
                         }
                         "player" -> {
                             currentPlay?.let { play ->
@@ -133,8 +133,8 @@ object PlaysXmlParser {
         val players: MutableList<Player> = mutableListOf()
 
         fun build(): Play? {
-            val id = gameId ?: return null
-            val name = gameName ?: return null
+            val validGameId = gameId ?: return null
+            val validGameName = gameName ?: return null
 
             return Play(
                 id = this.id,
@@ -143,8 +143,8 @@ object PlaysXmlParser {
                 length = length,
                 incomplete = incomplete,
                 location = location,
-                gameId = id,
-                gameName = name,
+                gameId = validGameId,
+                gameName = validGameName,
                 gameSubtype = gameSubtype,
                 comments = comments,
                 players = players

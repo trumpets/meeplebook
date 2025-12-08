@@ -1,15 +1,11 @@
 package app.meeplebook.core.plays
 
 import app.meeplebook.core.network.RetryException
-import app.meeplebook.core.plays.local.PlaysLocalDataSource
+import app.meeplebook.core.plays.local.FakePlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
-import app.meeplebook.core.plays.remote.PlaysRemoteDataSource
+import app.meeplebook.core.plays.remote.FakePlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,8 +15,8 @@ import java.io.IOException
 
 class PlaysRepositoryImplTest {
 
-    private lateinit var local: PlaysLocalDataSource
-    private lateinit var remote: PlaysRemoteDataSource
+    private lateinit var local: FakePlaysLocalDataSource
+    private lateinit var remote: FakePlaysRemoteDataSource
     private lateinit var repository: PlaysRepositoryImpl
 
     private val testPlay = Play(
@@ -39,15 +35,15 @@ class PlaysRepositoryImplTest {
 
     @Before
     fun setup() {
-        local = mockk(relaxed = true)
-        remote = mockk(relaxed = true)
+        local = FakePlaysLocalDataSource()
+        remote = FakePlaysRemoteDataSource()
         repository = PlaysRepositoryImpl(local, remote)
     }
 
     @Test
     fun `observePlays returns flow from local data source`() = runTest {
         val plays = listOf(testPlay)
-        coEvery { local.observePlays() } returns flowOf(plays)
+        local.savePlays(plays)
 
         val result = repository.observePlays()
 
@@ -60,7 +56,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `getPlays returns data from local data source`() = runTest {
         val plays = listOf(testPlay)
-        coEvery { local.getPlays() } returns plays
+        local.savePlays(plays)
 
         val result = repository.getPlays()
 
@@ -70,41 +66,65 @@ class PlaysRepositoryImplTest {
     @Test
     fun `syncPlays success fetches from remote and saves to local`() = runTest {
         val plays = listOf(testPlay)
-        coEvery { remote.fetchPlays("user123", null) } returns plays
+        remote.playsToReturn = plays
 
         val result = repository.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
         assertEquals(plays, (result as AppResult.Success).value)
-        coVerify { remote.fetchPlays("user123", null) }
-        coVerify { local.savePlays(plays) }
+        assertTrue(remote.fetchPlaysCalled)
+        assertEquals("user123", remote.lastFetchUsername)
+        assertEquals(1, remote.lastFetchPage)
+        assertEquals(plays, local.getPlays())
     }
 
     @Test
-    fun `syncPlays with page number`() = runTest {
-        val plays = listOf(testPlay)
-        coEvery { remote.fetchPlays("user123", 2) } returns plays
-
-        val result = repository.syncPlays("user123", 2)
+    fun `syncPlays fetches multiple pages`() = runTest {
+        // Simulate multi-page response
+        val page1Plays = List(100) { i ->
+            testPlay.copy(id = i + 1)
+        }
+        val page2Plays = List(50) { i ->
+            testPlay.copy(id = i + 101)
+        }
+        
+        // Configure fake to return different results per page
+        var callCount = 0
+        val fakePlaysRemote = object : PlaysRemoteDataSource {
+            override suspend fun fetchPlays(username: String, page: Int?): List<Play> {
+                callCount++
+                return when (page) {
+                    1 -> page1Plays
+                    2 -> page2Plays
+                    else -> emptyList()
+                }
+            }
+        }
+        
+        val repo = PlaysRepositoryImpl(local, fakePlaysRemote)
+        val result = repo.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
-        coVerify { remote.fetchPlays("user123", 2) }
+        val allPlays = (result as AppResult.Success).value
+        assertEquals(150, allPlays.size)
+        assertEquals(2, callCount)
+        assertEquals(150, local.getPlays().size)
     }
 
     @Test
     fun `syncPlays returns NotLoggedIn on IllegalArgumentException`() = runTest {
-        coEvery { remote.fetchPlays(any(), any()) } throws IllegalArgumentException("Invalid username")
+        remote.shouldThrowException = IllegalArgumentException("Invalid username")
 
-        val result = repository.syncPlays("", null)
+        val result = repository.syncPlays("")
 
         assertTrue(result is AppResult.Failure)
         assertEquals(PlayError.NotLoggedIn, (result as AppResult.Failure).error)
-        coVerify(exactly = 0) { local.savePlays(any()) }
+        assertTrue(local.getPlays().isEmpty())
     }
 
     @Test
     fun `syncPlays returns NetworkError on IOException`() = runTest {
-        coEvery { remote.fetchPlays(any(), any()) } throws IOException("Network error")
+        remote.shouldThrowException = IOException("Network error")
 
         val result = repository.syncPlays("user123")
 
@@ -115,7 +135,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `syncPlays returns MaxRetriesExceeded on RetryException`() = runTest {
         val retryException = RetryException("Retry failed", "user123", 202, 5, 1000L)
-        coEvery { remote.fetchPlays(any(), any()) } throws retryException
+        remote.shouldThrowException = retryException
 
         val result = repository.syncPlays("user123")
 
@@ -128,7 +148,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `syncPlays returns Unknown error for other exceptions`() = runTest {
         val exception = RuntimeException("Unknown error")
-        coEvery { remote.fetchPlays(any(), any()) } throws exception
+        remote.shouldThrowException = exception
 
         val result = repository.syncPlays("user123")
 
@@ -140,8 +160,10 @@ class PlaysRepositoryImplTest {
 
     @Test
     fun `clearPlays calls local data source`() = runTest {
+        local.savePlays(listOf(testPlay))
+
         repository.clearPlays()
 
-        coVerify { local.clearPlays() }
+        assertTrue(local.getPlays().isEmpty())
     }
 }

@@ -26,11 +26,33 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.getPlays()
     }
 
-    override suspend fun syncPlays(username: String, page: Int?): AppResult<List<Play>, PlayError> {
+    override suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError> {
         try {
-            val plays = remote.fetchPlays(username, page)
-            local.savePlays(plays)
-            return AppResult.Success(plays)
+            val allPlays = mutableListOf<Play>()
+            var currentPage = 1
+            var hasMorePages = true
+
+            // Loop through all pages until no more plays are returned
+            while (hasMorePages) {
+                val plays = remote.fetchPlays(username, currentPage)
+                
+                if (plays.isEmpty()) {
+                    hasMorePages = false
+                } else {
+                    allPlays.addAll(plays)
+                    local.savePlays(plays)
+                    
+                    // BGG returns 100 plays per page
+                    // If we got fewer than 100, we're on the last page
+                    if (plays.size < 100) {
+                        hasMorePages = false
+                    } else {
+                        currentPage++
+                    }
+                }
+            }
+            
+            return AppResult.Success(allPlays)
         } catch (e: Exception) {
             return when (e) {
                 is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)

@@ -25,15 +25,15 @@ interface PlaysRepository {
     suspend fun getPlays(): List<Play>
 
     /**
-     * Syncs plays for a specific user from BGG.
+     * Syncs all plays for a specific user from BGG.
      *
-     * Fetches plays from BGG and stores them locally.
+     * Fetches all pages of plays from BGG and stores them locally.
+     * This method orchestrates multi-page fetching and merges results.
      *
      * @param username The BGG username.
-     * @param page The page number to fetch (optional, starts at 1).
-     * @return Success with the plays, or Failure with an error.
+     * @return Success with all the plays, or Failure with an error.
      */
-    suspend fun syncPlays(username: String, page: Int? = null): AppResult<List<Play>, PlayError>
+    suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError>
 
     /**
      * Clears all plays from local storage.

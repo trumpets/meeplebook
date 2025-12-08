@@ -112,7 +112,7 @@ class PlaysXmlParserTest {
         val play = result[0]
         assertEquals(54321, play.id)
         assertEquals("2024-02-20", play.date)
-        assertEquals(0, play.length)
+        assertNull(play.length)
         assertNull(play.location)
         assertNull(play.comments)
         assertTrue(play.players.isEmpty())

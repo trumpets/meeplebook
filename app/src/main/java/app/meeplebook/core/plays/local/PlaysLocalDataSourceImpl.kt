@@ -32,7 +32,12 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
     override suspend fun savePlays(plays: List<Play>) {
         database.withTransaction {
-            // Bulk insert all plays first
+            // Delete old players for plays being updated
+            plays.forEach { play ->
+                playerDao.deletePlayersForPlay(play.id)
+            }
+            
+            // Bulk insert all plays
             playDao.insertAll(plays.map { it.toEntity() })
             
             // Bulk insert all players
