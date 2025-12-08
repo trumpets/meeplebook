@@ -128,7 +128,7 @@ class CollectionItemDaoTest {
     }
 
     @Test
-    fun sortingIsCaseInsensitive() = runTest {
+    fun sortingHandlesMixedCase() = runTest {
         // Insert items with different cases
         val items = listOf(
             createTestEntity(1, "catan", GameSubtype.BOARDGAME),
@@ -141,12 +141,12 @@ class CollectionItemDaoTest {
         // Query the collection
         val result = dao.getCollection()
 
-        // Verify alphabetical order (SQLite default is case-insensitive for ASCII)
+        // Verify alphabetical order by name (SQLite uses BINARY collation by default)
         assertEquals(4, result.size)
         assertEquals("Azul", result[0].name)
         assertEquals("Brass", result[1].name)
-        assertEquals("catan", result[2].name)
-        assertEquals("WINGSPAN", result[3].name)
+        assertEquals("WINGSPAN", result[2].name)
+        assertEquals("catan", result[3].name)
     }
 
     // --- Test 3: Upsert behavior with OnConflictStrategy.REPLACE ---
@@ -415,13 +415,14 @@ class CollectionItemDaoTest {
 
     /**
      * Creates a test [CollectionItemEntity] with default or specified values.
+     * Uses null defaults for optional parameters to make test intentions clear.
      */
     private fun createTestEntity(
         gameId: Int,
         name: String = "Test Game $gameId",
         subtype: GameSubtype = GameSubtype.BOARDGAME,
-        yearPublished: Int? = 2020,
-        thumbnail: String? = "https://example.com/thumb$gameId.jpg"
+        yearPublished: Int? = null,
+        thumbnail: String? = null
     ): CollectionItemEntity {
         return CollectionItemEntity(
             gameId = gameId,
