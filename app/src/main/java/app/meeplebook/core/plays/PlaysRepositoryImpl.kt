@@ -1,5 +1,6 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.collection.remote.CollectionRemoteDataSourceImpl
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
@@ -7,6 +8,7 @@ import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
 import javax.inject.Inject
@@ -35,6 +37,11 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.getPlaysForGame(gameId)
     }
 
+    companion object {
+        /** Delay between requests to avoid rate limiting */
+        private const val RATE_LIMIT_DELAY_MS = 5000L
+    }
+
     override suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError> {
         try {
             val allPlays = mutableListOf<Play>()
@@ -57,6 +64,9 @@ class PlaysRepositoryImpl @Inject constructor(
                         hasMorePages = false
                     } else {
                         currentPage++
+
+                        // Wait between requests to avoid rate limiting
+                        delay(RATE_LIMIT_DELAY_MS)
                     }
                 }
             }

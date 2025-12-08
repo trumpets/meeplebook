@@ -11,7 +11,6 @@ package app.meeplebook.core.plays.model
  * @param location The location where the play occurred.
  * @param gameId The BGG game ID.
  * @param gameName The name of the game.
- * @param gameSubtype The type of the game (boardgame or boardgameexpansion).
  * @param comments Comments about the play.
  * @param players List of players who participated in the play.
  */
