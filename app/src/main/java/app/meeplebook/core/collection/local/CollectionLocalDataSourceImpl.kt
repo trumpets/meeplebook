@@ -1,0 +1,36 @@
+package app.meeplebook.core.collection.local
+
+import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.database.CollectionItemDao
+import app.meeplebook.core.database.toCollectionItem
+import app.meeplebook.core.database.toEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+/**
+ * Implementation of [CollectionLocalDataSource] using Room database.
+ */
+class CollectionLocalDataSourceImpl @Inject constructor(
+    private val dao: CollectionItemDao
+) : CollectionLocalDataSource {
+
+    override fun observeCollection(): Flow<List<CollectionItem>> {
+        return dao.observeCollection().map { entities ->
+            entities.map { it.toCollectionItem() }
+        }
+    }
+
+    override suspend fun getCollection(): List<CollectionItem> {
+        return dao.getCollection().map { it.toCollectionItem() }
+    }
+
+    override suspend fun saveCollection(items: List<CollectionItem>) {
+        val entities = items.map { it.toEntity() }
+        dao.replaceCollection(entities)
+    }
+
+    override suspend fun clearCollection() {
+        dao.deleteAll()
+    }
+}

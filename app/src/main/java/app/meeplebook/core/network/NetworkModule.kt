@@ -22,9 +22,19 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(
         okHttp: OkHttpClient
-    ): Retrofit =
-        Retrofit.Builder()
+    ): Retrofit {
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttp)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBggApi(
+        retrofit: Retrofit
+    ): BggApi {
+        return retrofit.create(BggApi::class.java)
+    }
+
 }
