@@ -111,7 +111,9 @@ object PlaysXmlParser {
     private fun safeNextText(parser: XmlPullParser): String? {
         return try {
             parser.nextText()
-        } catch (_: Exception) {
+        } catch (e: org.xmlpull.v1.XmlPullParserException) {
+            null
+        } catch (e: java.io.IOException) {
             null
         }
     }
