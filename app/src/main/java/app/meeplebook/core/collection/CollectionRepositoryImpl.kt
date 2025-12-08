@@ -3,6 +3,7 @@ package app.meeplebook.core.collection
 import app.meeplebook.core.collection.local.CollectionLocalDataSource
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.remote.CollectionFetchException
 import app.meeplebook.core.collection.remote.CollectionRemoteDataSource
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.result.AppResult
@@ -36,6 +37,7 @@ class CollectionRepositoryImpl @Inject constructor(
                 is IllegalArgumentException -> AppResult.Failure(CollectionError.NotLoggedIn)
                 is IOException -> AppResult.Failure(CollectionError.NetworkError)
                 is RetryException -> AppResult.Failure(CollectionError.MaxRetriesExceeded(e))
+                is CollectionFetchException -> AppResult.Failure(CollectionError.Unknown(e))
                 else -> AppResult.Failure(CollectionError.Unknown(e))
             }
         }

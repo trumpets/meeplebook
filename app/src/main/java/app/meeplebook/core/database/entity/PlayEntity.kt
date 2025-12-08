@@ -1,15 +1,17 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.Player
 
 /**
  * Room entity representing a play stored locally.
  */
 @Entity(
     tableName = "plays",
-    indices = [androidx.room.Index(value = ["date"])]
+    indices = [Index(value = ["date"])]
 )
 data class PlayEntity(
     @PrimaryKey
@@ -21,7 +23,6 @@ data class PlayEntity(
     val location: String?,
     val gameId: Int,
     val gameName: String,
-    val gameSubtype: String,
     val comments: String?
 )
 
@@ -29,7 +30,7 @@ data class PlayEntity(
  * Maps a [PlayEntity] to a [Play] domain model.
  * Note: Players must be loaded separately and combined.
  */
-fun PlayEntity.toPlay(players: List<app.meeplebook.core.plays.model.Player>): Play {
+fun PlayEntity.toPlay(players: List<Player>): Play {
     return Play(
         id = id,
         date = date,
@@ -39,7 +40,6 @@ fun PlayEntity.toPlay(players: List<app.meeplebook.core.plays.model.Player>): Pl
         location = location,
         gameId = gameId,
         gameName = gameName,
-        gameSubtype = gameSubtype,
         comments = comments,
         players = players
     )
@@ -58,7 +58,6 @@ fun Play.toEntity(): PlayEntity {
         location = location,
         gameId = gameId,
         gameName = gameName,
-        gameSubtype = gameSubtype,
         comments = comments
     )
 }

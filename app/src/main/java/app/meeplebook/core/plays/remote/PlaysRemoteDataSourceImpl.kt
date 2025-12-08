@@ -54,13 +54,7 @@ class PlaysRemoteDataSourceImpl @Inject constructor(
 
             if (code != 200) {
                 response.body()?.close()
-                throw RetryException(
-                    message = "Unexpected HTTP $code",
-                    username = username,
-                    lastHttpCode = code,
-                    attempts = attempt,
-                    lastDelayMs = 0L
-                )
+                throw PlaysFetchException(message = "Unexpected HTTP $code")
             }
 
             val body = response.body()

@@ -57,7 +57,6 @@ object PlaysXmlParser {
                             currentPlay?.let { play ->
                                 play.gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull()
                                 play.gameName = parser.getAttributeValue(null, "name")
-                                play.gameSubtype = parser.getAttributeValue(null, "objecttype") ?: ""
                             }
                         }
                         "comments" -> {
@@ -111,9 +110,7 @@ object PlaysXmlParser {
     private fun safeNextText(parser: XmlPullParser): String? {
         return try {
             parser.nextText()
-        } catch (e: org.xmlpull.v1.XmlPullParserException) {
-            null
-        } catch (e: java.io.IOException) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -128,13 +125,12 @@ object PlaysXmlParser {
     ) {
         var gameId: Int? = null
         var gameName: String? = null
-        var gameSubtype: String = ""
         var comments: String? = null
         val players: MutableList<Player> = mutableListOf()
 
         fun build(): Play? {
             val validGameId = gameId ?: return null
-            val validGameName = gameName ?: return null
+            val validGameName = gameName?.takeIf { it.isNotBlank() } ?: return null
 
             return Play(
                 id = this.id,
@@ -145,7 +141,6 @@ object PlaysXmlParser {
                 location = location,
                 gameId = validGameId,
                 gameName = validGameName,
-                gameSubtype = gameSubtype,
                 comments = comments,
                 players = players
             )

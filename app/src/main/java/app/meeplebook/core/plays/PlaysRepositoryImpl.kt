@@ -4,6 +4,7 @@ import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
@@ -22,8 +23,16 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.observePlays()
     }
 
+    override fun observePlaysForGame(gameId: Int): Flow<List<Play>> {
+        return local.observePlaysForGame(gameId)
+    }
+
     override suspend fun getPlays(): List<Play> {
         return local.getPlays()
+    }
+
+    override suspend fun getPlaysForGame(gameId: Int): List<Play> {
+        return local.getPlaysForGame(gameId)
     }
 
     override suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError> {
@@ -58,6 +67,7 @@ class PlaysRepositoryImpl @Inject constructor(
                 is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)
                 is IOException -> AppResult.Failure(PlayError.NetworkError)
                 is RetryException -> AppResult.Failure(PlayError.MaxRetriesExceeded(e))
+                is PlaysFetchException -> AppResult.Failure(PlayError.Unknown(e))
                 else -> AppResult.Failure(PlayError.Unknown(e))
             }
         }

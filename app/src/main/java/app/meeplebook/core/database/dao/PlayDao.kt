@@ -1,10 +1,12 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import app.meeplebook.core.database.entity.PlayEntity
+import app.meeplebook.core.database.entity.PlayWithPlayers
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -28,6 +30,34 @@ interface PlayDao {
     suspend fun getPlaysWithPlayers(): List<PlayWithPlayers>
 
     /**
+     * Observes a specific play with its players by ID.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays WHERE id = :playId")
+    fun observePlayWithPlayersById(playId: Int): Flow<PlayWithPlayers>
+
+    /**
+     * Gets a specific play with its players by ID.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays WHERE id = :playId")
+    suspend fun getPlayWithPlayersById(playId: Int): PlayWithPlayers?
+
+    /**
+     * Observes plays with their players for a specific game.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays WHERE gameId = :gameId")
+    fun observePlaysWithPlayersForGame(gameId: Int): Flow<List<PlayWithPlayers>>
+
+    /**
+     * Gets plays with their players for a specific game.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays WHERE gameId = :gameId")
+    suspend fun getPlaysWithPlayersForGame(gameId: Int): List<PlayWithPlayers>
+
+    /**
      * Observes all plays.
      */
     @Query("SELECT * FROM plays ORDER BY date DESC")
@@ -44,6 +74,18 @@ interface PlayDao {
      */
     @Query("SELECT * FROM plays WHERE id = :playId")
     suspend fun getPlayById(playId: Int): PlayEntity?
+
+    /**
+     * Observes all plays for a specific game, ordered by date descending.
+     */
+    @Query("SELECT * FROM plays WHERE gameId = :gameId ORDER BY date DESC")
+    fun observePlaysForGame(gameId: Int): Flow<List<PlayEntity>>
+
+    /**
+     * Gets all plays for a specific game, ordered by date descending.
+     */
+    @Query("SELECT * FROM plays WHERE gameId = :gameId ORDER BY date DESC")
+    suspend fun getPlaysForGame(gameId: Int): List<PlayEntity>
 
     /**
      * Inserts a play, replacing on conflict.

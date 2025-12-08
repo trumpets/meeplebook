@@ -6,6 +6,7 @@ import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.remote.FakePlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -28,7 +29,6 @@ class PlaysRepositoryImplTest {
         location = "Home",
         gameId = 123,
         gameName = "Test Game",
-        gameSubtype = "boardgame",
         comments = null,
         players = emptyList()
     )
@@ -45,12 +45,9 @@ class PlaysRepositoryImplTest {
         val plays = listOf(testPlay)
         local.savePlays(plays)
 
-        val result = repository.observePlays()
+        val result = repository.observePlays().first()
 
-        var emittedPlays: List<Play>? = null
-        result.collect { emittedPlays = it }
-
-        assertEquals(plays, emittedPlays)
+        assertEquals(plays, result)
     }
 
     @Test
@@ -71,7 +68,7 @@ class PlaysRepositoryImplTest {
         val result = repository.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
-        assertEquals(plays, (result as AppResult.Success).value)
+        assertEquals(plays, (result as AppResult.Success).data)
         assertTrue(remote.fetchPlaysCalled)
         assertEquals("user123", remote.lastFetchUsername)
         assertEquals(1, remote.lastFetchPage)
@@ -97,7 +94,7 @@ class PlaysRepositoryImplTest {
         val result = repository.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
-        val allPlays = (result as AppResult.Success).value
+        val allPlays = (result as AppResult.Success).data
         assertEquals(150, allPlays.size)
         assertEquals(150, local.getPlays().size)
     }

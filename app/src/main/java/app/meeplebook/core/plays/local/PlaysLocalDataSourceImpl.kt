@@ -2,10 +2,10 @@ package app.meeplebook.core.plays.local
 
 import androidx.room.withTransaction
 import app.meeplebook.core.database.MeepleBookDatabase
-import app.meeplebook.core.database.PlayDao
-import app.meeplebook.core.database.PlayerDao
-import app.meeplebook.core.database.toEntity
-import app.meeplebook.core.database.toPlay
+import app.meeplebook.core.database.dao.PlayDao
+import app.meeplebook.core.database.dao.PlayerDao
+import app.meeplebook.core.database.entity.toEntity
+import app.meeplebook.core.database.entity.toPlay
 import app.meeplebook.core.plays.model.Play
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,8 +26,18 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override fun observePlaysForGame(gameId: Int): Flow<List<Play>> {
+        return playDao.observePlaysWithPlayersForGame(gameId).map { playsWithPlayers ->
+            playsWithPlayers.map { it.toPlay() }
+        }
+    }
+
     override suspend fun getPlays(): List<Play> {
         return playDao.getPlaysWithPlayers().map { it.toPlay() }
+    }
+
+    override suspend fun getPlaysForGame(gameId: Int): List<Play> {
+        return playDao.getPlaysWithPlayersForGame(gameId).map { it.toPlay() }
     }
 
     override suspend fun savePlays(plays: List<Play>) {
@@ -48,6 +58,10 @@ class PlaysLocalDataSourceImpl @Inject constructor(
                 playerDao.insertAll(allPlayers)
             }
         }
+    }
+
+    override suspend fun savePlay(play: Play) {
+        savePlays(listOf(play))
     }
 
     override suspend fun clearPlays() {

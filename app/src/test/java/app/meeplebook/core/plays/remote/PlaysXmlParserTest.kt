@@ -46,7 +46,6 @@ class PlaysXmlParserTest {
         assertEquals("Home", play.location)
         assertEquals(174430, play.gameId)
         assertEquals("Gloomhaven", play.gameName)
-        assertEquals("thing", play.gameSubtype)
         assertEquals("Great game!", play.comments)
         assertTrue(play.players.isEmpty())
     }

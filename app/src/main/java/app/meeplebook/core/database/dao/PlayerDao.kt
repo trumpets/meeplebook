@@ -1,15 +1,23 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import app.meeplebook.core.database.entity.PlayerEntity
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for players.
  */
 @Dao
 interface PlayerDao {
+
+    /**
+     * Observe all players for a specific play.
+     */
+    @Query("SELECT * FROM players WHERE playId = :playId")
+    fun observePlayersForPlay(playId: Int): Flow<List<PlayerEntity>>
 
     /**
      * Gets all players for a specific play.

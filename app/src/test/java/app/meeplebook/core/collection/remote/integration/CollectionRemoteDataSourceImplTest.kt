@@ -1,5 +1,6 @@
 package app.meeplebook.core.collection.remote.integration
 
+import app.meeplebook.core.collection.remote.CollectionFetchException
 import app.meeplebook.core.collection.remote.CollectionRemoteDataSourceImpl
 import app.meeplebook.core.network.BggApi
 import app.meeplebook.core.network.RetryException
@@ -323,31 +324,31 @@ class CollectionRemoteDataSourceImplTest {
     // --- Unexpected response code scenarios ---
 
     @Test
-    fun `fetchCollection throws RetryException on unexpected response code`() = runTest {
+    fun `fetchCollection throws CollectionFetchException on unexpected response code`() = runTest {
         // Given - unexpected 400 response
         mockWebServer.enqueue(MockResponse().setResponseCode(400).setBody("Bad Request"))
 
         // When / Then
         try {
             dataSource.fetchCollection("testuser")
-            fail("Expected RetryException")
-        } catch (e: RetryException) {
-            assertEquals(400, e.lastHttpCode)
+            fail("Expected CollectionFetchException")
+        } catch (e: CollectionFetchException) {
             assertTrue(e.message?.contains("Unexpected HTTP") == true)
+            assertTrue(e.message?.contains("400") == true)
         }
     }
 
     @Test
-    fun `fetchCollection throws RetryException on 404 not found`() = runTest {
+    fun `fetchCollection throws CollectionFetchException on 404 not found`() = runTest {
         // Given - 404 response
         mockWebServer.enqueue(MockResponse().setResponseCode(404).setBody("Not Found"))
 
         // When / Then
         try {
             dataSource.fetchCollection("testuser")
-            fail("Expected RetryException")
-        } catch (e: RetryException) {
-            assertEquals(404, e.lastHttpCode)
+            fail("Expected CollectionFetchException")
+        } catch (e: CollectionFetchException) {
+            assertTrue(e.message?.contains("404") == true)
         }
     }
 

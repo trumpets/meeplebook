@@ -1,10 +1,11 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import app.meeplebook.core.database.entity.CollectionItemEntity
 import kotlinx.coroutines.flow.Flow
 
 /**

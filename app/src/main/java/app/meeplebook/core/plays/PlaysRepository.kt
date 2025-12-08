@@ -18,11 +18,25 @@ interface PlaysRepository {
     fun observePlays(): Flow<List<Play>>
 
     /**
+     * Observes all plays for a specific game from local storage.
+     *
+     * @return Flow emitting the user's plays for a specific game.
+     */
+    fun observePlaysForGame(gameId: Int): Flow<List<Play>>
+
+    /**
      * Gets plays from local storage.
      *
      * @return The user's plays.
      */
     suspend fun getPlays(): List<Play>
+
+    /**
+     * Gets all plays for a specific game from local storage.
+     *
+     * @return The user's plays.
+     */
+    suspend fun getPlaysForGame(gameId: Int): List<Play>
 
     /**
      * Syncs all plays for a specific user from BGG.

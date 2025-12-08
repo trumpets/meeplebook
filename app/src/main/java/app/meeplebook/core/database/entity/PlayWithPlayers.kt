@@ -1,4 +1,4 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.entity
 
 import androidx.room.Embedded
 import androidx.room.Relation

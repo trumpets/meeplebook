@@ -19,19 +19,13 @@ abstract class PlaysModule {
 
     @Binds
     @Singleton
-    abstract fun bindPlaysRepository(
-        impl: PlaysRepositoryImpl
-    ): PlaysRepository
+    abstract fun bindPlaysRepository(impl: PlaysRepositoryImpl): PlaysRepository
 
     @Binds
     @Singleton
-    abstract fun bindPlaysLocalDataSource(
-        impl: PlaysLocalDataSourceImpl
-    ): PlaysLocalDataSource
+    abstract fun bindPlaysLocalDataSource(impl: PlaysLocalDataSourceImpl): PlaysLocalDataSource
 
     @Binds
     @Singleton
-    abstract fun bindPlaysRemoteDataSource(
-        impl: PlaysRemoteDataSourceImpl
-    ): PlaysRemoteDataSource
+    abstract fun bindPlaysRemoteDataSource(impl: PlaysRemoteDataSourceImpl): PlaysRemoteDataSource
 }

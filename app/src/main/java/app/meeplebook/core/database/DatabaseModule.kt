@@ -2,6 +2,9 @@ package app.meeplebook.core.database
 
 import android.content.Context
 import androidx.room.Room
+import app.meeplebook.core.database.dao.CollectionItemDao
+import app.meeplebook.core.database.dao.PlayDao
+import app.meeplebook.core.database.dao.PlayerDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +24,7 @@ object DatabaseModule {
             MeepleBookDatabase::class.java,
             "meeplebook.db"
         )
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true) // TODO: Handle migrations properly before going live
             .build()
     }
 

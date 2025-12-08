@@ -20,6 +20,7 @@ interface PlaysRemoteDataSource {
      * @throws app.meeplebook.core.network.RetryException if the fetch fails after retries.
      * @throws IllegalArgumentException if the username is blank.
      * @throws java.io.IOException for network-related errors.
+     * @throws PlaysFetchException for unknown http status codes
      */
     suspend fun fetchPlays(username: String, page: Int? = null): List<Play>
 }
