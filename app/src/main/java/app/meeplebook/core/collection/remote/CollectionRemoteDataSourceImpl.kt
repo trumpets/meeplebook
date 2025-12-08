@@ -81,7 +81,8 @@ class CollectionRemoteDataSourceImpl @Inject constructor(
                 )
             }
 
-            val body = response.body() ?: throw RetrySignal(code)
+            val body = response.body()
+                ?: throw java.io.IOException("Empty response body on HTTP $code")
 
             // STREAM reader instead of body.string()
             body.charStream().use { reader ->
