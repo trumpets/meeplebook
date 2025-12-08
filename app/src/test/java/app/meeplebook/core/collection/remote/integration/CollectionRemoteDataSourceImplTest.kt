@@ -261,6 +261,7 @@ class CollectionRemoteDataSourceImplTest {
 
         // Then
         assertEquals(2, result.size)
+        assertEquals(3, mockWebServer.requestCount)
     }
 
     @Test
@@ -316,6 +317,7 @@ class CollectionRemoteDataSourceImplTest {
 
         // Then
         assertEquals(2, result.size)
+        assertEquals(3, mockWebServer.requestCount)
     }
 
     // --- Unexpected response code scenarios ---
