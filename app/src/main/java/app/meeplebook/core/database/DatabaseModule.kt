@@ -20,11 +20,23 @@ object DatabaseModule {
             context,
             MeepleBookDatabase::class.java,
             "meeplebook.db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     fun provideCollectionItemDao(database: MeepleBookDatabase): CollectionItemDao {
         return database.collectionItemDao()
+    }
+
+    @Provides
+    fun providePlayDao(database: MeepleBookDatabase): PlayDao {
+        return database.playDao()
+    }
+
+    @Provides
+    fun providePlayerDao(database: MeepleBookDatabase): PlayerDao {
+        return database.playerDao()
     }
 }

@@ -30,4 +30,21 @@ interface BggApi {
         @Query("excludesubtype") excludeSubtype: String? = null,
         @Query("subtype") subtype: String? = null
     ): Response<ResponseBody>
+
+    /**
+     * Fetches a user's plays from BGG.
+     *
+     * @param username The BGG username.
+     * @param type The type of item (typically "thing" for board games).
+     * @param subtype The subtype to filter by (e.g., "boardgame", "boardgameexpansion").
+     * @param page The page number (page size is 100 records).
+     * @return Response containing XML body. Note: May return 202 if BGG is queuing the request.
+     */
+    @GET("xmlapi2/plays")
+    suspend fun getPlays(
+        @Query("username") username: String,
+        @Query("type") type: String? = null,
+        @Query("subtype") subtype: String? = null,
+        @Query("page") page: Int? = null
+    ): Response<ResponseBody>
 }

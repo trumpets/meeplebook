@@ -7,10 +7,16 @@ import androidx.room.RoomDatabase
  * The Room database for MeepleBook.
  */
 @Database(
-    entities = [CollectionItemEntity::class],
-    version = 1,
+    entities = [
+        CollectionItemEntity::class,
+        PlayEntity::class,
+        PlayerEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class MeepleBookDatabase : RoomDatabase() {
     abstract fun collectionItemDao(): CollectionItemDao
+    abstract fun playDao(): PlayDao
+    abstract fun playerDao(): PlayerDao
 }
