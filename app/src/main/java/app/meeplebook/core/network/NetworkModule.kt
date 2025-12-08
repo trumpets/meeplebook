@@ -29,8 +29,8 @@ object NetworkModule {
             .build()
     }
 
-
     @Provides
+    @Singleton
     fun provideBggApi(
         retrofit: Retrofit
     ): BggApi {

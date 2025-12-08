@@ -62,4 +62,13 @@ const val BACKOFF_MULTIPLIER = 1.4
 /** Maximum number of retry attempts */
 const val MAX_RETRY_ATTEMPTS = 10
 
+/**
+ * Internal signal exception used to trigger retries in the backoff mechanism.
+ *
+ * This exception is thrown within retryable blocks to indicate that the operation
+ * should be retried according to the configured backoff strategy. It is not intended
+ * for general error handling.
+ *
+ * @property httpCode Optional HTTP status code associated with the failure.
+ */
 class RetrySignal(val httpCode: Int?) : Exception()
