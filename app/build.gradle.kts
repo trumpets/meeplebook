@@ -140,6 +140,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     // Testing
+    // Unit tests (src/test)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
@@ -147,12 +148,14 @@ dependencies {
     testImplementation(libs.room.testing)
     testImplementation(libs.xmlpull)
     testImplementation(libs.kxml2)
+    
+    // Instrumented tests (src/androidTest)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.test) // For runTest in androidTest
+    androidTestImplementation(libs.room.testing) // For in-memory Room database in androidTest
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
