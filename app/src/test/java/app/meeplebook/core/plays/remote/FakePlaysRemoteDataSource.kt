@@ -8,6 +8,7 @@ import app.meeplebook.core.plays.model.Play
 class FakePlaysRemoteDataSource : PlaysRemoteDataSource {
 
     var playsToReturn: List<Play> = emptyList()
+    var playsToReturnByPage: Map<Int, List<Play>> = emptyMap()
     var shouldThrowException: Exception? = null
     var fetchPlaysCalled = false
     var lastFetchUsername: String? = null
@@ -19,6 +20,11 @@ class FakePlaysRemoteDataSource : PlaysRemoteDataSource {
         lastFetchPage = page
 
         shouldThrowException?.let { throw it }
+
+        // If page-specific responses are configured, use them
+        if (playsToReturnByPage.isNotEmpty() && page != null) {
+            return playsToReturnByPage[page] ?: emptyList()
+        }
 
         return playsToReturn
     }

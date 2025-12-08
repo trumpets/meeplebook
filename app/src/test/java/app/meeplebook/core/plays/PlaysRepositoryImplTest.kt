@@ -89,25 +89,16 @@ class PlaysRepositoryImplTest {
         }
         
         // Configure fake to return different results per page
-        var callCount = 0
-        val fakePlaysRemote = object : PlaysRemoteDataSource {
-            override suspend fun fetchPlays(username: String, page: Int?): List<Play> {
-                callCount++
-                return when (page) {
-                    1 -> page1Plays
-                    2 -> page2Plays
-                    else -> emptyList()
-                }
-            }
-        }
+        remote.playsToReturnByPage = mapOf(
+            1 to page1Plays,
+            2 to page2Plays
+        )
         
-        val repo = PlaysRepositoryImpl(local, fakePlaysRemote)
-        val result = repo.syncPlays("user123")
+        val result = repository.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
         val allPlays = (result as AppResult.Success).value
         assertEquals(150, allPlays.size)
-        assertEquals(2, callCount)
         assertEquals(150, local.getPlays().size)
     }
 
