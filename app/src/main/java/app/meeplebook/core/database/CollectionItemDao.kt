@@ -14,13 +14,13 @@ import kotlinx.coroutines.flow.Flow
 interface CollectionItemDao {
 
     /**
-     * Observes all collection items for a specific user.
+     * Observes all collection items.
      */
     @Query("SELECT * FROM collection_items ORDER BY name ASC")
     fun observeCollection(): Flow<List<CollectionItemEntity>>
 
     /**
-     * Gets all collection items for a specific user.
+     * Gets all collection items.
      */
     @Query("SELECT * FROM collection_items ORDER BY name ASC")
     suspend fun getCollection(): List<CollectionItemEntity>
@@ -38,13 +38,13 @@ interface CollectionItemDao {
     suspend fun insertAll(items: List<CollectionItemEntity>)
 
     /**
-     * Deletes all collection items for a specific user.
+     * Deletes all collection items.
      */
     @Query("DELETE FROM collection_items")
     suspend fun deleteAll()
 
     /**
-     * Replaces the entire collection for a user with new items.
+     * Replaces the entire collection with new items.
      */
     @Transaction
     suspend fun replaceCollection(items: List<CollectionItemEntity>) {

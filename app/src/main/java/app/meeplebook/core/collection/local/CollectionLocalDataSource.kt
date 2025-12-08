@@ -9,28 +9,28 @@ import kotlinx.coroutines.flow.Flow
 interface CollectionLocalDataSource {
 
     /**
-     * Observes the collection for a specific user.
+     * Observes the collection.
      *
      * @return Flow emitting the user's collection.
      */
     fun observeCollection(): Flow<List<CollectionItem>>
 
     /**
-     * Gets the collection for a specific user.
+     * Gets the collection.
      *
      * @return The user's collection.
      */
     suspend fun getCollection(): List<CollectionItem>
 
     /**
-     * Saves (replaces) the collection for a specific user.
+     * Saves (replaces) the collection.
      *
      * @param items The collection items to save.
      */
     suspend fun saveCollection(items: List<CollectionItem>)
 
     /**
-     * Clears the collection for a specific user.
+     * Clears the collection.
      *
      */
     suspend fun clearCollection()

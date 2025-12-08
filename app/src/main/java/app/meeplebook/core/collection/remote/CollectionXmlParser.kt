@@ -1,6 +1,5 @@
 package app.meeplebook.core.collection.remote
 
-import android.util.Xml
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 import org.xmlpull.v1.XmlPullParser
@@ -19,7 +18,7 @@ object CollectionXmlParser {
     /**
      * Parses the BGG collection XML response.
      *
-     * @param xml The XML string from BGG.
+     * @param reader The Reader containing XML from BGG.
      * @return List of [CollectionItem]s parsed from the XML.
      */
     fun parse(reader: Reader): List<CollectionItem> {

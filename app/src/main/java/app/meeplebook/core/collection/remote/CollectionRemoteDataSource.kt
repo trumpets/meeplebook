@@ -16,7 +16,9 @@ interface CollectionRemoteDataSource {
      *
      * @param username The BGG username.
      * @return List of [CollectionItem]s in the user's collection.
-     * @throws CollectionFetchException if the fetch fails after retries.
+     * @throws app.meeplebook.core.network.RetryException if the fetch fails after retries.
+     * @throws IllegalArgumentException if the username is blank.
+     * @throws java.io.IOException for network-related errors.
      */
     suspend fun fetchCollection(username: String): List<CollectionItem>
 }
