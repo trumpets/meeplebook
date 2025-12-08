@@ -5,6 +5,7 @@ import app.meeplebook.core.collection.local.FakeCollectionLocalDataSource
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.remote.CollectionRemoteDataSourceImpl
+import app.meeplebook.core.network.BggApi
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -16,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
 /**
@@ -38,11 +40,14 @@ class CollectionRepositoryIntegrationTest {
             .readTimeout(5, TimeUnit.SECONDS)
             .build()
 
+        val bggApi = Retrofit.Builder()
+            .baseUrl(mockWebServer.url("/"))
+            .client(okHttpClient)
+            .build()
+            .create(BggApi::class.java)
+
         fakeLocalDataSource = FakeCollectionLocalDataSource()
-        remoteDataSource = CollectionRemoteDataSourceImpl(
-            okHttpClient,
-            mockWebServer.url("/").toString()
-        )
+        remoteDataSource = CollectionRemoteDataSourceImpl(bggApi)
         repository = CollectionRepositoryImpl(fakeLocalDataSource, remoteDataSource)
     }
 
@@ -72,7 +77,12 @@ class CollectionRepositoryIntegrationTest {
 
         val expansionsXml = """
             <?xml version="1.0" encoding="utf-8"?>
-            <items totalitems="0"></items>
+            <items totalitems="1">
+                <item objectid="3" subtype="boardgameexpansion">
+                    <name>Expansion 1</name>
+                    <yearpublished>2022</yearpublished>
+                </item>
+            </items>
         """.trimIndent()
 
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(boardgamesXml))
@@ -84,7 +94,7 @@ class CollectionRepositoryIntegrationTest {
         // Then
         assertTrue(result is AppResult.Success)
         val items = (result as AppResult.Success).data
-        assertEquals(2, items.size)
+        assertEquals(3, items.size)
         assertEquals("Game 1", items[0].name)
         assertEquals("Game 2", items[1].name)
         assertEquals(1, fakeLocalDataSource.saveCollectionCallCount)
@@ -146,7 +156,12 @@ class CollectionRepositoryIntegrationTest {
 
         val expansionsXml = """
             <?xml version="1.0" encoding="utf-8"?>
-            <items totalitems="0"></items>
+            <items totalitems="1">
+                <item objectid="2" subtype="boardgameexpansion">
+                    <name>Test Expansion</name>
+                    <yearpublished>2021</yearpublished>
+                </item>
+            </items>
         """.trimIndent()
 
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(boardgamesXml))
@@ -156,34 +171,51 @@ class CollectionRepositoryIntegrationTest {
         repository.syncCollection("testuser")
 
         // Then
-        val localItems = repository.observeCollection("testuser").first()
-        assertEquals(1, localItems.size)
+        val localItems = repository.observeCollection().first()
+        assertEquals(2, localItems.size)
         assertEquals("Test Game", localItems[0].name)
     }
 
     @Test
-    fun `syncCollection with server error returns RateLimitError`() = runTest {
-        // Given
-        mockWebServer.enqueue(MockResponse().setResponseCode(503))
+    fun `syncCollection with server error returns MaxRetriesExceeded`() = runTest {
+        // Given - server errors will trigger retry logic until max attempts
+        repeat(10) {
+            mockWebServer.enqueue(MockResponse().setResponseCode(503))
+        }
 
         // When
         val result = repository.syncCollection("testuser")
 
         // Then
         assertTrue(result is AppResult.Failure)
-        assertTrue((result as AppResult.Failure).error is CollectionError.RateLimitError)
+        assertTrue((result as AppResult.Failure).error is CollectionError.MaxRetriesExceeded)
     }
 
     @Test
     fun `syncCollection sends correct query parameters`() = runTest {
-        // Given
-        val emptyXml = """
+        // Given - valid responses with items to avoid retry logic
+        val boardgamesXml = """
             <?xml version="1.0" encoding="utf-8"?>
-            <items totalitems="0"></items>
+            <items totalitems="1">
+                <item objectid="1" subtype="boardgame">
+                    <name>Test Game</name>
+                    <yearpublished>2020</yearpublished>
+                </item>
+            </items>
         """.trimIndent()
 
-        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(emptyXml))
-        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(emptyXml))
+        val expansionsXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1">
+                <item objectid="2" subtype="boardgameexpansion">
+                    <name>Test Expansion</name>
+                    <yearpublished>2021</yearpublished>
+                </item>
+            </items>
+        """.trimIndent()
+
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(boardgamesXml))
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(expansionsXml))
 
         // When
         repository.syncCollection("myuser")
