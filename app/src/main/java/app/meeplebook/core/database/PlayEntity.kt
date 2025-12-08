@@ -7,7 +7,10 @@ import app.meeplebook.core.plays.model.Play
 /**
  * Room entity representing a play stored locally.
  */
-@Entity(tableName = "plays")
+@Entity(
+    tableName = "plays",
+    indices = [androidx.room.Index(value = ["date"])]
+)
 data class PlayEntity(
     @PrimaryKey
     val id: Int,

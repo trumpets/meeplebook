@@ -68,7 +68,15 @@ class PlaysRemoteDataSourceImpl @Inject constructor(
 
             // Use charStream directly for parsing
             body.charStream().use { reader ->
-                return@retryWithBackoff PlaysXmlParser.parse(reader)
+                // Check for disguised queued response BEFORE parsing
+                val peek = reader.buffered(2048).readText()
+
+                if (peek.contains("total=\"0\"") && !peek.contains("<play ")) {
+                    throw RetrySignal(code)
+                }
+
+                // Need a fresh Reader for actual parsing
+                return@retryWithBackoff PlaysXmlParser.parse(peek.reader())
             }
         }
     }

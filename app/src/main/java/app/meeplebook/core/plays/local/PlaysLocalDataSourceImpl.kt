@@ -32,9 +32,15 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
     override suspend fun savePlays(plays: List<Play>) {
         database.withTransaction {
-            plays.forEach { play ->
-                playDao.insert(play.toEntity())
-                playerDao.insertAll(play.players.map { it.toEntity() })
+            // Bulk insert all plays first
+            playDao.insertAll(plays.map { it.toEntity() })
+            
+            // Bulk insert all players
+            val allPlayers = plays.flatMap { play ->
+                play.players.map { it.toEntity() }
+            }
+            if (allPlayers.isNotEmpty()) {
+                playerDao.insertAll(allPlayers)
             }
         }
     }
