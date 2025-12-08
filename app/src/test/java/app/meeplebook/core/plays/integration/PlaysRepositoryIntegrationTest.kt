@@ -81,7 +81,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).value
+        val plays = (result as AppResult.Success).data
         assertEquals(2, plays.size)
         assertEquals("Gloomhaven", plays[0].gameName)
         assertEquals("Catan", plays[1].gameName)
@@ -102,7 +102,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).value
+        val plays = (result as AppResult.Success).data
         assertEquals(150, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
@@ -121,7 +121,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).value
+        val plays = (result as AppResult.Success).data
         assertEquals(130, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
@@ -129,7 +129,7 @@ class PlaysRepositoryIntegrationTest {
     @Test
     fun `syncPlays stops fetching when page is empty`() = runTest {
         // Given - first page has plays, second page is empty
-        val page1Plays = buildPlaysXml(1, 50)
+        val page1Plays = buildPlaysXml(1, 100)
         val emptyPlays = """
             <?xml version="1.0" encoding="utf-8"?>
             <plays username="testuser" userid="123" total="0" page="2">
@@ -144,8 +144,8 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).value
-        assertEquals(50, plays.size)
+        val plays = (result as AppResult.Success).data
+        assertEquals(100, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
 
@@ -211,7 +211,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        assertEquals(10, (result as AppResult.Success).value.size)
+        assertEquals(10, (result as AppResult.Success).data.size)
         assertEquals(2, mockWebServer.requestCount)
     }
 
@@ -246,7 +246,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).value
+        val plays = (result as AppResult.Success).data
         assertEquals(1, plays.size)
         assertEquals(null, plays[0].length) // 0 normalized to null
         assertEquals(null, plays[0].location) // blank normalized to null
@@ -257,18 +257,14 @@ class PlaysRepositoryIntegrationTest {
 
     private fun buildPlaysXml(startId: Int, count: Int): String {
         val plays = (startId until startId + count).joinToString("\n") { id ->
-            """
-                <play id="$id" date="2024-01-01" quantity="1" length="60" incomplete="0" location="">
-                    <item name="Game $id" objecttype="thing" objectid="$id"></item>
-                </play>
-            """.trimIndent()
+            """<play id="$id" date="2024-01-01" quantity="1" length="60" incomplete="0" location="">
+    <item name="Game $id" objecttype="thing" objectid="$id"></item>
+</play>"""
         }
 
-        return """
-            <?xml version="1.0" encoding="utf-8"?>
-            <plays username="testuser" userid="123" total="$count" page="1">
-                $plays
-            </plays>
-        """.trimIndent()
+        return """<?xml version="1.0" encoding="utf-8"?>
+<plays username="testuser" userid="123" total="$count" page="1">
+    $plays
+</plays>"""
     }
 }

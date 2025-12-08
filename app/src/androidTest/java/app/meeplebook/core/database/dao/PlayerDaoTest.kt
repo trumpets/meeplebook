@@ -1,10 +1,9 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.dao
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.meeplebook.core.database.dao.PlayDao
-import app.meeplebook.core.database.dao.PlayerDao
+import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
 import kotlinx.coroutines.flow.first
@@ -161,6 +160,7 @@ class PlayerDaoTest {
             id = 10,
             playId = 1,
             name = "Original Name",
+            username = "testplayer",
             win = false
         )
         playerDao.insert(originalPlayer)
@@ -176,6 +176,7 @@ class PlayerDaoTest {
             id = 10, // Same ID
             playId = 1,
             name = "Updated Name",
+            username = "testplayer",
             win = true
         )
         playerDao.insert(updatedPlayer)

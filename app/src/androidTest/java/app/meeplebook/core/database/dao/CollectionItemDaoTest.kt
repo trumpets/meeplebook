@@ -1,9 +1,11 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.dao
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.core.collection.model.GameSubtype
+import app.meeplebook.core.database.MeepleBookDatabase
+import app.meeplebook.core.database.entity.CollectionItemEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After

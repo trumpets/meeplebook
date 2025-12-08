@@ -1,10 +1,9 @@
-package app.meeplebook.core.database
+package app.meeplebook.core.database.dao
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.meeplebook.core.database.dao.PlayDao
-import app.meeplebook.core.database.dao.PlayerDao
+import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
 import kotlinx.coroutines.flow.first
