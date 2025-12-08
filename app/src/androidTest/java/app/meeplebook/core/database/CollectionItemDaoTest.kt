@@ -417,6 +417,9 @@ class CollectionItemDaoTest {
     /**
      * Creates a test [CollectionItemEntity] with default or specified values.
      * Uses null defaults for optional parameters to make test intentions clear.
+     * 
+     * Note: Parameter order (gameId, name, subtype, ...) differs from constructor
+     * for better test readability. Most common usage: createTestEntity(id, name, subtype)
      */
     private fun createTestEntity(
         gameId: Int,
