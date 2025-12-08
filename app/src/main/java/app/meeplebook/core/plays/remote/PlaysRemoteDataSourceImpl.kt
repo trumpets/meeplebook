@@ -66,13 +66,9 @@ class PlaysRemoteDataSourceImpl @Inject constructor(
             val body = response.body()
                 ?: throw IOException("Empty response body on HTTP $code")
 
-            // STREAM reader instead of body.string()
+            // Use charStream directly for parsing
             body.charStream().use { reader ->
-                // Read the content for parsing
-                val content = reader.readText()
-                
-                // Parse plays
-                return@retryWithBackoff PlaysXmlParser.parse(content.reader())
+                return@retryWithBackoff PlaysXmlParser.parse(reader)
             }
         }
     }

@@ -3,6 +3,7 @@ package app.meeplebook.core.database
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 import app.meeplebook.core.plays.model.Player
 
 /**
@@ -10,7 +11,6 @@ import app.meeplebook.core.plays.model.Player
  */
 @Entity(
     tableName = "players",
-    primaryKeys = ["playId", "name"],
     foreignKeys = [
         ForeignKey(
             entity = PlayEntity::class,
@@ -22,6 +22,8 @@ import app.meeplebook.core.plays.model.Player
     indices = [Index("playId")]
 )
 data class PlayerEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     val playId: Int,
     val username: String?,
     val userId: Int?,
@@ -37,6 +39,7 @@ data class PlayerEntity(
  */
 fun PlayerEntity.toPlayer(): Player {
     return Player(
+        id = id,
         playId = playId,
         username = username,
         userId = userId,
@@ -53,6 +56,7 @@ fun PlayerEntity.toPlayer(): Player {
  */
 fun Player.toEntity(): PlayerEntity {
     return PlayerEntity(
+        id = id,
         playId = playId,
         username = username,
         userId = userId,

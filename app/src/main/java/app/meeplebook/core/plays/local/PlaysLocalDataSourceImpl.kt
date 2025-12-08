@@ -4,7 +4,6 @@ import app.meeplebook.core.database.PlayDao
 import app.meeplebook.core.database.PlayerDao
 import app.meeplebook.core.database.toEntity
 import app.meeplebook.core.database.toPlay
-import app.meeplebook.core.database.toPlayer
 import app.meeplebook.core.plays.model.Play
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,21 +18,13 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 ) : PlaysLocalDataSource {
 
     override fun observePlays(): Flow<List<Play>> {
-        return playDao.observePlays().map { playEntities ->
-            playEntities.map { playEntity ->
-                val players = playerDao.getPlayersForPlay(playEntity.id)
-                    .map { it.toPlayer() }
-                playEntity.toPlay(players)
-            }
+        return playDao.observePlaysWithPlayers().map { playsWithPlayers ->
+            playsWithPlayers.map { it.toPlay() }
         }
     }
 
     override suspend fun getPlays(): List<Play> {
-        return playDao.getPlays().map { playEntity ->
-            val players = playerDao.getPlayersForPlay(playEntity.id)
-                .map { it.toPlayer() }
-            playEntity.toPlay(players)
-        }
+        return playDao.getPlaysWithPlayers().map { it.toPlay() }
     }
 
     override suspend fun savePlays(plays: List<Play>) {

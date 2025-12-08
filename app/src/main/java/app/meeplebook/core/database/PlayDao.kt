@@ -14,6 +14,20 @@ import kotlinx.coroutines.flow.Flow
 interface PlayDao {
 
     /**
+     * Observes all plays with their players.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays ORDER BY date DESC")
+    fun observePlaysWithPlayers(): Flow<List<PlayWithPlayers>>
+
+    /**
+     * Gets all plays with their players.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays ORDER BY date DESC")
+    suspend fun getPlaysWithPlayers(): List<PlayWithPlayers>
+
+    /**
      * Observes all plays.
      */
     @Query("SELECT * FROM plays ORDER BY date DESC")
@@ -48,13 +62,4 @@ interface PlayDao {
      */
     @Query("DELETE FROM plays")
     suspend fun deleteAll()
-
-    /**
-     * Replaces all plays with new plays.
-     */
-    @Transaction
-    suspend fun replacePlays(plays: List<PlayEntity>) {
-        deleteAll()
-        insertAll(plays)
-    }
 }

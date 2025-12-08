@@ -32,6 +32,7 @@ data class Play(
 /**
  * Represents a player in a play.
  *
+ * @param id The unique ID of this player record (auto-generated, 0 for new players).
  * @param playId The play ID this player is associated with.
  * @param username The BGG username of the player.
  * @param userId The BGG user ID.
@@ -42,6 +43,7 @@ data class Play(
  * @param win Whether the player won.
  */
 data class Player(
+    val id: Int = 0,
     val playId: Int,
     val username: String?,
     val userId: Int?,
