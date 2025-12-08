@@ -1,6 +1,5 @@
 package app.meeplebook.core.plays
 
-import app.meeplebook.core.collection.remote.CollectionRemoteDataSourceImpl
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
