@@ -176,37 +176,6 @@ class PlaysRemoteDataSourceImplTest {
         assertEquals(10, mockWebServer.requestCount)
     }
 
-    // --- Disguised queue response scenarios ---
-
-    @Test
-    fun `fetchPlays retries on disguised queue response (200 with total=0 and no plays)`() = runTest {
-        // Given - disguised queue response (200 but actually queued), then success
-        val queuedXml = """
-            <?xml version="1.0" encoding="utf-8"?>
-            <plays username="testuser" userid="123" total="0" page="1">
-            </plays>
-        """.trimIndent()
-
-        val successXml = """
-            <?xml version="1.0" encoding="utf-8"?>
-            <plays username="testuser" userid="123" total="1" page="1">
-                <play id="1" date="2024-01-15" quantity="1" length="120" incomplete="0" location="">
-                    <item name="Game" objecttype="thing" objectid="1"></item>
-                </play>
-            </plays>
-        """.trimIndent()
-
-        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(queuedXml))
-        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(successXml))
-
-        // When
-        val result = dataSource.fetchPlays("testuser", 1)
-
-        // Then
-        assertEquals(1, result.size)
-        assertEquals(2, mockWebServer.requestCount)
-    }
-
     // --- 5xx Server error scenarios ---
 
     @Test
