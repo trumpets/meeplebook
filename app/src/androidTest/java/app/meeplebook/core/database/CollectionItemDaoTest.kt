@@ -358,11 +358,12 @@ class CollectionItemDaoTest {
             )
         )
 
-        // Get initial emission
+        // Verify initial state - Room's Flow emits current database state immediately
         var result = dao.observeCollection().first()
         assertEquals(1, result.size)
+        assertEquals(1, result[0].gameId)
 
-        // Replace collection
+        // Replace collection with new items
         dao.replaceCollection(
             listOf(
                 createTestEntity(2, "Game 2", GameSubtype.BOARDGAME),
@@ -370,7 +371,7 @@ class CollectionItemDaoTest {
             )
         )
 
-        // Get updated emission
+        // Verify updated state - collecting from Flow again gets the new database state
         result = dao.observeCollection().first()
         assertEquals(2, result.size)
         assertTrue(result.none { it.gameId == 1 })
