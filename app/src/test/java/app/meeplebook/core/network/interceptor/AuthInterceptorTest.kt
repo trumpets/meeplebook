@@ -1,13 +1,13 @@
 package app.meeplebook.core.network.interceptor
 
-import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.result.AppResult
 import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import okhttp3.Interceptor
@@ -23,15 +23,15 @@ import org.junit.Test
 class AuthInterceptorTest {
 
     private lateinit var chain: Interceptor.Chain
-    private lateinit var authRepository: AuthRepository
-    private lateinit var lazyRepository: Lazy<AuthRepository>
+    private lateinit var fakeAuthRepository: FakeAuthRepository
+    private lateinit var lazyRepository: Lazy<FakeAuthRepository>
     private lateinit var interceptor: AuthInterceptor
 
     @Before
     fun setUp() {
         chain = mockk(relaxed = true)
-        authRepository = mockk()
-        lazyRepository = Lazy { authRepository }
+        fakeAuthRepository = FakeAuthRepository()
+        lazyRepository = Lazy { fakeAuthRepository }
     }
 
     @After
@@ -45,7 +45,8 @@ class AuthInterceptorTest {
     fun `intercept adds cookie header when user is logged in`() = runTest {
         // Given
         val testUser = AuthCredentials("testuser", "testpass")
-        every { authRepository.observeCurrentUser() } returns flowOf(testUser)
+        fakeAuthRepository.loginResult = AppResult.Success(testUser)
+        fakeAuthRepository.login(testUser.username, testUser.password)
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected
@@ -70,8 +71,7 @@ class AuthInterceptorTest {
 
     @Test
     fun `intercept does not add cookie header when user is not logged in`() = runTest {
-        // Given
-        every { authRepository.observeCurrentUser() } returns flowOf(null)
+        // Given - no login, so current user is null
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected
@@ -97,7 +97,8 @@ class AuthInterceptorTest {
     fun `intercept properly encodes username with special characters`() = runTest {
         // Given
         val testUser = AuthCredentials("user+name@test", "password123")
-        every { authRepository.observeCurrentUser() } returns flowOf(testUser)
+        fakeAuthRepository.loginResult = AppResult.Success(testUser)
+        fakeAuthRepository.login(testUser.username, testUser.password)
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected
@@ -125,7 +126,8 @@ class AuthInterceptorTest {
     fun `intercept properly encodes password with special characters`() = runTest {
         // Given
         val testUser = AuthCredentials("username", "pass word!@#")
-        every { authRepository.observeCurrentUser() } returns flowOf(testUser)
+        fakeAuthRepository.loginResult = AppResult.Success(testUser)
+        fakeAuthRepository.login(testUser.username, testUser.password)
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected
@@ -153,7 +155,8 @@ class AuthInterceptorTest {
     fun `intercept proceeds with modified request and returns response`() = runTest {
         // Given
         val testUser = AuthCredentials("testuser", "testpass")
-        every { authRepository.observeCurrentUser() } returns flowOf(testUser)
+        fakeAuthRepository.loginResult = AppResult.Success(testUser)
+        fakeAuthRepository.login(testUser.username, testUser.password)
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected
@@ -177,7 +180,8 @@ class AuthInterceptorTest {
     fun `intercept preserves original request URL and method`() = runTest {
         // Given
         val testUser = AuthCredentials("testuser", "testpass")
-        every { authRepository.observeCurrentUser() } returns flowOf(testUser)
+        fakeAuthRepository.loginResult = AppResult.Success(testUser)
+        fakeAuthRepository.login(testUser.username, testUser.password)
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected
@@ -203,8 +207,7 @@ class AuthInterceptorTest {
 
     @Test
     fun `intercept does not modify request when credentials are null`() = runTest {
-        // Given
-        every { authRepository.observeCurrentUser() } returns flowOf(null)
+        // Given - no login, so current user is null
         
         interceptor = AuthInterceptor(lazyRepository)
         advanceUntilIdle() // Allow the Flow to be collected

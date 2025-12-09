@@ -41,7 +41,7 @@ class AuthInterceptor(
     init {
         // Start observing credentials and cache them in memory
         // This eliminates the need for runBlocking on every request
-        // Note: The Flow from DataStore is a hot flow that never completes normally.
+        // Note: The Flow from DataStore is a cold flow that remains active while collected and never completes normally.
         // If it does complete or error, we fail safe by leaving credentials null/stale.
         //
         // Race condition handling: If intercept() is called before the Flow emits its
