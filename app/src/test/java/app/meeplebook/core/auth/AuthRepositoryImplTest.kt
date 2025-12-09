@@ -49,6 +49,25 @@ class AuthRepositoryImplTest {
         assertNull(result)
     }
 
+    // --- getCurrentUser tests ---
+
+    @Test
+    fun `getCurrentUser returns credentials from local data source`() = runTest {
+        val credentials = AuthCredentials("user", "pass")
+        fakeLocalDataSource.setCredentials(credentials)
+
+        val result = repository.getCurrentUser()
+
+        assertEquals(credentials, result)
+    }
+
+    @Test
+    fun `getCurrentUser returns null when not logged in`() = runTest {
+        val result = repository.getCurrentUser()
+
+        assertNull(result)
+    }
+
     // --- login tests ---
 
     @Test

@@ -1,4 +1,4 @@
-package app.meeplebook.core.network
+package app.meeplebook.core.di
 
 import javax.inject.Qualifier
 

@@ -1,5 +1,6 @@
 package app.meeplebook.core.network
 
+import app.meeplebook.core.di.BggBaseUrl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
