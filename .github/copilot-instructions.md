@@ -32,7 +32,6 @@ model/             // shared data classes (Game, Play, User, AuthToken)
 network/           // retrofit interfaces, xml parsers
 database/          // Room entities, DAOs, Mappers
 util/              // helpers, date utils, xml utils
-di/                // hilt modules (app-wide)
 feature/
 login/
 LoginScreen.kt
@@ -184,6 +183,7 @@ Use Result<T> or sealed Either type from repository to differentiate success/fai
 ## 10 — Testing strategy
 
 Prefer fakes to Mockks!!! Only use Mockks for 3rd party classes. If a class can't be faked, abstract it to an interface so it can be!
+When adding a new feature, examine the types of tests of similar existing features and replicate the strategy.
 
 ### Unit tests
 
