@@ -29,7 +29,7 @@ class GetRecentPlaysUseCase @Inject constructor(
                 RecentPlay(
                     id = play.id.toLong(),
                     gameName = play.gameName,
-                    thumbnailUrl = null, // TODO: Add thumbnail support when available
+                    thumbnailUrl = null, // TODO: Add thumbnail support from CollectionRepository by mapping Play.gameId to collection items
                     dateText = formatDateText(play.date),
                     playerCount = play.players.size,
                     playerNames = formatPlayerNames(play.players.map { it.name })
