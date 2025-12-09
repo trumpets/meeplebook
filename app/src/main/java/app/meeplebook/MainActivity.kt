@@ -41,10 +41,10 @@ class MainActivity : ComponentActivity() {
                     }
                     
                     // Only show nav host once we've determined the initial route
-                    if (initialRoute != null) {
+                    initialRoute?.let { route ->
                         AppNavHost(
                             navController = navController,
-                            startDestination = initialRoute!!
+                            startDestination = route
                         )
                     }
                 }

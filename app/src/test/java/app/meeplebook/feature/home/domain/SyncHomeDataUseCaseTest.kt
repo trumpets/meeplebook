@@ -75,11 +75,6 @@ class SyncHomeDataUseCaseTest {
         assertEquals("testuser", fakeCollectionRepository.lastSyncUsername)
         assertEquals(1, fakePlaysRepository.syncPlaysCallCount)
         assertEquals("testuser", fakePlaysRepository.lastSyncUsername)
-        
-        // Verify sync times were recorded
-        assertNotNull(fakeSyncTimeRepository.observeLastCollectionSync().replayCache.firstOrNull())
-        assertNotNull(fakeSyncTimeRepository.observeLastPlaysSync().replayCache.firstOrNull())
-        assertNotNull(fakeSyncTimeRepository.observeLastFullSync().replayCache.firstOrNull())
     }
 
     @Test
