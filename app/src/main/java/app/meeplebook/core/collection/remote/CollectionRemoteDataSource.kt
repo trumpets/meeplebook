@@ -19,6 +19,7 @@ interface CollectionRemoteDataSource {
      * @throws app.meeplebook.core.network.RetryException if the fetch fails after retries.
      * @throws IllegalArgumentException if the username is blank.
      * @throws java.io.IOException for network-related errors.
+     * @throws CollectionFetchException for unknown http status codes
      */
     suspend fun fetchCollection(username: String): List<CollectionItem>
 }

@@ -1,9 +1,9 @@
 package app.meeplebook.core.collection.local
 
 import app.meeplebook.core.collection.model.CollectionItem
-import app.meeplebook.core.database.CollectionItemDao
-import app.meeplebook.core.database.toCollectionItem
-import app.meeplebook.core.database.toEntity
+import app.meeplebook.core.database.dao.CollectionItemDao
+import app.meeplebook.core.database.entity.toCollectionItem
+import app.meeplebook.core.database.entity.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
