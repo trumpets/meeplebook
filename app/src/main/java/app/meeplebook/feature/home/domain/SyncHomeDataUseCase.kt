@@ -7,6 +7,8 @@ import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.sync.SyncTimeRepository
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
@@ -25,7 +27,8 @@ sealed class SyncHomeDataError {
 class SyncHomeDataUseCase @Inject constructor(
     private val authRepository: AuthRepository,
     private val collectionRepository: CollectionRepository,
-    private val playsRepository: PlaysRepository
+    private val playsRepository: PlaysRepository,
+    private val syncTimeRepository: SyncTimeRepository
 ) {
     /**
      * Syncs collection and plays data for the currently logged-in user.
@@ -40,7 +43,10 @@ class SyncHomeDataUseCase @Inject constructor(
         // Sync collection
         val collectionResult = collectionRepository.syncCollection(user.username)
         collectionResult.fold(
-            onSuccess = { /* Continue to sync plays */ },
+            onSuccess = { 
+                // Record collection sync time
+                syncTimeRepository.updateCollectionSyncTime(LocalDateTime.now())
+            },
             onFailure = { error ->
                 return AppResult.Failure(SyncHomeDataError.CollectionSyncFailed(error))
             }
@@ -49,11 +55,17 @@ class SyncHomeDataUseCase @Inject constructor(
         // Sync plays
         val playsResult = playsRepository.syncPlays(user.username)
         playsResult.fold(
-            onSuccess = { /* Success */ },
+            onSuccess = { 
+                // Record plays sync time
+                syncTimeRepository.updatePlaysSyncTime(LocalDateTime.now())
+            },
             onFailure = { error ->
                 return AppResult.Failure(SyncHomeDataError.PlaysSyncFailed(error))
             }
         )
+        
+        // Record full sync time
+        syncTimeRepository.updateFullSyncTime(LocalDateTime.now())
         
         return AppResult.Success(Unit)
     }

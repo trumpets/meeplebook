@@ -81,6 +81,7 @@ enum class HomeNavigationDestination(
 
 /**
  * HomeScreen entry point that wires the ViewModel to the UI.
+ * Contains a nested NavHost for managing bottom tab navigation.
  *
  * @param viewModel The HomeViewModel (injected by Hilt)
  */
@@ -89,13 +90,40 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val tabNavController = androidx.navigation.compose.rememberNavController()
+    
+    // Track selected tab
+    val currentTab = androidx.navigation.compose.currentBackStackEntryAsState()
+        .value?.destination?.route
+    
+    val selectedTab = when (currentTab) {
+        "app.meeplebook.feature.home.navigation.HomeTabScreen.Collection" -> HomeNavigationDestination.COLLECTION
+        "app.meeplebook.feature.home.navigation.HomeTabScreen.Plays" -> HomeNavigationDestination.PLAYS
+        "app.meeplebook.feature.home.navigation.HomeTabScreen.Profile" -> HomeNavigationDestination.PROFILE
+        else -> HomeNavigationDestination.HOME
+    }
 
     HomeScreenContent(
         uiState = uiState,
-        onRefresh = { viewModel.refresh() }
-        // Top bar buttons (profile, more) do nothing - ignore them as per requirements
-        // Bottom navigation tabs do nothing - ignore them as per requirements
-        // Game highlights do nothing - ignore them as per requirements
+        selectedNavItem = selectedTab,
+        onNavItemClick = { destination ->
+            val route = when (destination) {
+                HomeNavigationDestination.HOME -> app.meeplebook.feature.home.navigation.HomeTabScreen.Overview
+                HomeNavigationDestination.COLLECTION -> app.meeplebook.feature.home.navigation.HomeTabScreen.Collection
+                HomeNavigationDestination.PLAYS -> app.meeplebook.feature.home.navigation.HomeTabScreen.Plays
+                HomeNavigationDestination.PROFILE -> app.meeplebook.feature.home.navigation.HomeTabScreen.Profile
+            }
+            tabNavController.navigate(route) {
+                // Pop up to start destination to avoid building up back stack
+                popUpTo(app.meeplebook.feature.home.navigation.HomeTabScreen.Overview) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        },
+        onRefresh = { viewModel.refresh() },
+        tabNavController = tabNavController
     )
 }
 
@@ -111,7 +139,8 @@ fun HomeScreenContent(
     onRecentPlayClick: (RecentPlay) -> Unit = {},
     onRecentlyAddedClick: () -> Unit = {},
     onSuggestedGameClick: () -> Unit = {},
-    onRefresh: () -> Unit = {}
+    onRefresh: () -> Unit = {},
+    tabNavController: androidx.navigation.NavHostController? = null
 ) {
     Scaffold(
         topBar = {
@@ -179,36 +208,69 @@ fun HomeScreenContent(
             }
         }
     ) { innerPadding ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            if (uiState.isLoading) {
-                // Loading state
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("loadingIndicator"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.loading_message),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+        // Nested NavHost for tabs
+        if (tabNavController != null) {
+            androidx.navigation.compose.NavHost(
+                navController = tabNavController,
+                startDestination = app.meeplebook.feature.home.navigation.HomeTabScreen.Overview,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Overview> {
+                    HomeOverviewTab(uiState, onRefresh)
                 }
-            } else {
-                LazyColumn(
+                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Collection> {
+                    HomeCollectionTab()
+                }
+                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Plays> {
+                    HomePlaysTab()
+                }
+                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Profile> {
+                    HomeProfileTab()
+                }
+            }
+        } else {
+            // Fallback for previews without tab navigation
+            HomeOverviewTab(uiState, onRefresh, Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Composable
+private fun HomeOverviewTab(
+    uiState: HomeUiState,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize()
+    ) {
+        if (uiState.isLoading) {
+            // Loading state
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("loadingIndicator"),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.loading_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("homeContent"),
@@ -287,6 +349,45 @@ fun HomeScreenContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeCollectionTab() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Collection Tab - Coming Soon",
+            style = MaterialTheme.typography.headlineSmall
+        )
+    }
+}
+
+@Composable
+private fun HomePlaysTab() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Plays Tab - Coming Soon",
+            style = MaterialTheme.typography.headlineSmall
+        )
+    }
+}
+
+@Composable
+private fun HomeProfileTab() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Profile Tab - Coming Soon",
+            style = MaterialTheme.typography.headlineSmall
+        )
     }
 }
 
