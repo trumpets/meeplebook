@@ -1,92 +1,37 @@
 package app.meeplebook.core.network.interceptor
 
-import android.net.Uri
-import android.util.Log
-import app.meeplebook.BuildConfig
 import app.meeplebook.core.auth.AuthRepository
-import app.meeplebook.core.model.AuthCredentials
-import dagger.Lazy
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
+import dagger.Lazy
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
-/**
- * Interceptor that adds BGG authentication cookies to requests.
- * Uses Lazy<AuthRepository> to prevent circular dependency:
- * - AuthRepository needs OkHttpClient for remote data source
- * - OkHttpClient needs AuthInterceptor
- * - Lazy breaks the cycle by deferring AuthRepository resolution
- * 
- * The interceptor maintains an in-memory cache of credentials that's updated
- * via Flow to avoid blocking network threads with runBlocking calls.
- */
 class AuthInterceptor(
-    private val repository: Lazy<AuthRepository>
+    private val repository: Lazy<AuthRepository> // to prevent circular dependency as repo needs OkHttp which needs this
 ) : Interceptor {
-
-    private val tag = "AuthInterceptor"
-    
-    // Cache credentials in memory to avoid blocking on every request
-    @Volatile
-    private var cachedCredentials: AuthCredentials? = null
-    
-    // Scope for observing credential changes
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
-    init {
-        // Start observing credentials and cache them in memory
-        // This eliminates the need for runBlocking on every request
-        // Note: The Flow from DataStore is a cold flow that remains active while collected and never completes normally.
-        // If it does complete or error, we fail safe by leaving credentials null/stale.
-        //
-        // Race condition handling: If intercept() is called before the Flow emits its
-        // first value, cachedCredentials will be null and the request proceeds without auth.
-        // This is acceptable because:
-        // 1. The interceptor is created early in app startup (Singleton)
-        // 2. Network requests typically happen after UI initialization
-        // 3. Failing without auth is safe - the request succeeds, just unauthenticated
-        // 4. Subsequent requests will have credentials cached once Flow emits
-        scope.launch {
-            try {
-                repository.get().observeCurrentUser().collect { credentials ->
-                    cachedCredentials = credentials
-                    if (BuildConfig.DEBUG) {
-                        Log.d(tag, "Credentials updated: ${if (credentials != null) "logged in" else "logged out"}")
-                    }
-                }
-                // If Flow completes (should never happen with DataStore), log it
-                if (BuildConfig.DEBUG) {
-                    Log.w(tag, "Credential observation completed unexpectedly")
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(tag, "Error observing credentials", e)
-                }
-                // On error, clear cached credentials to fail safe
-                // This prevents using potentially corrupted credentials
-                cachedCredentials = null
-            }
-        }
-    }
 
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Use cached credentials instead of blocking to fetch them
-        val currentUser = cachedCredentials
+        // blocks the OkHttp request thread to get the current user synchronously
+        // this is acceptable here since the auth data is stored locally
+        // and the operation should be quick
+        // alternatively, we could cache the current user in memory to avoid blocking
+        // but that would add complexity to keep the cache in sync
+        // with the repository
+        val currentUser = runBlocking { repository.get().getCurrentUser() }
 
         if (currentUser == null) {
             return chain.proceed(originalRequest)
         }
 
-        val username = Uri.encode(currentUser.username, "UTF-8")
-        val password = Uri.encode(currentUser.password, "UTF-8")
+        // Use URLEncoder for JVM-friendly percent-encoding and convert '+' (space) to '%20'
+        val username = URLEncoder.encode(currentUser.username, StandardCharsets.UTF_8.name()).replace("+", "%20")
+        val password = URLEncoder.encode(currentUser.password, StandardCharsets.UTF_8.name()).replace("+", "%20")
 
         val cookieValue = "bggusername=$username; bggpassword=$password"
 
@@ -95,20 +40,5 @@ class AuthInterceptor(
             .build()
 
         return chain.proceed(requestWithCookie)
-    }
-    
-    /**
-     * Cleanup method to cancel the coroutine scope.
-     * Internal for testing purposes only.
-     * 
-     * In production, this interceptor is a @Singleton and lives for the app lifetime,
-     * so cleanup is not needed (and would never be called). The coroutine scope will
-     * be garbage collected with the interceptor when the app process terminates.
-     * 
-     * This method exists solely to support unit tests that create multiple instances
-     * and need to clean up between tests.
-     */
-    internal fun cleanup() {
-        scope.cancel()
     }
 }

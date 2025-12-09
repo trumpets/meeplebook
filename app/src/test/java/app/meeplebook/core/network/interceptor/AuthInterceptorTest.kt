@@ -1,31 +1,26 @@
 package app.meeplebook.core.network.interceptor
 
+import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.model.AuthCredentials
-import app.meeplebook.core.result.AppResult
 import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
+import io.mockk.verify
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class AuthInterceptorTest {
 
     private lateinit var chain: Interceptor.Chain
     private lateinit var fakeAuthRepository: FakeAuthRepository
-    private lateinit var lazyRepository: Lazy<FakeAuthRepository>
-    private lateinit var interceptor: AuthInterceptor
+    private lateinit var lazyRepository: Lazy<AuthRepository>
 
     @Before
     fun setUp() {
@@ -34,25 +29,16 @@ class AuthInterceptorTest {
         lazyRepository = Lazy { fakeAuthRepository }
     }
 
-    @After
-    fun tearDown() {
-        if (::interceptor.isInitialized) {
-            interceptor.cleanup()
-        }
-    }
-
     @Test
-    fun `intercept adds cookie header when user is logged in`() = runTest {
+    fun `intercept adds cookie header when user is authenticated`() {
         // Given
-        val testUser = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.loginResult = AppResult.Success(testUser)
-        fakeAuthRepository.login(testUser.username, testUser.password)
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
+        val credentials = AuthCredentials("testuser", "testpass")
+        fakeAuthRepository.setCurrentUser(credentials)
+
+        val interceptor = AuthInterceptor(lazyRepository)
 
         val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection")
+            .url("https://api.example.com/test")
             .build()
         every { chain.request() } returns originalRequest
 
@@ -65,19 +51,18 @@ class AuthInterceptorTest {
 
         // Then
         val capturedRequest = requestSlot.captured
-        val cookieHeader = capturedRequest.header("Cookie")
-        assertEquals("bggusername=testuser; bggpassword=testpass", cookieHeader)
+        assertEquals("bggusername=testuser; bggpassword=testpass", capturedRequest.header("Cookie"))
     }
 
     @Test
-    fun `intercept does not add cookie header when user is not logged in`() = runTest {
-        // Given - no login, so current user is null
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
+    fun `intercept does not add cookie header when user is null`() {
+        // Given
+        fakeAuthRepository.setCurrentUser(null)
+
+        val interceptor = AuthInterceptor(lazyRepository)
 
         val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection")
+            .url("https://api.example.com/test")
             .build()
         every { chain.request() } returns originalRequest
 
@@ -94,17 +79,15 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept properly encodes username with special characters`() = runTest {
+    fun `intercept properly encodes username with special characters`() {
         // Given
-        val testUser = AuthCredentials("user+name@test", "password123")
-        fakeAuthRepository.loginResult = AppResult.Success(testUser)
-        fakeAuthRepository.login(testUser.username, testUser.password)
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
+        val credentials = AuthCredentials("user@test.com", "password")
+        fakeAuthRepository.setCurrentUser(credentials)
+
+        val interceptor = AuthInterceptor(lazyRepository)
 
         val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection")
+            .url("https://api.example.com/test")
             .build()
         every { chain.request() } returns originalRequest
 
@@ -117,23 +100,20 @@ class AuthInterceptorTest {
 
         // Then
         val capturedRequest = requestSlot.captured
-        val cookieHeader = capturedRequest.header("Cookie")
-        // URI.encode should encode special characters
-        assertEquals("bggusername=user%2Bname%40test; bggpassword=password123", cookieHeader)
+        // @ should be encoded to %40
+        assertEquals("bggusername=user%40test.com; bggpassword=password", capturedRequest.header("Cookie"))
     }
 
     @Test
-    fun `intercept properly encodes password with special characters`() = runTest {
+    fun `intercept properly encodes password with special characters`() {
         // Given
-        val testUser = AuthCredentials("username", "pass word!@#")
-        fakeAuthRepository.loginResult = AppResult.Success(testUser)
-        fakeAuthRepository.login(testUser.username, testUser.password)
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
+        val credentials = AuthCredentials("username", "p@ss word!")
+        fakeAuthRepository.setCurrentUser(credentials)
+
+        val interceptor = AuthInterceptor(lazyRepository)
 
         val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection")
+            .url("https://api.example.com/test")
             .build()
         every { chain.request() } returns originalRequest
 
@@ -146,23 +126,46 @@ class AuthInterceptorTest {
 
         // Then
         val capturedRequest = requestSlot.captured
-        val cookieHeader = capturedRequest.header("Cookie")
-        // URI.encode should encode special characters
-        assertEquals("bggusername=username; bggpassword=pass%20word%21%40%23", cookieHeader)
+        // @ should be encoded to %40, space to %20, ! to %21
+        assertEquals("bggusername=username; bggpassword=p%40ss%20word%21", capturedRequest.header("Cookie"))
     }
 
     @Test
-    fun `intercept proceeds with modified request and returns response`() = runTest {
+    fun `intercept encodes both username and password with special characters`() {
         // Given
-        val testUser = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.loginResult = AppResult.Success(testUser)
-        fakeAuthRepository.login(testUser.username, testUser.password)
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
+        val credentials = AuthCredentials("user+name", "pass=word&test")
+        fakeAuthRepository.setCurrentUser(credentials)
+
+        val interceptor = AuthInterceptor(lazyRepository)
 
         val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection")
+            .url("https://api.example.com/test")
+            .build()
+        every { chain.request() } returns originalRequest
+
+        val requestSlot = slot<Request>()
+        val mockResponse = mockk<Response>()
+        every { chain.proceed(capture(requestSlot)) } returns mockResponse
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        val capturedRequest = requestSlot.captured
+        // + should be encoded to %2B, = to %3D, & to %26
+        assertEquals("bggusername=user%2Bname; bggpassword=pass%3Dword%26test", capturedRequest.header("Cookie"))
+    }
+
+    @Test
+    fun `intercept proceeds with modified request`() {
+        // Given
+        val credentials = AuthCredentials("testuser", "testpass")
+        fakeAuthRepository.setCurrentUser(credentials)
+
+        val interceptor = AuthInterceptor(lazyRepository)
+
+        val originalRequest = Request.Builder()
+            .url("https://api.example.com/test")
             .build()
         every { chain.request() } returns originalRequest
 
@@ -173,22 +176,19 @@ class AuthInterceptorTest {
         val result = interceptor.intercept(chain)
 
         // Then
+        verify { chain.proceed(any()) }
         assertEquals(mockResponse, result)
     }
 
     @Test
-    fun `intercept preserves original request URL and method`() = runTest {
+    fun `intercept proceeds with original request when user is null`() {
         // Given
-        val testUser = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.loginResult = AppResult.Success(testUser)
-        fakeAuthRepository.login(testUser.username, testUser.password)
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
+        fakeAuthRepository.setCurrentUser(null)
+
+        val interceptor = AuthInterceptor(lazyRepository)
 
         val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection?username=test")
-            .post(mockk(relaxed = true))
+            .url("https://api.example.com/test")
             .build()
         every { chain.request() } returns originalRequest
 
@@ -197,36 +197,11 @@ class AuthInterceptorTest {
         every { chain.proceed(capture(requestSlot)) } returns mockResponse
 
         // When
-        interceptor.intercept(chain)
+        val result = interceptor.intercept(chain)
 
         // Then
-        val capturedRequest = requestSlot.captured
-        assertEquals(originalRequest.url, capturedRequest.url)
-        assertEquals(originalRequest.method, capturedRequest.method)
-    }
-
-    @Test
-    fun `intercept does not modify request when credentials are null`() = runTest {
-        // Given - no login, so current user is null
-        
-        interceptor = AuthInterceptor(lazyRepository)
-        advanceUntilIdle() // Allow the Flow to be collected
-
-        val originalRequest = Request.Builder()
-            .url("https://api.boardgamegeek.com/collection")
-            .build()
-        every { chain.request() } returns originalRequest
-
-        val requestSlot = slot<Request>()
-        val mockResponse = mockk<Response>()
-        every { chain.proceed(capture(requestSlot)) } returns mockResponse
-
-        // When
-        interceptor.intercept(chain)
-
-        // Then
-        val capturedRequest = requestSlot.captured
-        assertEquals(originalRequest.url, capturedRequest.url)
-        assertEquals(originalRequest.headers, capturedRequest.headers)
+        verify { chain.proceed(any()) }
+        assertEquals(mockResponse, result)
+        assertEquals(originalRequest, requestSlot.captured)
     }
 }
