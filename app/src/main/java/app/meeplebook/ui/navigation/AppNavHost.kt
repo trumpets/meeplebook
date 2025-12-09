@@ -21,9 +21,7 @@ fun AppNavHost(navController: NavHostController) {
             )
         }
         composable<Home> {
-            HomeScreen(
-                shouldRefresh = true // Refresh data immediately after login
-            )
+            HomeScreen()
         }
     }
 }

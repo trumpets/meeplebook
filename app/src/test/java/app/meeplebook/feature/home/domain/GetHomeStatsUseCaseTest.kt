@@ -5,7 +5,6 @@ import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.model.Play
-import app.meeplebook.core.plays.model.Player
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before

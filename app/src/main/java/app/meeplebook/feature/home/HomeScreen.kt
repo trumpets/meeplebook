@@ -83,21 +83,12 @@ enum class HomeNavigationDestination(
  * HomeScreen entry point that wires the ViewModel to the UI.
  *
  * @param viewModel The HomeViewModel (injected by Hilt)
- * @param shouldRefresh Flag to trigger immediate refresh (e.g., after login)
  */
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    shouldRefresh: Boolean = false
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    // Trigger refresh when shouldRefresh is true (e.g., after login)
-    LaunchedEffect(shouldRefresh) {
-        if (shouldRefresh) {
-            viewModel.refresh()
-        }
-    }
 
     HomeScreenContent(
         uiState = uiState,

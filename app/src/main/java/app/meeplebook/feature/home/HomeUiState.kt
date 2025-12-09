@@ -42,5 +42,6 @@ data class HomeUiState(
     val suggestedGame: GameHighlight? = null,
     val lastSyncedText: String = "",
     val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val errorMessage: String? = null
 )

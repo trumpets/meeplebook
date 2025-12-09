@@ -85,13 +85,15 @@ class HomeViewModelTest {
 
     @Test
     fun `loads home data on initialization`() = runTest {
-        // Setup data
-        fakeCollectionRepository.setCollection(
-            listOf(createCollectionItem(1, "Game 1"))
-        )
-        fakePlaysRepository.setPlays(
-            listOf(createPlay(1, "2024-12-05"))
-        )
+        // Setup logged in user for sync to work
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("testuser", "testpass"))
+        fakeAuthRepository.login("testuser", "testpass")
+        
+        // Setup sync results
+        val collectionItems = listOf(createCollectionItem(1, "Game 1"))
+        fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
+        val plays = listOf(createPlay(1, "2024-12-05"))
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(plays)
 
         viewModel = HomeViewModel(
             getHomeStatsUseCase,
@@ -287,9 +289,6 @@ class HomeViewModelTest {
         )
         advanceUntilIdle()
 
-        // Initial state should have "Never synced"
-        assertEquals("Never synced", viewModel.uiState.value.lastSyncedText)
-
         // After refresh
         viewModel.refresh()
         advanceUntilIdle()
@@ -297,6 +296,103 @@ class HomeViewModelTest {
         // Should have a recent sync time
         val lastSyncedText = viewModel.uiState.value.lastSyncedText
         assertTrue(lastSyncedText.contains("Last synced"))
+    }
+
+    @Test
+    fun `refresh handles collection sync failure gracefully`() = runTest {
+        // Setup logged in user
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("testuser", "testpass"))
+        fakeAuthRepository.login("testuser", "testpass")
+
+        // Make collection sync fail
+        fakeCollectionRepository.syncCollectionResult = 
+            AppResult.Failure(app.meeplebook.core.collection.model.CollectionError.NetworkError(
+                RuntimeException("Network error")
+            ))
+
+        viewModel = HomeViewModel(
+            getHomeStatsUseCase,
+            getRecentPlaysUseCase,
+            getCollectionHighlightsUseCase,
+            syncHomeDataUseCase
+        )
+        advanceUntilIdle()
+
+        // Trigger explicit refresh
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Verify error handling
+        val state = viewModel.uiState.value
+        assertFalse(state.isRefreshing)
+        assertNotNull(state.errorMessage)
+        assertEquals("Failed to sync data. Please try again.", state.errorMessage)
+    }
+
+    @Test
+    fun `refresh handles plays sync failure gracefully`() = runTest {
+        // Setup logged in user
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("testuser", "testpass"))
+        fakeAuthRepository.login("testuser", "testpass")
+
+        // Successful collection sync but failed plays sync
+        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = 
+            AppResult.Failure(app.meeplebook.core.plays.model.PlayError.NetworkError(
+                RuntimeException("Network error")
+            ))
+
+        viewModel = HomeViewModel(
+            getHomeStatsUseCase,
+            getRecentPlaysUseCase,
+            getCollectionHighlightsUseCase,
+            syncHomeDataUseCase
+        )
+        advanceUntilIdle()
+
+        // Trigger explicit refresh
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Verify error handling
+        val state = viewModel.uiState.value
+        assertFalse(state.isRefreshing)
+        assertNotNull(state.errorMessage)
+    }
+
+    @Test
+    fun `refresh clears previous error message`() = runTest {
+        // Setup logged in user
+        fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("testuser", "testpass"))
+        fakeAuthRepository.login("testuser", "testpass")
+
+        // First refresh fails
+        fakeCollectionRepository.syncCollectionResult = 
+            AppResult.Failure(app.meeplebook.core.collection.model.CollectionError.NetworkError(
+                RuntimeException("Network error")
+            ))
+
+        viewModel = HomeViewModel(
+            getHomeStatsUseCase,
+            getRecentPlaysUseCase,
+            getCollectionHighlightsUseCase,
+            syncHomeDataUseCase
+        )
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.errorMessage)
+
+        // Second refresh succeeds
+        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
+        
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Error should be cleared
+        assertNull(viewModel.uiState.value.errorMessage)
     }
 
     private fun createCollectionItem(gameId: Int, name: String) = CollectionItem(

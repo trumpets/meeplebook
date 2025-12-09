@@ -2,11 +2,13 @@ package app.meeplebook.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.meeplebook.core.result.AppResult
 import app.meeplebook.feature.home.domain.GetCollectionHighlightsUseCase
 import app.meeplebook.feature.home.domain.GetHomeStatsUseCase
 import app.meeplebook.feature.home.domain.GetRecentPlaysUseCase
 import app.meeplebook.feature.home.domain.SyncHomeDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +17,10 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+
+private const val MINUTES_IN_HOUR = 60L
+private const val MINUTES_IN_TWO_HOURS = 120L
+private const val MINUTES_IN_DAY = 1440L
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -30,8 +36,9 @@ class HomeViewModel @Inject constructor(
     private var lastSyncTime: LocalDateTime? = null
 
     init {
-        // Load initial data when ViewModel is created
-        loadHomeData()
+        // Refresh data on initialization (syncs from BGG)
+        // This ensures fresh data after login
+        refresh()
     }
 
     /**
@@ -40,18 +47,31 @@ class HomeViewModel @Inject constructor(
      */
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true) }
+            _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
             
             // Sync data from BGG
-            syncHomeDataUseCase()
+            val syncResult = syncHomeDataUseCase()
             
-            // Record sync time
-            lastSyncTime = LocalDateTime.now()
-            
-            // Reload data
-            loadHomeData()
-            
-            _uiState.update { it.copy(isRefreshing = false) }
+            when (syncResult) {
+                is AppResult.Success -> {
+                    // Record sync time
+                    lastSyncTime = LocalDateTime.now()
+                    
+                    // Reload data
+                    loadHomeData()
+                    
+                    _uiState.update { it.copy(isRefreshing = false) }
+                }
+                is AppResult.Failure -> {
+                    // Show error to user via UI state
+                    _uiState.update { 
+                        it.copy(
+                            isRefreshing = false,
+                            errorMessage = "Failed to sync data. Please try again."
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -63,9 +83,13 @@ class HomeViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             // Load all data in parallel
-            val stats = getHomeStatsUseCase()
-            val recentPlays = getRecentPlaysUseCase()
-            val (recentlyAdded, suggested) = getCollectionHighlightsUseCase()
+            val statsDeferred = async { getHomeStatsUseCase() }
+            val recentPlaysDeferred = async { getRecentPlaysUseCase() }
+            val highlightsDeferred = async { getCollectionHighlightsUseCase() }
+            
+            val stats = statsDeferred.await()
+            val recentPlays = recentPlaysDeferred.await()
+            val (recentlyAdded, suggested) = highlightsDeferred.await()
             
             _uiState.update {
                 it.copy(
@@ -91,11 +115,11 @@ class HomeViewModel @Inject constructor(
         
         return when {
             minutesAgo < 1L -> "Last synced: just now"
-            minutesAgo < 60L -> "Last synced: $minutesAgo min ago"
-            minutesAgo < 120L -> "Last synced: 1 hour ago"
-            minutesAgo < 1440L -> "Last synced: ${minutesAgo / 60} hours ago"
+            minutesAgo < MINUTES_IN_HOUR -> "Last synced: $minutesAgo min ago"
+            minutesAgo < MINUTES_IN_TWO_HOURS -> "Last synced: 1 hour ago"
+            minutesAgo < MINUTES_IN_DAY -> "Last synced: ${minutesAgo / MINUTES_IN_HOUR} hours ago"
             else -> {
-                val daysAgo = minutesAgo / 1440
+                val daysAgo = minutesAgo / MINUTES_IN_DAY
                 "Last synced: $daysAgo day${if (daysAgo > 1) "s" else ""} ago"
             }
         }
