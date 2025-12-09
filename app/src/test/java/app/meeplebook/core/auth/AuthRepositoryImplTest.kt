@@ -30,21 +30,21 @@ class AuthRepositoryImplTest {
         repository = AuthRepositoryImpl(fakeLocalDataSource, fakeRemoteDataSource)
     }
 
-    // --- currentUser tests ---
+    // --- observeCurrentUser tests ---
 
     @Test
-    fun `currentUser returns flow from local data source`() = runTest {
+    fun `observeCurrentUser returns flow from local data source`() = runTest {
         val credentials = AuthCredentials("user", "pass")
         fakeLocalDataSource.setCredentials(credentials)
 
-        val result = repository.currentUser().first()
+        val result = repository.observeCurrentUser().first()
 
         assertEquals(credentials, result)
     }
 
     @Test
-    fun `currentUser returns null when not logged in`() = runTest {
-        val result = repository.currentUser().first()
+    fun `observeCurrentUser returns null when not logged in`() = runTest {
+        val result = repository.observeCurrentUser().first()
 
         assertNull(result)
     }

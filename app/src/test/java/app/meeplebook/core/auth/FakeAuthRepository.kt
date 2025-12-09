@@ -38,7 +38,11 @@ class FakeAuthRepository : AuthRepository {
     var lastLoginPassword: String? = null
         private set
 
-    override fun currentUser(): Flow<AuthCredentials?> = _currentUser
+    override fun observeCurrentUser(): Flow<AuthCredentials?> = _currentUser
+
+    override suspend fun getCurrentUser(): AuthCredentials? {
+        return _currentUser.value
+    }
 
     override suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError> {
         loginCallCount++

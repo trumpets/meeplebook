@@ -17,8 +17,12 @@ class AuthRepositoryImpl @Inject constructor(
     private val remote: BggAuthRemoteDataSource
 ) : AuthRepository {
 
-    override fun currentUser(): Flow<AuthCredentials?> {
+    override fun observeCurrentUser(): Flow<AuthCredentials?> {
         return local.observeCredentials()
+    }
+
+    override suspend fun getCurrentUser(): AuthCredentials? {
+        return local.getCredentials()
     }
 
     override suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError> {

@@ -8,7 +8,10 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
 
     /** Emits the currently authenticated user, or null if logged out */
-    fun currentUser(): Flow<AuthCredentials?>
+    fun observeCurrentUser(): Flow<AuthCredentials?>
+
+    /** Gets the currently authenticated user, or null if logged out */
+    suspend fun getCurrentUser(): AuthCredentials?
 
     /** Performs a login with BGG */
     suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError>

@@ -2,10 +2,13 @@ package app.meeplebook.core.network
 
 import android.content.Context
 import app.meeplebook.BuildConfig
+import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.network.interceptor.AuthInterceptor
 import app.meeplebook.core.network.interceptor.BearerInterceptor
 import app.meeplebook.core.network.interceptor.UserAgentInterceptor
 import dagger.Module
 import dagger.Provides
+import dagger.Lazy
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
@@ -39,11 +42,18 @@ object OkHttpModule {
 
     @Provides
     @Singleton
-    fun provideOkHttp(logging: HttpLoggingInterceptor, bearer: BearerInterceptor, userAgent: UserAgentInterceptor): OkHttpClient {
+    fun provideAuthInterceptor(repository: Lazy<AuthRepository>): AuthInterceptor {
+        return AuthInterceptor(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttp(logging: HttpLoggingInterceptor, bearer: BearerInterceptor, userAgent: UserAgentInterceptor, authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .addNetworkInterceptor(logging)
             .addInterceptor(bearer)
             .addInterceptor(userAgent)
+            .addInterceptor(authInterceptor)
             .build()
     }
 }
