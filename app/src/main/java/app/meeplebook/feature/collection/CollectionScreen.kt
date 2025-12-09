@@ -302,10 +302,12 @@ fun CollectionScreenContent(
                     // Collection list with section headers (for alphabetical sort)
                     // Note: Search filtering is applied at the ViewModel level before
                     // games reach this UI. The searchQuery in uiState is for display only.
-                    val groupedGames = if (uiState.currentSort == CollectionSort.ALPHABETICAL) {
-                        uiState.games.groupBy { it.name.firstOrNull()?.uppercaseChar() ?: '#' }
-                    } else {
-                        mapOf("" to uiState.games) // No grouping for other sorts
+                    val groupedGames = remember(uiState.currentSort, uiState.games) {
+                        if (uiState.currentSort == CollectionSort.ALPHABETICAL) {
+                            uiState.games.groupBy { it.name.firstOrNull()?.uppercaseChar() ?: '#' }
+                        } else {
+                            mapOf("" to uiState.games) // No grouping for other sorts
+                        }
                     }
                     
                     LazyColumn(
@@ -318,7 +320,7 @@ fun CollectionScreenContent(
                             if (uiState.viewMode == CollectionViewMode.COMPACT) 8.dp else 12.dp
                         )
                     ) {
-                        groupedGames.forEach { (header, games) ->
+                        groupedGames.entries.forEach { (header, games) ->
                             if (header.isNotEmpty() && uiState.currentSort == CollectionSort.ALPHABETICAL) {
                                 item(key = "header_$header") {
                                     Text(
@@ -348,8 +350,7 @@ fun CollectionScreenContent(
                 }
             }
         }
-    }
-    
+        
         // Scroll to top FAB
         if (showScrollToTopFab && uiState.games.isNotEmpty()) {
             SmallFloatingActionButton(
