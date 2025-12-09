@@ -43,6 +43,14 @@ class AuthInterceptor(
         // This eliminates the need for runBlocking on every request
         // Note: The Flow from DataStore is a hot flow that never completes normally.
         // If it does complete or error, we fail safe by leaving credentials null/stale.
+        //
+        // Race condition handling: If intercept() is called before the Flow emits its
+        // first value, cachedCredentials will be null and the request proceeds without auth.
+        // This is acceptable because:
+        // 1. The interceptor is created early in app startup (Singleton)
+        // 2. Network requests typically happen after UI initialization
+        // 3. Failing without auth is safe - the request succeeds, just unauthenticated
+        // 4. Subsequent requests will have credentials cached once Flow emits
         scope.launch {
             try {
                 repository.get().observeCurrentUser().collect { credentials ->
@@ -92,8 +100,13 @@ class AuthInterceptor(
     /**
      * Cleanup method to cancel the coroutine scope.
      * Internal for testing purposes only.
-     * In production, this interceptor is a singleton and lives for the app lifetime,
-     * so cleanup is not needed.
+     * 
+     * In production, this interceptor is a @Singleton and lives for the app lifetime,
+     * so cleanup is not needed (and would never be called). The coroutine scope will
+     * be garbage collected with the interceptor when the app process terminates.
+     * 
+     * This method exists solely to support unit tests that create multiple instances
+     * and need to clean up between tests.
      */
     internal fun cleanup() {
         scope.cancel()
