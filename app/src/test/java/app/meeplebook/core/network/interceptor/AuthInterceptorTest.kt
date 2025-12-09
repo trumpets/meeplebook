@@ -3,7 +3,6 @@ package app.meeplebook.core.network.interceptor
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.model.AuthCredentials
 import dagger.Lazy
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

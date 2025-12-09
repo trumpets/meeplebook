@@ -56,7 +56,9 @@ class AuthInterceptor(
                     Log.w(tag, "Credential observation completed unexpectedly")
                 }
             } catch (e: Exception) {
-                Log.e(tag, "Error observing credentials", e)
+                if (BuildConfig.DEBUG) {
+                    Log.e(tag, "Error observing credentials", e)
+                }
                 // On error, clear cached credentials to fail safe
                 // This prevents using potentially corrupted credentials
                 cachedCredentials = null
