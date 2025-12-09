@@ -40,6 +40,10 @@ data class CollectionUiState(
 
 /**
  * Extension function to convert [CollectionItem] to [CollectionGameItem].
+ * 
+ * Note: playCount and lastPlayed are set to default values here.
+ * When integrated with a ViewModel, these should be populated by merging
+ * collection data with plays data from PlaysRepository.
  */
 fun CollectionItem.toCollectionGameItem(): CollectionGameItem {
     return CollectionGameItem(
@@ -47,7 +51,7 @@ fun CollectionItem.toCollectionGameItem(): CollectionGameItem {
         name = name,
         yearPublished = yearPublished,
         thumbnail = thumbnail,
-        playCount = 0, // TODO: Will be populated from plays data
-        lastPlayed = null // TODO: Will be populated from plays data
+        playCount = 0, // Will be populated from plays data in ViewModel
+        lastPlayed = null // Will be populated from plays data in ViewModel
     )
 }
