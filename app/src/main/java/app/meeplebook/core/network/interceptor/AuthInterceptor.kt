@@ -40,15 +40,20 @@ class AuthInterceptor(
     init {
         // Start observing credentials and cache them in memory
         // This eliminates the need for runBlocking on every request
+        // Note: The Flow from DataStore is a hot flow that never completes normally.
+        // If it does complete or error, we fail safe by leaving credentials null/stale.
         scope.launch {
             try {
                 repository.get().observeCurrentUser().collect { credentials ->
                     cachedCredentials = credentials
                     Log.d(tag, "Credentials updated: ${if (credentials != null) "logged in" else "logged out"}")
                 }
+                // If Flow completes (should never happen with DataStore), log it
+                Log.w(tag, "Credential observation completed unexpectedly")
             } catch (e: Exception) {
                 Log.e(tag, "Error observing credentials", e)
                 // On error, clear cached credentials to fail safe
+                // This prevents using potentially corrupted credentials
                 cachedCredentials = null
             }
         }
