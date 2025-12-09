@@ -464,4 +464,22 @@ class CollectionScreenContentTest {
         // FAB should not be visible initially (before scrolling)
         composeTestRule.onNodeWithTag("scrollToTopFab").assertDoesNotExist()
     }
+
+    @Test
+    fun collectionScreen_emptySearchResults_displaysNoResultsMessage() {
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                CollectionScreenContent(
+                    uiState = CollectionUiState(
+                        games = emptyList(),
+                        searchQuery = "nonexistent game"
+                    )
+                )
+            }
+        }
+
+        // Verify no results message is displayed
+        composeTestRule.onNodeWithTag("emptyState").assertIsDisplayed()
+        composeTestRule.onNodeWithText("No games match your search").assertIsDisplayed()
+    }
 }

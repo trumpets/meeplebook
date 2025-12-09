@@ -278,7 +278,7 @@ fun CollectionScreenContent(
                     }
                 }
                 uiState.games.isEmpty() -> {
-                    // Empty state
+                    // Empty state - either no collection or no search results
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -286,7 +286,11 @@ fun CollectionScreenContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.collection_empty),
+                            text = if (uiState.searchQuery.isNotEmpty()) {
+                                stringResource(R.string.collection_no_results)
+                            } else {
+                                stringResource(R.string.collection_empty)
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -296,6 +300,8 @@ fun CollectionScreenContent(
                 }
                 else -> {
                     // Collection list with section headers (for alphabetical sort)
+                    // Note: Search filtering is applied at the ViewModel level before
+                    // games reach this UI. The searchQuery in uiState is for display only.
                     val groupedGames = if (uiState.currentSort == CollectionSort.ALPHABETICAL) {
                         uiState.games.groupBy { it.name.firstOrNull()?.uppercaseChar() ?: '#' }
                     } else {
