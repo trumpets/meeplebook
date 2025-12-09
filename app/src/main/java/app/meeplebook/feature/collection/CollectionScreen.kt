@@ -302,11 +302,14 @@ fun CollectionScreenContent(
                     // Collection list with section headers (for alphabetical sort)
                     // Note: Search filtering is applied at the ViewModel level before
                     // games reach this UI. The searchQuery in uiState is for display only.
+                    
+                    // Performance: groupBy is cached with remember() and only recalculates
+                    // when sort or games list changes. Empty string used as sentinel for "no grouping".
                     val groupedGames = remember(uiState.currentSort, uiState.games) {
                         if (uiState.currentSort == CollectionSort.ALPHABETICAL) {
                             uiState.games.groupBy { it.name.firstOrNull()?.uppercaseChar() ?: '#' }
                         } else {
-                            mapOf("" to uiState.games) // No grouping for other sorts
+                            mapOf("" to uiState.games) // Empty string = no grouping/headers
                         }
                     }
                     
@@ -320,6 +323,8 @@ fun CollectionScreenContent(
                             if (uiState.viewMode == CollectionViewMode.COMPACT) 8.dp else 12.dp
                         )
                     ) {
+                        // forEach on Map entries is fine here - we're using LazyColumn's items()
+                        // function inside which provides proper lazy loading for large lists
                         groupedGames.entries.forEach { (header, games) ->
                             if (header.isNotEmpty() && uiState.currentSort == CollectionSort.ALPHABETICAL) {
                                 item(key = "header_$header") {
