@@ -2,6 +2,7 @@ package app.meeplebook.core.network.interceptor
 
 import android.net.Uri
 import android.util.Log
+import app.meeplebook.BuildConfig
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.model.AuthCredentials
 import dagger.Lazy
@@ -46,10 +47,14 @@ class AuthInterceptor(
             try {
                 repository.get().observeCurrentUser().collect { credentials ->
                     cachedCredentials = credentials
-                    Log.d(tag, "Credentials updated: ${if (credentials != null) "logged in" else "logged out"}")
+                    if (BuildConfig.DEBUG) {
+                        Log.d(tag, "Credentials updated: ${if (credentials != null) "logged in" else "logged out"}")
+                    }
                 }
                 // If Flow completes (should never happen with DataStore), log it
-                Log.w(tag, "Credential observation completed unexpectedly")
+                if (BuildConfig.DEBUG) {
+                    Log.w(tag, "Credential observation completed unexpectedly")
+                }
             } catch (e: Exception) {
                 Log.e(tag, "Error observing credentials", e)
                 // On error, clear cached credentials to fail safe
@@ -84,10 +89,11 @@ class AuthInterceptor(
     
     /**
      * Cleanup method to cancel the coroutine scope.
-     * Should be called when the interceptor is no longer needed.
-     * In practice, since this is a singleton, it lives for the app lifetime.
+     * Internal for testing purposes only.
+     * In production, this interceptor is a singleton and lives for the app lifetime,
+     * so cleanup is not needed.
      */
-    fun cleanup() {
+    internal fun cleanup() {
         scope.cancel()
     }
 }
