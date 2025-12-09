@@ -27,4 +27,21 @@
     <string name="play_date_players">%1$s • %2$d players</string>
     <string name="empty_recent_plays_message">No recent plays. Start logging your game sessions!</string>
     <string name="loading_message">Loading your games…</string>
+
+    <!-- Collection Screen -->
+    <string name="collection_title">My Collection</string>
+    <string name="collection_loading">Loading collection…</string>
+    <string name="collection_empty">Your collection is empty. Add games to your BGG collection to see them here.</string>
+    <string name="collection_game_count">%d games</string>
+    <string name="collection_sort_button">Sort</string>
+    <string name="collection_filter_button">Filter</string>
+    <string name="collection_sort_alphabetical">Alphabetical</string>
+    <string name="collection_sort_year_oldest">Year Published (Oldest)</string>
+    <string name="collection_sort_year_newest">Year Published (Newest)</string>
+    <string name="collection_sort_most_played">Most Played</string>
+    <string name="collection_sort_least_played">Least Played</string>
+    <string name="collection_sort_recently_played">Most Recently Played</string>
+    <string name="collection_sort_least_recently_played">Least Recently Played</string>
+    <string name="collection_year_published">(%d)</string>
+    <string name="collection_plays_count">%d plays</string>
 </resources>
