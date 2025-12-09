@@ -44,4 +44,10 @@
     <string name="collection_sort_least_recently_played">Least Recently Played</string>
     <string name="collection_year_published">(%d)</string>
     <string name="collection_plays_count">%d plays</string>
+    <string name="collection_search_hint">Search games…</string>
+    <string name="collection_clear_search">Clear search</string>
+    <string name="collection_scroll_to_top">Scroll to top</string>
+    <string name="collection_view_compact">Compact view</string>
+    <string name="collection_view_comfortable">Comfortable view</string>
+    <string name="collection_no_results">No games match your search</string>
 </resources>

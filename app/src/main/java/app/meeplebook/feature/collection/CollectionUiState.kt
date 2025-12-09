@@ -28,11 +28,21 @@ enum class CollectionSort {
 }
 
 /**
+ * View mode for the collection display.
+ */
+enum class CollectionViewMode {
+    COMFORTABLE,  // Default view with larger cards
+    COMPACT       // Smaller cards to show more games per screen
+}
+
+/**
  * UI state for the Collection screen.
  */
 data class CollectionUiState(
     val games: List<CollectionGameItem> = emptyList(),
     val currentSort: CollectionSort = CollectionSort.ALPHABETICAL,
+    val viewMode: CollectionViewMode = CollectionViewMode.COMFORTABLE,
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null
