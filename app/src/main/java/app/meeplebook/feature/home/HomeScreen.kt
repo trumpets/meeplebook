@@ -42,6 +42,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import app.meeplebook.R
 import app.meeplebook.ui.theme.MeepleBookTheme
 
@@ -73,6 +77,35 @@ enum class HomeNavigationDestination(
     COLLECTION(R.string.nav_collection, Icons.Default.CollectionsBookmark, R.string.nav_collection),
     PLAYS(R.string.nav_plays, Icons.Default.BarChart, R.string.nav_plays),
     PROFILE(R.string.nav_profile, Icons.Default.Person, R.string.nav_profile)
+}
+
+/**
+ * HomeScreen entry point that wires the ViewModel to the UI.
+ *
+ * @param viewModel The HomeViewModel (injected by Hilt)
+ * @param shouldRefresh Flag to trigger immediate refresh (e.g., after login)
+ */
+@Composable
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    shouldRefresh: Boolean = false
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Trigger refresh when shouldRefresh is true (e.g., after login)
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) {
+            viewModel.refresh()
+        }
+    }
+
+    HomeScreenContent(
+        uiState = uiState,
+        onRefresh = { viewModel.refresh() }
+        // Top bar buttons (profile, more) do nothing - ignore them as per requirements
+        // Bottom navigation tabs do nothing - ignore them as per requirements
+        // Game highlights do nothing - ignore them as per requirements
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
