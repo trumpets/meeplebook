@@ -1,8 +1,9 @@
 package app.meeplebook.feature.home
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -225,7 +226,12 @@ class HomeScreenContentTest {
         }
 
         // Verify zero stats are displayed
-        composeTestRule.onNodeWithText("0").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("0").assertCountEquals(4)
+        composeTestRule.onAllNodesWithText("0")[0].assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("0")[1].assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("0")[2].assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("0")[3].assertIsDisplayed()
+
         composeTestRule.onNodeWithText("Never synced").assertIsDisplayed()
     }
 
