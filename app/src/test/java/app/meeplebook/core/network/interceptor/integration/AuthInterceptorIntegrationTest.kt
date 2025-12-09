@@ -1,12 +1,16 @@
 package app.meeplebook.core.network.interceptor.integration
 
-import app.meeplebook.core.auth.AuthRepository
-import app.meeplebook.core.auth.FakeAuthRepository
+import app.meeplebook.core.auth.CurrentCredentialsStore
+import app.meeplebook.core.auth.local.FakeAuthLocalDataSource
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.network.interceptor.AuthInterceptor
 import app.meeplebook.core.network.interceptor.BearerInterceptor
 import app.meeplebook.core.network.interceptor.UserAgentInterceptor
-import dagger.Lazy
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -26,18 +30,21 @@ import java.util.concurrent.TimeUnit
  * These tests verify the interceptor works correctly in a real OkHttp request chain,
  * which provides more confidence than unit tests with mocked chains.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class AuthInterceptorIntegrationTest {
 
     private lateinit var mockWebServer: MockWebServer
-    private lateinit var fakeAuthRepository: FakeAuthRepository
-    private lateinit var lazyRepository: Lazy<AuthRepository>
+    private lateinit var fakeAuthLocalDataSource: FakeAuthLocalDataSource
+    private lateinit var testScope: TestScope
+    private lateinit var credentialsStore: CurrentCredentialsStore
 
     @Before
     fun setUp() {
         mockWebServer = MockWebServer()
         mockWebServer.start()
-        fakeAuthRepository = FakeAuthRepository()
-        lazyRepository = Lazy { fakeAuthRepository }
+        fakeAuthLocalDataSource = FakeAuthLocalDataSource()
+        testScope = TestScope(UnconfinedTestDispatcher())
+        credentialsStore = CurrentCredentialsStore(fakeAuthLocalDataSource, testScope)
     }
 
     @After
@@ -46,13 +53,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor adds cookie header to request in real chain when user is authenticated`() {
+    fun `interceptor adds cookie header to request in real chain when user is authenticated`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpassword")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -70,12 +78,13 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor does not add cookie header when user is null`() {
+    fun `interceptor does not add cookie header when user is null`() = runTest {
         // Given
-        fakeAuthRepository.setCurrentUser(null)
+        fakeAuthLocalDataSource.setCredentials(null)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -93,13 +102,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor properly encodes username and password with special characters`() {
+    fun `interceptor properly encodes username and password with special characters`() = runTest {
         // Given
         val credentials = AuthCredentials("user@example.com", "p@ss word!")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -117,13 +127,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor preserves existing headers`() {
+    fun `interceptor preserves existing headers`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -145,13 +156,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor returns response correctly`() {
+    fun `interceptor returns response correctly`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -174,13 +186,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `multiple requests all receive cookie header`() {
+    fun `multiple requests all receive cookie header`() = runTest {
         // Given
         val credentials = AuthCredentials("persistentuser", "persistentpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -204,15 +217,16 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor works with bearer and user agent interceptors together`() {
+    fun `interceptor works with bearer and user agent interceptors together`() = runTest {
         // Given - all three interceptors in the chain
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
             .addInterceptor(UserAgentInterceptor(null))
             .addInterceptor(BearerInterceptor("test-token"))
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -232,13 +246,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor handles error responses correctly`() {
+    fun `interceptor handles error responses correctly`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -261,13 +276,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor handles POST requests correctly`() {
+    fun `interceptor handles POST requests correctly`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -287,13 +303,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor handles PUT requests correctly`() {
+    fun `interceptor handles PUT requests correctly`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -313,13 +330,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor handles DELETE requests correctly`() {
+    fun `interceptor handles DELETE requests correctly`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -339,13 +357,14 @@ class AuthInterceptorIntegrationTest {
     }
 
     @Test
-    fun `interceptor does not add cookie to subsequent requests when user becomes null`() {
+    fun `interceptor does not add cookie to subsequent requests when user becomes null`() = runTest {
         // Given - first request with user, second without
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle()
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(lazyRepository))
+            .addInterceptor(AuthInterceptor(credentialsStore))
             .connectTimeout(5, TimeUnit.SECONDS)
             .build()
 
@@ -359,7 +378,8 @@ class AuthInterceptorIntegrationTest {
         client.newCall(request1).execute()
 
         // User logs out before second request
-        fakeAuthRepository.setCurrentUser(null)
+        fakeAuthLocalDataSource.setCredentials(null)
+        advanceUntilIdle()
 
         val request2 = Request.Builder()
             .url(mockWebServer.url("/api/test2"))

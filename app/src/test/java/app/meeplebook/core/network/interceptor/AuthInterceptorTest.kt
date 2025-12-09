@@ -1,13 +1,17 @@
 package app.meeplebook.core.network.interceptor
 
-import app.meeplebook.core.auth.AuthRepository
-import app.meeplebook.core.auth.FakeAuthRepository
+import app.meeplebook.core.auth.CurrentCredentialsStore
+import app.meeplebook.core.auth.local.FakeAuthLocalDataSource
 import app.meeplebook.core.model.AuthCredentials
-import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -16,26 +20,30 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AuthInterceptorTest {
 
     private lateinit var chain: Interceptor.Chain
-    private lateinit var fakeAuthRepository: FakeAuthRepository
-    private lateinit var lazyRepository: Lazy<AuthRepository>
+    private lateinit var fakeAuthLocalDataSource: FakeAuthLocalDataSource
+    private lateinit var testScope: TestScope
+    private lateinit var credentialsStore: CurrentCredentialsStore
 
     @Before
     fun setUp() {
         chain = mockk(relaxed = true)
-        fakeAuthRepository = FakeAuthRepository()
-        lazyRepository = Lazy { fakeAuthRepository }
+        fakeAuthLocalDataSource = FakeAuthLocalDataSource()
+        testScope = TestScope(UnconfinedTestDispatcher())
+        credentialsStore = CurrentCredentialsStore(fakeAuthLocalDataSource, testScope)
     }
 
     @Test
-    fun `intercept adds cookie header when user is authenticated`() {
+    fun `intercept adds cookie header when user is authenticated`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -55,11 +63,12 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept does not add cookie header when user is null`() {
+    fun `intercept does not add cookie header when user is null`() = runTest {
         // Given
-        fakeAuthRepository.setCurrentUser(null)
+        fakeAuthLocalDataSource.setCredentials(null)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -79,12 +88,13 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept properly encodes username with special characters`() {
+    fun `intercept properly encodes username with special characters`() = runTest {
         // Given
         val credentials = AuthCredentials("user@test.com", "password")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -105,12 +115,13 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept properly encodes password with special characters`() {
+    fun `intercept properly encodes password with special characters`() = runTest {
         // Given
         val credentials = AuthCredentials("username", "p@ss word!")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -131,12 +142,13 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept encodes both username and password with special characters`() {
+    fun `intercept encodes both username and password with special characters`() = runTest {
         // Given
         val credentials = AuthCredentials("user+name", "pass=word&test")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -157,12 +169,13 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept proceeds with modified request`() {
+    fun `intercept proceeds with modified request`() = runTest {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        fakeAuthLocalDataSource.setCredentials(credentials)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -181,11 +194,12 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `intercept proceeds with original request when user is null`() {
+    fun `intercept proceeds with original request when user is null`() = runTest {
         // Given
-        fakeAuthRepository.setCurrentUser(null)
+        fakeAuthLocalDataSource.setCredentials(null)
+        advanceUntilIdle() // Allow the Flow to be collected
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
