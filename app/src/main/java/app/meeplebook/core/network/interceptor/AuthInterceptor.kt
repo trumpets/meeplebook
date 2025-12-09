@@ -1,12 +1,13 @@
 package app.meeplebook.core.network.interceptor
 
-import android.net.Uri
 import app.meeplebook.core.auth.AuthRepository
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
 import dagger.Lazy
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class AuthInterceptor(
     private val repository: Lazy<AuthRepository> // to prevent circular dependency as repo needs OkHttp which needs this
@@ -28,8 +29,9 @@ class AuthInterceptor(
             return chain.proceed(originalRequest)
         }
 
-        val username = Uri.encode(currentUser.username, "UTF-8")
-        val password = Uri.encode(currentUser.password, "UTF-8")
+        // Use URLEncoder for JVM-friendly percent-encoding and convert '+' (space) to '%20'
+        val username = URLEncoder.encode(currentUser.username, StandardCharsets.UTF_8.name()).replace("+", "%20")
+        val password = URLEncoder.encode(currentUser.password, StandardCharsets.UTF_8.name()).replace("+", "%20")
 
         val cookieValue = "bggusername=$username; bggpassword=$password"
 
