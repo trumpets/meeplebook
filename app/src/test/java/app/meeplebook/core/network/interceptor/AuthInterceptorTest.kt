@@ -1,9 +1,9 @@
 package app.meeplebook.core.network.interceptor
 
 import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.model.AuthCredentials
 import dagger.Lazy
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -19,21 +19,21 @@ import org.junit.Test
 class AuthInterceptorTest {
 
     private lateinit var chain: Interceptor.Chain
-    private lateinit var mockRepository: AuthRepository
+    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var lazyRepository: Lazy<AuthRepository>
 
     @Before
     fun setUp() {
         chain = mockk(relaxed = true)
-        mockRepository = mockk()
-        lazyRepository = Lazy { mockRepository }
+        fakeAuthRepository = FakeAuthRepository()
+        lazyRepository = Lazy { fakeAuthRepository }
     }
 
     @Test
     fun `intercept adds cookie header when user is authenticated`() {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        coEvery { mockRepository.getCurrentUser() } returns credentials
+        fakeAuthRepository.setCurrentUser(credentials)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
@@ -57,7 +57,7 @@ class AuthInterceptorTest {
     @Test
     fun `intercept does not add cookie header when user is null`() {
         // Given
-        coEvery { mockRepository.getCurrentUser() } returns null
+        fakeAuthRepository.setCurrentUser(null)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
@@ -82,7 +82,7 @@ class AuthInterceptorTest {
     fun `intercept properly encodes username with special characters`() {
         // Given
         val credentials = AuthCredentials("user@test.com", "password")
-        coEvery { mockRepository.getCurrentUser() } returns credentials
+        fakeAuthRepository.setCurrentUser(credentials)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
@@ -108,7 +108,7 @@ class AuthInterceptorTest {
     fun `intercept properly encodes password with special characters`() {
         // Given
         val credentials = AuthCredentials("username", "p@ss word!")
-        coEvery { mockRepository.getCurrentUser() } returns credentials
+        fakeAuthRepository.setCurrentUser(credentials)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
@@ -134,7 +134,7 @@ class AuthInterceptorTest {
     fun `intercept encodes both username and password with special characters`() {
         // Given
         val credentials = AuthCredentials("user+name", "pass=word&test")
-        coEvery { mockRepository.getCurrentUser() } returns credentials
+        fakeAuthRepository.setCurrentUser(credentials)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
@@ -160,7 +160,7 @@ class AuthInterceptorTest {
     fun `intercept proceeds with modified request`() {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        coEvery { mockRepository.getCurrentUser() } returns credentials
+        fakeAuthRepository.setCurrentUser(credentials)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
@@ -183,7 +183,7 @@ class AuthInterceptorTest {
     @Test
     fun `intercept proceeds with original request when user is null`() {
         // Given
-        coEvery { mockRepository.getCurrentUser() } returns null
+        fakeAuthRepository.setCurrentUser(null)
 
         val interceptor = AuthInterceptor(lazyRepository)
 
