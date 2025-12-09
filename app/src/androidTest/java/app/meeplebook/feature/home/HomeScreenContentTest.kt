@@ -369,4 +369,34 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
         composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
     }
+
+    @Test
+    fun homeScreen_refreshingState_displaysCorrectly() {
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeScreenContent(
+                    uiState = HomeUiState(
+                        isRefreshing = true,
+                        recentPlays = listOf(
+                            RecentPlay(
+                                id = 1,
+                                gameName = "Catan",
+                                thumbnailUrl = null,
+                                dateText = "Today",
+                                playerCount = 4,
+                                playerNames = "You, Alex, Jordan, Sam"
+                            )
+                        )
+                    )
+                )
+            }
+        }
+
+        // Verify content is still displayed during refresh
+        composeTestRule.onNodeWithTag("homeContent").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Catan").assertIsDisplayed()
+        
+        // Note: PullToRefreshBox's refresh indicator is an internal implementation detail
+        // and doesn't expose test tags. The isRefreshing state is properly passed to the component.
+    }
 }
