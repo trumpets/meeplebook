@@ -10,8 +10,10 @@ import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
+import app.meeplebook.core.sync.FakeSyncTimeRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -21,6 +23,7 @@ class SyncHomeDataUseCaseTest {
     private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
+    private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var useCase: SyncHomeDataUseCase
 
     @Before
@@ -28,10 +31,12 @@ class SyncHomeDataUseCaseTest {
         fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
+        fakeSyncTimeRepository = FakeSyncTimeRepository()
         useCase = SyncHomeDataUseCase(
             fakeAuthRepository,
             fakeCollectionRepository,
-            fakePlaysRepository
+            fakePlaysRepository,
+            fakeSyncTimeRepository
         )
     }
 
@@ -70,6 +75,11 @@ class SyncHomeDataUseCaseTest {
         assertEquals("testuser", fakeCollectionRepository.lastSyncUsername)
         assertEquals(1, fakePlaysRepository.syncPlaysCallCount)
         assertEquals("testuser", fakePlaysRepository.lastSyncUsername)
+        
+        // Verify sync times were recorded
+        assertNotNull(fakeSyncTimeRepository.observeLastCollectionSync().replayCache.firstOrNull())
+        assertNotNull(fakeSyncTimeRepository.observeLastPlaysSync().replayCache.firstOrNull())
+        assertNotNull(fakeSyncTimeRepository.observeLastFullSync().replayCache.firstOrNull())
     }
 
     @Test

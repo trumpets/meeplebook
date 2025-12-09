@@ -9,6 +9,7 @@ import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
+import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.feature.home.domain.GetCollectionHighlightsUseCase
 import app.meeplebook.feature.home.domain.GetHomeStatsUseCase
 import app.meeplebook.feature.home.domain.GetRecentPlaysUseCase
@@ -37,6 +38,7 @@ class HomeViewModelTest {
     private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
+    private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var getHomeStatsUseCase: GetHomeStatsUseCase
     private lateinit var getRecentPlaysUseCase: GetRecentPlaysUseCase
     private lateinit var getCollectionHighlightsUseCase: GetCollectionHighlightsUseCase
@@ -51,6 +53,7 @@ class HomeViewModelTest {
         fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
+        fakeSyncTimeRepository = FakeSyncTimeRepository()
         
         getHomeStatsUseCase = GetHomeStatsUseCase(fakeCollectionRepository, fakePlaysRepository)
         getRecentPlaysUseCase = GetRecentPlaysUseCase(fakePlaysRepository)
@@ -61,7 +64,8 @@ class HomeViewModelTest {
         syncHomeDataUseCase = SyncHomeDataUseCase(
             fakeAuthRepository,
             fakeCollectionRepository,
-            fakePlaysRepository
+            fakePlaysRepository,
+            fakeSyncTimeRepository
         )
     }
 
@@ -72,12 +76,7 @@ class HomeViewModelTest {
 
     @Test
     fun `initial state shows loading`() {
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
 
         val state = viewModel.uiState.value
         assertTrue(state.isLoading)
@@ -95,12 +94,7 @@ class HomeViewModelTest {
         val plays = listOf(createPlay(1, "2024-12-05"))
         fakePlaysRepository.syncPlaysResult = AppResult.Success(plays)
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -121,12 +115,7 @@ class HomeViewModelTest {
         val plays = listOf(createPlay(1, "2024-12-05"))
         fakePlaysRepository.syncPlaysResult = AppResult.Success(plays)
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Trigger refresh
@@ -152,12 +141,7 @@ class HomeViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Clear initial state
@@ -174,12 +158,7 @@ class HomeViewModelTest {
 
     @Test
     fun `loads empty state correctly`() = runTest {
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -207,12 +186,7 @@ class HomeViewModelTest {
             )
         )
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -231,12 +205,7 @@ class HomeViewModelTest {
             )
         )
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -257,12 +226,7 @@ class HomeViewModelTest {
             listOf(createPlay(1, "2024-12-05", gameId = 1))
         )
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -281,12 +245,7 @@ class HomeViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // After refresh
@@ -310,12 +269,7 @@ class HomeViewModelTest {
                 RuntimeException("Network error")
             ))
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Trigger explicit refresh
@@ -342,12 +296,7 @@ class HomeViewModelTest {
                 RuntimeException("Network error")
             ))
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         // Trigger explicit refresh
@@ -372,12 +321,7 @@ class HomeViewModelTest {
                 RuntimeException("Network error")
             ))
 
-        viewModel = HomeViewModel(
-            getHomeStatsUseCase,
-            getRecentPlaysUseCase,
-            getCollectionHighlightsUseCase,
-            syncHomeDataUseCase
-        )
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.refresh()
@@ -394,6 +338,16 @@ class HomeViewModelTest {
         // Error should be cleared
         assertNull(viewModel.uiState.value.errorMessage)
     }
+
+    private fun createViewModel() = HomeViewModel(
+        getHomeStatsUseCase,
+        getRecentPlaysUseCase,
+        getCollectionHighlightsUseCase,
+        syncHomeDataUseCase,
+        fakeCollectionRepository,
+        fakePlaysRepository,
+        fakeSyncTimeRepository
+    )
 
     private fun createCollectionItem(gameId: Int, name: String) = CollectionItem(
         gameId = gameId,
