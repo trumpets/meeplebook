@@ -1,9 +1,7 @@
 package app.meeplebook.core.network.interceptor
 
-import app.meeplebook.core.auth.AuthRepository
-import app.meeplebook.core.auth.FakeAuthRepository
+import app.meeplebook.core.auth.CurrentCredentialsStore
 import app.meeplebook.core.model.AuthCredentials
-import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -19,23 +17,21 @@ import org.junit.Test
 class AuthInterceptorTest {
 
     private lateinit var chain: Interceptor.Chain
-    private lateinit var fakeAuthRepository: FakeAuthRepository
-    private lateinit var lazyRepository: Lazy<AuthRepository>
+    private lateinit var credentialsStore: CurrentCredentialsStore
 
     @Before
     fun setUp() {
         chain = mockk(relaxed = true)
-        fakeAuthRepository = FakeAuthRepository()
-        lazyRepository = Lazy { fakeAuthRepository }
+        credentialsStore = mockk(relaxed = true)
     }
 
     @Test
     fun `intercept adds cookie header when user is authenticated`() {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        every { credentialsStore.current } returns credentials
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -57,9 +53,9 @@ class AuthInterceptorTest {
     @Test
     fun `intercept does not add cookie header when user is null`() {
         // Given
-        fakeAuthRepository.setCurrentUser(null)
+        every { credentialsStore.current } returns null
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -82,9 +78,9 @@ class AuthInterceptorTest {
     fun `intercept properly encodes username with special characters`() {
         // Given
         val credentials = AuthCredentials("user@test.com", "password")
-        fakeAuthRepository.setCurrentUser(credentials)
+        every { credentialsStore.current } returns credentials
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -108,9 +104,9 @@ class AuthInterceptorTest {
     fun `intercept properly encodes password with special characters`() {
         // Given
         val credentials = AuthCredentials("username", "p@ss word!")
-        fakeAuthRepository.setCurrentUser(credentials)
+        every { credentialsStore.current } returns credentials
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -134,9 +130,9 @@ class AuthInterceptorTest {
     fun `intercept encodes both username and password with special characters`() {
         // Given
         val credentials = AuthCredentials("user+name", "pass=word&test")
-        fakeAuthRepository.setCurrentUser(credentials)
+        every { credentialsStore.current } returns credentials
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -160,9 +156,9 @@ class AuthInterceptorTest {
     fun `intercept proceeds with modified request`() {
         // Given
         val credentials = AuthCredentials("testuser", "testpass")
-        fakeAuthRepository.setCurrentUser(credentials)
+        every { credentialsStore.current } returns credentials
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
@@ -183,9 +179,9 @@ class AuthInterceptorTest {
     @Test
     fun `intercept proceeds with original request when user is null`() {
         // Given
-        fakeAuthRepository.setCurrentUser(null)
+        every { credentialsStore.current } returns null
 
-        val interceptor = AuthInterceptor(lazyRepository)
+        val interceptor = AuthInterceptor(credentialsStore)
 
         val originalRequest = Request.Builder()
             .url("https://api.example.com/test")
