@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 /**
@@ -82,6 +83,11 @@ android {
         animationsDisabled = true
         unitTests.isReturnDefaultValues = true
     }
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+        generateKotlin = true
+    }
 }
 
 kotlin {
@@ -128,14 +134,28 @@ dependencies {
     implementation(libs.tink.android)
     implementation(libs.androidx.datastore.preferences)
 
+    // Database
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     // Testing
+    // Unit tests (src/test)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.room.testing)
+    testImplementation(libs.xmlpull)
+    testImplementation(libs.kxml2)
+    
+    // Instrumented tests (src/androidTest)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.kotlinx.coroutines.test) // For runTest in androidTest
+    androidTestImplementation(libs.room.testing) // For in-memory Room database in androidTest
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

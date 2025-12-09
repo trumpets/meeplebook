@@ -87,4 +87,48 @@ class BearerInterceptorTest {
         verify { chain.proceed(any()) }
         assertEquals(mockResponse, result)
     }
+
+    @Test
+    fun `intercept does not add bearer token header when token is null`() {
+        // Given
+        val interceptor = BearerInterceptor(null)
+
+        val originalRequest = Request.Builder()
+            .url("https://api.example.com/test")
+            .build()
+        every { chain.request() } returns originalRequest
+
+        val requestSlot = slot<Request>()
+        val mockResponse = mockk<Response>()
+        every { chain.proceed(capture(requestSlot)) } returns mockResponse
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        val capturedRequest = requestSlot.captured
+        assertNull(capturedRequest.header("Authorization"))
+    }
+
+    @Test
+    fun `intercept does not add bearer token header when token is blank`() {
+        // Given
+        val interceptor = BearerInterceptor("   ")
+
+        val originalRequest = Request.Builder()
+            .url("https://api.example.com/test")
+            .build()
+        every { chain.request() } returns originalRequest
+
+        val requestSlot = slot<Request>()
+        val mockResponse = mockk<Response>()
+        every { chain.proceed(capture(requestSlot)) } returns mockResponse
+
+        // When
+        interceptor.intercept(chain)
+
+        // Then
+        val capturedRequest = requestSlot.captured
+        assertNull(capturedRequest.header("Authorization"))
+    }
 }

@@ -15,12 +15,26 @@ object NetworkModule {
     private const val BASE_URL = "https://boardgamegeek.com/"
 
     @Provides
+    @BggBaseUrl
+    fun provideBggBaseUrl(): String = BASE_URL
+
+    @Provides
     @Singleton
     fun provideRetrofit(
         okHttp: OkHttpClient
-    ): Retrofit =
-        Retrofit.Builder()
+    ): Retrofit {
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttp)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBggApi(
+        retrofit: Retrofit
+    ): BggApi {
+        return retrofit.create(BggApi::class.java)
+    }
+
 }
