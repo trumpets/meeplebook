@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -83,7 +86,8 @@ fun HomeScreenContent(
     onMoreClick: () -> Unit = {},
     onRecentPlayClick: (RecentPlay) -> Unit = {},
     onRecentlyAddedClick: () -> Unit = {},
-    onSuggestedGameClick: () -> Unit = {}
+    onSuggestedGameClick: () -> Unit = {},
+    onRefresh: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -95,13 +99,19 @@ fun HomeScreenContent(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onProfileClick) {
+                    IconButton(
+                        onClick = onProfileClick,
+                        modifier = Modifier.testTag("profileButton")
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = stringResource(R.string.profile_action_description)
                         )
                     }
-                    IconButton(onClick = onMoreClick) {
+                    IconButton(
+                        onClick = onMoreClick,
+                        modifier = Modifier.testTag("moreButton")
+                    ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.more_options_description)
@@ -145,69 +155,109 @@ fun HomeScreenContent(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .testTag("homeContent"),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Quick Stats Card
-            item {
-                StatsCard(
-                    stats = uiState.stats,
-                    lastSyncedText = uiState.lastSyncedText
-                )
-            }
-
-            // Recent Activity Section
-            item {
-                Text(
-                    text = stringResource(R.string.recent_activity_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            items(
-                items = uiState.recentPlays,
-                key = { it.id }
-            ) { play ->
-                RecentPlayCard(
-                    play = play,
-                    onClick = { onRecentPlayClick(play) }
-                )
-            }
-
-            // Collection Highlights Section
-            if (uiState.recentlyAddedGame != null || uiState.suggestedGame != null) {
-                item {
-                    Text(
-                        text = stringResource(R.string.collection_highlights_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+            if (uiState.isLoading) {
+                // Loading state
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("loadingIndicator"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        uiState.recentlyAddedGame?.let { game ->
-                            GameHighlightCard(
-                                highlight = game,
-                                onClick = onRecentlyAddedClick,
-                                modifier = Modifier.weight(1f)
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.loading_message),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("homeContent"),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Quick Stats Card
+                    item {
+                        StatsCard(
+                            stats = uiState.stats,
+                            lastSyncedText = uiState.lastSyncedText
+                        )
+                    }
+
+                    // Recent Activity Section
+                    item {
+                        Text(
+                            text = stringResource(R.string.recent_activity_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Empty state for recent plays
+                    if (uiState.recentPlays.isEmpty()) {
+                        item {
+                            EmptyStateMessage(
+                                message = stringResource(R.string.empty_recent_plays_message),
+                                modifier = Modifier.testTag("emptyRecentPlays")
                             )
                         }
-                        uiState.suggestedGame?.let { game ->
-                            GameHighlightCard(
-                                highlight = game,
-                                onClick = onSuggestedGameClick,
-                                modifier = Modifier.weight(1f)
+                    } else {
+                        items(
+                            items = uiState.recentPlays,
+                            key = { it.id }
+                        ) { play ->
+                            RecentPlayCard(
+                                play = play,
+                                onClick = { onRecentPlayClick(play) }
                             )
+                        }
+                    }
+
+                    // Collection Highlights Section
+                    if (uiState.recentlyAddedGame != null || uiState.suggestedGame != null) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.collection_highlights_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                uiState.recentlyAddedGame?.let { game ->
+                                    GameHighlightCard(
+                                        highlight = game,
+                                        onClick = onRecentlyAddedClick,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                uiState.suggestedGame?.let { game ->
+                                    GameHighlightCard(
+                                        highlight = game,
+                                        onClick = onSuggestedGameClick,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -290,6 +340,26 @@ private fun StatItem(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun EmptyStateMessage(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -410,6 +480,7 @@ private fun GameHighlightCard(
  * 1. Default state with sample data
  * 2. Empty state
  * 3. Loading state
+ * 4. Refreshing state
  */
 class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState> {
     override val values: Sequence<HomeUiState> = sequenceOf(
@@ -469,6 +540,26 @@ class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState
         // Loading state
         HomeUiState(
             isLoading = true
+        ),
+        // Refreshing state
+        HomeUiState(
+            stats = HomeStats(
+                gamesCount = 50,
+                totalPlays = 100,
+                playsThisMonth = 5,
+                unplayedCount = 10
+            ),
+            recentPlays = listOf(
+                RecentPlay(
+                    id = 1,
+                    gameName = "Catan",
+                    thumbnailUrl = null,
+                    dateText = "Today",
+                    playerCount = 4,
+                    playerNames = "You, Alex, Jordan, Sam"
+                )
+            ),
+            isRefreshing = true
         )
     )
 }

@@ -271,4 +271,80 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithTag("highlightCard_101").performClick()
         assertTrue(suggestedClicked)
     }
+
+    @Test
+    fun homeScreen_loadingState_displaysLoadingIndicator() {
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeScreenContent(
+                    uiState = HomeUiState(isLoading = true)
+                )
+            }
+        }
+
+        // Verify loading indicator is displayed
+        composeTestRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Loading your games…").assertIsDisplayed()
+
+        // Verify home content is not displayed
+        composeTestRule.onNodeWithTag("homeContent").assertDoesNotExist()
+    }
+
+    @Test
+    fun homeScreen_emptyRecentPlays_displaysEmptyStateMessage() {
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeScreenContent(
+                    uiState = HomeUiState(
+                        stats = HomeStats(),
+                        recentPlays = emptyList()
+                    )
+                )
+            }
+        }
+
+        // Verify empty state message is displayed
+        composeTestRule.onNodeWithTag("emptyRecentPlays").assertIsDisplayed()
+        composeTestRule.onNodeWithText("No recent plays. Start logging your game sessions!").assertIsDisplayed()
+    }
+
+    @Test
+    fun homeScreen_profileButtonClick_triggersCallback() {
+        var profileClicked = false
+
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeScreenContent(
+                    uiState = HomeUiState(),
+                    onProfileClick = { profileClicked = true }
+                )
+            }
+        }
+
+        // Click profile button
+        composeTestRule.onNodeWithTag("profileButton").performClick()
+
+        // Verify callback was triggered
+        assertTrue(profileClicked)
+    }
+
+    @Test
+    fun homeScreen_moreButtonClick_triggersCallback() {
+        var moreClicked = false
+
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeScreenContent(
+                    uiState = HomeUiState(),
+                    onMoreClick = { moreClicked = true }
+                )
+            }
+        }
+
+        // Click more button
+        composeTestRule.onNodeWithTag("moreButton").performClick()
+
+        // Verify callback was triggered
+        assertTrue(moreClicked)
+    }
 }
