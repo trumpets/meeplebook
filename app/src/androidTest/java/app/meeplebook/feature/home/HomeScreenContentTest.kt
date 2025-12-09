@@ -2,6 +2,8 @@ package app.meeplebook.feature.home
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -346,5 +348,25 @@ class HomeScreenContentTest {
 
         // Verify callback was triggered
         assertTrue(moreClicked)
+    }
+
+    @Test
+    fun homeScreen_navigationBar_reflectsSelectedState() {
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeScreenContent(
+                    uiState = HomeUiState(),
+                    selectedNavItem = HomeNavigationDestination.COLLECTION
+                )
+            }
+        }
+
+        // Verify Collection is selected
+        composeTestRule.onNodeWithText("Collection").assertIsSelected()
+
+        // Verify other items are not selected
+        composeTestRule.onNodeWithText("Home").assertIsNotSelected()
+        composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
+        composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
     }
 }
