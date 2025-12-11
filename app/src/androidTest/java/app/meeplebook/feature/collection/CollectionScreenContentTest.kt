@@ -359,23 +359,6 @@ class CollectionScreenContentTest {
     }
 
     @Test
-    fun collectionScreen_searchQueryChange_triggersCallback() {
-        var searchQuery = ""
-
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                CollectionScreenContent(
-                    uiState = CollectionUiState(searchQuery = searchQuery),
-                    onSearchQueryChange = { searchQuery = it }
-                )
-            }
-        }
-
-        // Note: Testing text input requires more complex setup with performTextInput
-        // The callback is properly wired, but full interaction testing would need additional setup
-    }
-
-    @Test
     fun collectionScreen_viewModeButton_isDisplayed() {
         composeTestRule.setContent {
             MeepleBookTheme {

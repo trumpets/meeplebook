@@ -33,8 +33,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -246,14 +244,14 @@ fun CollectionScreenContent(
                 }
             }
 
-        // Main content with pull-to-refresh
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("collectionRefreshBox")
-        ) {
+            // Main content with pull-to-refresh
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = onRefresh,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("collectionRefreshBox")
+            ) {
             when {
                 uiState.isLoading -> {
                     // Loading state
@@ -355,7 +353,6 @@ fun CollectionScreenContent(
                 }
             }
         }
-        
         // Scroll to top FAB
         if (showScrollToTopFab && uiState.games.isNotEmpty()) {
             SmallFloatingActionButton(
