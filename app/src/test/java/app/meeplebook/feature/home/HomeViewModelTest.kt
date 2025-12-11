@@ -254,7 +254,7 @@ class HomeViewModelTest {
 
         // Should have a recent sync time
         val lastSyncedText = viewModel.uiState.value.lastSyncedText
-        assertTrue(lastSyncedText.contains("Last synced"))
+        assertTrue(lastSyncedText.contains("Full sync:"))
     }
 
     @Test

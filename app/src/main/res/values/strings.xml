@@ -27,4 +27,7 @@
     <string name="play_date_players">%1$s • %2$d players</string>
     <string name="empty_recent_plays_message">No recent plays. Start logging your game sessions!</string>
     <string name="loading_message">Loading your games…</string>
+    <string name="home_collection_tab_coming_soon">Collection Tab - Coming Soon</string>
+    <string name="home_plays_tab_coming_soon">Plays Tab - Coming Soon</string>
+    <string name="home_profile_tab_coming_soon">Profile Tab - Coming Soon</string>
 </resources>

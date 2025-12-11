@@ -92,14 +92,14 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val tabNavController = androidx.navigation.compose.rememberNavController()
     
-    // Track selected tab
-    val currentTab = androidx.navigation.compose.currentBackStackEntryAsState()
-        .value?.destination?.route
+    // Track selected tab - pass tabNavController to track the correct NavController
+    val currentBackStackEntry by tabNavController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
     
-    val selectedTab = when (currentTab) {
-        "app.meeplebook.feature.home.navigation.HomeTabScreen.Collection" -> HomeNavigationDestination.COLLECTION
-        "app.meeplebook.feature.home.navigation.HomeTabScreen.Plays" -> HomeNavigationDestination.PLAYS
-        "app.meeplebook.feature.home.navigation.HomeTabScreen.Profile" -> HomeNavigationDestination.PROFILE
+    val selectedTab = when {
+        currentRoute?.contains("Collection") == true -> HomeNavigationDestination.COLLECTION
+        currentRoute?.contains("Plays") == true -> HomeNavigationDestination.PLAYS
+        currentRoute?.contains("Profile") == true -> HomeNavigationDestination.PROFILE
         else -> HomeNavigationDestination.HOME
     }
 
@@ -359,7 +359,7 @@ private fun HomeCollectionTab() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Collection Tab - Coming Soon",
+            text = stringResource(R.string.home_collection_tab_coming_soon),
             style = MaterialTheme.typography.headlineSmall
         )
     }
@@ -372,7 +372,7 @@ private fun HomePlaysTab() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Plays Tab - Coming Soon",
+            text = stringResource(R.string.home_plays_tab_coming_soon),
             style = MaterialTheme.typography.headlineSmall
         )
     }
@@ -385,7 +385,7 @@ private fun HomeProfileTab() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Profile Tab - Coming Soon",
+            text = stringResource(R.string.home_profile_tab_coming_soon),
             style = MaterialTheme.typography.headlineSmall
         )
     }
