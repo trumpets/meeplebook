@@ -67,6 +67,10 @@ UiEvent: sealed class of user actions (object SubmitLogin, data class UsernameCh
 
 !!! IMPORTANT !!! No hardcoded strings throughout the app. Use string resources.
 
+!!! IMPORTANT !!! No direct navigation calls in composables. Emit events to ViewModel.
+
+!!! IMPORTANT !!! User facing dates (in UI) should follow EU format DD/MM/YYYY. Time is HH:MM 24h format.
+
 ### ViewModel
 Exposes val uiState: StateFlow<UiState> (read-only).
 
