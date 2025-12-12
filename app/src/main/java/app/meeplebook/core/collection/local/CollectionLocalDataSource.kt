@@ -34,4 +34,24 @@ interface CollectionLocalDataSource {
      *
      */
     suspend fun clearCollection()
+
+    /**
+     * Gets the count of items in the collection.
+     */
+    suspend fun getCollectionCount(): Int
+
+    /**
+     * Gets the count of unplayed games.
+     */
+    suspend fun getUnplayedGamesCount(): Int
+
+    /**
+     * Gets the most recently added collection item.
+     */
+    suspend fun getMostRecentlyAddedItem(): CollectionItem?
+
+    /**
+     * Gets the first unplayed game.
+     */
+    suspend fun getFirstUnplayedGame(): CollectionItem?
 }

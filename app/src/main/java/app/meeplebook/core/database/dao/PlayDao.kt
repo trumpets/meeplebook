@@ -104,4 +104,23 @@ interface PlayDao {
      */
     @Query("DELETE FROM plays")
     suspend fun deleteAll()
+
+    /**
+     * Gets the total count of plays (sum of quantities).
+     */
+    @Query("SELECT SUM(quantity) FROM plays")
+    suspend fun getTotalPlaysCount(): Int?
+
+    /**
+     * Gets the count of plays for a specific month (date format: yyyy-MM).
+     */
+    @Query("SELECT SUM(quantity) FROM plays WHERE date LIKE :monthPrefix || '%'")
+    suspend fun getPlaysCountForMonth(monthPrefix: String): Int?
+
+    /**
+     * Gets the most recent plays with a limit, ordered by date descending.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays ORDER BY date DESC LIMIT :limit")
+    suspend fun getRecentPlaysWithPlayers(limit: Int): List<PlayWithPlayers>
 }

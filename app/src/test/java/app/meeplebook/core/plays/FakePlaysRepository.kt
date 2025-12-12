@@ -62,6 +62,22 @@ class FakePlaysRepository : PlaysRepository {
         plays.value = emptyList()
     }
 
+    override suspend fun getTotalPlaysCount(): Int {
+        return plays.value.sumOf { it.quantity }
+    }
+
+    override suspend fun getPlaysCountForMonth(monthPrefix: String): Int {
+        return plays.value
+            .filter { it.date.startsWith(monthPrefix) }
+            .sumOf { it.quantity }
+    }
+
+    override suspend fun getRecentPlays(limit: Int): List<Play> {
+        return plays.value
+            .sortedByDescending { it.date }
+            .take(limit)
+    }
+
     /**
      * Sets the plays directly for testing.
      */

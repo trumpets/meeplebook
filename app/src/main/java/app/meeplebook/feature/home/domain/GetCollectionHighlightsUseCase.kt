@@ -2,48 +2,37 @@ package app.meeplebook.feature.home.domain
 
 import app.meeplebook.R
 import app.meeplebook.core.collection.CollectionRepository
-import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.feature.home.GameHighlight
 import javax.inject.Inject
 
 /**
  * Use case that determines game highlights for the home screen.
  * Returns a recently added game and a suggested game to play.
+ * Uses optimized Room queries for better performance.
  */
 class GetCollectionHighlightsUseCase @Inject constructor(
-    private val collectionRepository: CollectionRepository,
-    private val playsRepository: PlaysRepository
+    private val collectionRepository: CollectionRepository
 ) {
     /**
-     * Gets game highlights for the home screen.
+     * Gets game highlights for the home screen using optimized database queries.
      *
      * @return Pair of (recentlyAdded, suggested) where either can be null
      */
     suspend operator fun invoke(): Pair<GameHighlight?, GameHighlight?> {
-        val collection = collectionRepository.getCollection()
-        val plays = playsRepository.getPlays()
-        
-        if (collection.isEmpty()) {
-            return null to null
-        }
+        // Use optimized Room queries instead of loading all data into memory
         
         // Recently added: game with most recent lastModified date
-        val recentlyAdded = collection
-            .filter { it.lastModified != null }
-            .maxByOrNull { it.lastModified!! }
-            ?.let { game ->
-                GameHighlight(
-                    id = game.gameId.toLong(),
-                    gameName = game.name,
-                    thumbnailUrl = game.thumbnail,
-                    subtitleResId = R.string.game_highlight_recently_added
-                )
-            }
+        val recentlyAdded = collectionRepository.getMostRecentlyAddedItem()?.let { game ->
+            GameHighlight(
+                id = game.gameId.toLong(),
+                gameName = game.name,
+                thumbnailUrl = game.thumbnail,
+                subtitleResId = R.string.game_highlight_recently_added
+            )
+        }
         
-        // Suggested: an unplayed game from the collection
-        val playedGameIds = plays.map { it.gameId }.toSet()
-        val unplayedGames = collection.filter { it.gameId !in playedGameIds }
-        val suggested = unplayedGames.firstOrNull()?.let { game ->
+        // Suggested: first unplayed game from the collection
+        val suggested = collectionRepository.getFirstUnplayedGame()?.let { game ->
             GameHighlight(
                 id = game.gameId.toLong(),
                 gameName = game.name,

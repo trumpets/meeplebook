@@ -33,4 +33,20 @@ class CollectionLocalDataSourceImpl @Inject constructor(
     override suspend fun clearCollection() {
         dao.deleteAll()
     }
+
+    override suspend fun getCollectionCount(): Int {
+        return dao.getCollectionCount()
+    }
+
+    override suspend fun getUnplayedGamesCount(): Int {
+        return dao.getUnplayedGamesCount()
+    }
+
+    override suspend fun getMostRecentlyAddedItem(): CollectionItem? {
+        return dao.getMostRecentlyAddedItem()?.toCollectionItem()
+    }
+
+    override suspend fun getFirstUnplayedGame(): CollectionItem? {
+        return dao.getFirstUnplayedGame()?.toCollectionItem()
+    }
 }

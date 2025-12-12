@@ -9,32 +9,28 @@ import javax.inject.Inject
 
 /**
  * Use case that calculates home screen statistics from collection and plays data.
+ * Uses optimized Room queries for better performance.
  */
 class GetHomeStatsUseCase @Inject constructor(
     private val collectionRepository: CollectionRepository,
     private val playsRepository: PlaysRepository
 ) {
     /**
-     * Calculates statistics for the home screen.
+     * Calculates statistics for the home screen using optimized database queries.
      *
      * @return [HomeStats] containing games count, play counts, and unplayed count
      */
     suspend operator fun invoke(): HomeStats {
-        val collection = collectionRepository.getCollection()
-        val plays = playsRepository.getPlays()
+        // Use optimized Room queries instead of loading all data into memory
+        val gamesCount = collectionRepository.getCollectionCount()
+        val totalPlays = playsRepository.getTotalPlaysCount()
         
-        val gamesCount = collection.size
-        val totalPlays = plays.sumOf { it.quantity }
-        
-        // Calculate plays this month
+        // Calculate plays this month using Room query
         val currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
-        val playsThisMonth = plays
-            .filter { it.date.startsWith(currentMonth) }
-            .sumOf { it.quantity }
+        val playsThisMonth = playsRepository.getPlaysCountForMonth(currentMonth)
         
-        // Calculate unplayed games (games in collection that have no plays)
-        val playedGameIds = plays.map { it.gameId }.toSet()
-        val unplayedCount = collection.count { it.gameId !in playedGameIds }
+        // Use optimized Room query for unplayed games count
+        val unplayedCount = collectionRepository.getUnplayedGamesCount()
         
         return HomeStats(
             gamesCount = gamesCount,

@@ -53,6 +53,27 @@ class FakeCollectionRepository : CollectionRepository {
         collection.value = emptyList()
     }
 
+    override suspend fun getCollectionCount(): Int {
+        return collection.value.size
+    }
+
+    override suspend fun getUnplayedGamesCount(): Int {
+        // This is a simplified implementation for testing
+        // In the real implementation, this would check against plays
+        return collection.value.size
+    }
+
+    override suspend fun getMostRecentlyAddedItem(): CollectionItem? {
+        return collection.value
+            .filter { it.lastModified != null }
+            .maxByOrNull { it.lastModified!! }
+    }
+
+    override suspend fun getFirstUnplayedGame(): CollectionItem? {
+        // Simplified for testing - just returns first item
+        return collection.value.firstOrNull()
+    }
+
     /**
      * Sets the collection directly for testing.
      */
