@@ -16,7 +16,7 @@ fun AppNavHost(
         composable<Login> {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Home) {
+                    navController.navigate(Home(refreshOnLogin = true)) {
                         // Clear login screen from back stack
                         popUpTo(Login) { inclusive = true }
                     }

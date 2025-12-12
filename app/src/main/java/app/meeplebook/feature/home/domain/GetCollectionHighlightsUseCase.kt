@@ -1,5 +1,6 @@
 package app.meeplebook.feature.home.domain
 
+import app.meeplebook.R
 import app.meeplebook.core.collection.CollectionRepository
 import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.feature.home.GameHighlight
@@ -35,7 +36,7 @@ class GetCollectionHighlightsUseCase @Inject constructor(
                     id = game.gameId.toLong(),
                     gameName = game.name,
                     thumbnailUrl = game.thumbnail,
-                    subtitle = "Recently Added"
+                    subtitleResId = R.string.game_highlight_recently_added
                 )
             }
         
@@ -47,7 +48,7 @@ class GetCollectionHighlightsUseCase @Inject constructor(
                 id = game.gameId.toLong(),
                 gameName = game.name,
                 thumbnailUrl = game.thumbnail,
-                subtitle = "Try Tonight?"
+                subtitleResId = R.string.game_highlight_try_tonight
             )
         }
         

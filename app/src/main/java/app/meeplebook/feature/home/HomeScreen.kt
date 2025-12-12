@@ -59,7 +59,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import app.meeplebook.R
+import app.meeplebook.feature.home.navigation.HomeTabScreen
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 /** Aspect ratio for game thumbnail images (16:9). */
@@ -90,16 +96,17 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val tabNavController = androidx.navigation.compose.rememberNavController()
+    val tabNavController = rememberNavController()
     
     // Track selected tab - pass tabNavController to track the correct NavController
     val currentBackStackEntry by tabNavController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     
+    // Match route using class name comparison for type-safe routing
     val selectedTab = when {
-        currentRoute?.contains("Collection") == true -> HomeNavigationDestination.COLLECTION
-        currentRoute?.contains("Plays") == true -> HomeNavigationDestination.PLAYS
-        currentRoute?.contains("Profile") == true -> HomeNavigationDestination.PROFILE
+        currentRoute?.contains(HomeTabScreen.Collection::class.simpleName ?: "") == true -> HomeNavigationDestination.COLLECTION
+        currentRoute?.contains(HomeTabScreen.Plays::class.simpleName ?: "") == true -> HomeNavigationDestination.PLAYS
+        currentRoute?.contains(HomeTabScreen.Profile::class.simpleName ?: "") == true -> HomeNavigationDestination.PROFILE
         else -> HomeNavigationDestination.HOME
     }
 
@@ -108,14 +115,14 @@ fun HomeScreen(
         selectedNavItem = selectedTab,
         onNavItemClick = { destination ->
             val route = when (destination) {
-                HomeNavigationDestination.HOME -> app.meeplebook.feature.home.navigation.HomeTabScreen.Overview
-                HomeNavigationDestination.COLLECTION -> app.meeplebook.feature.home.navigation.HomeTabScreen.Collection
-                HomeNavigationDestination.PLAYS -> app.meeplebook.feature.home.navigation.HomeTabScreen.Plays
-                HomeNavigationDestination.PROFILE -> app.meeplebook.feature.home.navigation.HomeTabScreen.Profile
+                HomeNavigationDestination.HOME -> HomeTabScreen.Overview
+                HomeNavigationDestination.COLLECTION -> HomeTabScreen.Collection
+                HomeNavigationDestination.PLAYS -> HomeTabScreen.Plays
+                HomeNavigationDestination.PROFILE -> HomeTabScreen.Profile
             }
             tabNavController.navigate(route) {
                 // Pop up to start destination to avoid building up back stack
-                popUpTo(app.meeplebook.feature.home.navigation.HomeTabScreen.Overview) {
+                popUpTo(HomeTabScreen.Overview) {
                     saveState = true
                 }
                 launchSingleTop = true
@@ -140,7 +147,7 @@ fun HomeScreenContent(
     onRecentlyAddedClick: () -> Unit = {},
     onSuggestedGameClick: () -> Unit = {},
     onRefresh: () -> Unit = {},
-    tabNavController: androidx.navigation.NavHostController? = null
+    tabNavController: NavHostController? = null
 ) {
     Scaffold(
         topBar = {
@@ -210,23 +217,23 @@ fun HomeScreenContent(
     ) { innerPadding ->
         // Nested NavHost for tabs
         if (tabNavController != null) {
-            androidx.navigation.compose.NavHost(
+            NavHost(
                 navController = tabNavController,
-                startDestination = app.meeplebook.feature.home.navigation.HomeTabScreen.Overview,
+                startDestination = HomeTabScreen.Overview,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Overview> {
+                composable<HomeTabScreen.Overview> {
                     HomeOverviewTab(uiState, onRefresh)
                 }
-                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Collection> {
+                composable<HomeTabScreen.Collection> {
                     HomeCollectionTab()
                 }
-                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Plays> {
+                composable<HomeTabScreen.Plays> {
                     HomePlaysTab()
                 }
-                androidx.navigation.compose.composable<app.meeplebook.feature.home.navigation.HomeTabScreen.Profile> {
+                composable<HomeTabScreen.Profile> {
                     HomeProfileTab()
                 }
             }
@@ -590,7 +597,7 @@ private fun GameHighlightCard(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = highlight.subtitle,
+                text = stringResource(highlight.subtitleResId),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

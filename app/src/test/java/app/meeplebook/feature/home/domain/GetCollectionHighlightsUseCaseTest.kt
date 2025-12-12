@@ -47,7 +47,7 @@ class GetCollectionHighlightsUseCaseTest {
 
         assertNotNull(recentlyAdded)
         assertEquals("Game 3", recentlyAdded?.gameName)
-        assertEquals("Recently Added", recentlyAdded?.subtitle)
+        assertEquals(app.meeplebook.R.string.game_highlight_recently_added, recentlyAdded?.subtitleResId)
     }
 
     @Test
@@ -67,7 +67,7 @@ class GetCollectionHighlightsUseCaseTest {
 
         assertNotNull(suggested)
         assertEquals("Unplayed Game", suggested?.gameName)
-        assertEquals("Try Tonight?", suggested?.subtitle)
+        assertEquals(app.meeplebook.R.string.game_highlight_try_tonight, suggested?.subtitleResId)
     }
 
     @Test
@@ -163,7 +163,7 @@ class GetCollectionHighlightsUseCaseTest {
 
         assertNotNull(recentlyAdded)
         assertEquals("Recent Game", recentlyAdded?.gameName)
-        assertEquals("Recently Added", recentlyAdded?.subtitle)
+        assertEquals(app.meeplebook.R.string.game_highlight_recently_added, recentlyAdded?.subtitleResId)
     }
 
     @Test

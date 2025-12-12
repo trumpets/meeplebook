@@ -1,5 +1,7 @@
 package app.meeplebook.feature.home
 
+import androidx.annotation.StringRes
+
 /**
  * Represents a recently played game entry.
  */
@@ -19,7 +21,7 @@ data class GameHighlight(
     val id: Long,
     val gameName: String,
     val thumbnailUrl: String?,
-    val subtitle: String
+    @StringRes val subtitleResId: Int
 )
 
 /**

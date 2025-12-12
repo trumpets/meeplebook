@@ -3,6 +3,7 @@ package app.meeplebook.feature.home.domain
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.Player
+import app.meeplebook.core.util.FakeDateFormatter
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -13,12 +14,14 @@ import java.time.format.DateTimeFormatter
 class GetRecentPlaysUseCaseTest {
 
     private lateinit var fakePlaysRepository: FakePlaysRepository
+    private lateinit var fakeDateFormatter: FakeDateFormatter
     private lateinit var useCase: GetRecentPlaysUseCase
 
     @Before
     fun setUp() {
         fakePlaysRepository = FakePlaysRepository()
-        useCase = GetRecentPlaysUseCase(fakePlaysRepository)
+        fakeDateFormatter = FakeDateFormatter()
+        useCase = GetRecentPlaysUseCase(fakePlaysRepository, fakeDateFormatter)
     }
 
     @Test
