@@ -77,12 +77,13 @@ private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f
 enum class HomeNavigationDestination(
     val labelResId: Int,
     val icon: ImageVector,
-    val contentDescriptionResId: Int
+    val contentDescriptionResId: Int,
+    val route: HomeTabScreen
 ) {
-    HOME(R.string.nav_home, Icons.Default.Home, R.string.nav_home),
-    COLLECTION(R.string.nav_collection, Icons.Default.CollectionsBookmark, R.string.nav_collection),
-    PLAYS(R.string.nav_plays, Icons.Default.BarChart, R.string.nav_plays),
-    PROFILE(R.string.nav_profile, Icons.Default.Person, R.string.nav_profile)
+    HOME(R.string.nav_home, Icons.Default.Home, R.string.nav_home, HomeTabScreen.Overview),
+    COLLECTION(R.string.nav_collection, Icons.Default.CollectionsBookmark, R.string.nav_collection, HomeTabScreen.Collection),
+    PLAYS(R.string.nav_plays, Icons.Default.BarChart, R.string.nav_plays, HomeTabScreen.Plays),
+    PROFILE(R.string.nav_profile, Icons.Default.Person, R.string.nav_profile, HomeTabScreen.Profile)
 }
 
 /**
@@ -102,25 +103,16 @@ fun HomeScreen(
     val currentBackStackEntry by tabNavController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     
-    // Match route using class name comparison for type-safe routing
-    val selectedTab = when {
-        currentRoute?.contains(HomeTabScreen.Collection::class.simpleName ?: "") == true -> HomeNavigationDestination.COLLECTION
-        currentRoute?.contains(HomeTabScreen.Plays::class.simpleName ?: "") == true -> HomeNavigationDestination.PLAYS
-        currentRoute?.contains(HomeTabScreen.Profile::class.simpleName ?: "") == true -> HomeNavigationDestination.PROFILE
-        else -> HomeNavigationDestination.HOME
-    }
+    // Match route directly from enum
+    val selectedTab = HomeNavigationDestination.entries.find { destination ->
+        currentRoute?.contains(destination.route::class.simpleName ?: "") == true
+    } ?: HomeNavigationDestination.HOME
 
     HomeScreenContent(
         uiState = uiState,
         selectedNavItem = selectedTab,
         onNavItemClick = { destination ->
-            val route = when (destination) {
-                HomeNavigationDestination.HOME -> HomeTabScreen.Overview
-                HomeNavigationDestination.COLLECTION -> HomeTabScreen.Collection
-                HomeNavigationDestination.PLAYS -> HomeTabScreen.Plays
-                HomeNavigationDestination.PROFILE -> HomeTabScreen.Profile
-            }
-            tabNavController.navigate(route) {
+            tabNavController.navigate(destination.route) {
                 // Pop up to start destination to avoid building up back stack
                 popUpTo(HomeTabScreen.Overview) {
                     saveState = true
