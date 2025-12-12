@@ -17,7 +17,7 @@ class FakeDateFormatter {
             daysDiff == 0L -> "Today"
             daysDiff == 1L -> "Yesterday"
             daysDiff < 7L -> "$daysDiff days ago"
-            else -> playDate.format(DateTimeFormatter.ofPattern("MMM d"))
+            else -> playDate.format(DateTimeFormatter.ofPattern("d MMM"))
         }
     }
     

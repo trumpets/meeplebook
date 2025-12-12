@@ -11,6 +11,8 @@ import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.util.FakeDateFormatter
+import app.meeplebook.core.util.FakeSyncFormatter
 import app.meeplebook.feature.home.domain.GetCollectionHighlightsUseCase
 import app.meeplebook.feature.home.domain.GetHomeStatsUseCase
 import app.meeplebook.feature.home.domain.GetRecentPlaysUseCase
@@ -40,6 +42,7 @@ class HomeViewModelTest {
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
+    private lateinit var fakeSyncFormatter: FakeSyncFormatter
     private lateinit var getHomeStatsUseCase: GetHomeStatsUseCase
     private lateinit var getRecentPlaysUseCase: GetRecentPlaysUseCase
     private lateinit var getCollectionHighlightsUseCase: GetCollectionHighlightsUseCase
@@ -56,8 +59,11 @@ class HomeViewModelTest {
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
         
+        val fakeDateFormatter = FakeDateFormatter()
+        fakeSyncFormatter = FakeSyncFormatter()
+        
         getHomeStatsUseCase = GetHomeStatsUseCase(fakeCollectionRepository, fakePlaysRepository)
-        getRecentPlaysUseCase = GetRecentPlaysUseCase(fakePlaysRepository)
+        getRecentPlaysUseCase = GetRecentPlaysUseCase(fakePlaysRepository, fakeDateFormatter)
         getCollectionHighlightsUseCase = GetCollectionHighlightsUseCase(
             fakeCollectionRepository,
             fakePlaysRepository
@@ -347,7 +353,8 @@ class HomeViewModelTest {
         syncHomeDataUseCase,
         fakeCollectionRepository,
         fakePlaysRepository,
-        fakeSyncTimeRepository
+        fakeSyncTimeRepository,
+        fakeSyncFormatter
     )
 
     private fun createCollectionItem(gameId: Int, name: String) = CollectionItem(

@@ -26,7 +26,7 @@ class DateFormatter @Inject constructor(
             daysDiff == 0L -> context.getString(R.string.date_today)
             daysDiff == 1L -> context.getString(R.string.date_yesterday)
             daysDiff < 7L -> context.getString(R.string.date_days_ago, daysDiff)
-            else -> playDate.format(DateTimeFormatter.ofPattern("MMM d"))
+            else -> playDate.format(DateTimeFormatter.ofPattern("d MMM"))
         }
     }
     

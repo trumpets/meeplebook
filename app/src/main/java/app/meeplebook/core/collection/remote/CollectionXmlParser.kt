@@ -118,8 +118,7 @@ object CollectionXmlParser {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
-        var lastModified: LocalDateTime?
-
+        var lastModified: LocalDateTime? = null
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
