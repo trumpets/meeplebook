@@ -65,6 +65,8 @@ UiState: immutable data class representing all info the screen needs.
 
 UiEvent: sealed class of user actions (object SubmitLogin, data class UsernameChanged(String)).
 
+!!! IMPORTANT !!! No hardcoded strings throughout the app. Use string resources.
+
 ### ViewModel
 Exposes val uiState: StateFlow<UiState> (read-only).
 
