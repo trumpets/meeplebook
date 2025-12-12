@@ -5,7 +5,9 @@ import app.meeplebook.core.collection.model.GameSubtype
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
@@ -102,10 +104,10 @@ object CollectionXmlParser {
      * Parses the lastmodified date string from BGG XML.
      * Expected format: YYYY-MM-DD HH:MM:SS
      */
-    private fun parseLastModified(lastModified: String?): LocalDateTime? {
+    private fun parseLastModified(lastModified: String?): Instant? {
         if (lastModified.isNullOrBlank()) return null
         return try {
-            LocalDateTime.parse(lastModified, dateFormatter)
+            LocalDateTime.parse(lastModified, dateFormatter).toInstant(ZoneOffset.UTC)
         } catch (_: Exception) {
             null
         }
@@ -118,7 +120,7 @@ object CollectionXmlParser {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
-        var lastModified: LocalDateTime? = null
+        var lastModified: Instant? = null
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null

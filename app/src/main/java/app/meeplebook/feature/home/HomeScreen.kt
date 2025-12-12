@@ -139,7 +139,7 @@ fun HomeScreenContent(
     onRecentlyAddedClick: () -> Unit = {},
     onSuggestedGameClick: () -> Unit = {},
     onRefresh: () -> Unit = {},
-    tabNavController: NavHostController? = null
+    tabNavController: NavHostController
 ) {
     Scaffold(
         topBar = {
@@ -208,30 +208,25 @@ fun HomeScreenContent(
         }
     ) { innerPadding ->
         // Nested NavHost for tabs
-        if (tabNavController != null) {
-            NavHost(
-                navController = tabNavController,
-                startDestination = HomeTabScreen.Overview,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                composable<HomeTabScreen.Overview> {
-                    HomeOverviewTab(uiState, onRefresh)
-                }
-                composable<HomeTabScreen.Collection> {
-                    HomeCollectionTab()
-                }
-                composable<HomeTabScreen.Plays> {
-                    HomePlaysTab()
-                }
-                composable<HomeTabScreen.Profile> {
-                    HomeProfileTab()
-                }
+        NavHost(
+            navController = tabNavController,
+            startDestination = HomeTabScreen.Overview,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            composable<HomeTabScreen.Overview> {
+                HomeOverviewTab(uiState, onRefresh, onRecentPlayClick, onRecentlyAddedClick, onSuggestedGameClick)
             }
-        } else {
-            // Fallback for previews without tab navigation
-            HomeOverviewTab(uiState, onRefresh, Modifier.padding(innerPadding))
+            composable<HomeTabScreen.Collection> {
+                HomeCollectionTab()
+            }
+            composable<HomeTabScreen.Plays> {
+                HomePlaysTab()
+            }
+            composable<HomeTabScreen.Profile> {
+                HomeProfileTab()
+            }
         }
     }
 }
@@ -240,6 +235,9 @@ fun HomeScreenContent(
 private fun HomeOverviewTab(
     uiState: HomeUiState,
     onRefresh: () -> Unit,
+    onRecentPlayClick: (RecentPlay) -> Unit = {},
+    onRecentlyAddedClick: () -> Unit = {},
+    onSuggestedGameClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     PullToRefreshBox(
@@ -646,13 +644,13 @@ class HomeUiStatePreviewParameterProvider : PreviewParameterProvider<HomeUiState
                 id = 100,
                 gameName = "Azul",
                 thumbnailUrl = null,
-                subtitle = "Added 2 days ago"
+                subtitleResId = R.string.game_highlight_recently_added
             ),
             suggestedGame = GameHighlight(
                 id = 101,
                 gameName = "Ticket to Ride",
                 thumbnailUrl = null,
-                subtitle = "Try Tonight?"
+                subtitleResId = R.string.game_highlight_try_tonight
             ),
             lastSyncedText = "Last synced: 5 min ago"
         ),

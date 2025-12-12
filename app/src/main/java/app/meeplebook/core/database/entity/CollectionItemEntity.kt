@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Room entity representing a collection item stored locally.
@@ -19,7 +19,7 @@ data class CollectionItemEntity(
     val name: String,
     val yearPublished: Int?,
     val thumbnail: String?,
-    val lastModified: LocalDateTime?
+    val lastModified: Instant?
 )
 
 /**

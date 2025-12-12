@@ -9,6 +9,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 import java.time.LocalDateTime
 
 class GetCollectionHighlightsUseCaseTest {
@@ -142,7 +143,7 @@ class GetCollectionHighlightsUseCaseTest {
         id: Int,
         name: String,
         thumbnail: String? = null,
-        lastModified: LocalDateTime? = null
+        lastModified: Instant? = null
     ) = CollectionItem(
         gameId = id,
         subtype = GameSubtype.BOARDGAME,
