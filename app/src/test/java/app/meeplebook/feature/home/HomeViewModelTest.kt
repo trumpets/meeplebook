@@ -1,5 +1,6 @@
 package app.meeplebook.feature.home
 
+import app.meeplebook.R
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.model.CollectionItem
@@ -279,8 +280,8 @@ class HomeViewModelTest {
         // Verify error handling
         val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
-        assertNotNull(state.errorMessage)
-        assertEquals("Failed to sync data. Please try again.", state.errorMessage)
+        assertNotNull(state.errorMessageResId)
+        assertEquals(R.string.sync_failed_error, state.errorMessageResId)
     }
 
     @Test
@@ -306,7 +307,7 @@ class HomeViewModelTest {
         // Verify error handling
         val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
-        assertNotNull(state.errorMessage)
+        assertNotNull(state.errorMessageResId)
     }
 
     @Test
@@ -326,7 +327,7 @@ class HomeViewModelTest {
 
         viewModel.refresh()
         advanceUntilIdle()
-        assertNotNull(viewModel.uiState.value.errorMessage)
+        assertNotNull(viewModel.uiState.value.errorMessageResId)
 
         // Second refresh succeeds
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
@@ -336,7 +337,7 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         // Error should be cleared
-        assertNull(viewModel.uiState.value.errorMessage)
+        assertNull(viewModel.uiState.value.errorMessageResId)
     }
 
     private fun createViewModel() = HomeViewModel(

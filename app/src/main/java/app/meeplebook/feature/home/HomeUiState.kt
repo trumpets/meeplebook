@@ -45,5 +45,5 @@ data class HomeUiState(
     val lastSyncedText: String = "",
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
-    val errorMessage: String? = null
+    @StringRes val errorMessageResId: Int? = null
 )

@@ -56,7 +56,7 @@ class HomeViewModel @Inject constructor(
      */
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            _uiState.update { it.copy(isRefreshing = true, errorMessageResId = null) }
             
             // Sync data from BGG
             val syncResult = syncHomeDataUseCase()
@@ -64,14 +64,14 @@ class HomeViewModel @Inject constructor(
             when (syncResult) {
                 is AppResult.Success -> {
                     // Data will be updated reactively through observeDataChanges
-                    _uiState.update { it.copy(isRefreshing = false, errorMessage = null) }
+                    _uiState.update { it.copy(isRefreshing = false, errorMessageResId = null) }
                 }
                 is AppResult.Failure -> {
                     // Show error to user via UI state
                     _uiState.update { 
                         it.copy(
                             isRefreshing = false,
-                            errorMessage = "Failed to sync data. Please try again."
+                            errorMessageResId = R.string.sync_failed_error
                         )
                     }
                 }
@@ -108,7 +108,7 @@ class HomeViewModel @Inject constructor(
                 val (highlights, syncText) = highlightsAndSync
                 val (recentlyAdded, suggested) = highlights
                 
-                // Update state preserving isRefreshing and errorMessage
+                // Update state preserving isRefreshing and errorMessageResId
                 _uiState.update { current ->
                     current.copy(
                         stats = stats,
