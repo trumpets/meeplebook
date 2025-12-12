@@ -1,5 +1,7 @@
 package app.meeplebook.core.collection.model
 
+import java.time.LocalDateTime
+
 /**
  * Represents a game item in a user's BGG collection.
  *
@@ -8,13 +10,15 @@ package app.meeplebook.core.collection.model
  * @param name The name of the game.
  * @param yearPublished The year the game was published.
  * @param thumbnail URL to the game's thumbnail image.
+ * @param lastModified The date and time when this collection item was last modified.
  */
 data class CollectionItem(
     val gameId: Int,
     val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,
-    val thumbnail: String?
+    val thumbnail: String?,
+    val lastModified: LocalDateTime?
 )
 
 /**

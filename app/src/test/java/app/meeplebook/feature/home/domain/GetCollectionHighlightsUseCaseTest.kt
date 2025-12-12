@@ -145,16 +145,53 @@ class GetCollectionHighlightsUseCaseTest {
         assertEquals("Solo Game", suggested?.gameName)
     }
 
+    @Test
+    fun `returns game with most recent lastModified as recently added`() = runTest {
+        val oldDate = java.time.LocalDateTime.of(2024, 1, 1, 10, 0)
+        val middleDate = java.time.LocalDateTime.of(2024, 6, 15, 14, 30)
+        val recentDate = java.time.LocalDateTime.of(2024, 12, 1, 8, 15)
+        
+        fakeCollectionRepository.setCollection(
+            listOf(
+                createCollectionItem(1, "Old Game", lastModified = oldDate),
+                createCollectionItem(2, "Recent Game", lastModified = recentDate),
+                createCollectionItem(3, "Middle Game", lastModified = middleDate)
+            )
+        )
+
+        val (recentlyAdded, _) = useCase()
+
+        assertNotNull(recentlyAdded)
+        assertEquals("Recent Game", recentlyAdded?.gameName)
+        assertEquals("Recently Added", recentlyAdded?.subtitle)
+    }
+
+    @Test
+    fun `returns null for recently added when no games have lastModified`() = runTest {
+        fakeCollectionRepository.setCollection(
+            listOf(
+                createCollectionItem(1, "Game 1", lastModified = null),
+                createCollectionItem(2, "Game 2", lastModified = null)
+            )
+        )
+
+        val (recentlyAdded, _) = useCase()
+
+        assertNull(recentlyAdded)
+    }
+
     private fun createCollectionItem(
         id: Int,
         name: String,
-        thumbnail: String? = null
+        thumbnail: String? = null,
+        lastModified: java.time.LocalDateTime? = null
     ) = CollectionItem(
         gameId = id,
         subtype = GameSubtype.BOARDGAME,
         name = name,
         yearPublished = 2020,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModified = lastModified
     )
 
     private fun createPlay(

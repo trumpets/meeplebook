@@ -139,7 +139,8 @@ class GetHomeStatsUseCaseTest {
         subtype = GameSubtype.BOARDGAME,
         name = name,
         yearPublished = 2020,
-        thumbnail = null
+        thumbnail = null,
+        lastModified = null
     )
 
     private fun createPlay(

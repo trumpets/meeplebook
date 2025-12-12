@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
+import java.time.LocalDateTime
 
 /**
  * Room entity representing a collection item stored locally.
@@ -17,7 +18,8 @@ data class CollectionItemEntity(
     val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,
-    val thumbnail: String?
+    val thumbnail: String?,
+    val lastModified: LocalDateTime?
 )
 
 /**
@@ -29,7 +31,8 @@ fun CollectionItemEntity.toCollectionItem(): CollectionItem {
         subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModified = lastModified
     )
 }
 
@@ -42,6 +45,7 @@ fun CollectionItem.toEntity(): CollectionItemEntity {
         subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModified = lastModified
     )
 }

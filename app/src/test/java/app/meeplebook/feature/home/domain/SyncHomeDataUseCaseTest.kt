@@ -59,7 +59,7 @@ class SyncHomeDataUseCaseTest {
 
         // Setup successful sync results
         val collectionItems = listOf(
-            CollectionItem(1, GameSubtype.BOARDGAME, "Game 1", 2020, null)
+            CollectionItem(1, GameSubtype.BOARDGAME, "Game 1", 2020, null, null)
         )
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
 
@@ -104,7 +104,7 @@ class SyncHomeDataUseCaseTest {
 
         // Setup successful collection sync
         val collectionItems = listOf(
-            CollectionItem(1, GameSubtype.BOARDGAME, "Game 1", 2020, null)
+            CollectionItem(1, GameSubtype.BOARDGAME, "Game 1", 2020, null, null)
         )
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
 

@@ -26,16 +26,18 @@ class GetCollectionHighlightsUseCase @Inject constructor(
             return null to null
         }
         
-        // Recently added: last game in collection (assuming collection is ordered by add date)
-        // In a real implementation, we'd have an actual "dateAdded" field
-        val recentlyAdded = collection.lastOrNull()?.let { game ->
-            GameHighlight(
-                id = game.gameId.toLong(),
-                gameName = game.name,
-                thumbnailUrl = game.thumbnail,
-                subtitle = "Recently Added"
-            )
-        }
+        // Recently added: game with most recent lastModified date
+        val recentlyAdded = collection
+            .filter { it.lastModified != null }
+            .maxByOrNull { it.lastModified!! }
+            ?.let { game ->
+                GameHighlight(
+                    id = game.gameId.toLong(),
+                    gameName = game.name,
+                    thumbnailUrl = game.thumbnail,
+                    subtitle = "Recently Added"
+                )
+            }
         
         // Suggested: an unplayed game from the collection
         val playedGameIds = plays.map { it.gameId }.toSet()
