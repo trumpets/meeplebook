@@ -42,12 +42,10 @@ object CollectionXmlParser {
                         "item" -> {
                             val gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull()
                             val subtype = parser.getAttributeValue(null, "subtype")
-                            val lastModified = parser.getAttributeValue(null, "lastmodified")
                             if (gameId != null) {
                                 currentItem = CollectionItemBuilder(
                                     gameId = gameId,
-                                    subtype = parseSubtype(subtype),
-                                    lastModified = parseLastModified(lastModified)
+                                    subtype = parseSubtype(subtype)
                                 )
                             }
                         }
@@ -59,6 +57,11 @@ object CollectionXmlParser {
                         }
                         "thumbnail" -> {
                             currentItem?.thumbnail = safeNextText(parser)
+                        }
+                        "status" -> {
+                            currentItem?.lastModified = parseLastModified(
+                                parser.getAttributeValue(null, "lastmodified")
+                            )
                         }
                     }
                 }
@@ -111,11 +114,12 @@ object CollectionXmlParser {
     private class CollectionItemBuilder(
         val gameId: Int,
         val subtype: GameSubtype,
-        val lastModified: LocalDateTime?
     ) {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
+        var lastModified: LocalDateTime?
+
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
