@@ -18,12 +18,10 @@ class SyncTimeRepositoryImpl @Inject constructor(
     
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     
-    companion object {
-        private val LAST_COLLECTION_SYNC = stringPreferencesKey("last_collection_sync")
-        private val LAST_PLAYS_SYNC = stringPreferencesKey("last_plays_sync")
-        private val LAST_FULL_SYNC = stringPreferencesKey("last_full_sync")
-    }
-    
+    private val LAST_COLLECTION_SYNC = stringPreferencesKey("last_collection_sync")
+    private val LAST_PLAYS_SYNC = stringPreferencesKey("last_plays_sync")
+    private val LAST_FULL_SYNC = stringPreferencesKey("last_full_sync")
+
     override fun observeLastCollectionSync(): Flow<LocalDateTime?> =
         dataStore.data.map { prefs ->
             prefs[LAST_COLLECTION_SYNC]?.let { LocalDateTime.parse(it, formatter) }
