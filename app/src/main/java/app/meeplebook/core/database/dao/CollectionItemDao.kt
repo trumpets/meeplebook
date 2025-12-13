@@ -64,12 +64,12 @@ interface CollectionItemDao {
      */
     @Query("""
         SELECT COUNT(*) FROM collection_items 
-        WHERE gameId NOT IN (SELECT DISTINCT gameId FROM plays)
+        WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
     """)
     suspend fun getUnplayedGamesCount(): Int
 
     /**
-     * Gets the collection item with the most recent lastModified date.
+     * Gets the collection item most recently added or updated on BGG (based on lastModifiedDate from BGG).
      */
     @Query("SELECT * FROM collection_items WHERE lastModifiedDate IS NOT NULL ORDER BY lastModifiedDate DESC LIMIT 1")
     suspend fun getMostRecentlyAddedItem(): CollectionItemEntity?
@@ -78,8 +78,9 @@ interface CollectionItemDao {
      * Gets an unplayed game (first game in collection that has no plays).
      */
     @Query("""
-        SELECT * FROM collection_items 
-        WHERE gameId NOT IN (SELECT DISTINCT gameId FROM plays) 
+        SELECT * FROM collection_items
+        WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
+        ORDER BY name ASC
         LIMIT 1
     """)
     suspend fun getFirstUnplayedGame(): CollectionItemEntity?
