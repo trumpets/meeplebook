@@ -40,8 +40,8 @@ fun parseBggDate(value: String?): Instant? {
     if (value.isNullOrBlank()) return null
     return try {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val ldt = LocalDateTime.parse(value, formatter)
-        ldt.toInstant(ZoneOffset.UTC)
+        val ldt = LocalDate.parse(value, formatter)
+        ldt.atStartOfDay(ZoneOffset.UTC).toInstant()
     } catch (_: Exception) {
         null
     }
