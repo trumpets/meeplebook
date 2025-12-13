@@ -5,6 +5,7 @@ import app.meeplebook.core.collection.model.GameSubtype
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
+import java.time.Instant
 
 /**
  * Parses BGG collection XML responses into domain models.
@@ -53,6 +54,12 @@ object CollectionXmlParser {
                         "thumbnail" -> {
                             currentItem?.thumbnail = safeNextText(parser)
                         }
+                        "status" -> {
+                            val lastModifiedStr = parser.getAttributeValue(null, "lastmodified")
+                            currentItem?.lastModifiedDate = lastModifiedStr?.toLongOrNull()?.let {
+                                Instant.ofEpochSecond(it)
+                            }
+                        }
                     }
                 }
                 XmlPullParser.END_TAG -> {
@@ -95,6 +102,7 @@ object CollectionXmlParser {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
+        var lastModifiedDate: Instant? = null
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
@@ -103,7 +111,8 @@ object CollectionXmlParser {
                 subtype = subtype,
                 name = itemName,
                 yearPublished = yearPublished,
-                thumbnail = thumbnail
+                thumbnail = thumbnail,
+                lastModifiedDate = lastModifiedDate
             )
         }
     }

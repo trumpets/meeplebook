@@ -46,4 +46,20 @@ class CollectionRepositoryImpl @Inject constructor(
     override suspend fun clearCollection() {
         local.clearCollection()
     }
+
+    override suspend fun getCollectionCount(): Int {
+        return local.getCollectionCount()
+    }
+
+    override suspend fun getUnplayedGamesCount(): Int {
+        return local.getUnplayedGamesCount()
+    }
+
+    override suspend fun getMostRecentlyAddedItem(): CollectionItem? {
+        return local.getMostRecentlyAddedItem()
+    }
+
+    override suspend fun getFirstUnplayedGame(): CollectionItem? {
+        return local.getFirstUnplayedGame()
+    }
 }
