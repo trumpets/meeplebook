@@ -9,6 +9,7 @@ import app.meeplebook.core.database.entity.toPlay
 import app.meeplebook.core.plays.model.Play
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import javax.inject.Inject
 
 /**
@@ -69,5 +70,17 @@ class PlaysLocalDataSourceImpl @Inject constructor(
             playerDao.deleteAll()
             playDao.deleteAll()
         }
+    }
+
+    override suspend fun getTotalPlaysCount(): Int {
+        return playDao.getTotalPlaysCount() ?: 0
+    }
+
+    override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int {
+        return playDao.getPlaysCountForMonth(start, end) ?: 0
+    }
+
+    override suspend fun getRecentPlays(limit: Int): List<Play> {
+        return playDao.getRecentPlaysWithPlayers(limit).map { it.toPlay() }
     }
 }

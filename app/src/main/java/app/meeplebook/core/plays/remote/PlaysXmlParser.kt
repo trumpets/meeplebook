@@ -5,6 +5,7 @@ import app.meeplebook.core.plays.model.Player
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
+import java.time.Instant
 
 /**
  * Parses BGG plays XML responses into domain models.
@@ -36,7 +37,10 @@ object PlaysXmlParser {
                     when (parser.name) {
                         "play" -> {
                             val id = parser.getAttributeValue(null, "id")?.toIntOrNull()
-                            val date = parser.getAttributeValue(null, "date")
+                            val date = parser.getAttributeValue(null, "date")?.toLongOrNull()?.let {
+                                Instant.ofEpochSecond(it)
+                            }
+
                             val quantity = parser.getAttributeValue(null, "quantity")?.toIntOrNull() ?: 1
                             val length = parser.getAttributeValue(null, "length")?.toIntOrNull()?.takeIf { it > 0 }
                             val incomplete = parser.getAttributeValue(null, "incomplete")?.toIntOrNull() == 1
@@ -117,7 +121,7 @@ object PlaysXmlParser {
 
     private class PlayBuilder(
         val id: Int,
-        val date: String,
+        val date: Instant,
         val quantity: Int,
         val length: Int?,
         val incomplete: Boolean,

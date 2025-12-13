@@ -2,6 +2,7 @@ package app.meeplebook.core.plays.local
 
 import app.meeplebook.core.plays.model.Play
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /**
  * Local data source for storing and retrieving user plays.
@@ -54,4 +55,19 @@ interface PlaysLocalDataSource {
      * Clears all plays.
      */
     suspend fun clearPlays()
+
+    /**
+     * Gets the total count of plays (sum of quantities).
+     */
+    suspend fun getTotalPlaysCount(): Int
+
+    /**
+     * Gets the count of plays for a specific month.
+     */
+    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int
+
+    /**
+     * Gets the most recent plays with a limit.
+     */
+    suspend fun getRecentPlays(limit: Int): List<Play>
 }

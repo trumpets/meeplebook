@@ -10,6 +10,7 @@ import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
+import java.time.Instant
 import javax.inject.Inject
 
 /**
@@ -84,5 +85,17 @@ class PlaysRepositoryImpl @Inject constructor(
 
     override suspend fun clearPlays() {
         local.clearPlays()
+    }
+
+    override suspend fun getTotalPlaysCount(): Int {
+        return local.getTotalPlaysCount()
+    }
+
+    override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int {
+        return local.getPlaysCountForMonth(start, end)
+    }
+
+    override suspend fun getRecentPlays(limit: Int): List<Play> {
+        return local.getRecentPlays(limit)
     }
 }

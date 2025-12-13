@@ -4,6 +4,7 @@ import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /**
  * Repository for managing user plays.
@@ -53,4 +54,19 @@ interface PlaysRepository {
      * Clears all plays from local storage.
      */
     suspend fun clearPlays()
+
+    /**
+     * Gets the total count of plays (sum of quantities).
+     */
+    suspend fun getTotalPlaysCount(): Int
+
+    /**
+     * Gets the count of plays for a specific month.
+     */
+    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int
+
+    /**
+     * Gets the most recent plays with a limit.
+     */
+    suspend fun getRecentPlays(limit: Int): List<Play>
 }

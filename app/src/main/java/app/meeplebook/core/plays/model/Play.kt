@@ -1,10 +1,12 @@
 package app.meeplebook.core.plays.model
 
+import java.time.Instant
+
 /**
  * Represents a logged play of a game on BGG.
  *
  * @param id The unique play ID from BGG.
- * @param date The date when the play occurred (ISO 8601 format: YYYY-MM-DD).
+ * @param date The date when the play occurred, Instant.
  * @param quantity The number of times the game was played.
  * @param length The length of the play in minutes.
  * @param incomplete Whether the play was incomplete.
@@ -16,7 +18,7 @@ package app.meeplebook.core.plays.model
  */
 data class Play(
     val id: Int,
-    val date: String,
+    val date: Instant,
     val quantity: Int,
     val length: Int?,
     val incomplete: Boolean,

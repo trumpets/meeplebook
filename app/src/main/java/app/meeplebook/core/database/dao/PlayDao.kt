@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayWithPlayers
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /**
  * Data Access Object for plays.
@@ -104,4 +105,23 @@ interface PlayDao {
      */
     @Query("DELETE FROM plays")
     suspend fun deleteAll()
+
+    /**
+     * Gets the total count of plays (sum of quantities).
+     */
+    @Query("SELECT SUM(quantity) FROM plays")
+    suspend fun getTotalPlaysCount(): Int?
+
+    /**
+     * Gets the count of plays for a specific month.
+     */
+    @Query("SELECT SUM(quantity) FROM plays WHERE date >= :start AND date < :end")
+    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int?
+
+    /**
+     * Gets the most recent plays with a limit, ordered by date descending.
+     */
+    @Transaction
+    @Query("SELECT * FROM plays ORDER BY date DESC LIMIT :limit")
+    suspend fun getRecentPlaysWithPlayers(limit: Int): List<PlayWithPlayers>
 }
