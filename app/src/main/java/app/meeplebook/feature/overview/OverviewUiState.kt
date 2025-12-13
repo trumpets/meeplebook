@@ -1,4 +1,4 @@
-package app.meeplebook.feature.home
+package app.meeplebook.feature.overview
 
 import androidx.annotation.StringRes
 
@@ -25,7 +25,7 @@ data class GameHighlight(
 )
 
 /**
- * Statistics summary shown on the home screen.
+ * Statistics summary shown on the overview screen.
  */
 data class HomeStats(
     val gamesCount: Int = 0,
@@ -35,9 +35,9 @@ data class HomeStats(
 )
 
 /**
- * UI state for the Home screen.
+ * UI state for the Overview screen (home tab).
  */
-data class HomeUiState(
+data class OverviewUiState(
     val stats: HomeStats = HomeStats(),
     val recentPlays: List<RecentPlay> = emptyList(),
     val recentlyAddedGame: GameHighlight? = null,

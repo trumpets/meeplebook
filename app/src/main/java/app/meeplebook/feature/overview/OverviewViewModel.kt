@@ -1,4 +1,4 @@
-package app.meeplebook.feature.home
+package app.meeplebook.feature.overview
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class OverviewViewModel @Inject constructor(
     private val getHomeStatsUseCase: GetHomeStatsUseCase,
     private val getRecentPlaysUseCase: GetRecentPlaysUseCase,
     private val getCollectionHighlightsUseCase: GetCollectionHighlightsUseCase,
@@ -35,8 +35,8 @@ class HomeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(OverviewUiState(isLoading = true))
+    val uiState: StateFlow<OverviewUiState> = _uiState.asStateFlow()
     
     private val refreshOnLogin: Boolean = savedStateHandle.get<Boolean>("refreshOnLogin") ?: false
 
@@ -51,64 +51,34 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Refreshes home data by syncing with BGG and reloading.
-     * Should be called on pull-to-refresh and after login.
-     */
-    fun refresh() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true, errorMessageResId = null) }
-            
-            // Sync data from BGG
-            val syncResult = syncHomeDataUseCase()
-            
-            when (syncResult) {
-                is AppResult.Success -> {
-                    // Data will be updated reactively through observeDataChanges
-                    _uiState.update { it.copy(isRefreshing = false, errorMessageResId = null) }
-                }
-                is AppResult.Failure -> {
-                    // Show error to user via UI state
-                    _uiState.update { 
-                        it.copy(
-                            isRefreshing = false,
-                            errorMessageResId = R.string.sync_failed_error
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Observes data changes and updates UI state reactively.
+     * Observes collection, plays, and sync time changes, automatically updating UI state.
      */
     private fun observeDataChanges() {
         viewModelScope.launch {
-            // Combine all data sources - only observe last full sync
             combine(
                 collectionRepository.observeCollection(),
                 playsRepository.observePlays(),
                 syncTimeRepository.observeLastFullSync()
-            ) { collection, plays, lastFullSync ->
-                // Calculate stats
+            ) { _, _, lastFullSync ->
+                // Calculate all data using use cases
                 val stats = getHomeStatsUseCase()
-                
-                // Get recent plays
                 val recentPlays = getRecentPlaysUseCase()
-                
-                // Get highlights
                 val (recentlyAdded, suggested) = getCollectionHighlightsUseCase()
                 
                 // Format sync time
                 val syncText = syncFormatter.formatLastSynced(lastFullSync)
-                
-                // Return updated values without creating new state object
-                Triple(stats, recentPlays, Pair(recentlyAdded, suggested) to syncText)
-            }.collect { (stats, recentPlays, highlightsAndSync) ->
-                val (highlights, syncText) = highlightsAndSync
+
+                // Return new state data
+                Triple(
+                    Triple(stats, recentPlays, Pair(recentlyAdded, suggested)),
+                    syncText,
+                    lastFullSync
+                )
+            }.collect { (dataTriple, syncText, _) ->
+                val (stats, recentPlays, highlights) = dataTriple
                 val (recentlyAdded, suggested) = highlights
                 
-                // Update state preserving isRefreshing and errorMessageResId
+                // Update state with new values, preserving isRefreshing and errorMessage
                 _uiState.update { current ->
                     current.copy(
                         stats = stats,
@@ -118,6 +88,32 @@ class HomeViewModel @Inject constructor(
                         lastSyncedText = syncText,
                         isLoading = false
                     )
+                }
+            }
+        }
+    }
+
+    /**
+     * Triggers a refresh by syncing data from BGG.
+     */
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true, errorMessageResId = null) }
+            
+            // Sync data from BGG and handle result
+            val syncResult = syncHomeDataUseCase()
+            when (syncResult) {
+                is AppResult.Success -> {
+                    // Data will be automatically updated through observeDataChanges
+                    _uiState.update { it.copy(isRefreshing = false) }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { 
+                        it.copy(
+                            isRefreshing = false,
+                            errorMessageResId = R.string.sync_failed_error
+                        )
+                    }
                 }
             }
         }
