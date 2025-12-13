@@ -10,6 +10,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.meeplebook.feature.overview.GameHighlight
+import app.meeplebook.feature.overview.HomeStats
+import app.meeplebook.feature.overview.HomeUiState
+import app.meeplebook.feature.overview.RecentPlay
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

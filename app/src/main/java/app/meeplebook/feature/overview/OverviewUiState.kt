@@ -1,4 +1,4 @@
-package app.meeplebook.feature.home
+package app.meeplebook.feature.overview
 
 /**
  * Represents a recently played game entry.
