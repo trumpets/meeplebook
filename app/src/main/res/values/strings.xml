@@ -27,4 +27,26 @@
     <string name="play_date_players">%1$s • %2$d players</string>
     <string name="empty_recent_plays_message">No recent plays. Start logging your game sessions!</string>
     <string name="loading_message">Loading your games…</string>
+
+    <!-- Game Highlights -->
+    <string name="game_highlight_recently_added">Recently Added</string>
+    <string name="game_highlight_try_tonight">Try Tonight?</string>
+
+    <!-- Date formatting -->
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="date_days_ago">%d days ago</string>
+    <string name="players_none">No players</string>
+    <string name="players_more">+%d</string>
+
+    <!-- Sync status -->
+    <string name="sync_never">Never synced</string>
+    <string name="sync_just_now">just now</string>
+    <string name="sync_minutes_ago">%d min ago</string>
+    <string name="sync_one_hour_ago">1 hour ago</string>
+    <string name="sync_hours_ago">%d hours ago</string>
+    <string name="sync_one_day_ago">1 day ago</string>
+    <string name="sync_days_ago">%d days ago</string>
+    <string name="sync_last_synced">Last synced: %s</string>
+    <string name="sync_failed_error">Failed to sync data. Please try again.</string>
 </resources>
