@@ -2,7 +2,7 @@ package app.meeplebook.core.plays.remote
 
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.Player
-import app.meeplebook.core.util.parseBggDateToInstant
+import app.meeplebook.core.util.parseBggDate
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
@@ -38,8 +38,7 @@ object PlaysXmlParser {
                     when (parser.name) {
                         "play" -> {
                             val id = parser.getAttributeValue(null, "id")?.toIntOrNull()
-                            val date = parseBggDateToInstant(parser.getAttributeValue(null, "date"))
-
+                            val date = parseBggDate(parser.getAttributeValue(null, "date"))
                             val quantity = parser.getAttributeValue(null, "quantity")?.toIntOrNull() ?: 1
                             val length = parser.getAttributeValue(null, "length")?.toIntOrNull()?.takeIf { it > 0 }
                             val incomplete = parser.getAttributeValue(null, "incomplete")?.toIntOrNull() == 1

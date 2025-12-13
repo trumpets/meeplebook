@@ -2,7 +2,7 @@ package app.meeplebook.core.collection.remote
 
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
-import app.meeplebook.core.util.parseBggDateToInstant
+import app.meeplebook.core.util.parseBggDateTime
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
@@ -57,7 +57,7 @@ object CollectionXmlParser {
                         }
                         "status" -> {
                             val lastModifiedStr = parser.getAttributeValue(null, "lastmodified")
-                            currentItem?.lastModifiedDate = parseBggDateToInstant(lastModifiedStr)
+                            currentItem?.lastModifiedDate = parseBggDateTime(lastModifiedStr)
                         }
                     }
                 }

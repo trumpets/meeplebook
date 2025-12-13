@@ -16,10 +16,21 @@ fun monthRangeFor(yearMonth: String): Pair<Instant, Instant> {
     return start to end
 }
 
-fun parseBggDateToInstant(value: String?): Instant? {
+fun parseBggDateTime(value: String?): Instant? {
     if (value.isNullOrBlank()) return null
     return try {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val ldt = LocalDateTime.parse(value, formatter)
+        ldt.toInstant(ZoneOffset.UTC)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+fun parseBggDate(value: String?): Instant? {
+    if (value.isNullOrBlank()) return null
+    return try {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val ldt = LocalDateTime.parse(value, formatter)
         ldt.toInstant(ZoneOffset.UTC)
     } catch (_: Exception) {

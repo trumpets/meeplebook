@@ -6,7 +6,7 @@ import java.time.Instant
  * Represents a logged play of a game on BGG.
  *
  * @param id The unique play ID from BGG.
- * @param date The date when the play occurred, Instant.
+ * @param date The date and time when the play occurred, as a [java.time.Instant] (UTC).
  * @param quantity The number of times the game was played.
  * @param length The length of the play in minutes.
  * @param incomplete Whether the play was incomplete.

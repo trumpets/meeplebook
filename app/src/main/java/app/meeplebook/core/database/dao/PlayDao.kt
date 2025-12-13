@@ -109,14 +109,14 @@ interface PlayDao {
     /**
      * Gets the total count of plays (sum of quantities).
      */
-    @Query("SELECT SUM(quantity) FROM plays")
-    suspend fun getTotalPlaysCount(): Int?
+    @Query("SELECT COALESCE(SUM(quantity)) FROM plays")
+    suspend fun getTotalPlaysCount(): Int
 
     /**
      * Gets the count of plays for a specific month.
      */
-    @Query("SELECT SUM(quantity) FROM plays WHERE date >= :start AND date < :end")
-    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int?
+    @Query("SELECT COALESCE(SUM(quantity)) FROM plays WHERE date >= :start AND date < :end")
+    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int
 
     /**
      * Gets the most recent plays with a limit, ordered by date descending.

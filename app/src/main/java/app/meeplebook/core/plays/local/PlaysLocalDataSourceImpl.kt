@@ -73,11 +73,11 @@ class PlaysLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getTotalPlaysCount(): Int {
-        return playDao.getTotalPlaysCount() ?: 0
+        return playDao.getTotalPlaysCount()
     }
 
     override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int {
-        return playDao.getPlaysCountForMonth(start, end) ?: 0
+        return playDao.getPlaysCountForMonth(start, end)
     }
 
     override suspend fun getRecentPlays(limit: Int): List<Play> {
