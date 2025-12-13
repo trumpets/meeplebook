@@ -57,7 +57,7 @@ interface CollectionItemDao {
      * Gets the count of items in the collection.
      */
     @Query("SELECT COUNT(*) FROM collection_items")
-    suspend fun getCollectionCount(): Int
+    suspend fun getCollectionCount(): Long
 
     /**
      * Gets the count of unplayed games (games in collection that are not in plays table).
@@ -66,7 +66,7 @@ interface CollectionItemDao {
         SELECT COUNT(*) FROM collection_items 
         WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
     """)
-    suspend fun getUnplayedGamesCount(): Int
+    suspend fun getUnplayedGamesCount(): Long
 
     /**
      * Gets the collection item most recently added or updated on BGG (based on lastModifiedDate from BGG).

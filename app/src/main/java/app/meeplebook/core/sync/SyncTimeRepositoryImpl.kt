@@ -7,18 +7,17 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class SyncTimeRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : SyncTimeRepository {
 
-    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-
-    private val LAST_COLLECTION_SYNC = longPreferencesKey("last_collection_sync")
-    private val LAST_PLAYS_SYNC = longPreferencesKey("last_plays_sync")
-    private val LAST_FULL_SYNC = longPreferencesKey("last_full_sync")
+    companion object {
+        private val LAST_COLLECTION_SYNC = longPreferencesKey("last_collection_sync")
+        private val LAST_PLAYS_SYNC = longPreferencesKey("last_plays_sync")
+        private val LAST_FULL_SYNC = longPreferencesKey("last_full_sync")
+    }
 
     override fun observeLastCollectionSync(): Flow<Instant?> =
         dataStore.data.map { prefs ->

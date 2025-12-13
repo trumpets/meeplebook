@@ -44,6 +44,7 @@ object PlaysXmlParser {
                             val incomplete = parser.getAttributeValue(null, "incomplete")?.toIntOrNull() == 1
                             val location = parser.getAttributeValue(null, "location")?.takeIf { it.isNotBlank() }
 
+                            // TODO: log that a date is invalid or missing
                             if (id != null && date != null) {
                                 currentPlay = PlayBuilder(
                                     id = id,

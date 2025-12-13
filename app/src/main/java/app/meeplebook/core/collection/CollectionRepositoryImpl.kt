@@ -47,11 +47,11 @@ class CollectionRepositoryImpl @Inject constructor(
         local.clearCollection()
     }
 
-    override suspend fun getCollectionCount(): Int {
+    override suspend fun getCollectionCount(): Long {
         return local.getCollectionCount()
     }
 
-    override suspend fun getUnplayedGamesCount(): Int {
+    override suspend fun getUnplayedGamesCount(): Long {
         return local.getUnplayedGamesCount()
     }
 

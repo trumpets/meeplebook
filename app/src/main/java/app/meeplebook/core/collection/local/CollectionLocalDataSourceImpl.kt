@@ -34,11 +34,11 @@ class CollectionLocalDataSourceImpl @Inject constructor(
         dao.deleteAll()
     }
 
-    override suspend fun getCollectionCount(): Int {
+    override suspend fun getCollectionCount(): Long {
         return dao.getCollectionCount()
     }
 
-    override suspend fun getUnplayedGamesCount(): Int {
+    override suspend fun getUnplayedGamesCount(): Long {
         return dao.getUnplayedGamesCount()
     }
 

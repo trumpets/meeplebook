@@ -38,12 +38,12 @@ interface CollectionLocalDataSource {
     /**
      * Gets the count of items in the collection.
      */
-    suspend fun getCollectionCount(): Int
+    suspend fun getCollectionCount(): Long
 
     /**
      * Gets the count of unplayed games.
      */
-    suspend fun getUnplayedGamesCount(): Int
+    suspend fun getUnplayedGamesCount(): Long
 
     /**
      * Gets the most recently added collection item.

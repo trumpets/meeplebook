@@ -43,12 +43,12 @@ interface CollectionRepository {
     /**
      * Gets the count of items in the collection.
      */
-    suspend fun getCollectionCount(): Int
+    suspend fun getCollectionCount(): Long
 
     /**
      * Gets the count of unplayed games in the collection.
      */
-    suspend fun getUnplayedGamesCount(): Int
+    suspend fun getUnplayedGamesCount(): Long
 
     /**
      * Gets the most recently added collection item.

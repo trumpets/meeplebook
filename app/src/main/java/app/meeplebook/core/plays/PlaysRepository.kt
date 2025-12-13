@@ -58,12 +58,12 @@ interface PlaysRepository {
     /**
      * Gets the total count of plays (sum of quantities).
      */
-    suspend fun getTotalPlaysCount(): Int
+    suspend fun getTotalPlaysCount(): Long
 
     /**
      * Gets the count of plays for a specific month.
      */
-    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int
+    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Long
 
     /**
      * Gets the most recent plays with a limit.

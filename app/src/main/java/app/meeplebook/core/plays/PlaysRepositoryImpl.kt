@@ -87,11 +87,11 @@ class PlaysRepositoryImpl @Inject constructor(
         local.clearPlays()
     }
 
-    override suspend fun getTotalPlaysCount(): Int {
+    override suspend fun getTotalPlaysCount(): Long {
         return local.getTotalPlaysCount()
     }
 
-    override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Int {
+    override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Long {
         return local.getPlaysCountForMonth(start, end)
     }
 
