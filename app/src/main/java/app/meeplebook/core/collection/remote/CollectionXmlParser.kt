@@ -5,6 +5,10 @@ import app.meeplebook.core.collection.model.GameSubtype
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 /**
  * Parses BGG collection XML responses into domain models.
@@ -14,6 +18,9 @@ object CollectionXmlParser {
     private val parserFactory: XmlPullParserFactory by lazy {
         XmlPullParserFactory.newInstance()
     }
+    
+    // BGG uses ISO 8601 format for dates
+    private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
     /**
      * Parses the BGG collection XML response.
@@ -53,6 +60,11 @@ object CollectionXmlParser {
                         "thumbnail" -> {
                             currentItem?.thumbnail = safeNextText(parser)
                         }
+                        "status" -> {
+                            currentItem?.lastModified = parseLastModified(
+                                parser.getAttributeValue(null, "lastmodified")
+                            )
+                        }
                     }
                 }
                 XmlPullParser.END_TAG -> {
@@ -87,14 +99,28 @@ object CollectionXmlParser {
             else -> GameSubtype.BOARDGAME
         }
     }
+    
+    /**
+     * Parses the lastmodified date string from BGG XML.
+     * Expected format: YYYY-MM-DD HH:MM:SS
+     */
+    private fun parseLastModified(lastModified: String?): Instant? {
+        if (lastModified.isNullOrBlank()) return null
+        return try {
+            LocalDateTime.parse(lastModified, dateFormatter).toInstant(ZoneOffset.UTC)
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     private class CollectionItemBuilder(
         val gameId: Int,
-        val subtype: GameSubtype
+        val subtype: GameSubtype,
     ) {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
+        var lastModified: Instant? = null
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
@@ -103,7 +129,8 @@ object CollectionXmlParser {
                 subtype = subtype,
                 name = itemName,
                 yearPublished = yearPublished,
-                thumbnail = thumbnail
+                thumbnail = thumbnail,
+                lastModified = lastModified
             )
         }
     }

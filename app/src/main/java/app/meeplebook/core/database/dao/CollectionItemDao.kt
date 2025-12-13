@@ -52,4 +52,35 @@ interface CollectionItemDao {
         deleteAll()
         insertAll(items)
     }
+
+    /**
+     * Gets the count of items in the collection.
+     */
+    @Query("SELECT COUNT(*) FROM collection_items")
+    suspend fun getCollectionCount(): Int
+
+    /**
+     * Gets the count of unplayed games (games in collection that are not in plays table).
+     */
+    @Query("""
+        SELECT COUNT(*) FROM collection_items 
+        WHERE gameId NOT IN (SELECT DISTINCT gameId FROM plays)
+    """)
+    suspend fun getUnplayedGamesCount(): Int
+
+    /**
+     * Gets the collection item with the most recent lastModified date.
+     */
+    @Query("SELECT * FROM collection_items WHERE lastModified IS NOT NULL ORDER BY lastModified DESC LIMIT 1")
+    suspend fun getMostRecentlyAddedItem(): CollectionItemEntity?
+
+    /**
+     * Gets an unplayed game (first game in collection that has no plays).
+     */
+    @Query("""
+        SELECT * FROM collection_items 
+        WHERE gameId NOT IN (SELECT DISTINCT gameId FROM plays) 
+        LIMIT 1
+    """)
+    suspend fun getFirstUnplayedGame(): CollectionItemEntity?
 }

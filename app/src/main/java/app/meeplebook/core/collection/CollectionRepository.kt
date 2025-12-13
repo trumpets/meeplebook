@@ -39,4 +39,24 @@ interface CollectionRepository {
      *
      */
     suspend fun clearCollection()
+
+    /**
+     * Gets the count of items in the collection.
+     */
+    suspend fun getCollectionCount(): Int
+
+    /**
+     * Gets the count of unplayed games in the collection.
+     */
+    suspend fun getUnplayedGamesCount(): Int
+
+    /**
+     * Gets the most recently added collection item.
+     */
+    suspend fun getMostRecentlyAddedItem(): CollectionItem?
+
+    /**
+     * Gets the first unplayed game from the collection.
+     */
+    suspend fun getFirstUnplayedGame(): CollectionItem?
 }

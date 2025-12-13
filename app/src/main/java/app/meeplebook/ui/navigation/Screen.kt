@@ -6,4 +6,4 @@ import kotlinx.serialization.Serializable
 object Login
 
 @Serializable
-object Home
+data class Home(val refreshOnLogin: Boolean = false)
