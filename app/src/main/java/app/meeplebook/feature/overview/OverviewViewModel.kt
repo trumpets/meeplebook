@@ -56,7 +56,7 @@ class OverviewViewModel @Inject constructor(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            OverviewUiState(isLoading = false)
+            OverviewUiState(isLoading = true)
         )
 
     private val refreshOnLogin: Boolean = savedStateHandle.get<Boolean>("refreshOnLogin") ?: false
