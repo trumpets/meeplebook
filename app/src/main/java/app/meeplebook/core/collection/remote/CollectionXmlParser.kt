@@ -37,7 +37,7 @@ object CollectionXmlParser {
                 XmlPullParser.START_TAG -> {
                     when (parser.name) {
                         "item" -> {
-                            val gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull()
+                            val gameId = parser.getAttributeValue(null, "objectid")?.toLongOrNull()
                             val subtype = parser.getAttributeValue(null, "subtype")
                             if (gameId != null) {
                                 currentItem = CollectionItemBuilder(
@@ -95,7 +95,7 @@ object CollectionXmlParser {
     }
 
     private class CollectionItemBuilder(
-        val gameId: Int,
+        val gameId: Long,
         val subtype: GameSubtype
     ) {
         var name: String? = null

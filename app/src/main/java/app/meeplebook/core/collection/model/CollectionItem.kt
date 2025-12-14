@@ -12,7 +12,7 @@ import java.time.Instant
  * @param thumbnail URL to the game's thumbnail image.
  */
 data class CollectionItem(
-    val gameId: Int,
+    val gameId: Long,
     val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,

@@ -25,7 +25,7 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.observePlays()
     }
 
-    override fun observePlaysForGame(gameId: Int): Flow<List<Play>> {
+    override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return local.observePlaysForGame(gameId)
     }
 
@@ -33,7 +33,7 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.getPlays()
     }
 
-    override suspend fun getPlaysForGame(gameId: Int): List<Play> {
+    override suspend fun getPlaysForGame(gameId: Long): List<Play> {
         return local.getPlaysForGame(gameId)
     }
 
@@ -87,15 +87,15 @@ class PlaysRepositoryImpl @Inject constructor(
         local.clearPlays()
     }
 
-    override suspend fun getTotalPlaysCount(): Long {
-        return local.getTotalPlaysCount()
+    override fun observeTotalPlaysCount(): Flow<Long> {
+        return local.observeTotalPlaysCount()
     }
 
-    override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Long {
-        return local.getPlaysCountForMonth(start, end)
+    override fun observePlaysCountForPeriod(start: Instant, end: Instant): Flow<Long> {
+        return local.observePlaysCountForMonth(start, end)
     }
 
-    override suspend fun getRecentPlays(limit: Int): List<Play> {
-        return local.getRecentPlays(limit)
+    override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
+        return local.observeRecentPlays(limit)
     }
 }

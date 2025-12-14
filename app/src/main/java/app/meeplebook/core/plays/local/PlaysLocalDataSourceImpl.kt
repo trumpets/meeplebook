@@ -27,7 +27,7 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         }
     }
 
-    override fun observePlaysForGame(gameId: Int): Flow<List<Play>> {
+    override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return playDao.observePlaysWithPlayersForGame(gameId).map { playsWithPlayers ->
             playsWithPlayers.map { it.toPlay() }
         }
@@ -37,7 +37,7 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         return playDao.getPlaysWithPlayers().map { it.toPlay() }
     }
 
-    override suspend fun getPlaysForGame(gameId: Int): List<Play> {
+    override suspend fun getPlaysForGame(gameId: Long): List<Play> {
         return playDao.getPlaysWithPlayersForGame(gameId).map { it.toPlay() }
     }
 
@@ -72,15 +72,17 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTotalPlaysCount(): Long {
-        return playDao.getTotalPlaysCount()
+    override fun observeTotalPlaysCount(): Flow<Long> {
+        return playDao.observeTotalPlaysCount()
     }
 
-    override suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Long {
-        return playDao.getPlaysCountForMonth(start, end)
+    override fun observePlaysCountForMonth(start: Instant, end: Instant): Flow<Long> {
+        return playDao.observePlaysCountForMonth(start, end)
     }
 
-    override suspend fun getRecentPlays(limit: Int): List<Play> {
-        return playDao.getRecentPlaysWithPlayers(limit).map { it.toPlay() }
+    override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
+        return playDao.observeRecentPlaysWithPlayers(limit).map { entities ->
+            entities.map {it.toPlay()}
+        }
     }
 }

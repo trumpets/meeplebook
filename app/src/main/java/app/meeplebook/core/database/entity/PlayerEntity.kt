@@ -23,10 +23,10 @@ import app.meeplebook.core.plays.model.Player
 )
 data class PlayerEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val playId: Int,
+    val id: Long = 0,
+    val playId: Long,
     val username: String?,
-    val userId: Int?,
+    val userId: Long?,
     val name: String,
     val startPosition: String?,
     val color: String?,

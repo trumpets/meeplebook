@@ -37,7 +37,7 @@ object PlaysXmlParser {
                 XmlPullParser.START_TAG -> {
                     when (parser.name) {
                         "play" -> {
-                            val id = parser.getAttributeValue(null, "id")?.toIntOrNull()
+                            val id = parser.getAttributeValue(null, "id")?.toLongOrNull()
                             val date = parseBggDate(parser.getAttributeValue(null, "date"))
                             val quantity = parser.getAttributeValue(null, "quantity")?.toIntOrNull() ?: 1
                             val length = parser.getAttributeValue(null, "length")?.toIntOrNull()?.takeIf { it > 0 }
@@ -58,7 +58,7 @@ object PlaysXmlParser {
                         }
                         "item" -> {
                             currentPlay?.let { play ->
-                                play.gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull()
+                                play.gameId = parser.getAttributeValue(null, "objectid")?.toLongOrNull()
                                 play.gameName = parser.getAttributeValue(null, "name")
                             }
                         }
@@ -68,7 +68,7 @@ object PlaysXmlParser {
                         "player" -> {
                             currentPlay?.let { play ->
                                 val username = parser.getAttributeValue(null, "username")
-                                val userId = parser.getAttributeValue(null, "userid")?.toIntOrNull()
+                                val userId = parser.getAttributeValue(null, "userid")?.toLongOrNull()
                                 val name = parser.getAttributeValue(null, "name")
                                 val startPosition = parser.getAttributeValue(null, "startposition")
                                 val color = parser.getAttributeValue(null, "color")
@@ -119,14 +119,14 @@ object PlaysXmlParser {
     }
 
     private class PlayBuilder(
-        val id: Int,
+        val id: Long,
         val date: Instant,
         val quantity: Int,
         val length: Int?,
         val incomplete: Boolean,
         val location: String?
     ) {
-        var gameId: Int? = null
+        var gameId: Long? = null
         var gameName: String? = null
         var comments: String? = null
         val players: MutableList<Player> = mutableListOf()

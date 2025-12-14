@@ -54,28 +54,28 @@ interface CollectionItemDao {
     }
 
     /**
-     * Gets the count of items in the collection.
+     * Observe the count of items in the collection.
      */
     @Query("SELECT COUNT(*) FROM collection_items")
-    suspend fun getCollectionCount(): Long
+    fun observeCollectionCount(): Flow<Long>
 
     /**
-     * Gets the count of unplayed games (games in collection that are not in plays table).
+     * Observe the count of unplayed games (games in collection that are not in plays table).
      */
     @Query("""
         SELECT COUNT(*) FROM collection_items 
         WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
     """)
-    suspend fun getUnplayedGamesCount(): Long
+    fun observeUnplayedGamesCount(): Flow<Long>
 
     /**
-     * Gets the collection item most recently added or updated on BGG (based on lastModifiedDate from BGG).
+     * Observe the collection item most recently added or updated on BGG (based on lastModifiedDate from BGG).
      */
     @Query("SELECT * FROM collection_items WHERE lastModifiedDate IS NOT NULL ORDER BY lastModifiedDate DESC LIMIT 1")
-    suspend fun getMostRecentlyAddedItem(): CollectionItemEntity?
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItemEntity>
 
     /**
-     * Gets an unplayed game (first game in collection that has no plays).
+     * Observe an unplayed game (first game in collection that has no plays).
      */
     @Query("""
         SELECT * FROM collection_items
@@ -83,5 +83,5 @@ interface CollectionItemDao {
         ORDER BY name ASC
         LIMIT 1
     """)
-    suspend fun getFirstUnplayedGame(): CollectionItemEntity?
+    fun observeFirstUnplayedGame(): Flow<CollectionItemEntity>
 }

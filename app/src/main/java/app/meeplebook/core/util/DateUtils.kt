@@ -15,14 +15,15 @@ private const val MINUTES_IN_HOUR = 60L
 private const val MINUTES_IN_TWO_HOURS = MINUTES_IN_HOUR * 2
 private const val MINUTES_IN_DAY = MINUTES_IN_HOUR * 24
 
-// Usage example:
-// val (start, end) = monthRangeFor("2025-09")
-fun monthRangeFor(yearMonth: String): Pair<Instant, Instant> {
-    // yearMonth must be "yyyy-MM"
-    val ym = YearMonth.parse(yearMonth)
-    val start = ym.atDay(1).atStartOfDay(ZoneOffset.UTC).toInstant()
-    val end = ym.plusMonths(1).atDay(1).atStartOfDay(ZoneOffset.UTC).toInstant()
-    return start to end
+data class Range(
+    val start: Instant,
+    val end: Instant
+)
+
+fun monthRangeFor(yearMonth: YearMonth, zoneId: ZoneId = ZoneOffset.UTC): Range {
+    val start = yearMonth.atDay(1).atStartOfDay(zoneId).toInstant()
+    val end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(zoneId).toInstant()
+    return Range(start, end)
 }
 
 fun parseBggDateTime(value: String?): Instant? {

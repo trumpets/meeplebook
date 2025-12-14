@@ -23,7 +23,7 @@ interface PlaysRepository {
      *
      * @return Flow emitting the user's plays for a specific game.
      */
-    fun observePlaysForGame(gameId: Int): Flow<List<Play>>
+    fun observePlaysForGame(gameId: Long): Flow<List<Play>>
 
     /**
      * Gets plays from local storage.
@@ -37,7 +37,7 @@ interface PlaysRepository {
      *
      * @return The user's plays.
      */
-    suspend fun getPlaysForGame(gameId: Int): List<Play>
+    suspend fun getPlaysForGame(gameId: Long): List<Play>
 
     /**
      * Syncs all plays for a specific user from BGG.
@@ -56,17 +56,17 @@ interface PlaysRepository {
     suspend fun clearPlays()
 
     /**
-     * Gets the total count of plays (sum of quantities).
+     * Observes the total count of plays (sum of quantities).
      */
-    suspend fun getTotalPlaysCount(): Long
+    fun observeTotalPlaysCount(): Flow<Long>
 
     /**
-     * Gets the count of plays for a specific month.
+     * Observes the count of plays for a specific period.
      */
-    suspend fun getPlaysCountForMonth(start: Instant, end: Instant): Long
+    fun observePlaysCountForPeriod(start: Instant, end: Instant): Flow<Long>
 
     /**
-     * Gets the most recent plays with a limit.
+     * Observes the most recent plays with a limit.
      */
-    suspend fun getRecentPlays(limit: Int): List<Play>
+    fun observeRecentPlays(limit: Int): Flow<List<Play>>
 }

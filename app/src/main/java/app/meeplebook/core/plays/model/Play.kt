@@ -17,13 +17,13 @@ import java.time.Instant
  * @param players List of players who participated in the play.
  */
 data class Play(
-    val id: Int,
+    val id: Long,
     val date: Instant,
     val quantity: Int,
     val length: Int?,
     val incomplete: Boolean,
     val location: String?,
-    val gameId: Int,
+    val gameId: Long,
     val gameName: String,
     val comments: String?,
     val players: List<Player>

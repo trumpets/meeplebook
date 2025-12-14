@@ -36,22 +36,22 @@ interface CollectionLocalDataSource {
     suspend fun clearCollection()
 
     /**
-     * Gets the count of items in the collection.
+     * Observe the count of items in the collection.
      */
-    suspend fun getCollectionCount(): Long
+    fun observeCollectionCount(): Flow<Long>
 
     /**
-     * Gets the count of unplayed games.
+     * Observe the count of unplayed games.
      */
-    suspend fun getUnplayedGamesCount(): Long
+    fun observeUnplayedGamesCount(): Flow<Long>
 
     /**
-     * Gets the most recently added collection item.
+     * Observe the most recently added collection item.
      */
-    suspend fun getMostRecentlyAddedItem(): CollectionItem?
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItem>
 
     /**
-     * Gets the first unplayed game.
+     * Observe the first unplayed game.
      */
-    suspend fun getFirstUnplayedGame(): CollectionItem?
+    fun observeFirstUnplayedGame(): Flow<CollectionItem>
 }

@@ -16,13 +16,13 @@ import java.time.Instant
 )
 data class PlayEntity(
     @PrimaryKey
-    val id: Int,
+    val id: Long,
     val date: Instant,
     val quantity: Int,
     val length: Int?,
     val incomplete: Boolean,
     val location: String?,
-    val gameId: Int,
+    val gameId: Long,
     val gameName: String,
     val comments: String?
 )

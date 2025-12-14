@@ -43,7 +43,19 @@ data class OverviewUiState(
     val recentPlays: List<RecentPlay> = emptyList(),
     val recentlyAddedGame: GameHighlight? = null,
     val suggestedGame: GameHighlight? = null,
-    val lastSyncedText: String = "",
+    val lastSyncedDate: Instant? = null,
     val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    @StringRes val errorMessageResId: Int? = null
+)
+
+/**
+ * Side effects for the Overview screen.
+ *
+ * Represents transient UI states that don't persist across configuration changes,
+ * such as loading indicators and temporary error messages.
+ */
+data class OverviewUiEffects(
+    val isRefreshing: Boolean = false,
+    @StringRes val errorMessageResId: Int? = null
 )

@@ -14,7 +14,7 @@ import java.time.Instant
 )
 data class CollectionItemEntity(
     @PrimaryKey
-    val gameId: Int,
+    val gameId: Long,
     val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,
