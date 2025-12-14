@@ -8,12 +8,15 @@ import app.meeplebook.feature.home.HomeScreen
 import app.meeplebook.feature.login.LoginScreen
 
 @Composable
-fun AppNavHost(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Login) {
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: Any = Login
+) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable<Login> {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Home) {
+                    navController.navigate(Home(refreshOnLogin = true)) {
                         // Clear login screen from back stack
                         popUpTo(Login) { inclusive = true }
                     }
