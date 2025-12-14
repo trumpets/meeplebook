@@ -24,19 +24,19 @@ fun HomeNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeTabScreen.Overview.routeString,
+        startDestination = HomeTabScreen.Overview,
         modifier = modifier
     ) {
-        composable(HomeTabScreen.Overview.routeString) {
+        composable<HomeTabScreen.Overview> {
             OverviewScreen()
         }
-        composable(HomeTabScreen.Collection.routeString) {
+        composable<HomeTabScreen.Collection> {
             CollectionScreen()
         }
-        composable(HomeTabScreen.Plays.routeString) {
+        composable<HomeTabScreen.Plays> {
             PlaysScreen()
         }
-        composable(HomeTabScreen.Profile.routeString) {
+        composable<HomeTabScreen.Profile> {
             ProfileScreen()
         }
     }

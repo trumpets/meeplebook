@@ -14,11 +14,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -55,19 +56,9 @@ enum class HomeNavigationDestination(
 fun HomeScreen() {
     val tabNavController = rememberNavController()
 
-    // Track selected tab using NavController state (not ViewModel state)
-    val currentBackStackEntry by tabNavController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
-
-    // Match route to determine selected tab
-    val selectedTab = HomeNavigationDestination.entries.find {
-        it.route.routeString == currentRoute
-    } ?: HomeNavigationDestination.HOME
-
     HomeScreenContent(
-        selectedNavItem = selectedTab,
         onNavItemClick = { destination ->
-            tabNavController.navigate(destination.route.routeString) {
+            tabNavController.navigate(destination.route) {
                 // Pop up to start destination to avoid building up back stack
                 popUpTo(tabNavController.graph.startDestinationId) {
                     saveState = true
@@ -83,16 +74,19 @@ fun HomeScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
-    selectedNavItem: HomeNavigationDestination = HomeNavigationDestination.HOME,
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
 ) {
     Scaffold(
         bottomBar = {
             NavigationBar {
+                val navBackStackEntry = tabNavController.currentBackStackEntryAsState().value
+                val currentDestination = navBackStackEntry?.destination
                 HomeNavigationDestination.entries.forEach { destination ->
                     NavigationBarItem(
-                        selected = selectedNavItem == destination,
+                        selected = currentDestination?.hierarchy?.any {
+                            it.hasRoute(destination.route::class)
+                        } == true,
                         onClick = { onNavItemClick(destination) },
                         icon = {
                             Icon(
