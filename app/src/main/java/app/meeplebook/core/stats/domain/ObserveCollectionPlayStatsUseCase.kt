@@ -1,7 +1,8 @@
-package app.meeplebook.core.stats
+package app.meeplebook.core.stats.domain
 
 import app.meeplebook.core.collection.CollectionRepository
 import app.meeplebook.core.plays.PlaysRepository
+import app.meeplebook.core.stats.model.CollectionPlayStats
 import app.meeplebook.core.util.Range
 import app.meeplebook.core.util.monthRangeFor
 import kotlinx.coroutines.flow.Flow

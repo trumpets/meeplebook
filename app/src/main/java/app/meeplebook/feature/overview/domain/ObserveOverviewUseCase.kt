@@ -1,14 +1,13 @@
 package app.meeplebook.feature.overview.domain
 
-import app.meeplebook.R
 import app.meeplebook.core.collection.domain.ObserveCollectionHighlightsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
-import app.meeplebook.core.stats.ObserveCollectionPlayStatsUseCase
+import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
-import app.meeplebook.feature.overview.OverviewUiState
-import app.meeplebook.feature.overview.toGameHighlight
-import app.meeplebook.feature.overview.toOverviewStats
-import app.meeplebook.feature.overview.toRecentPlay
+import app.meeplebook.core.collection.domain.HighlightType
+import app.meeplebook.core.collection.domain.toDomain
+import app.meeplebook.core.plays.domain.toDomain
+import app.meeplebook.core.stats.domain.toDomain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
@@ -20,7 +19,7 @@ class ObserveOverviewUseCase @Inject constructor(
     private val observeLastSync: ObserveLastFullSyncUseCase
 ) {
 
-    operator fun invoke(): Flow<OverviewUiState> =
+    operator fun invoke(): Flow<DomainOverview> =
         combine(
             observeStats(),
             observeRecentPlays(),
@@ -28,13 +27,12 @@ class ObserveOverviewUseCase @Inject constructor(
             observeLastSync()
         ) { stats, recentPlays, highlights, lastSync ->
 
-            OverviewUiState(
-                stats = stats.toOverviewStats(),
-                recentPlays = recentPlays.map { play -> play.toRecentPlay() },
-                recentlyAddedGame = highlights.recentlyAdded?.toGameHighlight(R.string.game_highlight_recently_added),
-                suggestedGame = highlights.suggested?.toGameHighlight(R.string.game_highlight_try_tonight),
-                lastSyncedDate = lastSync,
-                isLoading = false
+            DomainOverview(
+                stats = stats.toDomain(),
+                recentPlays = recentPlays.map { play -> play.toDomain() },
+                recentlyAddedGame = highlights.recentlyAdded?.toDomain(HighlightType.RECENTLY_ADDED),
+                suggestedGame = highlights.suggested?.toDomain(HighlightType.SUGGESTED),
+                lastSyncedDate = lastSync
             )
         }
 }

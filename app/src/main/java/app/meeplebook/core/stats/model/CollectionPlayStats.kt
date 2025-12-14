@@ -1,4 +1,4 @@
-package app.meeplebook.core.stats
+package app.meeplebook.core.stats.model
 
 data class CollectionPlayStats(
     val gamesCount: Long,

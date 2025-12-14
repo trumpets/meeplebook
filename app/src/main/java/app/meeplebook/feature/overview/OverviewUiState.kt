@@ -1,7 +1,6 @@
 package app.meeplebook.feature.overview
 
 import androidx.annotation.StringRes
-import java.time.Instant
 
 /**
  * Represents a recently played game entry.
@@ -10,9 +9,9 @@ data class RecentPlay(
     val id: Long,
     val gameName: String,
     val thumbnailUrl: String?,
-    val date: Instant,
+    val dateText: String,
     val playerCount: Int,
-    val playerNames: List<String>
+    val playerNames: String
 )
 
 /**
@@ -22,7 +21,7 @@ data class GameHighlight(
     val id: Long,
     val gameName: String,
     val thumbnailUrl: String?,
-    @StringRes val subtitleResId: Int
+    val subtitleText: String
 )
 
 /**
@@ -43,7 +42,7 @@ data class OverviewUiState(
     val recentPlays: List<RecentPlay> = emptyList(),
     val recentlyAddedGame: GameHighlight? = null,
     val suggestedGame: GameHighlight? = null,
-    val lastSyncedDate: Instant? = null,
+    val lastSyncedText: String = "",
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     @StringRes val errorMessageResId: Int? = null

@@ -43,7 +43,7 @@ class HomeScreenContentTest {
                             playsThisMonth = 18,
                             unplayedCount = 23
                         ),
-                        lastSyncedDate = "Last synced: 5 min ago"
+                        lastSyncedText = "Last synced: 5 min ago"
                     )
                 )
             }
@@ -225,7 +225,7 @@ class HomeScreenContentTest {
                 HomeScreenContent(
                     uiState = OverviewUiState(
                         stats = OverviewStats(),
-                        lastSyncedDate = "Never synced"
+                        lastSyncedText = "Never synced"
                     )
                 )
             }

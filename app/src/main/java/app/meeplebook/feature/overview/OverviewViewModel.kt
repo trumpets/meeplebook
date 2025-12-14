@@ -8,6 +8,8 @@ import app.meeplebook.R
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
 import app.meeplebook.core.sync.model.SyncUserDataError
+import app.meeplebook.core.ui.StringProvider
+import app.meeplebook.core.util.formatLastSynced
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,6 +27,7 @@ import javax.inject.Inject
 class OverviewViewModel @Inject constructor(
     private val observeOverviewUseCase: ObserveOverviewUseCase,
     private val syncUserDataUseCase: SyncUserDataUseCase,
+    private val stringProvider: StringProvider,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -31,7 +35,17 @@ class OverviewViewModel @Inject constructor(
 
     val uiState: StateFlow<OverviewUiState> =
         combine(
-            observeOverviewUseCase(),
+            observeOverviewUseCase()
+                .map { domain ->
+                    OverviewUiState(
+                        stats = domain.stats.toOverviewStats(),
+                        recentPlays = domain.recentPlays.map { it.toRecentPlay(stringProvider) },
+                        recentlyAddedGame = domain.recentlyAddedGame?.toGameHighlight(stringProvider),
+                        suggestedGame = domain.suggestedGame?.toGameHighlight(stringProvider),
+                        lastSyncedText = formatLastSynced(stringProvider, domain.lastSyncedDate),
+                        isLoading = false
+                    )
+                },
             _uiEffects
         ) { data, effects ->
             data.copy(

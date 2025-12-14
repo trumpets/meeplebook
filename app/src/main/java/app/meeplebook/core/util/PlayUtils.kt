@@ -1,15 +1,15 @@
 package app.meeplebook.core.util
 
-import android.content.Context
 import app.meeplebook.R
+import app.meeplebook.core.ui.StringProvider
 
 /**
  * Formats a list of player names into a comma-separated string.
  */
-fun formatPlayerNames(context: Context, names: List<String>): String {
+fun formatPlayerNames(stringProvider: StringProvider, names: List<String>): String {
     return when {
-        names.isEmpty() -> context.getString(R.string.players_none)
+        names.isEmpty() -> stringProvider.get(R.string.players_none)
         names.size <= 3 -> names.joinToString(", ")
-        else -> "${names.take(3).joinToString(", ")}, ${context.getString(R.string.players_more, names.size - 3)}"
+        else -> "${names.take(3).joinToString(", ")}, ${stringProvider.get(R.string.players_more, names.size - 3)}"
     }
 }
