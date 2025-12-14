@@ -25,11 +25,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,6 +75,7 @@ fun OverviewScreen(
     OverviewContent(
         uiState = uiState,
         onRefresh = { viewModel.refresh() },
+        onErrorShown = { viewModel.clearError() },
         onRecentPlayClick = { /* TODO: Navigate to play details */ },
         onRecentlyAddedClick = { /* TODO: Navigate to game details */ },
         onSuggestedGameClick = { /* TODO: Navigate to game details */ }
@@ -82,15 +87,30 @@ fun OverviewContent(
     uiState: OverviewUiState,
     modifier: Modifier = Modifier,
     onRefresh: () -> Unit = {},
+    onErrorShown: () -> Unit = {},
     onRecentPlayClick: (RecentPlay) -> Unit = {},
     onRecentlyAddedClick: () -> Unit = {},
     onSuggestedGameClick: () -> Unit = {},
 ) {
-    PullToRefreshBox(
-        isRefreshing = uiState.isRefreshing,
-        onRefresh = onRefresh,
-        modifier = modifier.fillMaxSize()
-    ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Resolve error message string when errorMessageResId is not null
+    val errorMessage = uiState.errorMessageResId?.let { stringResource(id = it) }
+
+    // Show snackbar when there's an error
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(message = it)
+            onErrorShown()
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize()
+        ) {
         if (uiState.isLoading) {
             // Loading state
             Box(
@@ -189,6 +209,14 @@ fun OverviewContent(
                 }
             }
         }
+
+        // Snackbar host positioned at the bottom of the screen
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
     }
 }
 
@@ -486,6 +514,26 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                 )
             ),
             isRefreshing = true
+        ),
+        // Error state
+        OverviewUiState(
+            stats = OverviewStats(
+                gamesCount = 50,
+                totalPlays = 100,
+                playsThisMonth = 5,
+                unplayedCount = 10
+            ),
+            recentPlays = listOf(
+                RecentPlay(
+                    id = 1,
+                    gameName = "Catan",
+                    thumbnailUrl = null,
+                    dateText = "Today",
+                    playerCount = 4,
+                    playerNames = "You, Alex, Jordan, Sam"
+                )
+            ),
+            errorMessageResId = R.string.sync_plays_failed_error
         )
     )
 }
