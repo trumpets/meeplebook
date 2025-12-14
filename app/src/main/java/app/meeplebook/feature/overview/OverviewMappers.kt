@@ -15,7 +15,6 @@ fun CollectionItem.toGameHighlight(@StringRes subtitleResId: Int): GameHighlight
         thumbnailUrl = thumbnail,
         subtitleResId = subtitleResId
     )
-
 }
 
 /**
@@ -32,6 +31,9 @@ fun Play.toRecentPlay(): RecentPlay {
     )
 }
 
+/**
+ * Maps a [CollectionPlayStats] to a [OverviewStats] for overview display.
+ */
 fun CollectionPlayStats.toOverviewStats(): OverviewStats {
     return OverviewStats(
         gamesCount = gamesCount,

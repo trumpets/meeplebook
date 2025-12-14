@@ -55,11 +55,11 @@ class CollectionRepositoryImpl @Inject constructor(
         return local.observeUnplayedGamesCount()
     }
 
-    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem> {
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
         return local.observeMostRecentlyAddedItem()
     }
 
-    override fun observeFirstUnplayedGame(): Flow<CollectionItem> {
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
         return local.observeFirstUnplayedGame()
     }
 }

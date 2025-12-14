@@ -42,13 +42,13 @@ class CollectionLocalDataSourceImpl @Inject constructor(
         return dao.observeUnplayedGamesCount()
     }
 
-    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem> {
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
         return dao.observeMostRecentlyAddedItem().map { itemEntity ->
             itemEntity.toCollectionItem()
         }
     }
 
-    override fun observeFirstUnplayedGame(): Flow<CollectionItem> {
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
         return dao.observeFirstUnplayedGame().map { itemEntity ->
             itemEntity.toCollectionItem()
         }

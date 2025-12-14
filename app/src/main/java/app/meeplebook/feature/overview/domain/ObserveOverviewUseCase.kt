@@ -34,7 +34,7 @@ class ObserveOverviewUseCase @Inject constructor(
                 recentlyAddedGame = highlights.recentlyAdded?.toGameHighlight(R.string.game_highlight_recently_added),
                 suggestedGame = highlights.suggested?.toGameHighlight(R.string.game_highlight_try_tonight),
                 lastSyncedDate = lastSync,
-                isLoading = true
+                isLoading = false
             )
         }
 }

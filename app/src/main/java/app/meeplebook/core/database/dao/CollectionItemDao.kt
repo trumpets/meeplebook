@@ -72,7 +72,7 @@ interface CollectionItemDao {
      * Observe the collection item most recently added or updated on BGG (based on lastModifiedDate from BGG).
      */
     @Query("SELECT * FROM collection_items WHERE lastModifiedDate IS NOT NULL ORDER BY lastModifiedDate DESC LIMIT 1")
-    fun observeMostRecentlyAddedItem(): Flow<CollectionItemEntity>
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItemEntity?>
 
     /**
      * Observe an unplayed game (first game in collection that has no plays).
@@ -83,5 +83,5 @@ interface CollectionItemDao {
         ORDER BY name ASC
         LIMIT 1
     """)
-    fun observeFirstUnplayedGame(): Flow<CollectionItemEntity>
+    fun observeFirstUnplayedGame(): Flow<CollectionItemEntity?>
 }

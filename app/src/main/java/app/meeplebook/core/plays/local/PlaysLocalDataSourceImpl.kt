@@ -82,7 +82,7 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
         return playDao.observeRecentPlaysWithPlayers(limit).map { entities ->
-            entities.map {it.toPlay()}
+            entities.map { it.toPlay() }
         }
     }
 }

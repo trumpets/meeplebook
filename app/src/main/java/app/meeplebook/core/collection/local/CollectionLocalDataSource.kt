@@ -48,10 +48,10 @@ interface CollectionLocalDataSource {
     /**
      * Observe the most recently added collection item.
      */
-    fun observeMostRecentlyAddedItem(): Flow<CollectionItem>
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItem?>
 
     /**
      * Observe the first unplayed game.
      */
-    fun observeFirstUnplayedGame(): Flow<CollectionItem>
+    fun observeFirstUnplayedGame(): Flow<CollectionItem?>
 }
