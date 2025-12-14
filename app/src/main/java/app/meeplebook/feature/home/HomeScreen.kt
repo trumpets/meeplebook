@@ -53,10 +53,12 @@ enum class HomeNavigationDestination(
  * All feature-specific logic is delegated to individual feature screens.
  */
 @Composable
-fun HomeScreen() {
-    val tabNavController = rememberNavController()
-
+fun HomeScreen(
+    refreshOnLogin: Boolean,
+    tabNavController: NavHostController
+) {
     HomeScreenContent(
+        refreshOnLogin,
         onNavItemClick = { destination ->
             tabNavController.navigate(destination.route) {
                 // Pop up to start destination to avoid building up back stack
@@ -74,6 +76,7 @@ fun HomeScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
+    refreshOnLogin: Boolean,
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
 ) {
@@ -102,6 +105,7 @@ fun HomeScreenContent(
     ) { innerPadding ->
         // Delegate to HomeNavHost for tab routing
         HomeNavHost(
+            refreshOnLogin = refreshOnLogin,
             navController = tabNavController,
             modifier = Modifier.padding(innerPadding)
         )
@@ -114,6 +118,6 @@ fun HomeScreenContent(
 fun HomeScreenPreview() {
     MeepleBookTheme {
         val previewNavController = rememberNavController()
-        HomeScreenContent(tabNavController = previewNavController)
+        HomeScreenContent(refreshOnLogin = false, tabNavController = previewNavController)
     }
 }

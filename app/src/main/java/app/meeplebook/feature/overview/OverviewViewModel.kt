@@ -27,8 +27,7 @@ import javax.inject.Inject
 class OverviewViewModel @Inject constructor(
     private val observeOverviewUseCase: ObserveOverviewUseCase,
     private val syncUserDataUseCase: SyncUserDataUseCase,
-    private val stringProvider: StringProvider,
-    savedStateHandle: SavedStateHandle
+    private val stringProvider: StringProvider
 ) : ViewModel() {
 
     private val _uiEffects = MutableStateFlow(OverviewUiEffects(isRefreshing = false, errorMessageResId = null))
@@ -59,15 +58,7 @@ class OverviewViewModel @Inject constructor(
             OverviewUiState(isLoading = true)
         )
 
-    private val refreshOnLogin: Boolean = savedStateHandle.get<Boolean>("refreshOnLogin") ?: false
     private var refreshJob: Job? = null
-
-    init {
-        // Only refresh data on initialization if coming from login
-        if (refreshOnLogin) {
-            refresh()
-        }
-    }
 
     /**
      * Triggers a refresh by syncing data from BGG.

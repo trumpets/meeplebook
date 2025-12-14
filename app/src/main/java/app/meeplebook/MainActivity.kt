@@ -50,10 +50,12 @@ class MainActivity : ComponentActivity() {
                     if (initialRoute == null) {
                         SplashScreen()
                     } else {
-                        AppNavHost(
-                            navController = navController,
-                            startDestination = initialRoute!!
-                        )
+                        initialRoute?.let { route ->
+                            AppNavHost(
+                                navController = navController,
+                                startDestination = route
+                            )
+                        }
                     }
                 }
             }

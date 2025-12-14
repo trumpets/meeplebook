@@ -28,7 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.ui.theme.MeepleBookTheme
 
@@ -56,9 +57,16 @@ private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f
  */
 @Composable
 fun OverviewScreen(
+    refreshOnLogin: Boolean,
     viewModel: OverviewViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    LaunchedEffect(refreshOnLogin) {
+        if (refreshOnLogin) {
+            viewModel.refresh()
+        }
+    }
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     OverviewContent(
         uiState = uiState,
@@ -86,8 +94,7 @@ fun OverviewContent(
         if (uiState.isLoading) {
             // Loading state
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = modifier
                     .testTag("loadingIndicator"),
                 contentAlignment = Alignment.Center
             ) {
@@ -106,8 +113,7 @@ fun OverviewContent(
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = modifier
                     .testTag("overviewContent"),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)

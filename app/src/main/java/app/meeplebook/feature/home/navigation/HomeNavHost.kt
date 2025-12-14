@@ -19,6 +19,7 @@ import app.meeplebook.feature.profile.ProfileScreen
  */
 @Composable
 fun HomeNavHost(
+    refreshOnLogin: Boolean,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -28,7 +29,9 @@ fun HomeNavHost(
         modifier = modifier
     ) {
         composable<HomeTabScreen.Overview> {
-            OverviewScreen()
+            OverviewScreen(
+                refreshOnLogin = refreshOnLogin
+            )
         }
         composable<HomeTabScreen.Collection> {
             CollectionScreen()
