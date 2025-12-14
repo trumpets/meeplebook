@@ -86,6 +86,13 @@ class OverviewViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Clears the current error message.
+     */
+    fun clearError() {
+        _uiEffects.update { it.copy(errorMessageResId = null) }
+    }
+
     @StringRes
     private fun mapSyncError(error: SyncUserDataError): Int =
         when (error) {
