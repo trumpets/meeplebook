@@ -111,112 +111,113 @@ fun OverviewContent(
             onRefresh = onRefresh,
             modifier = Modifier.fillMaxSize()
         ) {
-        if (uiState.isLoading) {
-            // Loading state
-            Box(
-                modifier = modifier
-                    .testTag("loadingIndicator"),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+            if (uiState.isLoading) {
+                // Loading state
+                Box(
+                    modifier = modifier
+                        .testTag("loadingIndicator"),
+                    contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.loading_message),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.loading_message),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-            }
-        } else {
-            LazyColumn(
-                modifier = modifier
-                    .testTag("overviewContent"),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Quick Stats Card
-                item {
-                    StatsCard(
-                        stats = uiState.stats,
-                        lastSyncedText = uiState.lastSyncedText
-                    )
-                }
-
-                // Recent Activity Section
-                item {
-                    Text(
-                        text = stringResource(R.string.recent_activity_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Empty state for recent plays
-                if (uiState.recentPlays.isEmpty()) {
+            } else {
+                LazyColumn(
+                    modifier = modifier
+                        .testTag("overviewContent"),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Quick Stats Card
                     item {
-                        EmptyStateMessage(
-                            message = stringResource(R.string.empty_recent_plays_message),
-                            modifier = Modifier.testTag("emptyRecentPlays")
+                        StatsCard(
+                            stats = uiState.stats,
+                            lastSyncedText = uiState.lastSyncedText
                         )
                     }
-                } else {
-                    items(
-                        items = uiState.recentPlays,
-                        key = { it.id }
-                    ) { play ->
-                        RecentPlayCard(
-                            play = play,
-                            onClick = { onRecentPlayClick(play) }
-                        )
-                    }
-                }
 
-                // Collection Highlights Section
-                if (uiState.recentlyAddedGame != null || uiState.suggestedGame != null) {
+                    // Recent Activity Section
                     item {
                         Text(
-                            text = stringResource(R.string.collection_highlights_title),
+                            text = stringResource(R.string.recent_activity_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            uiState.recentlyAddedGame?.let { game ->
-                                GameHighlightCard(
-                                    highlight = game,
-                                    onClick = onRecentlyAddedClick,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                            uiState.suggestedGame?.let { game ->
-                                GameHighlightCard(
-                                    highlight = game,
-                                    onClick = onSuggestedGameClick,
-                                    modifier = Modifier.weight(1f)
-                                )
+                    // Empty state for recent plays
+                    if (uiState.recentPlays.isEmpty()) {
+                        item {
+                            EmptyStateMessage(
+                                message = stringResource(R.string.empty_recent_plays_message),
+                                modifier = Modifier.testTag("emptyRecentPlays")
+                            )
+                        }
+                    } else {
+                        items(
+                            items = uiState.recentPlays,
+                            key = { it.id }
+                        ) { play ->
+                            RecentPlayCard(
+                                play = play,
+                                onClick = { onRecentPlayClick(play) }
+                            )
+                        }
+                    }
+
+                    // Collection Highlights Section
+                    if (uiState.recentlyAddedGame != null || uiState.suggestedGame != null) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.collection_highlights_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                uiState.recentlyAddedGame?.let { game ->
+                                    GameHighlightCard(
+                                        highlight = game,
+                                        onClick = onRecentlyAddedClick,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                uiState.suggestedGame?.let { game ->
+                                    GameHighlightCard(
+                                        highlight = game,
+                                        onClick = onSuggestedGameClick,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // Snackbar host positioned at the bottom of the screen
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp)
-        )
+            // Snackbar host positioned at the bottom of the screen
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            )
+        }
     }
 }
 
