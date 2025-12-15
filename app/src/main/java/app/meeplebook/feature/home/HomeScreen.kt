@@ -72,6 +72,35 @@ fun HomeScreen(
     )
 }
 
+/**
+ * Testable navigation bar component for HomeScreen.
+ * Extracted as a separate composable to allow testing without NavHost dependencies.
+ *
+ * @param currentDestination The currently selected destination
+ * @param onNavItemClick Callback when a navigation item is clicked
+ */
+@Composable
+fun HomeNavigationBar(
+    currentDestination: HomeNavigationDestination?,
+    onNavItemClick: (HomeNavigationDestination) -> Unit = {}
+) {
+    NavigationBar {
+        HomeNavigationDestination.entries.forEach { destination ->
+            NavigationBarItem(
+                selected = currentDestination == destination,
+                onClick = { onNavItemClick(destination) },
+                icon = {
+                    Icon(
+                        imageVector = destination.icon,
+                        contentDescription = stringResource(destination.contentDescriptionResId)
+                    )
+                },
+                label = { Text(stringResource(destination.labelResId)) }
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
@@ -81,25 +110,18 @@ fun HomeScreenContent(
 ) {
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry = tabNavController.currentBackStackEntryAsState().value
-                val currentDestination = navBackStackEntry?.destination
-                HomeNavigationDestination.entries.forEach { destination ->
-                    NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any {
-                            it.hasRoute(destination.route::class)
-                        } == true,
-                        onClick = { onNavItemClick(destination) },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = stringResource(destination.contentDescriptionResId)
-                            )
-                        },
-                        label = { Text(stringResource(destination.labelResId)) }
-                    )
-                }
+            val navBackStackEntry = tabNavController.currentBackStackEntryAsState().value
+            val currentDestination = navBackStackEntry?.destination
+            val selectedDestination = HomeNavigationDestination.entries.firstOrNull { destination ->
+                currentDestination?.hierarchy?.any {
+                    it.hasRoute(destination.route::class)
+                } == true
             }
+            
+            HomeNavigationBar(
+                currentDestination = selectedDestination,
+                onNavItemClick = onNavItemClick
+            )
         }
     ) { innerPadding ->
         // Delegate to HomeNavHost for tab routing
@@ -107,6 +129,17 @@ fun HomeScreenContent(
             refreshOnLogin = refreshOnLogin,
             navController = tabNavController,
             modifier = Modifier.padding(innerPadding)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun HomeNavigationBarPreview() {
+    MeepleBookTheme {
+        HomeNavigationBar(
+            currentDestination = HomeNavigationDestination.HOME
         )
     }
 }
