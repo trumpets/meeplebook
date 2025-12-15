@@ -52,9 +52,10 @@ enum class HomeNavigationDestination(
  */
 @Composable
 fun HomeScreen(
-    refreshOnLogin: Boolean,
-    tabNavController: NavHostController
+    refreshOnLogin: Boolean
 ) {
+    val tabNavController = rememberNavController()
+
     HomeScreenContent(
         refreshOnLogin,
         onNavItemClick = { destination ->

@@ -19,8 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.ui.navigation.AppNavHost
-import app.meeplebook.ui.navigation.Home
-import app.meeplebook.ui.navigation.Login
+import app.meeplebook.ui.navigation.Screen
 import app.meeplebook.ui.theme.MeepleBookTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -38,16 +37,16 @@ class MainActivity : ComponentActivity() {
             MeepleBookTheme {
                 Surface {
                     val navController = rememberNavController()
-                    var initialRoute by remember { mutableStateOf<Any?>(null) }
-
-                    // Check for existing credentials at startup
-                    LaunchedEffect(Unit) {
-                        val user = authRepository.getCurrentUser()
-                        initialRoute = if (user != null) Home(refreshOnLogin = false) else Login
-                    }
+                    var initialRoute by remember { mutableStateOf<Screen?>(null) }
 
                     // Show splash screen while determining route
                     if (initialRoute == null) {
+                        // Check for existing credentials at startup
+                        LaunchedEffect(Unit) {
+                            val user = authRepository.getCurrentUser()
+                            initialRoute = if (user != null) Screen.Home(refreshOnLogin = false) else Screen.Login
+                        }
+
                         SplashScreen()
                     } else {
                         initialRoute?.let { route ->
