@@ -134,10 +134,10 @@ class CollectionRepositoryIntegrationTest {
         val items = (result as AppResult.Success).data
         assertEquals(2, items.size)
 
-        val baseGame = items.find { it.gameId == 1 }!!
+        val baseGame = items.find { it.gameId == 1L }!!
         assertEquals(GameSubtype.BOARDGAME, baseGame.subtype)
 
-        val expansion = items.find { it.gameId == 100 }!!
+        val expansion = items.find { it.gameId == 100L }!!
         assertEquals(GameSubtype.BOARDGAME_EXPANSION, expansion.subtype)
     }
 

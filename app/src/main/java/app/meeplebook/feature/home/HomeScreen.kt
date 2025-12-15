@@ -75,7 +75,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
-    refreshOnLogin: Boolean,
+    refreshOnLogin: Boolean = false,
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
 ) {

@@ -42,6 +42,22 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
         collection.value = emptyList()
     }
 
+    override fun observeCollectionCount(): Flow<Long> {
+        TODO("Not yet implemented")
+    }
+
+    override fun observeUnplayedGamesCount(): Flow<Long> {
+        TODO("Not yet implemented")
+    }
+
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
+        TODO("Not yet implemented")
+    }
+
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
+        TODO("Not yet implemented")
+    }
+
     /**
      * Sets the collection for a user directly for testing.
      */

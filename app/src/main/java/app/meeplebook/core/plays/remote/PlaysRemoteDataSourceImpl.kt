@@ -1,7 +1,6 @@
 package app.meeplebook.core.plays.remote
 
 import app.meeplebook.core.network.BggApi
-import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.network.RetrySignal
 import app.meeplebook.core.network.retryWithBackoff
 import app.meeplebook.core.plays.model.Play

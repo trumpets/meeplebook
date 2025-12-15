@@ -64,6 +64,7 @@ okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver",
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 xmlpull = { group = "xmlpull", name = "xmlpull", version.ref = "xmlpull" }
 kxml2 = { group = "net.sf.kxml", name = "kxml2", version.ref = "kxml2" }
+hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

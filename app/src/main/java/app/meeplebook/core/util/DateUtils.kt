@@ -101,3 +101,7 @@ fun formatLastSynced(stringProvider: StringProvider, time: Instant?): String {
         stringProvider.get(R.string.sync_last_synced, formatTimeAgo(stringProvider, time))
     }
 }
+
+fun parseDateString(dateString: String): Instant {
+    return Instant.parse("${dateString}T00:00:00Z")
+}

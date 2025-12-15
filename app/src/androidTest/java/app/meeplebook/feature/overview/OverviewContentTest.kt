@@ -126,6 +126,26 @@ class OverviewContentTest {
     }
 
     @Test
+    fun overviewContent_fabClick_triggersCallback() {
+        var fabClicked = false
+
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                OverviewContent(
+                    uiState = OverviewUiState(),
+                    onLogPlayClick = { fabClicked = true }
+                )
+            }
+        }
+
+        // Click FAB
+        composeTestRule.onNodeWithTag("logPlayFab").performClick()
+
+        // Verify callback was triggered
+        assertTrue(fabClicked)
+    }
+
+    @Test
     fun overviewContent_gameHighlightCards_displayWhenPresent() {
         composeTestRule.setContent {
             MeepleBookTheme {

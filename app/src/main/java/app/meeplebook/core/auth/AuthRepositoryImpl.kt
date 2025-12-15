@@ -10,7 +10,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.IOException
-import java.net.UnknownHostException
 
 class AuthRepositoryImpl @Inject constructor(
     private val local: AuthLocalDataSource,

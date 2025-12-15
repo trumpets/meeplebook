@@ -2,14 +2,12 @@ package app.meeplebook.core.network
 
 import android.content.Context
 import app.meeplebook.BuildConfig
-import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.auth.CurrentCredentialsStore
 import app.meeplebook.core.network.interceptor.AuthInterceptor
 import app.meeplebook.core.network.interceptor.BearerInterceptor
 import app.meeplebook.core.network.interceptor.UserAgentInterceptor
 import dagger.Module
 import dagger.Provides
-import dagger.Lazy
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent

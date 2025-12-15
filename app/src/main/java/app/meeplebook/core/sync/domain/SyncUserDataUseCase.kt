@@ -2,9 +2,7 @@ package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.collection.CollectionRepository
-import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.plays.PlaysRepository
-import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.sync.SyncTimeRepository
