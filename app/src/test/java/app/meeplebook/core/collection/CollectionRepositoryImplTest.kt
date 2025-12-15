@@ -14,6 +14,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.time.Instant
 
 class CollectionRepositoryImplTest {
 
@@ -145,16 +146,18 @@ class CollectionRepositoryImplTest {
     // --- Helper functions ---
 
     private fun createTestItem(
-        gameId: Int,
+        gameId: Long,
         name: String,
         subtype: GameSubtype = GameSubtype.BOARDGAME,
         yearPublished: Int? = 2020,
-        thumbnail: String? = "https://example.com/thumb.jpg"
+        thumbnail: String? = "https://example.com/thumb.jpg",
+        lastModifiedDate: Instant = Instant.now()
     ) = CollectionItem(
         gameId = gameId,
         subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModifiedDate = lastModifiedDate
     )
 }

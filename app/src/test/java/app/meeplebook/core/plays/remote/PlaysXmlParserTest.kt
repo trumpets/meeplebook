@@ -1,5 +1,6 @@
 package app.meeplebook.core.plays.remote
 
+import app.meeplebook.core.util.parseDateString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -39,7 +40,7 @@ class PlaysXmlParserTest {
         assertEquals(1, result.size)
         val play = result[0]
         assertEquals(12345, play.id)
-        assertEquals("2024-01-15", play.date)
+        assertEquals(parseDateString("2024-01-15"), play.date)
         assertEquals(1, play.quantity)
         assertEquals(120, play.length)
         assertFalse(play.incomplete)
@@ -74,9 +75,9 @@ class PlaysXmlParserTest {
         assertEquals(3, play.players.size)
         
         val player1 = play.players[0]
-        assertEquals(12345, player1.playId)
+        assertEquals(12345L, player1.playId)
         assertEquals("player1", player1.username)
-        assertEquals(111, player1.userId)
+        assertEquals(111L, player1.userId)
         assertEquals("Alice", player1.name)
         assertEquals("1", player1.startPosition)
         assertEquals("Red", player1.color)
@@ -109,8 +110,8 @@ class PlaysXmlParserTest {
 
         assertEquals(1, result.size)
         val play = result[0]
-        assertEquals(54321, play.id)
-        assertEquals("2024-02-20", play.date)
+        assertEquals(54321L, play.id)
+        assertEquals(parseDateString("2024-02-20"), play.date)
         assertNull(play.length)
         assertNull(play.location)
         assertNull(play.comments)

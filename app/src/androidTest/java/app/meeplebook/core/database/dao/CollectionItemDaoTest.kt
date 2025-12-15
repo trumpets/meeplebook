@@ -15,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Instant
 
 /**
  * Room DAO tests for [CollectionItemDao].
@@ -211,19 +212,19 @@ class CollectionItemDaoTest {
         assertEquals(3, result.size)
         
         // Game A should remain unchanged
-        val gameA = result.find { it.gameId == 1 }
+        val gameA = result.find { it.gameId == 1L }
         assertNotNull(gameA)
         assertEquals("Game A", gameA?.name)
         assertEquals(2000, gameA?.yearPublished)
 
         // Game B should be updated
-        val gameB = result.find { it.gameId == 2 }
+        val gameB = result.find { it.gameId == 2L }
         assertNotNull(gameB)
         assertEquals("Game B Updated", gameB?.name)
         assertEquals(2022, gameB?.yearPublished)
 
         // Game C should be new
-        val gameC = result.find { it.gameId == 3 }
+        val gameC = result.find { it.gameId == 3L }
         assertNotNull(gameC)
         assertEquals("Game C", gameC?.name)
     }
@@ -254,9 +255,9 @@ class CollectionItemDaoTest {
         // Verify only new items exist
         result = dao.getCollection()
         assertEquals(2, result.size)
-        assertTrue(result.none { it.gameId in listOf(1, 2, 3) })
-        assertTrue(result.any { it.gameId == 10 && it.name == "New Game 1" })
-        assertTrue(result.any { it.gameId == 20 && it.name == "New Game 2" })
+        assertTrue(result.none { it.gameId in listOf(1L, 2L, 3L) })
+        assertTrue(result.any { it.gameId == 10L && it.name == "New Game 1" })
+        assertTrue(result.any { it.gameId == 20L && it.name == "New Game 2" })
     }
 
     @Test
@@ -298,8 +299,8 @@ class CollectionItemDaoTest {
         // Verify the operation completed atomically
         val result = dao.getCollection()
         assertEquals(2, result.size)
-        assertTrue(result.none { it.gameId == 1 })
-        assertTrue(result.all { it.gameId in listOf(2, 3) })
+        assertTrue(result.none { it.gameId == 1L })
+        assertTrue(result.all { it.gameId in listOf(2L, 3L) })
     }
 
     // --- Test 5: Observe collection as Flow ---
@@ -376,8 +377,8 @@ class CollectionItemDaoTest {
         // Verify updated state - collecting from Flow again gets the new database state
         result = dao.observeCollection().first()
         assertEquals(2, result.size)
-        assertTrue(result.none { it.gameId == 1 })
-        assertTrue(result.all { it.gameId in listOf(2, 3) })
+        assertTrue(result.none { it.gameId == 1L })
+        assertTrue(result.all { it.gameId in listOf(2L, 3L) })
     }
 
     // --- Test 6: Delete operations ---
@@ -424,18 +425,20 @@ class CollectionItemDaoTest {
      * for better test readability. Most common usage: createTestEntity(id, name, subtype)
      */
     private fun createTestEntity(
-        gameId: Int,
+        gameId: Long,
         name: String = "Test Game $gameId",
         subtype: GameSubtype = GameSubtype.BOARDGAME,
         yearPublished: Int? = null,
-        thumbnail: String? = null
+        thumbnail: String? = null,
+        lastModifiedDate: Instant = Instant.now()
     ): CollectionItemEntity {
         return CollectionItemEntity(
             gameId = gameId,
             subtype = subtype,
             name = name,
             yearPublished = yearPublished,
-            thumbnail = thumbnail
+            thumbnail = thumbnail,
+            lastModifiedDate = lastModifiedDate
         )
     }
 }

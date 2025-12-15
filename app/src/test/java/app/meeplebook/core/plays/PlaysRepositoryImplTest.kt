@@ -6,6 +6,7 @@ import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.remote.FakePlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
+import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -22,7 +23,7 @@ class PlaysRepositoryImplTest {
 
     private val testPlay = Play(
         id = 1,
-        date = "2024-01-01",
+        date = parseDateString("2024-01-01"),
         quantity = 1,
         length = 60,
         incomplete = false,
@@ -79,10 +80,10 @@ class PlaysRepositoryImplTest {
     fun `syncPlays fetches multiple pages`() = runTest {
         // Simulate multi-page response
         val page1Plays = List(100) { i ->
-            testPlay.copy(id = i + 1)
+            testPlay.copy(id = i + 1L)
         }
         val page2Plays = List(50) { i ->
-            testPlay.copy(id = i + 101)
+            testPlay.copy(id = i + 101L)
         }
         
         // Configure fake to return different results per page

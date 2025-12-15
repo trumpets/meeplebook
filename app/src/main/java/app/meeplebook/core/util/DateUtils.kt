@@ -101,3 +101,13 @@ fun formatLastSynced(stringProvider: StringProvider, time: Instant?): String {
         stringProvider.get(R.string.sync_last_synced, formatTimeAgo(stringProvider, time))
     }
 }
+
+/**
+ * Parses a date string in the format "yyyy-MM-dd" into an [Instant] at midnight UTC.
+ *
+ * @param dateString the date string to parse, expected in "yyyy-MM-dd" format (e.g., "2024-01-01")
+ * @return the corresponding [Instant] at 00:00:00 UTC on the given date
+ */
+fun parseDateString(dateString: String): Instant {
+    return Instant.parse("${dateString}T00:00:00Z")
+}
