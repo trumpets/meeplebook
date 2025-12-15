@@ -13,8 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -67,7 +72,8 @@ fun OverviewScreen(
         onErrorShown = { viewModel.clearError() },
         onRecentPlayClick = { /* TODO: Navigate to play details */ },
         onRecentlyAddedClick = { /* TODO: Navigate to game details */ },
-        onSuggestedGameClick = { /* TODO: Navigate to game details */ }
+        onSuggestedGameClick = { /* TODO: Navigate to game details */ },
+        onLogPlayClick = { /* TODO: Navigate to record play screen */ }
     )
 }
 
@@ -80,6 +86,7 @@ fun OverviewContent(
     onRecentPlayClick: (RecentPlay) -> Unit = {},
     onRecentlyAddedClick: () -> Unit = {},
     onSuggestedGameClick: () -> Unit = {},
+    onLogPlayClick: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -94,11 +101,33 @@ fun OverviewContent(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .padding(16.dp)
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onLogPlayClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.testTag("logPlayFab")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.log_play_description)
+                )
+            }
+        }
+    ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = onRefresh,
             modifier = Modifier.fillMaxSize()
+                .padding(paddingValues)
         ) {
             if (uiState.isLoading) {
                 // Loading state
@@ -190,14 +219,6 @@ fun OverviewContent(
                     }
                 }
             }
-
-            // Snackbar host positioned at the bottom of the screen
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            )
         }
     }
 }
