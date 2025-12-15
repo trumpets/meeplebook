@@ -46,4 +46,20 @@ class CollectionRepositoryImpl @Inject constructor(
     override suspend fun clearCollection() {
         local.clearCollection()
     }
+
+    override fun observeCollectionCount(): Flow<Long> {
+        return local.observeCollectionCount()
+    }
+
+    override fun observeUnplayedGamesCount(): Flow<Long> {
+        return local.observeUnplayedGamesCount()
+    }
+
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
+        return local.observeMostRecentlyAddedItem()
+    }
+
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
+        return local.observeFirstUnplayedGame()
+    }
 }

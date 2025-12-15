@@ -1,5 +1,7 @@
 package app.meeplebook.core.collection.model
 
+import java.time.Instant
+
 /**
  * Represents a game item in a user's BGG collection.
  *
@@ -10,11 +12,12 @@ package app.meeplebook.core.collection.model
  * @param thumbnail URL to the game's thumbnail image.
  */
 data class CollectionItem(
-    val gameId: Int,
+    val gameId: Long,
     val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,
-    val thumbnail: String?
+    val thumbnail: String?,
+    val lastModifiedDate: Instant?
 )
 
 /**

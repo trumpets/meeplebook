@@ -2,6 +2,7 @@ package app.meeplebook.core.plays.local
 
 import app.meeplebook.core.plays.model.Play
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /**
  * Local data source for storing and retrieving user plays.
@@ -20,7 +21,7 @@ interface PlaysLocalDataSource {
      *
      * @return Flow emitting the user's plays for a specific game.
      */
-    fun observePlaysForGame(gameId: Int): Flow<List<Play>>
+    fun observePlaysForGame(gameId: Long): Flow<List<Play>>
 
     /**
      * Gets all plays.
@@ -34,7 +35,7 @@ interface PlaysLocalDataSource {
      *
      * @return The user's plays.
      */
-    suspend fun getPlaysForGame(gameId: Int): List<Play>
+    suspend fun getPlaysForGame(gameId: Long): List<Play>
 
     /**
      * Saves (adds or updates) plays.
@@ -54,4 +55,19 @@ interface PlaysLocalDataSource {
      * Clears all plays.
      */
     suspend fun clearPlays()
+
+    /**
+     * Observes the total count of plays (sum of quantities).
+     */
+    fun observeTotalPlaysCount(): Flow<Long>
+
+    /**
+     * Observes the count of plays for a specific month.
+     */
+    fun observePlaysCountForMonth(start: Instant, end: Instant): Flow<Long>
+
+    /**
+     * Observes the most recent plays with a limit.
+     */
+    fun observeRecentPlays(limit: Int): Flow<List<Play>>
 }

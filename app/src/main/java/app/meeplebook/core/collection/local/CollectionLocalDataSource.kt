@@ -34,4 +34,24 @@ interface CollectionLocalDataSource {
      *
      */
     suspend fun clearCollection()
+
+    /**
+     * Observe the count of items in the collection.
+     */
+    fun observeCollectionCount(): Flow<Long>
+
+    /**
+     * Observe the count of unplayed games.
+     */
+    fun observeUnplayedGamesCount(): Flow<Long>
+
+    /**
+     * Observe the most recently added collection item.
+     */
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItem?>
+
+    /**
+     * Observe the first unplayed game.
+     */
+    fun observeFirstUnplayedGame(): Flow<CollectionItem?>
 }

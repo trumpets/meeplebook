@@ -10,6 +10,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.meeplebook.feature.overview.GameHighlight
+import app.meeplebook.feature.overview.OverviewStats
+import app.meeplebook.feature.overview.OverviewUiState
+import app.meeplebook.feature.overview.RecentPlay
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -32,8 +36,8 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
-                        stats = HomeStats(
+                    uiState = OverviewUiState(
+                        stats = OverviewStats(
                             gamesCount = 127,
                             totalPlays = 342,
                             playsThisMonth = 18,
@@ -63,7 +67,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
+                    uiState = OverviewUiState(
                         recentPlays = listOf(
                             RecentPlay(
                                 id = 1,
@@ -103,7 +107,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
+                    uiState = OverviewUiState(
                         recentPlays = listOf(
                             RecentPlay(
                                 id = 42,
@@ -134,7 +138,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(),
+                    uiState = OverviewUiState(),
                     onLogPlayClick = { fabClicked = true }
                 )
             }
@@ -151,7 +155,7 @@ class HomeScreenContentTest {
     fun homeScreen_navigationBar_displaysAllItems() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(uiState = HomeUiState())
+                HomeScreenContent(uiState = OverviewUiState())
             }
         }
 
@@ -169,7 +173,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(),
+                    uiState = OverviewUiState(),
                     onNavItemClick = { selectedDestination = it }
                 )
             }
@@ -187,7 +191,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
+                    uiState = OverviewUiState(
                         recentlyAddedGame = GameHighlight(
                             id = 100,
                             gameName = "Azul",
@@ -219,8 +223,8 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
-                        stats = HomeStats(),
+                    uiState = OverviewUiState(
+                        stats = OverviewStats(),
                         lastSyncedText = "Never synced"
                     )
                 )
@@ -245,7 +249,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
+                    uiState = OverviewUiState(
                         recentlyAddedGame = GameHighlight(
                             id = 100,
                             gameName = "Azul",
@@ -279,7 +283,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(isLoading = true)
+                    uiState = OverviewUiState(isLoading = true)
                 )
             }
         }
@@ -297,8 +301,8 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
-                        stats = HomeStats(),
+                    uiState = OverviewUiState(
+                        stats = OverviewStats(),
                         recentPlays = emptyList()
                     )
                 )
@@ -317,7 +321,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(),
+                    uiState = OverviewUiState(),
                     onProfileClick = { profileClicked = true }
                 )
             }
@@ -337,7 +341,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(),
+                    uiState = OverviewUiState(),
                     onMoreClick = { moreClicked = true }
                 )
             }
@@ -355,7 +359,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(),
+                    uiState = OverviewUiState(),
                     selectedNavItem = HomeNavigationDestination.COLLECTION
                 )
             }
@@ -375,7 +379,7 @@ class HomeScreenContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(
+                    uiState = OverviewUiState(
                         isRefreshing = true,
                         recentPlays = listOf(
                             RecentPlay(

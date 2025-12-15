@@ -2,9 +2,11 @@ package app.meeplebook.core.collection.remote
 
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
+import app.meeplebook.core.util.parseBggDateTime
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
+import java.time.Instant
 
 /**
  * Parses BGG collection XML responses into domain models.
@@ -35,7 +37,7 @@ object CollectionXmlParser {
                 XmlPullParser.START_TAG -> {
                     when (parser.name) {
                         "item" -> {
-                            val gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull()
+                            val gameId = parser.getAttributeValue(null, "objectid")?.toLongOrNull()
                             val subtype = parser.getAttributeValue(null, "subtype")
                             if (gameId != null) {
                                 currentItem = CollectionItemBuilder(
@@ -52,6 +54,10 @@ object CollectionXmlParser {
                         }
                         "thumbnail" -> {
                             currentItem?.thumbnail = safeNextText(parser)
+                        }
+                        "status" -> {
+                            val lastModifiedStr = parser.getAttributeValue(null, "lastmodified")
+                            currentItem?.lastModifiedDate = parseBggDateTime(lastModifiedStr)
                         }
                     }
                 }
@@ -89,12 +95,13 @@ object CollectionXmlParser {
     }
 
     private class CollectionItemBuilder(
-        val gameId: Int,
+        val gameId: Long,
         val subtype: GameSubtype
     ) {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
+        var lastModifiedDate: Instant? = null
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
@@ -103,7 +110,8 @@ object CollectionXmlParser {
                 subtype = subtype,
                 name = itemName,
                 yearPublished = yearPublished,
-                thumbnail = thumbnail
+                thumbnail = thumbnail,
+                lastModifiedDate = lastModifiedDate
             )
         }
     }

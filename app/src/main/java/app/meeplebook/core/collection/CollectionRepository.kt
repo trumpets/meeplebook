@@ -39,4 +39,24 @@ interface CollectionRepository {
      *
      */
     suspend fun clearCollection()
+
+    /**
+     * Observe the count of items in the collection.
+     */
+    fun observeCollectionCount(): Flow<Long>
+
+    /**
+     * Observe the count of unplayed games in the collection.
+     */
+    fun observeUnplayedGamesCount(): Flow<Long>
+
+    /**
+     * Observe the most recently added collection item.
+     */
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItem?>
+
+    /**
+     * Observe the first unplayed game from the collection.
+     */
+    fun observeFirstUnplayedGame(): Flow<CollectionItem?>
 }

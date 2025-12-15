@@ -33,4 +33,24 @@ class CollectionLocalDataSourceImpl @Inject constructor(
     override suspend fun clearCollection() {
         dao.deleteAll()
     }
+
+    override fun observeCollectionCount(): Flow<Long> {
+        return dao.observeCollectionCount()
+    }
+
+    override fun observeUnplayedGamesCount(): Flow<Long> {
+        return dao.observeUnplayedGamesCount()
+    }
+
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
+        return dao.observeMostRecentlyAddedItem().map { itemEntity ->
+            itemEntity?.toCollectionItem()
+        }
+    }
+
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
+        return dao.observeFirstUnplayedGame().map { itemEntity ->
+            itemEntity?.toCollectionItem()
+        }
+    }
 }
