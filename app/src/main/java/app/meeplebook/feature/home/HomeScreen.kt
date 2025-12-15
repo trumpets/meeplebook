@@ -45,8 +45,6 @@ enum class HomeNavigationDestination(
 
 /**
  * HomeScreen is a lightweight container that provides:
- * - Top App Bar
- * - Floating Action Button
  * - Bottom Navigation Bar
  * - A child NavHost for tab navigation
  *

@@ -1,7 +1,6 @@
 package app.meeplebook.feature.overview
 
 import androidx.annotation.StringRes
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
