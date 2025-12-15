@@ -2,8 +2,11 @@ package app.meeplebook.ui.navigation
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-object Login
+sealed interface Screen {
 
-@Serializable
-data class Home(val refreshOnLogin: Boolean = false)
+    @Serializable
+    object Login : Screen
+
+    @Serializable
+    data class Home(val refreshOnLogin: Boolean = false) : Screen
+}

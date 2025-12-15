@@ -58,6 +58,7 @@ fun formatRelativeDate(stringProvider: StringProvider, dateInstant: Instant): St
     val daysDiff = ChronoUnit.DAYS.between(playDate, today)
 
     return when {
+        daysDiff < 0L -> stringProvider.get(R.string.date_in_future)
         daysDiff == 0L -> stringProvider.get(R.string.date_today)
         daysDiff == 1L -> stringProvider.get(R.string.date_yesterday)
         daysDiff < 7L -> stringProvider.get(R.string.date_days_ago, daysDiff)
