@@ -386,7 +386,7 @@ class PlayDaoTest {
     }
 
     @Test
-    fun observePlaysEmitsSortedByparseDateString() = runTest {
+    fun observePlaysEmitsSortedByDate() = runTest {
         // Insert plays in random order
         playDao.insertAll(
             listOf(
