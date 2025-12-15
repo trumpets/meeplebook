@@ -1,19 +1,13 @@
-package app.meeplebook.feature.home
+package app.meeplebook.feature.overview
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.meeplebook.feature.overview.GameHighlight
-import app.meeplebook.feature.overview.OverviewStats
-import app.meeplebook.feature.overview.OverviewUiState
-import app.meeplebook.feature.overview.RecentPlay
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,20 +16,20 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * UI Compose tests for [HomeScreenContent].
- * Tests UI rendering and interaction behavior for different home screen states.
+ * UI Compose tests for [OverviewContent].
+ * Tests UI rendering and interaction behavior for different overview screen states.
  */
 @RunWith(AndroidJUnit4::class)
-class HomeScreenContentTest {
+class OverviewContentTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
-    fun homeScreen_statsCard_displaysCorrectValues() {
+    fun overviewContent_statsCard_displaysCorrectValues() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         stats = OverviewStats(
                             gamesCount = 127,
@@ -63,10 +57,10 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_recentPlays_rendersCorrectly() {
+    fun overviewContent_recentPlays_rendersCorrectly() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         recentPlays = listOf(
                             RecentPlay(
@@ -101,12 +95,12 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_recentPlayClick_triggersCallback() {
+    fun overviewContent_recentPlayClick_triggersCallback() {
         var clickedPlayId: Long? = null
 
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         recentPlays = listOf(
                             RecentPlay(
@@ -132,77 +126,22 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_fabClick_triggersCallback() {
-        var fabClicked = false
-
+    fun overviewContent_gameHighlightCards_displayWhenPresent() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
-                    uiState = OverviewUiState(),
-                    onLogPlayClick = { fabClicked = true }
-                )
-            }
-        }
-
-        // Click FAB
-        composeTestRule.onNodeWithTag("logPlayFab").performClick()
-
-        // Verify callback was triggered
-        assertTrue(fabClicked)
-    }
-
-    @Test
-    fun homeScreen_navigationBar_displaysAllItems() {
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                HomeScreenContent(uiState = OverviewUiState())
-            }
-        }
-
-        // Verify all navigation items are displayed
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Collection").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Plays").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Profile").assertIsDisplayed()
-    }
-
-    @Test
-    fun homeScreen_navigationBarClick_triggersCallback() {
-        var selectedDestination: HomeNavigationDestination? = null
-
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                HomeScreenContent(
-                    uiState = OverviewUiState(),
-                    onNavItemClick = { selectedDestination = it }
-                )
-            }
-        }
-
-        // Click on Collection nav item
-        composeTestRule.onNodeWithText("Collection").performClick()
-
-        // Verify callback was triggered with correct destination
-        assertEquals(HomeNavigationDestination.COLLECTION, selectedDestination)
-    }
-
-    @Test
-    fun homeScreen_gameHighlightCards_displayWhenPresent() {
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         recentlyAddedGame = GameHighlight(
                             id = 100,
                             gameName = "Azul",
                             thumbnailUrl = null,
-                            subtitle = "Added 2 days ago"
+                            subtitleText = "Added 2 days ago"
                         ),
                         suggestedGame = GameHighlight(
                             id = 101,
                             gameName = "Ticket to Ride",
                             thumbnailUrl = null,
-                            subtitle = "Try Tonight?"
+                            subtitleText = "Try Tonight?"
                         )
                     )
                 )
@@ -219,10 +158,10 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_emptyState_displaysZeroStats() {
+    fun overviewContent_emptyState_displaysZeroStats() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         stats = OverviewStats(),
                         lastSyncedText = "Never synced"
@@ -242,25 +181,25 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_highlightCardClick_triggersCallback() {
+    fun overviewContent_highlightCardClick_triggersCallback() {
         var recentlyAddedClicked = false
         var suggestedClicked = false
 
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         recentlyAddedGame = GameHighlight(
                             id = 100,
                             gameName = "Azul",
                             thumbnailUrl = null,
-                            subtitle = "Added 2 days ago"
+                            subtitleText = "Added 2 days ago"
                         ),
                         suggestedGame = GameHighlight(
                             id = 101,
                             gameName = "Ticket to Ride",
                             thumbnailUrl = null,
-                            subtitle = "Try Tonight?"
+                            subtitleText = "Try Tonight?"
                         )
                     ),
                     onRecentlyAddedClick = { recentlyAddedClicked = true },
@@ -279,10 +218,10 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_loadingState_displaysLoadingIndicator() {
+    fun overviewContent_loadingState_displaysLoadingIndicator() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(isLoading = true)
                 )
             }
@@ -292,15 +231,15 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
         composeTestRule.onNodeWithText("Loading your games…").assertIsDisplayed()
 
-        // Verify home content is not displayed
-        composeTestRule.onNodeWithTag("homeContent").assertDoesNotExist()
+        // Verify overview content is not displayed
+        composeTestRule.onNodeWithTag("overviewContent").assertDoesNotExist()
     }
 
     @Test
-    fun homeScreen_emptyRecentPlays_displaysEmptyStateMessage() {
+    fun overviewContent_emptyRecentPlays_displaysEmptyStateMessage() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         stats = OverviewStats(),
                         recentPlays = emptyList()
@@ -315,70 +254,10 @@ class HomeScreenContentTest {
     }
 
     @Test
-    fun homeScreen_profileButtonClick_triggersCallback() {
-        var profileClicked = false
-
+    fun overviewContent_refreshingState_displaysCorrectly() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                HomeScreenContent(
-                    uiState = OverviewUiState(),
-                    onProfileClick = { profileClicked = true }
-                )
-            }
-        }
-
-        // Click profile button
-        composeTestRule.onNodeWithTag("profileButton").performClick()
-
-        // Verify callback was triggered
-        assertTrue(profileClicked)
-    }
-
-    @Test
-    fun homeScreen_moreButtonClick_triggersCallback() {
-        var moreClicked = false
-
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                HomeScreenContent(
-                    uiState = OverviewUiState(),
-                    onMoreClick = { moreClicked = true }
-                )
-            }
-        }
-
-        // Click more button
-        composeTestRule.onNodeWithTag("moreButton").performClick()
-
-        // Verify callback was triggered
-        assertTrue(moreClicked)
-    }
-
-    @Test
-    fun homeScreen_navigationBar_reflectsSelectedState() {
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                HomeScreenContent(
-                    uiState = OverviewUiState(),
-                    selectedNavItem = HomeNavigationDestination.COLLECTION
-                )
-            }
-        }
-
-        // Verify Collection is selected
-        composeTestRule.onNodeWithText("Collection").assertIsSelected()
-
-        // Verify other items are not selected
-        composeTestRule.onNodeWithText("Home").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
-    }
-
-    @Test
-    fun homeScreen_refreshingState_displaysCorrectly() {
-        composeTestRule.setContent {
-            MeepleBookTheme {
-                HomeScreenContent(
+                OverviewContent(
                     uiState = OverviewUiState(
                         isRefreshing = true,
                         recentPlays = listOf(
@@ -397,7 +276,7 @@ class HomeScreenContentTest {
         }
 
         // Verify content is still displayed during refresh
-        composeTestRule.onNodeWithTag("homeContent").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("overviewContent").assertIsDisplayed()
         composeTestRule.onNodeWithText("Catan").assertIsDisplayed()
         
         // Note: PullToRefreshBox's refresh indicator is an internal implementation detail
