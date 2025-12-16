@@ -78,13 +78,15 @@ fun HomeScreen(
  *
  * @param currentDestination The currently selected destination
  * @param onNavItemClick Callback when a navigation item is clicked
+ * @param modifier Modifier to be applied to the NavigationBar
  */
 @Composable
 fun HomeNavigationBar(
     currentDestination: HomeNavigationDestination?,
-    onNavItemClick: (HomeNavigationDestination) -> Unit = {}
+    onNavItemClick: (HomeNavigationDestination) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
-    NavigationBar {
+    NavigationBar(modifier = modifier) {
         HomeNavigationDestination.entries.forEach { destination ->
             NavigationBarItem(
                 selected = currentDestination == destination,

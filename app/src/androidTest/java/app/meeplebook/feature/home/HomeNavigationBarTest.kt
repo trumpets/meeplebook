@@ -18,7 +18,7 @@ import org.junit.runner.RunWith
  * Tests UI rendering and interaction behavior for the home screen navigation bar.
  */
 @RunWith(AndroidJUnit4::class)
-class HomeScreenContentTest {
+class HomeNavigationBarTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -76,6 +76,29 @@ class HomeScreenContentTest {
 
         // Verify other items are not selected
         composeTestRule.onNodeWithText("Home").assertIsNotSelected()
+        composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
+        composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
+    }
+
+    @Test
+    fun homeScreen_navigationBar_nullDestination_nothingSelected() {
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                HomeNavigationBar(
+                    currentDestination = null
+                )
+            }
+        }
+
+        // Verify all navigation items are displayed
+        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Collection").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Plays").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Profile").assertIsDisplayed()
+
+        // Verify no items are selected
+        composeTestRule.onNodeWithText("Home").assertIsNotSelected()
+        composeTestRule.onNodeWithText("Collection").assertIsNotSelected()
         composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
         composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
     }
