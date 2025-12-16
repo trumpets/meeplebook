@@ -9,10 +9,9 @@ import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.plays.FakePlaysRepository
+import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
-import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
-import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.sync.FakeSyncTimeRepository
@@ -312,32 +311,5 @@ class OverviewViewModelTest {
         // Then - error is cleared
         state = viewModel.uiState.first()
         assertNull(state.errorMessageResId)
-    }
-
-    private fun createPlay(id: Long, gameName: String): Play {
-        return Play(
-            id = id,
-            date = Instant.parse("2024-01-15T20:00:00Z"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
-            gameId = id * 100,
-            gameName = gameName,
-            comments = null,
-            players = listOf(
-                Player(
-                    id = 0,
-                    playId = id,
-                    username = "testuser",
-                    userId = 12345,
-                    name = "Test User",
-                    startPosition = null,
-                    color = null,
-                    score = null,
-                    win = false
-                )
-            )
-        )
     }
 }

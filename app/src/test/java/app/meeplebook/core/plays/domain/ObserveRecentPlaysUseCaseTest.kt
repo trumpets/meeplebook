@@ -1,8 +1,7 @@
 package app.meeplebook.core.plays.domain
 
 import app.meeplebook.core.plays.FakePlaysRepository
-import app.meeplebook.core.plays.model.Play
-import app.meeplebook.core.plays.model.Player
+import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -99,36 +98,5 @@ class ObserveRecentPlaysUseCaseTest {
         // Then - plays are updated
         assertEquals(2, plays2.size)
         assertEquals("Wingspan", plays2[0].gameName)
-    }
-
-    private fun createPlay(
-        id: Long,
-        gameName: String,
-        date: Instant = Instant.parse("2024-01-15T20:00:00Z")
-    ): Play {
-        return Play(
-            id = id,
-            date = date,
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
-            gameId = id * 100,
-            gameName = gameName,
-            comments = null,
-            players = listOf(
-                Player(
-                    id = 0,
-                    playId = id,
-                    username = "testuser",
-                    userId = 12345,
-                    name = "Test User",
-                    startPosition = null,
-                    color = null,
-                    score = null,
-                    win = false
-                )
-            )
-        )
     }
 }
