@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.CollectionItemEntity
+import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
