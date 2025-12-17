@@ -1,5 +1,6 @@
 package app.meeplebook.feature.overview
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,7 +127,6 @@ fun OverviewContent(
             isRefreshing = uiState.isRefreshing,
             onRefresh = onRefresh,
             modifier = Modifier.fillMaxSize()
-                .padding(paddingValues)
         ) {
             if (uiState.isLoading) {
                 // Loading state
