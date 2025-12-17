@@ -83,8 +83,8 @@ fun HomeScreen(
 @Composable
 fun HomeNavigationBar(
     currentDestination: HomeNavigationDestination?,
+    modifier: Modifier = Modifier,
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     NavigationBar(modifier = modifier) {
         HomeNavigationDestination.entries.forEach { destination ->
