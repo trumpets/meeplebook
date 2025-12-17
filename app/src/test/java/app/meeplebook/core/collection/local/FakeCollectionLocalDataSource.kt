@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeCollectionLocalDataSource : CollectionLocalDataSource {
 
     private val collection = MutableStateFlow<List<CollectionItem>>(emptyList())
+    private val collectionCount = MutableStateFlow(0L)
+    private val unplayedGamesCount = MutableStateFlow(0L)
+    private val mostRecentlyAddedItem = MutableStateFlow<CollectionItem?>(null)
+    private val firstUnplayedGame = MutableStateFlow<CollectionItem?>(null)
 
     /** Tracks the number of times [saveCollection] was called. */
     var saveCollectionCallCount = 0
@@ -43,19 +47,19 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
     }
 
     override fun observeCollectionCount(): Flow<Long> {
-        TODO("Not yet implemented")
+        return collectionCount
     }
 
     override fun observeUnplayedGamesCount(): Flow<Long> {
-        TODO("Not yet implemented")
+        return unplayedGamesCount
     }
 
     override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
-        TODO("Not yet implemented")
+        return mostRecentlyAddedItem
     }
 
     override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
-        TODO("Not yet implemented")
+        return firstUnplayedGame
     }
 
     /**
@@ -63,5 +67,33 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
      */
     fun setCollection(items: List<CollectionItem>) {
         collection.value = items
+    }
+
+    /**
+     * Sets the collection count for testing.
+     */
+    fun setCollectionCount(count: Long) {
+        collectionCount.value = count
+    }
+
+    /**
+     * Sets the unplayed games count for testing.
+     */
+    fun setUnplayedGamesCount(count: Long) {
+        unplayedGamesCount.value = count
+    }
+
+    /**
+     * Sets the most recently added item for testing.
+     */
+    fun setMostRecentlyAddedItem(item: CollectionItem?) {
+        mostRecentlyAddedItem.value = item
+    }
+
+    /**
+     * Sets the first unplayed game for testing.
+     */
+    fun setFirstUnplayedGame(game: CollectionItem?) {
+        firstUnplayedGame.value = game
     }
 }

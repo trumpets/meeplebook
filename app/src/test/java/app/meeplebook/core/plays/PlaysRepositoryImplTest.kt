@@ -155,4 +155,115 @@ class PlaysRepositoryImplTest {
 
         assertTrue(local.getPlays().isEmpty())
     }
+
+    // --- observePlaysForGame tests ---
+
+    @Test
+    fun `observePlaysForGame returns flow from local data source`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameId = 123),
+            testPlay.copy(id = 2, gameId = 123)
+        )
+        local.savePlays(plays)
+        local.setPlaysForGame(123, plays)
+
+        val result = repository.observePlaysForGame(123).first()
+
+        assertEquals(plays, result)
+    }
+
+    @Test
+    fun `observePlaysForGame returns empty list when no plays for game`() = runTest {
+        val result = repository.observePlaysForGame(999).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    // --- getPlaysForGame tests ---
+
+    @Test
+    fun `getPlaysForGame returns data from local data source`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameId = 123),
+            testPlay.copy(id = 2, gameId = 123)
+        )
+        local.savePlays(plays)
+        local.setPlaysForGame(123, plays)
+
+        val result = repository.getPlaysForGame(123)
+
+        assertEquals(plays, result)
+    }
+
+    @Test
+    fun `getPlaysForGame returns empty list when no plays for game`() = runTest {
+        val result = repository.getPlaysForGame(999)
+
+        assertTrue(result.isEmpty())
+    }
+
+    // --- observeTotalPlaysCount tests ---
+
+    @Test
+    fun `observeTotalPlaysCount returns flow from local data source`() = runTest {
+        local.setTotalPlaysCount(10L)
+
+        val result = repository.observeTotalPlaysCount().first()
+
+        assertEquals(10L, result)
+    }
+
+    @Test
+    fun `observeTotalPlaysCount returns zero when no plays`() = runTest {
+        val result = repository.observeTotalPlaysCount().first()
+
+        assertEquals(0L, result)
+    }
+
+    // --- observePlaysCountForPeriod tests ---
+
+    @Test
+    fun `observePlaysCountForPeriod returns count from local data source`() = runTest {
+        val start = parseDateString("2024-01-01")
+        val end = parseDateString("2024-02-01")
+        local.setPlaysCountForMonth(start, end, 5L)
+
+        val result = repository.observePlaysCountForPeriod(start, end).first()
+
+        assertEquals(5L, result)
+    }
+
+    @Test
+    fun `observePlaysCountForPeriod returns zero when no plays in period`() = runTest {
+        val start = parseDateString("2024-03-01")
+        val end = parseDateString("2024-04-01")
+
+        val result = repository.observePlaysCountForPeriod(start, end).first()
+
+        assertEquals(0L, result)
+    }
+
+    // --- observeRecentPlays tests ---
+
+    @Test
+    fun `observeRecentPlays returns limited plays from local data source`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1),
+            testPlay.copy(id = 2),
+            testPlay.copy(id = 3)
+        )
+        local.savePlays(plays)
+        local.setRecentPlays(3, plays)
+
+        val result = repository.observeRecentPlays(3).first()
+
+        assertEquals(plays, result)
+    }
+
+    @Test
+    fun `observeRecentPlays returns empty list when no plays`() = runTest {
+        val result = repository.observeRecentPlays(5).first()
+
+        assertTrue(result.isEmpty())
+    }
 }

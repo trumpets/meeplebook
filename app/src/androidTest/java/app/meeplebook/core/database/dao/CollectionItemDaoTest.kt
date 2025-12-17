@@ -415,6 +415,287 @@ class CollectionItemDaoTest {
         assertTrue(result.isEmpty())
     }
 
+    // --- Test 7: Observe collection count ---
+
+    @Test
+    fun observeCollectionCountReturnsCorrectCount() = runTest {
+        // Initially should be 0
+        var count = dao.observeCollectionCount().first()
+        assertEquals(0L, count)
+
+        // Insert items
+        val items = listOf(
+            createTestEntity(1, "Game 1", GameSubtype.BOARDGAME),
+            createTestEntity(2, "Game 2", GameSubtype.BOARDGAME),
+            createTestEntity(3, "Game 3", GameSubtype.BOARDGAME_EXPANSION)
+        )
+        dao.insertAll(items)
+
+        // Verify count updated
+        count = dao.observeCollectionCount().first()
+        assertEquals(3L, count)
+    }
+
+    @Test
+    fun observeCollectionCountUpdatesAfterDelete() = runTest {
+        // Insert items
+        dao.insertAll(
+            listOf(
+                createTestEntity(1, "Game 1", GameSubtype.BOARDGAME),
+                createTestEntity(2, "Game 2", GameSubtype.BOARDGAME)
+            )
+        )
+
+        // Verify initial count
+        var count = dao.observeCollectionCount().first()
+        assertEquals(2L, count)
+
+        // Delete all
+        dao.deleteAll()
+
+        // Verify count updated
+        count = dao.observeCollectionCount().first()
+        assertEquals(0L, count)
+    }
+
+    // --- Test 8: Observe unplayed games count ---
+
+    @Test
+    fun observeUnplayedGamesCountReturnsCorrectCount() = runTest {
+        // Insert collection items
+        dao.insertAll(
+            listOf(
+                createTestEntity(1, "Game 1", GameSubtype.BOARDGAME),
+                createTestEntity(2, "Game 2", GameSubtype.BOARDGAME),
+                createTestEntity(3, "Game 3", GameSubtype.BOARDGAME)
+            )
+        )
+
+        // Initially all games are unplayed
+        var count = dao.observeUnplayedGamesCount().first()
+        assertEquals(3L, count)
+
+        // Insert a play for game 1
+        val playDao = database.playDao()
+        playDao.insert(
+            app.meeplebook.core.database.entity.PlayEntity(
+                id = 1,
+                date = parseDateString("2024-01-01"),
+                quantity = 1,
+                length = 60,
+                incomplete = false,
+                location = null,
+                gameId = 1,
+                gameName = "Game 1",
+                comments = null
+            )
+        )
+
+        // Now only 2 games should be unplayed
+        count = dao.observeUnplayedGamesCount().first()
+        assertEquals(2L, count)
+    }
+
+    @Test
+    fun observeUnplayedGamesCountReturnsZeroWhenAllPlayed() = runTest {
+        // Insert collection items
+        dao.insertAll(
+            listOf(
+                createTestEntity(1, "Game 1", GameSubtype.BOARDGAME),
+                createTestEntity(2, "Game 2", GameSubtype.BOARDGAME)
+            )
+        )
+
+        // Insert plays for all games
+        val playDao = database.playDao()
+        playDao.insertAll(
+            listOf(
+                app.meeplebook.core.database.entity.PlayEntity(
+                    id = 1,
+                    date = parseDateString("2024-01-01"),
+                    quantity = 1,
+                    length = 60,
+                    incomplete = false,
+                    location = null,
+                    gameId = 1,
+                    gameName = "Game 1",
+                    comments = null
+                ),
+                app.meeplebook.core.database.entity.PlayEntity(
+                    id = 2,
+                    date = parseDateString("2024-01-02"),
+                    quantity = 1,
+                    length = 60,
+                    incomplete = false,
+                    location = null,
+                    gameId = 2,
+                    gameName = "Game 2",
+                    comments = null
+                )
+            )
+        )
+
+        // All games are played
+        val count = dao.observeUnplayedGamesCount().first()
+        assertEquals(0L, count)
+    }
+
+    // --- Test 9: Observe most recently added item ---
+
+    @Test
+    fun observeMostRecentlyAddedItemReturnsLatestItem() = runTest {
+        // Insert items with different lastModifiedDate
+        val now = Instant.now()
+        dao.insertAll(
+            listOf(
+                createTestEntity(1, "Oldest Game", GameSubtype.BOARDGAME, lastModifiedDate = now.minusSeconds(3600)),
+                createTestEntity(2, "Middle Game", GameSubtype.BOARDGAME, lastModifiedDate = now.minusSeconds(1800)),
+                createTestEntity(3, "Newest Game", GameSubtype.BOARDGAME, lastModifiedDate = now)
+            )
+        )
+
+        // Verify most recent item
+        val result = dao.observeMostRecentlyAddedItem().first()
+
+        assertNotNull(result)
+        assertEquals(3L, result?.gameId)
+        assertEquals("Newest Game", result?.name)
+    }
+
+    @Test
+    fun observeMostRecentlyAddedItemReturnsNullWhenEmpty() = runTest {
+        // Observe with no items
+        val result = dao.observeMostRecentlyAddedItem().first()
+
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun observeMostRecentlyAddedItemIgnoresNullDates() = runTest {
+        // Insert items, some with null lastModifiedDate
+        val now = Instant.now()
+        
+        // Insert item with null date by using a modified entity
+        database.compileStatement("INSERT INTO collection_items (gameId, subtype, name, yearPublished, thumbnail, lastModifiedDate) VALUES (1, 'BOARDGAME', 'No Date Game', 2020, null, null)").executeInsert()
+        
+        dao.insert(createTestEntity(2, "Game With Date", GameSubtype.BOARDGAME, lastModifiedDate = now))
+
+        // Should return the game with a date
+        val result = dao.observeMostRecentlyAddedItem().first()
+
+        assertNotNull(result)
+        assertEquals(2L, result?.gameId)
+        assertEquals("Game With Date", result?.name)
+    }
+
+    // --- Test 10: Observe first unplayed game ---
+
+    @Test
+    fun observeFirstUnplayedGameReturnsFirstAlphabetically() = runTest {
+        // Insert collection items in random order
+        dao.insertAll(
+            listOf(
+                createTestEntity(3, "Zombicide", GameSubtype.BOARDGAME),
+                createTestEntity(1, "Agricola", GameSubtype.BOARDGAME),
+                createTestEntity(2, "Pandemic", GameSubtype.BOARDGAME)
+            )
+        )
+
+        // Verify first unplayed game (alphabetically)
+        val result = dao.observeFirstUnplayedGame().first()
+
+        assertNotNull(result)
+        assertEquals(1L, result?.gameId)
+        assertEquals("Agricola", result?.name)
+    }
+
+    @Test
+    fun observeFirstUnplayedGameSkipsPlayedGames() = runTest {
+        // Insert collection items
+        dao.insertAll(
+            listOf(
+                createTestEntity(1, "Agricola", GameSubtype.BOARDGAME),
+                createTestEntity(2, "Brass", GameSubtype.BOARDGAME),
+                createTestEntity(3, "Catan", GameSubtype.BOARDGAME)
+            )
+        )
+
+        // Insert plays for first two games
+        val playDao = database.playDao()
+        playDao.insertAll(
+            listOf(
+                app.meeplebook.core.database.entity.PlayEntity(
+                    id = 1,
+                    date = parseDateString("2024-01-01"),
+                    quantity = 1,
+                    length = 60,
+                    incomplete = false,
+                    location = null,
+                    gameId = 1,
+                    gameName = "Agricola",
+                    comments = null
+                ),
+                app.meeplebook.core.database.entity.PlayEntity(
+                    id = 2,
+                    date = parseDateString("2024-01-02"),
+                    quantity = 1,
+                    length = 60,
+                    incomplete = false,
+                    location = null,
+                    gameId = 2,
+                    gameName = "Brass",
+                    comments = null
+                )
+            )
+        )
+
+        // Should return Catan (first unplayed)
+        val result = dao.observeFirstUnplayedGame().first()
+
+        assertNotNull(result)
+        assertEquals(3L, result?.gameId)
+        assertEquals("Catan", result?.name)
+    }
+
+    @Test
+    fun observeFirstUnplayedGameReturnsNullWhenAllPlayed() = runTest {
+        // Insert collection items
+        dao.insertAll(
+            listOf(
+                createTestEntity(1, "Game 1", GameSubtype.BOARDGAME)
+            )
+        )
+
+        // Insert play for the game
+        val playDao = database.playDao()
+        playDao.insert(
+            app.meeplebook.core.database.entity.PlayEntity(
+                id = 1,
+                date = parseDateString("2024-01-01"),
+                quantity = 1,
+                length = 60,
+                incomplete = false,
+                location = null,
+                gameId = 1,
+                gameName = "Game 1",
+                comments = null
+            )
+        )
+
+        // Should return null (no unplayed games)
+        val result = dao.observeFirstUnplayedGame().first()
+
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun observeFirstUnplayedGameReturnsNullWhenEmpty() = runTest {
+        // Observe with no items
+        val result = dao.observeFirstUnplayedGame().first()
+
+        assertEquals(null, result)
+    }
+
     // --- Helper functions ---
 
     /**
