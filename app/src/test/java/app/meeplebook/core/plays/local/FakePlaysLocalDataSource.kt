@@ -12,19 +12,18 @@ import java.time.Instant
 class FakePlaysLocalDataSource : PlaysLocalDataSource {
 
     private val playsFlow = MutableStateFlow<List<Play>>(emptyList())
-    private val playsForGameFlow = MutableStateFlow<Map<Long, List<Play>>>(emptyMap())
     private val totalPlaysCount = MutableStateFlow(0L)
     private val playsCountForMonth = MutableStateFlow<Map<Pair<Instant, Instant>, Long>>(emptyMap())
     private val recentPlays = MutableStateFlow<Map<Int, List<Play>>>(emptyMap())
 
     override fun observePlays(): Flow<List<Play>> = playsFlow
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
-        return playsForGameFlow.map { map -> map[gameId] ?: emptyList() }
+        return playsFlow.map { list -> list.filter { it.gameId == gameId } }
     }
 
     override suspend fun getPlays(): List<Play> = playsFlow.value
     override suspend fun getPlaysForGame(gameId: Long): List<Play> {
-        return playsForGameFlow.value[gameId] ?: emptyList()
+        return playsFlow.value.filter { it.gameId == gameId }
     }
 
     override suspend fun savePlays(plays: List<Play>) {
@@ -62,15 +61,6 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
 
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
         return recentPlays.map { map -> map[limit] ?: emptyList() }
-    }
-
-    /**
-     * Sets plays for a specific game for testing.
-     */
-    fun setPlaysForGame(gameId: Long, plays: List<Play>) {
-        val currentMap = playsForGameFlow.value.toMutableMap()
-        currentMap[gameId] = plays
-        playsForGameFlow.value = currentMap
     }
 
     /**

@@ -165,7 +165,6 @@ class PlaysRepositoryImplTest {
             testPlay.copy(id = 2, gameId = 123)
         )
         local.savePlays(plays)
-        local.setPlaysForGame(123, plays)
 
         val result = repository.observePlaysForGame(123).first()
 
@@ -188,7 +187,6 @@ class PlaysRepositoryImplTest {
             testPlay.copy(id = 2, gameId = 123)
         )
         local.savePlays(plays)
-        local.setPlaysForGame(123, plays)
 
         val result = repository.getPlaysForGame(123)
 
