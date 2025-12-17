@@ -24,8 +24,6 @@ class OverviewMappersTest {
         fakeStringProvider = FakeStringProvider()
         fakeStringProvider.setString(R.string.game_highlight_recently_added, "Recently Added")
         fakeStringProvider.setString(R.string.game_highlight_try_tonight, "Try Tonight?")
-        fakeStringProvider.setString(R.string.player_count, "%d players")
-        fakeStringProvider.setString(R.string.player_you, "You")
     }
 
     @Test
@@ -71,8 +69,6 @@ class OverviewMappersTest {
     @Test
     fun `toRecentPlay maps play with multiple players correctly`() {
         // Given
-        fakeStringProvider.setString(R.string.relative_date_today, "Today")
-        fakeStringProvider.setString(R.string.player_names_format, "%s")
 
         val domain = DomainRecentPlay(
             id = 42,

@@ -60,8 +60,7 @@ class SyncUserDataUseCaseTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
 
@@ -120,8 +119,7 @@ class SyncUserDataUseCaseTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
 
@@ -149,8 +147,7 @@ class SyncUserDataUseCaseTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
 
@@ -192,8 +189,7 @@ class SyncUserDataUseCaseTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
 

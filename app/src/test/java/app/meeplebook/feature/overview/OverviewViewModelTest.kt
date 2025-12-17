@@ -67,10 +67,15 @@ class OverviewViewModelTest {
         fakeSyncTimeRepository = FakeSyncTimeRepository()
         fakeStringProvider = FakeStringProvider()
 
+        // Set a default user to ensure a consistent state for most tests.
+        // Tests requiring no user can clear it.
+        val user = AuthCredentials(username = "testuser", password = "password")
+        fakeAuthRepository.setCurrentUser(user)
+
         // Setup string resources
         fakeStringProvider.setString(R.string.game_highlight_recently_added, "Recently Added")
         fakeStringProvider.setString(R.string.game_highlight_try_tonight, "Try Tonight?")
-        fakeStringProvider.setString(R.string.last_synced_never, "Never synced")
+        fakeStringProvider.setString(R.string.sync_never, "Never synced")
 
         val observeStats = ObserveCollectionPlayStatsUseCase(
             collectionRepository = fakeCollectionRepository,
@@ -159,8 +164,7 @@ class OverviewViewModelTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
@@ -183,8 +187,7 @@ class OverviewViewModelTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
@@ -222,8 +225,7 @@ class OverviewViewModelTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
@@ -245,8 +247,7 @@ class OverviewViewModelTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
@@ -286,8 +287,10 @@ class OverviewViewModelTest {
 
     @Test
     fun `refresh clears previous error`() = runTest {
-        // Given - trigger an error first
-        advanceUntilIdle()
+        // Given - trigger an error first by logging out
+        fakeAuthRepository.setCurrentUser(null)
+        advanceUntilIdle() // wait for the ViewModel to finish its initial observers
+
         viewModel.refresh()
         advanceUntilIdle()
 
@@ -298,10 +301,11 @@ class OverviewViewModelTest {
         // When - setup successful refresh
         val user = AuthCredentials(
             username = "testuser",
-            password = "password",
-            bearerToken = "token"
+            password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
+        advanceUntilIdle() // ensure the login change is observed
+
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
 

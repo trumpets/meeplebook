@@ -108,10 +108,10 @@ class ObserveOverviewUseCaseTest {
         assertEquals("Catan", overview.recentPlays[0].gameName)
 
         assertNotNull(overview.recentlyAddedGame)
-        assertEquals("Azul", overview.recentlyAddedGame?.name)
+        assertEquals("Azul", overview.recentlyAddedGame?.gameName)
 
         assertNotNull(overview.suggestedGame)
-        assertEquals("Wingspan", overview.suggestedGame?.name)
+        assertEquals("Wingspan", overview.suggestedGame?.gameName)
 
         assertEquals(syncTime, overview.lastSyncedDate)
     }
