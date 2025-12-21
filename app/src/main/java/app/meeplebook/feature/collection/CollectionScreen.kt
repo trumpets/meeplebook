@@ -355,7 +355,7 @@ fun CollectionScreenContent(
             }
         }
     }
-        
+
         // Scroll to top FAB
         if (showScrollToTopFab && uiState.games.isNotEmpty()) {
             SmallFloatingActionButton(
@@ -376,6 +376,8 @@ fun CollectionScreenContent(
                 )
             }
         }
+    }
+}
     }
 }
 
