@@ -197,7 +197,7 @@ class OverviewViewModelTest {
 
         // When
         viewModel.refresh()
-        testScheduler.runCurrent()
+        testDispatcher.scheduler.runCurrent()
 
         // Then
         val state = viewModel.uiState.value
@@ -280,7 +280,7 @@ class OverviewViewModelTest {
 
         // When
         viewModel.clearError()
-        testScheduler.runCurrent()
+        testDispatcher.scheduler.runCurrent()
 
         // Then
         state = viewModel.uiState.value
