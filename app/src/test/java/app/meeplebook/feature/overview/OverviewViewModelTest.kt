@@ -127,6 +127,8 @@ class OverviewViewModelTest {
     @Test
     fun `uiState displays overview data correctly`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         fakeCollectionRepository.setCollectionCount(50)
         fakeCollectionRepository.setUnplayedCount(10)
         fakePlaysRepository.setTotalPlaysCount(100)
@@ -162,6 +164,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh succeeds and updates state`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -185,6 +189,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows refreshing state while syncing`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -208,6 +214,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows error when not logged in`() = runTest {
         // Given - no user logged in
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         fakeAuthRepository.setCurrentUser(null)
         advanceUntilIdle()
 
@@ -224,6 +232,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows error when collection sync fails`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -246,6 +256,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows error when plays sync fails`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -269,6 +281,8 @@ class OverviewViewModelTest {
     @Test
     fun `clearError removes error message`() = runTest {
         // Given - trigger an error
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         fakeAuthRepository.setCurrentUser(null)
         advanceUntilIdle()
         viewModel.refresh()
@@ -290,6 +304,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh clears previous error`() = runTest {
         // Given - trigger an error first by logging out
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         fakeAuthRepository.setCurrentUser(null)
         advanceUntilIdle() // wait for the ViewModel to finish its initial observers
 
