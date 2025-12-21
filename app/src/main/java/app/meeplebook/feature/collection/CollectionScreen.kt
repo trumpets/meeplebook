@@ -252,107 +252,110 @@ fun CollectionScreenContent(
                     .fillMaxSize()
                     .testTag("collectionRefreshBox")
             ) {
-            when {
-                uiState.isLoading -> {
-                    // Loading state
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("loadingIndicator"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                when {
+                    uiState.isLoading -> {
+                        // Loading state
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("loadingIndicator"),
+                            contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = stringResource(R.string.collection_loading),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    uiState.games.isEmpty() -> {
+                        // Empty state - either no collection or no search results
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("emptyState"),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = stringResource(R.string.collection_loading),
+                                text = if (uiState.searchQuery.isNotEmpty()) {
+                                    stringResource(R.string.collection_no_results)
+                                } else {
+                                    stringResource(R.string.collection_empty)
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(32.dp)
                             )
                         }
                     }
-                }
-                uiState.games.isEmpty() -> {
-                    // Empty state - either no collection or no search results
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("emptyState"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (uiState.searchQuery.isNotEmpty()) {
-                                stringResource(R.string.collection_no_results)
+                    else -> {
+                        // Collection list with section headers (for alphabetical sort)
+                        // Note: Search filtering is applied at the ViewModel level before
+                        // games reach this UI. The searchQuery in uiState is for display only.
+                        
+                        // Performance: groupBy is cached with remember() and only recalculates
+                        // when sort or games list changes. Empty string used as sentinel for "no grouping".
+                        val groupedGames = remember(uiState.currentSort, uiState.games) {
+                            if (uiState.currentSort == CollectionSort.ALPHABETICAL) {
+                                uiState.games.groupBy { it.name.firstOrNull()?.uppercaseChar() ?: '#' }
                             } else {
-                                stringResource(R.string.collection_empty)
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(32.dp)
-                        )
-                    }
-                }
-                else -> {
-                    // Collection list with section headers (for alphabetical sort)
-                    // Note: Search filtering is applied at the ViewModel level before
-                    // games reach this UI. The searchQuery in uiState is for display only.
-                    
-                    // Performance: groupBy is cached with remember() and only recalculates
-                    // when sort or games list changes. Empty string used as sentinel for "no grouping".
-                    val groupedGames = remember(uiState.currentSort, uiState.games) {
-                        if (uiState.currentSort == CollectionSort.ALPHABETICAL) {
-                            uiState.games.groupBy { it.name.firstOrNull()?.uppercaseChar() ?: '#' }
-                        } else {
-                            mapOf("" to uiState.games) // Empty string = no grouping/headers
+                                mapOf("" to uiState.games) // Empty string = no grouping/headers
+                            }
                         }
-                    }
-                    
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("collectionList"),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(
-                            if (uiState.viewMode == CollectionViewMode.COMPACT) 8.dp else 12.dp
-                        )
-                    ) {
-                        // forEach on Map entries is fine here - we're using LazyColumn's items()
-                        // function inside which provides proper lazy loading for large lists
-                        groupedGames.entries.forEach { (header, games) ->
-                            if (header.isNotEmpty() && uiState.currentSort == CollectionSort.ALPHABETICAL) {
-                                item(key = "header_$header") {
-                                    Text(
-                                        text = header.toString(),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .padding(top = 8.dp, bottom = 4.dp)
-                                            .testTag("sectionHeader_$header")
+                        
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("collectionList"),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(
+                                if (uiState.viewMode == CollectionViewMode.COMPACT) 8.dp else 12.dp
+                            )
+                        ) {
+                            // forEach on Map entries is fine here - we're using LazyColumn's items()
+                            // function inside which provides proper lazy loading for large lists
+                            groupedGames.entries.forEach { (header, games) ->
+                                if (header.isNotEmpty() && uiState.currentSort == CollectionSort.ALPHABETICAL) {
+                                    item(key = "header_$header") {
+                                        Text(
+                                            text = header.toString(),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier
+                                                .padding(top = 8.dp, bottom = 4.dp)
+                                                .testTag("sectionHeader_$header")
+                                        )
+                                    }
+                                }
+                                
+                                items(
+                                    items = games,
+                                    key = { it.gameId }
+                                ) { game ->
+                                    CollectionGameCard(
+                                        game = game,
+                                        onClick = { onGameClick(game) },
+                                        isCompact = uiState.viewMode == CollectionViewMode.COMPACT
                                     )
                                 }
-                            }
-                            
-                            items(
-                                items = games,
-                                key = { it.gameId }
-                            ) { game ->
-                                CollectionGameCard(
-                                    game = game,
-                                    onClick = { onGameClick(game) },
-                                    isCompact = uiState.viewMode == CollectionViewMode.COMPACT
-                                )
                             }
                         }
                     }
                 }
             }
         }
+    }
+        
         // Scroll to top FAB
         if (showScrollToTopFab && uiState.games.isNotEmpty()) {
             SmallFloatingActionButton(
