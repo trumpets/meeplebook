@@ -127,6 +127,8 @@ class OverviewViewModelTest {
     @Test
     fun `uiState displays overview data correctly`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         fakeCollectionRepository.setCollectionCount(50)
         fakeCollectionRepository.setUnplayedCount(10)
         fakePlaysRepository.setTotalPlaysCount(100)
@@ -147,7 +149,7 @@ class OverviewViewModelTest {
 
         // When
         advanceUntilIdle()
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.value
 
         // Then
         assertFalse(state.isLoading)
@@ -162,6 +164,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh succeeds and updates state`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -177,7 +181,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
         assertNull(state.errorMessageResId)
     }
@@ -185,6 +189,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows refreshing state while syncing`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -197,7 +203,7 @@ class OverviewViewModelTest {
 
         // When
         viewModel.refresh()
-        // Don't advance - check intermediate state
+        testDispatcher.scheduler.runCurrent()
 
         // Then
         val state = viewModel.uiState.value
@@ -208,6 +214,9 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows error when not logged in`() = runTest {
         // Given - no user logged in
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
+        fakeAuthRepository.setCurrentUser(null)
         advanceUntilIdle()
 
         // When
@@ -215,7 +224,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
         assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
     }
@@ -223,6 +232,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows error when collection sync fails`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -237,7 +248,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
         assertEquals(R.string.sync_collections_failed_error, state.errorMessageResId)
     }
@@ -245,6 +256,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows error when plays sync fails`() = runTest {
         // Given
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -260,7 +273,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.value
         assertFalse(state.isRefreshing)
         assertEquals(R.string.sync_plays_failed_error, state.errorMessageResId)
     }
@@ -268,26 +281,31 @@ class OverviewViewModelTest {
     @Test
     fun `clearError removes error message`() = runTest {
         // Given - trigger an error
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
+        fakeAuthRepository.setCurrentUser(null)
         advanceUntilIdle()
         viewModel.refresh()
         advanceUntilIdle()
 
         // Verify error exists
-        var state = viewModel.uiState.first()
+        var state = viewModel.uiState.value
         assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
 
         // When
         viewModel.clearError()
-        advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Then
-        state = viewModel.uiState.first()
+        state = viewModel.uiState.value
         assertNull(state.errorMessageResId)
     }
 
     @Test
     fun `refresh clears previous error`() = runTest {
         // Given - trigger an error first by logging out
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         fakeAuthRepository.setCurrentUser(null)
         advanceUntilIdle() // wait for the ViewModel to finish its initial observers
 
@@ -295,7 +313,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         // Verify error exists
-        var state = viewModel.uiState.first()
+        var state = viewModel.uiState.value
         assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
 
         // When - setup successful refresh
@@ -313,7 +331,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         // Then - error is cleared
-        state = viewModel.uiState.first()
+        state = viewModel.uiState.value
         assertNull(state.errorMessageResId)
     }
 }
