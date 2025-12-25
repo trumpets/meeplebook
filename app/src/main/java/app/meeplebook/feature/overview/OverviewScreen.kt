@@ -1,6 +1,5 @@
 package app.meeplebook.feature.overview
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
