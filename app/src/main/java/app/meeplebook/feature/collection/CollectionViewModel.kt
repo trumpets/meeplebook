@@ -47,15 +47,18 @@ class CollectionViewModel @Inject constructor(
 
     private fun reduceState(event: CollectionEvent) {
         _uiState.update { state ->
+            // Only process these events when in Content state to avoid unsafe casts
+            if (state !is CollectionUiState.Content) {
+                return@update state
+            }
+
             when (event) {
                 is CollectionEvent.SearchChanged ->
                     // TODO debounce search input
-                    (state as CollectionUiState.Content)
-                        .copy(searchQuery = event.query)
+                    state.copy(searchQuery = event.query)
 
                 is CollectionEvent.SortSelected ->
-                    (state as CollectionUiState.Content)
-                        .copy(sort = event.sort)
+                    state.copy(sort = event.sort)
 
                 else -> state
             }
