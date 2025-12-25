@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -359,12 +360,12 @@ private fun CollectionGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        state.sections.forEach { (letter, games) ->
-            stickyHeader(key = letter) {
-                SectionHeader(letter)
+        state.sections.forEach { section ->
+            stickyHeader(key = section.key) {
+                SectionHeader(section.key)
             }
 
-            items(games, key = { it.gameId }) { game ->
+            items(section.games, key = { it.gameId }) { game ->
                 GameGridCard(
                     game = game,
                     onClick = {
@@ -390,12 +391,12 @@ private fun CollectionList(
         contentPadding = PaddingValues(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        state.sections.forEach { (letter, games) ->
-            stickyHeader(key = letter) {
-                SectionHeader(letter)
+        state.sections.forEach { section ->
+            stickyHeader(key = section.key) {
+                SectionHeader(section.key)
             }
 
-            items(games, key = { it.gameId }) { game ->
+            items(section.games, key = { it.gameId }) { game ->
                 GameListRow(
                     game = game,
                     onClick = {
