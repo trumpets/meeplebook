@@ -48,7 +48,6 @@ fun CollectionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
-    var lastJump by remember { mutableStateOf<Char?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
@@ -57,12 +56,6 @@ fun CollectionScreen(
                 is CollectionUiEffects.ScrollToLetter -> {
                     val content = uiState as? CollectionUiState.Content ?: return@collect
                     val index = content.sectionIndices[effect.letter] ?: return@collect
-
-                    if (effect.letter == lastJump) {
-                        return@collect
-                    }
-
-                    lastJump = effect.letter
 
                     when (content.viewMode) {
                         CollectionViewMode.LIST ->
@@ -454,7 +447,12 @@ private fun GameGridCard(
                 fontWeight = FontWeight.SemiBold
             )
 
-            Text("${game.yearPublished} • ${game.playsSubtitle}")
+            Text(
+                listOfNotNull(
+                    game.yearPublished?.toString(),
+                    game.playersSubtitle
+                ).joinToString(separator = " • ")
+            )
 
             IconButton(
                 onClick = onLogPlay,
@@ -489,7 +487,13 @@ private fun GameListRow(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(game.name, fontWeight = FontWeight.SemiBold)
-            Text("${game.yearPublished} • ${game.playersSubtitle} • ${game.playTimeSubtitle}")
+            Text(
+                listOfNotNull(
+                    game.yearPublished?.toString(),
+                    game.playersSubtitle,
+                    game.playTimeSubtitle
+                ).joinToString(separator = " • ")
+            )
             Text(game.playsSubtitle)
         }
 
