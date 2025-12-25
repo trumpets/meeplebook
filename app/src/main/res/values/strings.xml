@@ -14,6 +14,8 @@
     <string name="nav_collection">Collection</string>
     <string name="nav_plays">Plays</string>
     <string name="nav_profile">Profile</string>
+
+    <!-- Overview Screen -->
     <string name="profile_action_description">Profile</string>
     <string name="more_options_description">More options</string>
     <string name="log_play_description">Log a play</string>
@@ -52,4 +54,16 @@
     <string name="sync_not_logged_in_error">Failed to sync data. User not logged in.</string>
     <string name="sync_collections_failed_error">Failed to sync collections data. Please try again.</string>
     <string name="sync_plays_failed_error">Failed to sync plays data. Please try again.</string>
+
+    <!-- Collection Screen -->
+    <string name="collection_loading">Loading collection…</string>
+    <string name="collection_empty">Your collection is empty. Add games to your BGG collection to see them here.</string>
+    <string name="collection_search_no_results">No games match your search</string>
+    <string name="collection_filter_no_results">No games match your filter</string>
+    <string name="collection_search_games">Search games</string>
+    <string name="collection_filter_all">All (%d)</string>
+    <string name="collection_filter_unplayed">Unplayed</string>
+    <string name="collection_filter_favorites">Favorites</string>
+    <string name="collection_filter_more">More</string>
+
 </resources>
