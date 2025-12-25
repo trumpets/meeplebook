@@ -392,7 +392,7 @@ private fun CollectionList(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         state.sections.forEach { (letter, games) ->
-            stickyHeader {
+            stickyHeader(key = letter) {
                 SectionHeader(letter)
             }
 
