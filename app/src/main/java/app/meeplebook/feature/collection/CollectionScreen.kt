@@ -570,10 +570,10 @@ private fun SortBottomSheet(
 
 /**
  * Provides preview parameter states for [CollectionScreenContent]:
- * 1. Default state with sample data
+ * 1. Default content state with sample data
  * 2. Empty state
  * 3. Loading state
- * 4. Refreshing state
+ * 4. Content state with refreshing flag set
  */
 class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<CollectionUiState> {
     override val values: Sequence<CollectionUiState> = sequenceOf(
