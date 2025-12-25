@@ -97,9 +97,9 @@ class CollectionViewModelTest {
     @Test
     fun `SearchChanged event does not throw ClassCastException when state is Error`() = runTest {
         // Given: state is Error
-        setViewModelState(CollectionUiState.Error(R.string.collection_empty))
+        setViewModelState(CollectionUiState.Error(R.string.sync_collections_failed_error))
         val errorState = viewModel.uiState.value as CollectionUiState.Error
-        assertEquals(R.string.collection_empty, errorState.errorMessageResId)
+        assertEquals(R.string.sync_collections_failed_error, errorState.errorMessageResId)
 
         // When: SearchChanged event is triggered
         // Then: should not throw ClassCastException
@@ -107,15 +107,15 @@ class CollectionViewModelTest {
 
         // State should remain Error
         val resultState = viewModel.uiState.value as CollectionUiState.Error
-        assertEquals(R.string.collection_empty, resultState.errorMessageResId)
+        assertEquals(R.string.sync_collections_failed_error, resultState.errorMessageResId)
     }
 
     @Test
     fun `SortSelected event does not throw ClassCastException when state is Error`() = runTest {
         // Given: state is Error
-        setViewModelState(CollectionUiState.Error(R.string.collection_search_no_results))
+        setViewModelState(CollectionUiState.Error(R.string.sync_collections_failed_error))
         val errorState = viewModel.uiState.value as CollectionUiState.Error
-        assertEquals(R.string.collection_search_no_results, errorState.errorMessageResId)
+        assertEquals(R.string.sync_collections_failed_error, errorState.errorMessageResId)
 
         // When: SortSelected event is triggered
         // Then: should not throw ClassCastException
@@ -123,12 +123,16 @@ class CollectionViewModelTest {
 
         // State should remain Error
         val resultState = viewModel.uiState.value as CollectionUiState.Error
-        assertEquals(R.string.collection_search_no_results, resultState.errorMessageResId)
+        assertEquals(R.string.sync_collections_failed_error, resultState.errorMessageResId)
     }
 
     /**
      * Helper method to set the ViewModel's internal state for testing.
      * Uses reflection to access the private _uiState field.
+     *
+     * Note: This approach is fragile and depends on the private field name remaining "_uiState".
+     * If the ViewModel gains proper dependency injection for state management, this helper
+     * should be replaced with a more robust approach using test doubles or constructor injection.
      */
     private fun setViewModelState(state: CollectionUiState) {
         val field = viewModel.javaClass.getDeclaredField("_uiState")
