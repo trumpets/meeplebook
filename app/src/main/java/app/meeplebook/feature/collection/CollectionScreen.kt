@@ -429,7 +429,7 @@ private fun GameGridCard(
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth()
-                    .background(Color.LightGray)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (game.isFavorite) {
                     Icon(
@@ -480,7 +480,7 @@ private fun GameListRow(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .background(Color.LightGray)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         )
 
         Spacer(Modifier.width(12.dp))
