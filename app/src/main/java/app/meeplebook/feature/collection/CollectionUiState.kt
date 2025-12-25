@@ -91,6 +91,14 @@ data class CollectionGameItem(
     val isFavorite: Boolean
 )
 
+/**
+ * One-time UI effects for the Collection screen.
+ *
+ * Unlike [CollectionUiState], which represents the continuous state of the screen,
+ * UI effects are one-time events that trigger side effects such as navigation,
+ * scrolling, or showing dialogs. Effects are emitted via a SharedFlow and consumed
+ * once by the UI layer.
+ */
 sealed interface CollectionUiEffects {
     data class ScrollToLetter(val letter: Char) : CollectionUiEffects
     data class NavigateToGame(val gameId: Int) : CollectionUiEffects
