@@ -59,7 +59,7 @@ enum class EmptyReason(
     NO_FILTER_RESULTS(R.string.collection_filter_no_results)
 }
 
-/** * Sort options for the collection. */
+/** Sort options for the collection. */
 enum class CollectionSort {
     ALPHABETICAL,
     YEAR_PUBLISHED_OLDEST,
