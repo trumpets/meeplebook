@@ -364,8 +364,7 @@ private fun CollectionGrid(
                 SectionHeader(letter)
             }
 
-            items(games.size, key = { games[it].gameId }) { index ->
-                val game = games[index]
+            items(games, key = { it.gameId }) { game ->
                 GameGridCard(
                     game = game,
                     onClick = {
