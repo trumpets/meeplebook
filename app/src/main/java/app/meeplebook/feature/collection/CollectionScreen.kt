@@ -487,15 +487,23 @@ private fun GameListRow(
         Spacer(Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(game.name, fontWeight = FontWeight.SemiBold)
             Text(
-                listOfNotNull(
+                text = game.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = listOfNotNull(
                     game.yearPublished?.toString(),
                     game.playersSubtitle,
                     game.playTimeSubtitle
-                ).joinToString(separator = " • ")
+                ).joinToString(separator = " • "),
+                style = MaterialTheme.typography.bodySmall
             )
-            Text(game.playsSubtitle)
+            Text(
+                text = game.playsSubtitle,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
 
         IconButton(onClick = onLogPlay) {
