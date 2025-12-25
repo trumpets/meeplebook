@@ -319,15 +319,15 @@ private fun CollectionToolbar(
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(onClick = { onViewModeChanged(CollectionViewMode.GRID) }) {
-                Icon(Icons.Outlined.GridView, contentDescription = "Grid")
+                Icon(Icons.Outlined.GridView, contentDescription = stringResource(id = R.string.collection_view_grid))
             }
             IconButton(onClick = { onViewModeChanged(CollectionViewMode.LIST) }) {
-                Icon(Icons.AutoMirrored.Outlined.ViewList, contentDescription = "List")
+                Icon(Icons.AutoMirrored.Outlined.ViewList, contentDescription = stringResource(id = R.string.collection_view_list))
             }
         }
 
         IconButton(onClick = onSortClicked) {
-            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
+            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(id = R.string.collection_sort))
         }
     }
 }
@@ -458,7 +458,7 @@ private fun GameGridCard(
                 onClick = onLogPlay,
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Log play")
+                Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.collection_log_play))
             }
         }
     }
@@ -498,7 +498,7 @@ private fun GameListRow(
         }
 
         IconButton(onClick = onLogPlay) {
-            Icon(Icons.Default.Add, contentDescription = "Log play")
+            Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.collection_log_play))
         }
     }
 }
