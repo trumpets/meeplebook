@@ -163,6 +163,13 @@ class CollectionViewModel @Inject constructor(
                 emitEffect(CollectionUiEffects.DismissSortSheet)
             }
 
+            is CollectionEvent.Refresh -> {
+                // TODO: Implement manual collection refresh handling.
+            }
+
+            is CollectionEvent.LogPlayClicked -> {
+                // TODO: Implement navigation or handling for logging a play.
+            }
             else -> Unit
         }
     }
