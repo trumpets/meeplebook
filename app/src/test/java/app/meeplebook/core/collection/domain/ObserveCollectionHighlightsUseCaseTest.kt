@@ -35,7 +35,12 @@ class ObserveCollectionHighlightsUseCaseTest {
             name = "Azul",
             yearPublished = 2017,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
         val suggested = CollectionItem(
             gameId = 2,
@@ -43,7 +48,12 @@ class ObserveCollectionHighlightsUseCaseTest {
             name = "Wingspan",
             yearPublished = 2019,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-01T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-01T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
 
         fakeCollectionRepository.setMostRecentlyAdded(recentlyAdded)
@@ -83,7 +93,12 @@ class ObserveCollectionHighlightsUseCaseTest {
             name = "Azul",
             yearPublished = 2017,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
 
         fakeCollectionRepository.setMostRecentlyAdded(recentlyAdded)
@@ -106,7 +121,12 @@ class ObserveCollectionHighlightsUseCaseTest {
             name = "Wingspan",
             yearPublished = 2019,
             thumbnail = null,
-            lastModifiedDate = null
+            lastModifiedDate = null,
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
 
         fakeCollectionRepository.setMostRecentlyAdded(null)
@@ -129,7 +149,12 @@ class ObserveCollectionHighlightsUseCaseTest {
             name = "Game 1",
             yearPublished = 2020,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
         fakeCollectionRepository.setMostRecentlyAdded(item1)
 
@@ -146,7 +171,12 @@ class ObserveCollectionHighlightsUseCaseTest {
             name = "Game 2",
             yearPublished = 2021,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-15T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-15T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
         fakeCollectionRepository.setMostRecentlyAdded(item2)
         val highlights2 = useCase().first()

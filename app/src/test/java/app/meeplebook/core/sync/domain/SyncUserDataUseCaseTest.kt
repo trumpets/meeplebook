@@ -71,7 +71,12 @@ class SyncUserDataUseCaseTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnail = null,
-                lastModifiedDate = Instant.now()
+                lastModifiedDate = Instant.now(),
+                minPlayers = null,
+                maxPlayers = null,
+                minPlayTimeMinutes = null,
+                maxPlayTimeMinutes = null,
+                numPlays = 0
             )
         )
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
@@ -158,7 +163,12 @@ class SyncUserDataUseCaseTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnail = null,
-                lastModifiedDate = Instant.now()
+                lastModifiedDate = Instant.now(),
+                minPlayers = null,
+                maxPlayers = null,
+                minPlayTimeMinutes = null,
+                maxPlayTimeMinutes = null,
+                numPlays = 0
             )
         )
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
