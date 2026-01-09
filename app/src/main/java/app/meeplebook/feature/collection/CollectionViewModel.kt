@@ -74,7 +74,7 @@ class CollectionViewModel @Inject constructor(
                 observeCollectionDomainSectionsUseCase(query)
             }
             .map { domainSections ->
-                val uiSections = domainSections.map{ it.toCollectionSection(stringProvider) }
+                val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
 
                 if (uiSections.isEmpty()) {
                     CollectionUiState.Empty(emptyReason(
