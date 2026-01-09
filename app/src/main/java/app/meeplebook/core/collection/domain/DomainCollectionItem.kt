@@ -2,6 +2,25 @@ package app.meeplebook.core.collection.domain
 
 import app.meeplebook.core.collection.model.CollectionItem
 
+/**
+ * Domain model representing a collection item for UI display purposes.
+ *
+ * This is a simplified version of [CollectionItem] that contains only the data
+ * needed for collection list display. Unlike [CollectionItem], this model:
+ * - Excludes metadata fields like lastModifiedDate and subtype
+ * - Uses raw numeric counts (playCount, player counts, play times) instead of formatted strings
+ * - Renames thumbnail field to thumbnailUrl for clarity
+ *
+ * @param gameId The BGG game ID.
+ * @param name The name of the game.
+ * @param yearPublished The year the game was published.
+ * @param thumbnailUrl URL to the game's thumbnail image.
+ * @param playCount The number of times the game has been played.
+ * @param minPlayers Minimum number of players.
+ * @param maxPlayers Maximum number of players.
+ * @param minPlayTimeMinutes Minimum play time in minutes.
+ * @param maxPlayTimeMinutes Maximum play time in minutes.
+ */
 data class DomainCollectionItem(
     val gameId: Long,
     val name: String,
