@@ -1,6 +1,7 @@
 package app.meeplebook.core.database.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
@@ -10,7 +11,10 @@ import java.time.Instant
  * Room entity representing a collection item stored locally.
  */
 @Entity(
-    tableName = "collection_items"
+    tableName = "collection_items",
+    indices = [
+        Index(value = ["name"])
+    ]
 )
 data class CollectionItemEntity(
     @PrimaryKey
