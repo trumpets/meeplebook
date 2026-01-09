@@ -3,6 +3,7 @@ package app.meeplebook.core.collection.local
 import app.meeplebook.core.collection.model.CollectionItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * Fake implementation of [CollectionLocalDataSource] for testing purposes.
@@ -29,6 +30,22 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
 
     override fun observeCollection(): Flow<List<CollectionItem>> {
         return collection
+    }
+
+    override fun observeCollectionByName(nameQuery: String): Flow<List<CollectionItem>> {
+        return collection.map { items ->
+            items.filter { item ->
+                item.name.contains(nameQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    override fun observeCollectionUnplayed(): Flow<List<CollectionItem>> {
+        return collection.map { items ->
+            items.filter { item ->
+                item.numPlays == 0
+            }
+        }
     }
 
     override suspend fun getCollection(): List<CollectionItem> {
