@@ -256,7 +256,7 @@ class ObserveCollectionDomainSectionsUseCaseTest {
             createCollectionItem(gameId = 1, name = "!Bang"),
             createCollectionItem(gameId = 2, name = "@Home"),
             createCollectionItem(gameId = 3, name = "Azul"),
-            createCollectionItem(gameId = 4, name = "$Money")
+            createCollectionItem(gameId = 4, name = "#Money")
         )
         fakeCollectionRepository.setCollection(items)
 
@@ -302,7 +302,7 @@ class ObserveCollectionDomainSectionsUseCaseTest {
     private fun createQuery(
         searchQuery: String = "",
         quickFilter: QuickFilter = QuickFilter.ALL,
-        sort: CollectionSort = CollectionSort.NAME
+        sort: CollectionSort = CollectionSort.ALPHABETICAL
     ): CollectionDataQuery {
         return CollectionDataQuery(
             searchQuery = searchQuery,

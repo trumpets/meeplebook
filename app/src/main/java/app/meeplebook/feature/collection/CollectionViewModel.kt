@@ -155,11 +155,11 @@ class CollectionViewModel @Inject constructor(
                 emitEffect(CollectionUiEffects.NavigateToGame(event.gameId))
             }
 
-            is CollectionEvent.OpenSortSheet -> {
+            CollectionEvent.OpenSortSheet -> {
                 emitEffect(CollectionUiEffects.OpenSortSheet)
             }
 
-            is CollectionEvent.DismissSortSheet -> {
+            CollectionEvent.DismissSortSheet -> {
                 emitEffect(CollectionUiEffects.DismissSortSheet)
             }
 
