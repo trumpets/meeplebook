@@ -17,7 +17,7 @@ interface CollectionItemDao {
     /**
      * Observes all collection items.
      */
-    @Query("SELECT * FROM collection_items ORDER BY name ASC")
+    @Query("SELECT * FROM collection_items ORDER BY name COLLATE NOCASE ASC")
     fun observeCollection(): Flow<List<CollectionItemEntity>>
 
     @Query("""
@@ -39,7 +39,7 @@ interface CollectionItemDao {
     /**
      * Gets all collection items.
      */
-    @Query("SELECT * FROM collection_items ORDER BY name ASC")
+    @Query("SELECT * FROM collection_items ORDER BY name COLLATE NOCASE ASC")
     suspend fun getCollection(): List<CollectionItemEntity>
 
     /**
@@ -96,7 +96,7 @@ interface CollectionItemDao {
     @Query("""
         SELECT * FROM collection_items
         WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
-        ORDER BY name ASC
+        ORDER BY name COLLATE NOCASE ASC
         LIMIT 1
     """)
     fun observeFirstUnplayedGame(): Flow<CollectionItemEntity?>
