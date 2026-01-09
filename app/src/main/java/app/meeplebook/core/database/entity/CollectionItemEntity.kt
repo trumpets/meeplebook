@@ -19,7 +19,12 @@ data class CollectionItemEntity(
     val name: String,
     val yearPublished: Int?,
     val thumbnail: String?,
-    val lastModifiedDate: Instant?
+    val lastModifiedDate: Instant?,
+    val minPlayers: Int?,
+    val maxPlayers: Int?,
+    val minPlayTimeMinutes: Int?,
+    val maxPlayTimeMinutes: Int?,
+    val numPlays: Int
 )
 
 /**
@@ -32,7 +37,12 @@ fun CollectionItemEntity.toCollectionItem(): CollectionItem {
         name = name,
         yearPublished = yearPublished,
         thumbnail = thumbnail,
-        lastModifiedDate = lastModifiedDate
+        lastModifiedDate = lastModifiedDate,
+        minPlayers = minPlayers,
+        maxPlayers = maxPlayers,
+        minPlayTimeMinutes = minPlayTimeMinutes,
+        maxPlayTimeMinutes = maxPlayTimeMinutes,
+        numPlays = numPlays
     )
 }
 
@@ -46,6 +56,11 @@ fun CollectionItem.toEntity(): CollectionItemEntity {
         name = name,
         yearPublished = yearPublished,
         thumbnail = thumbnail,
-        lastModifiedDate = lastModifiedDate
+        lastModifiedDate = lastModifiedDate,
+        minPlayers = minPlayers,
+        maxPlayers = maxPlayers,
+        minPlayTimeMinutes = minPlayTimeMinutes,
+        maxPlayTimeMinutes = maxPlayTimeMinutes,
+        numPlays = numPlays
     )
 }

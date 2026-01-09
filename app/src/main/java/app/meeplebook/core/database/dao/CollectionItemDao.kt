@@ -20,6 +20,22 @@ interface CollectionItemDao {
     @Query("SELECT * FROM collection_items ORDER BY name ASC")
     fun observeCollection(): Flow<List<CollectionItemEntity>>
 
+    @Query("""
+        SELECT * FROM collection_items
+        WHERE name LIKE '%' || :nameQuery || '%'
+        ORDER BY name COLLATE NOCASE ASC
+    """)
+    fun observeCollectionByName(
+        nameQuery: String
+    ): Flow<List<CollectionItemEntity>>
+
+    @Query("""
+        SELECT * FROM collection_items
+        WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
+        ORDER BY name COLLATE NOCASE ASC
+    """)
+    fun observeCollectionUnplayed(): Flow<List<CollectionItemEntity>>
+
     /**
      * Gets all collection items.
      */

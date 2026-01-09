@@ -63,11 +63,13 @@
     <string name="collection_search_games">Search games</string>
     <string name="collection_filter_all">All (%d)</string>
     <string name="collection_filter_unplayed">Unplayed</string>
-    <string name="collection_filter_favorites">Favorites</string>
     <string name="collection_filter_more">More</string>
     <string name="collection_view_grid">Grid</string>
     <string name="collection_view_list">List</string>
     <string name="collection_sort">Sort</string>
     <string name="collection_log_play">Log play</string>
+    <string name="collection_plays_count">%d plays</string>
+    <string name="collection_player_count">%d-%dp</string>
+    <string name="collection_play_time">%d-%dm</string>
 
 </resources>

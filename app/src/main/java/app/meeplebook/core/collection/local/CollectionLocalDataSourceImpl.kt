@@ -21,6 +21,18 @@ class CollectionLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override fun observeCollectionByName(nameQuery: String): Flow<List<CollectionItem>> {
+        return dao.observeCollectionByName(nameQuery).map { entities ->
+            entities.map { it.toCollectionItem() }
+        }
+    }
+
+    override fun observeCollectionUnplayed(): Flow<List<CollectionItem>> {
+        return dao.observeCollectionUnplayed().map { entities ->
+            entities.map { it.toCollectionItem() }
+        }
+    }
+
     override suspend fun getCollection(): List<CollectionItem> {
         return dao.getCollection().map { it.toCollectionItem() }
     }
