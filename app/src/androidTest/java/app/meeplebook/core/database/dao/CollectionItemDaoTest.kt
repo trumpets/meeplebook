@@ -7,7 +7,9 @@ import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.CollectionItemEntity
 import app.meeplebook.core.util.parseDateString
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -23,6 +25,7 @@ import java.time.Instant
  * Tests only the DAO layer with an in-memory database.
  */
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class CollectionItemDaoTest {
 
     private lateinit var database: MeepleBookDatabase
@@ -324,6 +327,8 @@ class CollectionItemDaoTest {
         )
         dao.insertAll(items)
 
+        advanceUntilIdle()
+
         // Observe and collect first emission
         val result = dao.observeCollection().first()
 
@@ -577,7 +582,7 @@ class CollectionItemDaoTest {
         val now = Instant.now()
         
         // Insert item with null date by using a modified entity
-        database.compileStatement("INSERT INTO collection_items (gameId, subtype, name, yearPublished, thumbnail, lastModifiedDate) VALUES (1, 'BOARDGAME', 'No Date Game', 2020, null, null)").executeInsert()
+        database.compileStatement("INSERT INTO collection_items (gameId, subtype, name, yearPublished, thumbnail, lastModifiedDate, numPlays) VALUES (1, 'BOARDGAME', 'No Date Game', 2020, null, null, 0)").executeInsert()
         
         dao.insert(createTestEntity(2, "Game With Date", GameSubtype.BOARDGAME, lastModifiedDate = now))
 
@@ -816,10 +821,9 @@ class CollectionItemDaoTest {
         val result = dao.observeCollectionByName("a").first()
 
         // Should return results sorted alphabetically
-        assertEquals(3, result.size)
+        assertEquals(2, result.size)
         assertEquals("Agricola", result[0].name)
         assertEquals("Azul", result[1].name)
-        assertEquals("Zombicide", result[2].name)
     }
 
     @Test
