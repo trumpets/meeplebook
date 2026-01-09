@@ -1,5 +1,6 @@
 package app.meeplebook.core.collection
 
+import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.result.AppResult
@@ -26,7 +27,13 @@ class FakeCollectionRepository : CollectionRepository {
     var lastSyncUsername: String? = null
         private set
 
-    override fun observeCollection(): Flow<List<CollectionItem>> = _collection
+    var lastObserveCollectionQuery: CollectionDataQuery? = null
+        private set
+
+    override fun observeCollection(query: CollectionDataQuery?): Flow<List<CollectionItem>> {
+        lastObserveCollectionQuery = query
+        return _collection
+    }
 
     override suspend fun getCollection(): List<CollectionItem> = _collection.value
 

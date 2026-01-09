@@ -14,7 +14,7 @@ enum class HighlightType { RECENTLY_ADDED, SUGGESTED }
 /**
  * Maps a [CollectionItem] to a [DomainGameHighlight] for overview display.
  */
-fun CollectionItem.toDomain(highlightType: HighlightType): DomainGameHighlight {
+fun CollectionItem.toDomainGameHighlight(highlightType: HighlightType): DomainGameHighlight {
     return DomainGameHighlight(
         id = gameId,
         gameName = name,

@@ -16,6 +16,20 @@ interface CollectionLocalDataSource {
     fun observeCollection(): Flow<List<CollectionItem>>
 
     /**
+     * Observes the collection filtered by name.
+     *
+     * @return Flow emitting the user's collection filtered by name.
+     */
+    fun observeCollectionByName(nameQuery: String): Flow<List<CollectionItem>>
+
+    /**
+     * Observes the unplayed items in the collection.
+     *
+     * @return Flow emitting the user's unplayed collection items.
+     */
+    fun observeCollectionUnplayed(): Flow<List<CollectionItem>>
+
+    /**
      * Gets the collection.
      *
      * @return The user's collection.

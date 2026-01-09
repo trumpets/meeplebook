@@ -1,5 +1,6 @@
 package app.meeplebook.core.collection
 
+import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.result.AppResult
@@ -15,7 +16,7 @@ interface CollectionRepository {
      *
      * @return Flow emitting the user's collection.
      */
-    fun observeCollection(): Flow<List<CollectionItem>>
+    fun observeCollection(query: CollectionDataQuery? = null): Flow<List<CollectionItem>>
 
     /**
      * Gets the collection from local storage.

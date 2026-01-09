@@ -27,6 +27,7 @@ interface BggApi {
         @Query("username") username: String,
         @Query("own") own: Int = 1,
         @Query("showprivate") showPrivate: Int = 1,
+        @Query("stats") stats: Int = 1,
         @Query("excludesubtype") excludeSubtype: String? = null,
         @Query("subtype") subtype: String? = null
     ): Response<ResponseBody>

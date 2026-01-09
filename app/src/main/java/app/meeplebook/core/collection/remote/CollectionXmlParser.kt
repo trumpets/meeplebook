@@ -59,6 +59,19 @@ object CollectionXmlParser {
                             val lastModifiedStr = parser.getAttributeValue(null, "lastmodified")
                             currentItem?.lastModifiedDate = parseBggDateTime(lastModifiedStr)
                         }
+                        "stats" -> {
+                            currentItem?.minPlayers =
+                                parser.getAttributeValue(null, "minplayers")?.toIntOrNull()
+                            currentItem?.maxPlayers =
+                                parser.getAttributeValue(null, "maxplayers")?.toIntOrNull()
+                            currentItem?.minPlayTimeMinutes =
+                                parser.getAttributeValue(null, "minplaytime")?.toIntOrNull()
+                            currentItem?.maxPlayTimeMinutes =
+                                parser.getAttributeValue(null, "maxplaytime")?.toIntOrNull()
+                        }
+                        "numplays" -> {
+                            currentItem?.numPlays = safeNextText(parser)?.toIntOrNull() ?: 0
+                        }
                     }
                 }
                 XmlPullParser.END_TAG -> {
@@ -102,6 +115,11 @@ object CollectionXmlParser {
         var yearPublished: Int? = null
         var thumbnail: String? = null
         var lastModifiedDate: Instant? = null
+        var minPlayers: Int? = null
+        var maxPlayers: Int? = null
+        var minPlayTimeMinutes: Int? = null
+        var maxPlayTimeMinutes: Int? = null
+        var numPlays: Int = 0
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
@@ -111,7 +129,12 @@ object CollectionXmlParser {
                 name = itemName,
                 yearPublished = yearPublished,
                 thumbnail = thumbnail,
-                lastModifiedDate = lastModifiedDate
+                lastModifiedDate = lastModifiedDate,
+                minPlayers = minPlayers,
+                maxPlayers = maxPlayers,
+                minPlayTimeMinutes = minPlayTimeMinutes,
+                maxPlayTimeMinutes = maxPlayTimeMinutes,
+                numPlays = numPlays
             )
         }
     }

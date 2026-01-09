@@ -12,7 +12,7 @@ import app.meeplebook.core.plays.domain.DomainRecentPlay
 import app.meeplebook.core.collection.domain.HighlightType
 
 /**
- * Maps a [CollectionItem] to a [GameHighlight] for overview display.
+ * Maps a [DomainGameHighlight] to a [GameHighlight] for overview display.
  */
 fun DomainGameHighlight.toGameHighlight(stringProvider: StringProvider): GameHighlight {
     return GameHighlight(

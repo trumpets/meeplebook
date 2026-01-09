@@ -1,5 +1,8 @@
 package app.meeplebook.feature.collection
 
+import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.QuickFilter
+
 /**
  * Represents user actions and system events for the Collection screen.
  *
@@ -15,7 +18,7 @@ sealed interface CollectionEvent {
     data class QuickFilterSelected(val filter: QuickFilter) : CollectionEvent
 
     // View / sort
-    data class ToggleViewMode(val viewMode: CollectionViewMode) : CollectionEvent
+    data class ViewModeSelected(val viewMode: CollectionViewMode) : CollectionEvent
     data class SortSelected(val sort: CollectionSort) : CollectionEvent
 
     // Bottom sheet
@@ -23,8 +26,8 @@ sealed interface CollectionEvent {
     data object DismissSortSheet : CollectionEvent
 
     // Actions
-    data class GameClicked(val gameId: Int) : CollectionEvent
-    data class LogPlayClicked(val gameId: Int) : CollectionEvent
+    data class GameClicked(val gameId: Long) : CollectionEvent
+    data class LogPlayClicked(val gameId: Long) : CollectionEvent
 
     // System
     data object Refresh : CollectionEvent

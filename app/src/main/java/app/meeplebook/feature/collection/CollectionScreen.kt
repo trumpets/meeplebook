@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -17,13 +18,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 /**
@@ -85,7 +88,9 @@ fun CollectionScreen(
 
     CollectionScreenRoot(
         uiState = uiState,
-        onEvent = { viewModel.onEvent(it) }
+        onEvent = { viewModel.onEvent(it) },
+        listState = listState,
+        gridState = gridState
     )
 }
 
@@ -93,7 +98,9 @@ fun CollectionScreen(
 @Composable
 fun CollectionScreenRoot(
     uiState: CollectionUiState,
-    onEvent: (CollectionEvent) -> Unit
+    onEvent: (CollectionEvent) -> Unit,
+    listState: LazyListState,
+    gridState: LazyGridState
 ) {
     Box(
         modifier = Modifier
@@ -113,7 +120,9 @@ fun CollectionScreenRoot(
             is CollectionUiState.Content ->
                 CollectionScreenContent(
                     uiState = uiState,
-                    onEvent = onEvent
+                    onEvent = onEvent,
+                    listState = listState,
+                    gridState = gridState
                 )
         }
     }
@@ -183,7 +192,9 @@ fun ErrorState(@StringRes errorMessageResId: Int) {
 @Composable
 fun CollectionScreenContent(
     uiState: CollectionUiState.Content,
-    onEvent: (CollectionEvent) -> Unit
+    onEvent: (CollectionEvent) -> Unit,
+    listState: LazyListState,
+    gridState: LazyGridState
 ) {
     Box {
         Column {
@@ -198,8 +209,9 @@ fun CollectionScreenContent(
             )
 
             CollectionToolbar(
+                selectedViewMode = uiState.viewMode,
                 onViewModeChanged = {
-                    onEvent(CollectionEvent.ToggleViewMode(it))
+                    onEvent(CollectionEvent.ViewModeSelected(it))
                 },
                 onSortClicked = {
                     onEvent(CollectionEvent.OpenSortSheet)
@@ -208,7 +220,9 @@ fun CollectionScreenContent(
 
             CollectionContent(
                 state = uiState,
-                onEvent = onEvent
+                onEvent = onEvent,
+                listState = listState,
+                gridState = gridState
             )
         }
 
@@ -283,26 +297,6 @@ private fun QuickFiltersRow(
                 label = { Text(stringResource(R.string.collection_filter_unplayed)) }
             )
         }
-
-        item {
-            FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.FAVORITES,
-                onClick = {
-                    onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.FAVORITES))
-                },
-                label = { Text(stringResource(R.string.collection_filter_favorites)) }
-            )
-        }
-
-        item {
-            FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.MORE,
-                onClick = {
-                    onEvent(CollectionEvent.OpenSortSheet)
-                },
-                label = { Text(stringResource(R.string.collection_filter_more)) }
-            )
-        }
     }
 }
 
@@ -310,6 +304,7 @@ private fun QuickFiltersRow(
 
 @Composable
 private fun CollectionToolbar(
+    selectedViewMode: CollectionViewMode,
     onViewModeChanged: (CollectionViewMode) -> Unit,
     onSortClicked: () -> Unit
 ) {
@@ -319,12 +314,25 @@ private fun CollectionToolbar(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        val selectedColor = MaterialTheme.colorScheme.primary
+        val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = { onViewModeChanged(CollectionViewMode.GRID) }) {
-                Icon(Icons.Outlined.GridView, contentDescription = stringResource(id = R.string.collection_view_grid))
-            }
-            IconButton(onClick = { onViewModeChanged(CollectionViewMode.LIST) }) {
+            IconButton(
+                onClick = { onViewModeChanged(CollectionViewMode.LIST) },
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = if (selectedViewMode == CollectionViewMode.LIST) selectedColor else unselectedColor
+                )
+            ) {
                 Icon(Icons.AutoMirrored.Outlined.ViewList, contentDescription = stringResource(id = R.string.collection_view_list))
+            }
+            IconButton(
+                onClick = { onViewModeChanged(CollectionViewMode.GRID) },
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = if (selectedViewMode == CollectionViewMode.GRID) selectedColor else unselectedColor
+                )
+            ) {
+                Icon(Icons.Outlined.GridView, contentDescription = stringResource(id = R.string.collection_view_grid))
             }
         }
 
@@ -340,11 +348,13 @@ private fun CollectionToolbar(
 @Composable
 private fun CollectionContent(
     state: CollectionUiState.Content,
-    onEvent: (CollectionEvent) -> Unit
+    onEvent: (CollectionEvent) -> Unit,
+    listState: LazyListState,
+    gridState: LazyGridState
 ) {
     when (state.viewMode) {
-        CollectionViewMode.GRID -> CollectionGrid(state, onEvent)
-        CollectionViewMode.LIST -> CollectionList(state, onEvent)
+        CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
+        CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
     }
 }
 
@@ -352,9 +362,11 @@ private fun CollectionContent(
 @Composable
 private fun CollectionGrid(
     state: CollectionUiState.Content,
-    onEvent: (CollectionEvent) -> Unit
+    onEvent: (CollectionEvent) -> Unit,
+    gridState: LazyGridState
 ) {
     LazyVerticalGrid(
+        state = gridState,
         columns = GridCells.Fixed(2),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(12.dp),
@@ -385,9 +397,11 @@ private fun CollectionGrid(
 @Composable
 private fun CollectionList(
     state: CollectionUiState.Content,
-    onEvent: (CollectionEvent) -> Unit
+    onEvent: (CollectionEvent) -> Unit,
+    listState: LazyListState
 ) {
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -432,9 +446,9 @@ private fun GameGridCard(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                if (game.isFavorite) {
+                if (game.isNew) {
                     Icon(
-                        Icons.Default.Star,
+                        Icons.Default.AutoAwesome,
                         contentDescription = null,
                         modifier = Modifier.padding(4.dp)
                     )
@@ -622,8 +636,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "42 plays",
             playersSubtitle = "3–4p",
             playTimeSubtitle = "75 min",
-            isNew = false,
-            isFavorite = true
+            isNew = false
         ),
         CollectionGameItem(
             gameId = 2,
@@ -633,8 +646,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "18 plays",
             playersSubtitle = "1–5p",
             playTimeSubtitle = "90 min",
-            isNew = false,
-            isFavorite = false
+            isNew = false
         ),
         CollectionGameItem(
             gameId = 3,
@@ -644,8 +656,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "25 plays",
             playersSubtitle = "2p",
             playTimeSubtitle = "30 min",
-            isNew = false,
-            isFavorite = true
+            isNew = false
         ),
         CollectionGameItem(
             gameId = 4,
@@ -655,8 +666,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "0 plays",
             playersSubtitle = "2–4p",
             playTimeSubtitle = "45 min",
-            isNew = true,
-            isFavorite = false
+            isNew = true
         ),
         CollectionGameItem(
             gameId = 40,
@@ -666,8 +676,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "0 plays",
             playersSubtitle = "2–4p",
             playTimeSubtitle = "45 min",
-            isNew = true,
-            isFavorite = false
+            isNew = true
         ),
         CollectionGameItem(
             gameId = 5,
@@ -677,8 +686,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "33 plays",
             playersSubtitle = "2–5p",
             playTimeSubtitle = "60 min",
-            isNew = false,
-            isFavorite = false
+            isNew = false
         )
     )
 
@@ -701,7 +709,9 @@ fun CollectionScreenPreview(
     MeepleBookTheme {
         CollectionScreenRoot(
             uiState = uiState,
-            onEvent = {}
+            onEvent = {},
+            rememberLazyListState(),
+            rememberLazyGridState()
         )
     }
 }

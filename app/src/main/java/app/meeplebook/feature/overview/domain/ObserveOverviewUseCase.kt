@@ -5,7 +5,7 @@ import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
 import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
 import app.meeplebook.core.collection.domain.HighlightType
-import app.meeplebook.core.collection.domain.toDomain
+import app.meeplebook.core.collection.domain.toDomainGameHighlight
 import app.meeplebook.core.plays.domain.toDomain
 import app.meeplebook.core.stats.domain.toDomain
 import kotlinx.coroutines.flow.Flow
@@ -30,8 +30,8 @@ class ObserveOverviewUseCase @Inject constructor(
             DomainOverview(
                 stats = stats.toDomain(),
                 recentPlays = recentPlays.map { play -> play.toDomain() },
-                recentlyAddedGame = highlights.recentlyAdded?.toDomain(HighlightType.RECENTLY_ADDED),
-                suggestedGame = highlights.suggested?.toDomain(HighlightType.SUGGESTED),
+                recentlyAddedGame = highlights.recentlyAdded?.toDomainGameHighlight(HighlightType.RECENTLY_ADDED),
+                suggestedGame = highlights.suggested?.toDomainGameHighlight(HighlightType.SUGGESTED),
                 lastSyncedDate = lastSync
             )
         }
