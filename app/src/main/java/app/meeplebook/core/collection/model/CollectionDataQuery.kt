@@ -11,7 +11,7 @@ package app.meeplebook.core.collection.model
  * @param sort Sort order to apply to the filtered collection.
  */
 data class CollectionDataQuery(
-    val searchQuery: String,
-    val quickFilter: QuickFilter,
-    val sort: CollectionSort
+    val searchQuery: String = "",
+    val quickFilter: QuickFilter = QuickFilter.ALL,
+    val sort: CollectionSort = CollectionSort.ALPHABETICAL
 )
