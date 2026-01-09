@@ -440,7 +440,6 @@ class CollectionMappersTest {
 
         // Then
         assertEquals('Z', result.key)
-        assertEquals(0, result.games.size)
         assertTrue(result.games.isEmpty())
     }
 
