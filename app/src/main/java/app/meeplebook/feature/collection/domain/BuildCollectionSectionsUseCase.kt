@@ -8,8 +8,8 @@ import javax.inject.Inject
  *
  * Groups games by the first letter of their name (case-insensitive), creating
  * sections A-Z. Games with names starting with non-alphabetic characters are
- * grouped into a '#' section. Sections are sorted alphabetically with the '#'
- * section appearing last.
+ * grouped into a '#' section. Sections are sorted with the '#' section appearing
+ * first, followed by alphabetical sections A-Z.
  */
 class BuildCollectionSectionsUseCase @Inject constructor() {
 
@@ -17,7 +17,7 @@ class BuildCollectionSectionsUseCase @Inject constructor() {
      * Organizes the provided collection items into sections.
      *
      * @param items The collection items to organize into sections
-     * @return A list of [DomainCollectionSection] sorted alphabetically (A-Z, then #)
+     * @return A list of [DomainCollectionSection] sorted with '#' first, then A-Z
      */
     operator fun invoke(
         items: List<DomainCollectionItem>
