@@ -27,7 +27,13 @@ class FakeCollectionRepository : CollectionRepository {
     var lastSyncUsername: String? = null
         private set
 
-    override fun observeCollection(query: CollectionDataQuery?): Flow<List<CollectionItem>> = _collection
+    var lastObserveCollectionQuery: CollectionDataQuery? = null
+        private set
+
+    override fun observeCollection(query: CollectionDataQuery?): Flow<List<CollectionItem>> {
+        lastObserveCollectionQuery = query
+        return _collection
+    }
 
     override suspend fun getCollection(): List<CollectionItem> = _collection.value
 
