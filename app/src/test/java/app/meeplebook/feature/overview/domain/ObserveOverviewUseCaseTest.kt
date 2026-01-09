@@ -73,7 +73,12 @@ class ObserveOverviewUseCaseTest {
             name = "Azul",
             yearPublished = 2017,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-10T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
         val suggested = CollectionItem(
             gameId = 2,
@@ -81,7 +86,12 @@ class ObserveOverviewUseCaseTest {
             name = "Wingspan",
             yearPublished = 2019,
             thumbnail = null,
-            lastModifiedDate = Instant.parse("2024-01-01T10:00:00Z")
+            lastModifiedDate = Instant.parse("2024-01-01T10:00:00Z"),
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
         fakeCollectionRepository.setMostRecentlyAdded(recentlyAdded)
         fakeCollectionRepository.setFirstUnplayed(suggested)
