@@ -145,12 +145,12 @@ class CollectionItemDaoTest {
         // Query the collection
         val result = dao.getCollection()
 
-        // Verify alphabetical order by name (SQLite uses BINARY collation by default)
+        // Verify alphabetical order by name (case-insensitive with COLLATE NOCASE)
         assertEquals(4, result.size)
         assertEquals("Azul", result[0].name)
         assertEquals("Brass", result[1].name)
-        assertEquals("WINGSPAN", result[2].name)
-        assertEquals("catan", result[3].name)
+        assertEquals("catan", result[2].name)
+        assertEquals("WINGSPAN", result[3].name)
     }
 
     // --- Test 3: Upsert behavior with OnConflictStrategy.REPLACE ---
