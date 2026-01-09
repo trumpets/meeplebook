@@ -1042,7 +1042,12 @@ class CollectionItemDaoTest {
             name = name,
             yearPublished = yearPublished,
             thumbnail = thumbnail,
-            lastModifiedDate = lastModifiedDate
+            lastModifiedDate = lastModifiedDate,
+            minPlayers = null,
+            maxPlayers = null,
+            minPlayTimeMinutes = null,
+            maxPlayTimeMinutes = null,
+            numPlays = 0
         )
     }
 }
