@@ -21,8 +21,7 @@ class ObserveCollectionUseCase @Inject constructor(
 ) {
 
     operator fun invoke(query: CollectionDataQuery? = null): Flow<List<DomainCollectionItem>> {
-        val effectiveQuery = query ?: CollectionDataQuery()
-        return collectionRepository.observeCollection(effectiveQuery).map { items ->
+        return collectionRepository.observeCollection(query).map { items ->
             items.map { item -> item.toDomainCollectionItem() }
         }
     }

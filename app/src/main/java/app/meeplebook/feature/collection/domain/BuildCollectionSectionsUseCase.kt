@@ -17,7 +17,8 @@ class BuildCollectionSectionsUseCase @Inject constructor() {
      * Organizes the provided collection items into sections.
      *
      * @param items The collection items to organize into sections
-     * @return A list of [DomainCollectionSection] sorted with '#' first, then A-Z
+     * @return A list of [DomainCollectionSection] sorted with '#' first, then A-Z. Uses the existing
+     * order of items within each section.
      */
     operator fun invoke(
         items: List<DomainCollectionItem>

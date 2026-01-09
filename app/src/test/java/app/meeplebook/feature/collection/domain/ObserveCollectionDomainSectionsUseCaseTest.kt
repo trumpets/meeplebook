@@ -59,8 +59,8 @@ class ObserveCollectionDomainSectionsUseCaseTest {
         // Section A
         assertEquals('A', sections[0].key)
         assertEquals(2, sections[0].items.size)
-        assertEquals("Ark Nova", sections[0].items[0].name)
-        assertEquals("Azul", sections[0].items[1].name)
+        assertEquals("Azul", sections[0].items[0].name)
+        assertEquals("Ark Nova", sections[0].items[1].name)
 
         // Section B
         assertEquals('B', sections[1].key)
@@ -70,8 +70,8 @@ class ObserveCollectionDomainSectionsUseCaseTest {
         // Section C
         assertEquals('C', sections[2].key)
         assertEquals(2, sections[2].items.size)
-        assertEquals("Cascadia", sections[2].items[0].name)
-        assertEquals("Catan", sections[2].items[1].name)
+        assertEquals("Catan", sections[2].items[0].name)
+        assertEquals("Cascadia", sections[2].items[1].name)
     }
 
     @Test
@@ -110,8 +110,8 @@ class ObserveCollectionDomainSectionsUseCaseTest {
         // Section # should come first
         assertEquals('#', sections[0].key)
         assertEquals(2, sections[0].items.size)
-        assertEquals("1775: Rebellion", sections[0].items[0].name)
-        assertEquals("7 Wonders", sections[0].items[1].name)
+        assertEquals("7 Wonders", sections[0].items[0].name)
+        assertEquals("1775: Rebellion", sections[0].items[1].name)
 
         // Then alphabetic sections
         assertEquals('A', sections[1].key)
