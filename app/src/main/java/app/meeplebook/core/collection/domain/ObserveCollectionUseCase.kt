@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * Observes the users collection.
+ * Observes the user's collection.
  *
  * Emits a flow of [DomainCollectionItem] containing all the games
  * in the user's collection.
