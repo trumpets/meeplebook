@@ -38,7 +38,7 @@ class CollectionViewModel @Inject constructor(
             .distinctUntilChanged()
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 ""
             )
 
@@ -59,7 +59,7 @@ class CollectionViewModel @Inject constructor(
             )
         }.stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
+            SharingStarted.Eagerly,
             CollectionDataQuery(
                 searchQuery = "",
                 quickFilter = QuickFilter.ALL,
@@ -101,7 +101,7 @@ class CollectionViewModel @Inject constructor(
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 CollectionUiState.Loading
             )
 
@@ -122,7 +122,7 @@ class CollectionViewModel @Inject constructor(
             }
         }.stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
+            SharingStarted.Eagerly,
             CollectionUiState.Loading
         )
 
