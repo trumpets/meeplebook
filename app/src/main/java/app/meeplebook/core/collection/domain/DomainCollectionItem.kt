@@ -8,7 +8,7 @@ import app.meeplebook.core.collection.model.CollectionItem
  * This is a simplified version of [CollectionItem] that contains only the data
  * needed for collection list display. Unlike [CollectionItem], this model:
  * - Excludes metadata fields like lastModifiedDate and subtype
- * - Uses raw numeric counts (playCount, player counts, play times) instead of formatted strings
+ * - Uses raw numeric counts (playCount, player counts, play times)
  * - Renames thumbnail field to thumbnailUrl for clarity
  *
  * @param gameId The BGG game ID.
