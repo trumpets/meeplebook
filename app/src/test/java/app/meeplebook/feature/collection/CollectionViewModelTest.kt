@@ -483,6 +483,7 @@ class CollectionViewModelTest {
 
         viewModel.uiState.test {
             // Skip initial StateFlow value - Loading
+            // If tests starts being flaky, consider replacing with more robust logic like a loop until it is not Loading
             skipItems(1)
 
             val state = awaitAfterDebounce(this@awaitUiStateAfterDebounce, DebounceDurations.SearchQuery)
