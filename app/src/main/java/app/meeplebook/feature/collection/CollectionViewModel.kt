@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -59,7 +60,7 @@ class CollectionViewModel @Inject constructor(
             )
         }.stateIn(
             viewModelScope,
-            SharingStarted.Eagerly,
+            SharingStarted.WhileSubscribed(5_000),
             CollectionDataQuery(
                 searchQuery = "",
                 quickFilter = QuickFilter.ALL,
@@ -101,7 +102,7 @@ class CollectionViewModel @Inject constructor(
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.Eagerly,
+                SharingStarted.WhileSubscribed(5_000),
                 CollectionUiState.Loading
             )
 
@@ -122,7 +123,7 @@ class CollectionViewModel @Inject constructor(
             }
         }.stateIn(
             viewModelScope,
-            SharingStarted.Eagerly,
+            SharingStarted.WhileSubscribed(5_000),
             CollectionUiState.Loading
         )
 
