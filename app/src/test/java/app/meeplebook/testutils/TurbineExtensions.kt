@@ -33,8 +33,8 @@ suspend fun <T> ReceiveTurbine<T>.awaitAfterDebounce(
 /**
  * Awaits the next non-skipped state from a [StateFlow] and asserts it is [T].
  *
- * \- Skips the first emission (the current StateFlow value)\.
- * \- If [debounceTime] is non-null, advances time before each awaited emission\.
+ * - Skips the first emission (the current StateFlow value).
+ * - If [debounceTime] is non-null, advances time before each awaited emission.
  */
 suspend inline fun <S, reified T: S> TestScope.awaitUiState(
     uiState: StateFlow<S>,
