@@ -78,10 +78,15 @@ class CollectionViewModel @Inject constructor(
                 val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
 
                 if (uiSections.isEmpty()) {
-                    CollectionUiState.Empty(emptyReason(
+                    CollectionUiState.Empty(
+                        reason = emptyReason(
+                            searchQuery = rawSearchQuery.value,
+                            quickFilter = quickFilter.value
+                        ),
                         searchQuery = rawSearchQuery.value,
-                        quickFilter = quickFilter.value
-                    ))
+                        activeQuickFilter = quickFilter.value,
+                        totalGameCount = 0 // TODO: Query unfiltered count if needed
+                    )
                 } else {
                     val sectionIndices = buildSectionIndices(uiSections)
 

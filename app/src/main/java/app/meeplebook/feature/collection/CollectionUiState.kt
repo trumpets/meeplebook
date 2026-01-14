@@ -13,7 +13,10 @@ sealed interface CollectionUiState {
     data object Loading : CollectionUiState
 
     data class Empty(
-        val reason: EmptyReason
+        val reason: EmptyReason,
+        val searchQuery: String,
+        val activeQuickFilter: QuickFilter,
+        val totalGameCount: Int
     ) : CollectionUiState
 
     data class Content(

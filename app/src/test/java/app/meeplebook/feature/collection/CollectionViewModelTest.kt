@@ -96,6 +96,9 @@ class CollectionViewModelTest {
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_GAMES, state.reason)
+        assertEquals("", state.searchQuery)
+        assertEquals(QuickFilter.ALL, state.activeQuickFilter)
+        assertEquals(0, state.totalGameCount)
     }
 
     @Test
@@ -186,6 +189,8 @@ class CollectionViewModelTest {
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_SEARCH_RESULTS, state.reason)
+        assertEquals("NonexistentGame", state.searchQuery)
+        assertEquals(QuickFilter.ALL, state.activeQuickFilter)
     }
 
     @Test
@@ -199,6 +204,8 @@ class CollectionViewModelTest {
         // Then - should show NO_FILTER_RESULTS
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_FILTER_RESULTS, state.reason)
+        assertEquals("", state.searchQuery)
+        assertEquals(QuickFilter.UNPLAYED, state.activeQuickFilter)
     }
 
     @Test

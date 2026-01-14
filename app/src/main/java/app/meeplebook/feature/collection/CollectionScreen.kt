@@ -112,7 +112,10 @@ fun CollectionScreenRoot(
                 LoadingState()
 
             is CollectionUiState.Empty ->
-                EmptyState(reason = uiState.reason)
+                EmptyScreenContent(
+                    uiState = uiState,
+                    onEvent = onEvent
+                )
 
             is CollectionUiState.Error ->
                 ErrorState(uiState.errorMessageResId)
@@ -170,6 +173,42 @@ fun EmptyState(reason: EmptyReason) {
 }
 
 @Composable
+fun EmptyScreenContent(
+    uiState: CollectionUiState.Empty,
+    onEvent: (CollectionEvent) -> Unit
+) {
+    Column {
+        SearchBar(
+            query = uiState.searchQuery,
+            onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
+        )
+
+        QuickFiltersRow(
+            searchQuery = uiState.searchQuery,
+            activeQuickFilter = uiState.activeQuickFilter,
+            totalGameCount = uiState.totalGameCount,
+            onEvent = onEvent
+        )
+
+        // Empty message in the center of remaining space
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("emptyState"),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(uiState.reason.descriptionResId),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(32.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun ErrorState(@StringRes errorMessageResId: Int) {
     Box(
         modifier = Modifier
@@ -204,7 +243,9 @@ fun CollectionScreenContent(
             )
 
             QuickFiltersRow(
-                state = uiState,
+                searchQuery = uiState.searchQuery,
+                activeQuickFilter = uiState.activeQuickFilter,
+                totalGameCount = uiState.totalGameCount,
                 onEvent = onEvent
             )
 
@@ -270,7 +311,9 @@ private fun SearchBar(
 
 @Composable
 private fun QuickFiltersRow(
-    state: CollectionUiState.Content,
+    searchQuery: String,
+    activeQuickFilter: QuickFilter,
+    totalGameCount: Int,
     onEvent: (CollectionEvent) -> Unit
 ) {
     LazyRow(
@@ -280,17 +323,17 @@ private fun QuickFiltersRow(
         // TODO: I don't like this. it's too hardcoded for my taste
         item {
             FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.ALL,
+                selected = activeQuickFilter == QuickFilter.ALL,
                 onClick = {
                     onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.ALL))
                 },
-                label = { Text(stringResource(R.string.collection_filter_all, state.totalGameCount)) }
+                label = { Text(stringResource(R.string.collection_filter_all, totalGameCount)) }
             )
         }
 
         item {
             FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.UNPLAYED,
+                selected = activeQuickFilter == QuickFilter.UNPLAYED,
                 onClick = {
                     onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
                 },
@@ -602,7 +645,24 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
     override val values: Sequence<CollectionUiState> = sequenceOf(
         sampleContentState(),
         sampleContentState(viewMode = CollectionViewMode.LIST),
-        CollectionUiState.Empty(EmptyReason.NO_GAMES),
+        CollectionUiState.Empty(
+            reason = EmptyReason.NO_GAMES,
+            searchQuery = "",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 0
+        ),
+        CollectionUiState.Empty(
+            reason = EmptyReason.NO_SEARCH_RESULTS,
+            searchQuery = "test search",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 0
+        ),
+        CollectionUiState.Empty(
+            reason = EmptyReason.NO_FILTER_RESULTS,
+            searchQuery = "",
+            activeQuickFilter = QuickFilter.UNPLAYED,
+            totalGameCount = 0
+        ),
         CollectionUiState.Loading,
         sampleContentState(isRefreshing = true)
     )
