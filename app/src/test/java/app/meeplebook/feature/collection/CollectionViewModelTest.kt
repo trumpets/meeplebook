@@ -135,24 +135,41 @@ class CollectionViewModelTest {
             createCollectionItem(gameId = 2, name = "Brass: Birmingham")
         )
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
-        // When - send search query
-        viewModel.onEvent(CollectionEvent.SearchChanged("Azul"))
+        viewModel.uiState.test {
+            advanceUntilIdle()
 
-        // Then - before debounce time, no filtering should occur
-        advanceTimeBy(200) // Less than 300ms debounce
-        val stateBeforeDebounce = viewModel.uiState.value
-        assertTrue(stateBeforeDebounce is CollectionUiState.Content)
-        assertEquals(2, (stateBeforeDebounce as CollectionUiState.Content).totalGameCount)
+            // Drain initial Loading states to avoid flakiness from assuming a fixed number of emissions
+            var current: CollectionUiState
+            do {
+                current = awaitItem()
+            } while (current is CollectionUiState.Loading)
 
-        // When - debounce time passes
-        advanceTimeBy(150) // Total 350ms > 300ms debounce
-        advanceUntilIdle()
+            val initial = current.assertState<CollectionUiState.Content>()
+            assertEquals("", initial.searchQuery)
+            assertEquals(2, initial.totalGameCount)
 
-        // Then - filtering should occur (note: actual filtering happens in repository query)
-        val stateAfterDebounce = viewModel.uiState.value
-        assertTrue(stateAfterDebounce is CollectionUiState.Content)
+            // Initial content state
+            // When - send search query
+            viewModel.onEvent(CollectionEvent.SearchChanged("Azul"))
+
+            // Then: UI state updates immediately with raw query, but not filtered yet.
+            val immediate = awaitItem().assertState<CollectionUiState.Content>()
+            assertEquals("Azul", immediate.searchQuery)
+            assertEquals(2, immediate.totalGameCount)
+
+            // And: before debounce expires, nothing else should be emitted.
+            advanceTimeBy(DebounceDurations.SearchQuery.inWholeMilliseconds - 1)
+            expectNoEvents()
+
+            // After debounce: advance past boundary and flush.
+            advanceTimeBy(2)
+            advanceUntilIdle()
+
+            expectNoEvents()
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
