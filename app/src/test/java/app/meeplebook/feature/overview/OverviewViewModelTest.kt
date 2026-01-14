@@ -19,11 +19,12 @@ import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
+import app.meeplebook.testutils.awaitUiState
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -151,8 +152,7 @@ class OverviewViewModelTest {
         fakePlaysRepository.setRecentPlays(recentPlays)
 
         // When
-        advanceUntilIdle()
-        val state = viewModel.uiState.first()
+        val state = awaitLoadedUiState(viewModel)
 
         // Then
         assertFalse(state.isLoading)
@@ -175,14 +175,11 @@ class OverviewViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
 
-        advanceUntilIdle()
-
         // When
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = awaitLoadedUiState(viewModel)
         assertFalse(state.isRefreshing)
         assertNull(state.errorMessageResId)
     }
@@ -190,6 +187,8 @@ class OverviewViewModelTest {
     @Test
     fun `refresh shows refreshing state while syncing`() = runTest {
         // Given
+        val gate = CompletableDeferred<Unit>()
+
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -198,29 +197,31 @@ class OverviewViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
 
-        advanceUntilIdle()
+        fakeCollectionRepository.beforeSync = { gate.await() }
 
         // When
         viewModel.refresh()
         // Don't advance - check intermediate state
 
         // Then
-        val state = viewModel.uiState.value
+        val state = awaitLoadedUiState(viewModel)
         assertTrue(state.isRefreshing)
         assertNull(state.errorMessageResId)
+
+        // Cleanup: let refresh complete
+        gate.complete(Unit)
     }
 
     @Test
     fun `refresh shows error when not logged in`() = runTest {
         // Given - no user logged in
-        advanceUntilIdle()
+        fakeAuthRepository.setCurrentUser(null)
 
         // When
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = awaitLoadedUiState(viewModel)
         assertFalse(state.isRefreshing)
         assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
     }
@@ -235,14 +236,11 @@ class OverviewViewModelTest {
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
 
-        advanceUntilIdle()
-
         // When
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = awaitLoadedUiState(viewModel)
         assertFalse(state.isRefreshing)
         assertEquals(R.string.sync_collections_failed_error, state.errorMessageResId)
     }
@@ -258,35 +256,30 @@ class OverviewViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Failure(PlayError.NetworkError)
 
-        advanceUntilIdle()
-
         // When
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.first()
+        val state = awaitLoadedUiState(viewModel)
         assertFalse(state.isRefreshing)
         assertEquals(R.string.sync_plays_failed_error, state.errorMessageResId)
     }
 
     @Test
     fun `clearError removes error message`() = runTest {
-        // Given - trigger an error
-        advanceUntilIdle()
+        // Given - trigger an error (no user logged in)
+        fakeAuthRepository.setCurrentUser(null)
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Verify error exists
-        var state = viewModel.uiState.first()
+        var state = awaitLoadedUiState(viewModel)
         assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
 
         // When
         viewModel.clearError()
-        advanceUntilIdle()
 
         // Then
-        state = viewModel.uiState.first()
+        state = awaitLoadedUiState(viewModel)
         assertNull(state.errorMessageResId)
     }
 
@@ -294,13 +287,11 @@ class OverviewViewModelTest {
     fun `refresh clears previous error`() = runTest {
         // Given - trigger an error first by logging out
         fakeAuthRepository.setCurrentUser(null)
-        advanceUntilIdle() // wait for the ViewModel to finish its initial observers
 
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Verify error exists
-        var state = viewModel.uiState.first()
+        var state = awaitLoadedUiState(viewModel)
         assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
 
         // When - setup successful refresh
@@ -309,16 +300,20 @@ class OverviewViewModelTest {
             password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
-        advanceUntilIdle() // ensure the login change is observed
 
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
 
         viewModel.refresh()
-        advanceUntilIdle()
 
         // Then - error is cleared
-        state = viewModel.uiState.first()
+        state = awaitLoadedUiState(viewModel)
         assertNull(state.errorMessageResId)
+    }
+
+    suspend fun TestScope.awaitLoadedUiState(
+        viewModel: OverviewViewModel
+    ): OverviewUiState {
+        return awaitUiState(viewModel.uiState, skipWhile = { it.isLoading })
     }
 }

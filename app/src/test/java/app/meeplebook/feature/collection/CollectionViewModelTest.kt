@@ -12,7 +12,8 @@ import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
-import app.meeplebook.testutils.awaitAfterDebounce
+import app.meeplebook.testutils.assertState
+import app.meeplebook.testutils.awaitUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -496,29 +497,6 @@ class CollectionViewModelTest {
     suspend inline fun <reified T: CollectionUiState> TestScope.awaitUiStateAfterDebounce(
         viewModel: CollectionViewModel
     ): T {
-        var content: T? = null
-
-        viewModel.uiState.test {
-            // Skip initial StateFlow value - Loading
-            skipItems(1)
-
-            // Drain initial Loading states to avoid flakiness from assuming a fixed number of emissions
-            var state: CollectionUiState
-            do {
-                state = awaitAfterDebounce(this@awaitUiStateAfterDebounce, DebounceDurations.SearchQuery)
-            } while (state is CollectionUiState.Loading)
-
-            content = state.assertState()
-
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        return requireNotNull(content) {
-            "Expected ${T::class.simpleName} after debounce but none was emitted"
-        }
+        return awaitUiState(viewModel.uiState, DebounceDurations.SearchQuery, skipWhile = { it is CollectionUiState.Loading })
     }
-
-    inline fun <reified T: CollectionUiState> CollectionUiState.assertState(): T =
-        this as? T
-            ?: error("Expected ${T::class.simpleName} but was ${this::class.simpleName}: $this")
 }
