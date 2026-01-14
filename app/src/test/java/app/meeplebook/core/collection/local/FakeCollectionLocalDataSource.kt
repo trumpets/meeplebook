@@ -3,6 +3,7 @@ package app.meeplebook.core.collection.local
 import app.meeplebook.core.collection.model.CollectionItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * Fake implementation of [CollectionLocalDataSource] for testing purposes.
@@ -10,6 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeCollectionLocalDataSource : CollectionLocalDataSource {
 
     private val collection = MutableStateFlow<List<CollectionItem>>(emptyList())
+    private val collectionCount = MutableStateFlow(0L)
+    private val unplayedGamesCount = MutableStateFlow(0L)
+    private val mostRecentlyAddedItem = MutableStateFlow<CollectionItem?>(null)
+    private val firstUnplayedGame = MutableStateFlow<CollectionItem?>(null)
 
     /** Tracks the number of times [saveCollection] was called. */
     var saveCollectionCallCount = 0
@@ -27,6 +32,22 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
         return collection
     }
 
+    override fun observeCollectionByName(nameQuery: String): Flow<List<CollectionItem>> {
+        return collection.map { items ->
+            items.filter { item ->
+                item.name.contains(nameQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    override fun observeCollectionUnplayed(): Flow<List<CollectionItem>> {
+        return collection.map { items ->
+            items.filter { item ->
+                item.numPlays == 0
+            }
+        }
+    }
+
     override suspend fun getCollection(): List<CollectionItem> {
         return collection.value
     }
@@ -42,10 +63,54 @@ class FakeCollectionLocalDataSource : CollectionLocalDataSource {
         collection.value = emptyList()
     }
 
+    override fun observeCollectionCount(): Flow<Long> {
+        return collectionCount
+    }
+
+    override fun observeUnplayedGamesCount(): Flow<Long> {
+        return unplayedGamesCount
+    }
+
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
+        return mostRecentlyAddedItem
+    }
+
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
+        return firstUnplayedGame
+    }
+
     /**
      * Sets the collection for a user directly for testing.
      */
     fun setCollection(items: List<CollectionItem>) {
         collection.value = items
+    }
+
+    /**
+     * Sets the collection count for testing.
+     */
+    fun setCollectionCount(count: Long) {
+        collectionCount.value = count
+    }
+
+    /**
+     * Sets the unplayed games count for testing.
+     */
+    fun setUnplayedGamesCount(count: Long) {
+        unplayedGamesCount.value = count
+    }
+
+    /**
+     * Sets the most recently added item for testing.
+     */
+    fun setMostRecentlyAddedItem(item: CollectionItem?) {
+        mostRecentlyAddedItem.value = item
+    }
+
+    /**
+     * Sets the first unplayed game for testing.
+     */
+    fun setFirstUnplayedGame(game: CollectionItem?) {
+        firstUnplayedGame.value = game
     }
 }

@@ -99,9 +99,9 @@ class AuthRepositoryIntegrationTest {
     }
 
     @Test
-    fun `login success updates currentUser flow`() = runTest {
+    fun `login success updates observeCurrentUser flow`() = runTest {
         // Given
-        assertNull(repository.currentUser().first())
+        assertNull(repository.observeCurrentUser().first())
 
         mockWebServer.enqueue(
             MockResponse()
@@ -113,7 +113,7 @@ class AuthRepositoryIntegrationTest {
         repository.login("myuser", "mypass")
 
         // Then
-        val currentUser = repository.currentUser().first()
+        val currentUser = repository.observeCurrentUser().first()
         assertEquals("myuser", currentUser?.username)
         assertEquals("mypass", currentUser?.password)
     }
@@ -214,7 +214,7 @@ class AuthRepositoryIntegrationTest {
 
         // Then
         assertFalse(repository.isLoggedIn().first())
-        assertNull(repository.currentUser().first())
+        assertNull(repository.observeCurrentUser().first())
         assertEquals(1, fakeLocalDataSource.clearCallCount)
     }
 
@@ -239,7 +239,7 @@ class AuthRepositoryIntegrationTest {
         repository.login("user2", "pass2")
 
         // Then
-        val currentUser = repository.currentUser().first()
+        val currentUser = repository.observeCurrentUser().first()
         assertEquals("user2", currentUser?.username)
         assertEquals(2, fakeLocalDataSource.saveCredentialsCallCount)
     }
@@ -263,7 +263,7 @@ class AuthRepositoryIntegrationTest {
 
         // Then - original user still logged in
         assertTrue(result is AppResult.Failure)
-        val currentUser = repository.currentUser().first()
+        val currentUser = repository.observeCurrentUser().first()
         assertEquals("user", currentUser?.username)
     }
 

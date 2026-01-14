@@ -10,15 +10,18 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.IOException
-import java.net.UnknownHostException
 
 class AuthRepositoryImpl @Inject constructor(
     private val local: AuthLocalDataSource,
     private val remote: BggAuthRemoteDataSource
 ) : AuthRepository {
 
-    override fun currentUser(): Flow<AuthCredentials?> {
+    override fun observeCurrentUser(): Flow<AuthCredentials?> {
         return local.observeCredentials()
+    }
+
+    override suspend fun getCurrentUser(): AuthCredentials? {
+        return local.getCredentials()
     }
 
     override suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError> {

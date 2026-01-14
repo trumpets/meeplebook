@@ -10,6 +10,7 @@ import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
+import java.time.Instant
 import javax.inject.Inject
 
 /**
@@ -24,7 +25,7 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.observePlays()
     }
 
-    override fun observePlaysForGame(gameId: Int): Flow<List<Play>> {
+    override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return local.observePlaysForGame(gameId)
     }
 
@@ -32,7 +33,7 @@ class PlaysRepositoryImpl @Inject constructor(
         return local.getPlays()
     }
 
-    override suspend fun getPlaysForGame(gameId: Int): List<Play> {
+    override suspend fun getPlaysForGame(gameId: Long): List<Play> {
         return local.getPlaysForGame(gameId)
     }
 
@@ -84,5 +85,17 @@ class PlaysRepositoryImpl @Inject constructor(
 
     override suspend fun clearPlays() {
         local.clearPlays()
+    }
+
+    override fun observeTotalPlaysCount(): Flow<Long> {
+        return local.observeTotalPlaysCount()
+    }
+
+    override fun observePlaysCountForPeriod(start: Instant, end: Instant): Flow<Long> {
+        return local.observePlaysCountForMonth(start, end)
+    }
+
+    override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
+        return local.observeRecentPlays(limit)
     }
 }

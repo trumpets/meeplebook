@@ -1,7 +1,7 @@
-package app.meeplebook.core.network
+package app.meeplebook.core.di
 
 import javax.inject.Qualifier
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class BggBaseUrl
+annotation class AuthDataStore

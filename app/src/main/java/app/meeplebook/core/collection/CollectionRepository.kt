@@ -1,5 +1,6 @@
 package app.meeplebook.core.collection
 
+import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.result.AppResult
@@ -15,7 +16,7 @@ interface CollectionRepository {
      *
      * @return Flow emitting the user's collection.
      */
-    fun observeCollection(): Flow<List<CollectionItem>>
+    fun observeCollection(query: CollectionDataQuery? = null): Flow<List<CollectionItem>>
 
     /**
      * Gets the collection from local storage.
@@ -39,4 +40,24 @@ interface CollectionRepository {
      *
      */
     suspend fun clearCollection()
+
+    /**
+     * Observe the count of items in the collection.
+     */
+    fun observeCollectionCount(): Flow<Long>
+
+    /**
+     * Observe the count of unplayed games in the collection.
+     */
+    fun observeUnplayedGamesCount(): Flow<Long>
+
+    /**
+     * Observe the most recently added collection item.
+     */
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItem?>
+
+    /**
+     * Observe the first unplayed game from the collection.
+     */
+    fun observeFirstUnplayedGame(): Flow<CollectionItem?>
 }

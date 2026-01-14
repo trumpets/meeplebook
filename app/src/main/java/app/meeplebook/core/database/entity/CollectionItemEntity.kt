@@ -1,23 +1,34 @@
 package app.meeplebook.core.database.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
+import java.time.Instant
 
 /**
  * Room entity representing a collection item stored locally.
  */
 @Entity(
-    tableName = "collection_items"
+    tableName = "collection_items",
+    indices = [
+        Index(value = ["name"])
+    ]
 )
 data class CollectionItemEntity(
     @PrimaryKey
-    val gameId: Int,
+    val gameId: Long,
     val subtype: GameSubtype,
     val name: String,
     val yearPublished: Int?,
-    val thumbnail: String?
+    val thumbnail: String?,
+    val lastModifiedDate: Instant?,
+    val minPlayers: Int?,
+    val maxPlayers: Int?,
+    val minPlayTimeMinutes: Int?,
+    val maxPlayTimeMinutes: Int?,
+    val numPlays: Int
 )
 
 /**
@@ -29,7 +40,13 @@ fun CollectionItemEntity.toCollectionItem(): CollectionItem {
         subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModifiedDate = lastModifiedDate,
+        minPlayers = minPlayers,
+        maxPlayers = maxPlayers,
+        minPlayTimeMinutes = minPlayTimeMinutes,
+        maxPlayTimeMinutes = maxPlayTimeMinutes,
+        numPlays = numPlays
     )
 }
 
@@ -42,6 +59,12 @@ fun CollectionItem.toEntity(): CollectionItemEntity {
         subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModifiedDate = lastModifiedDate,
+        minPlayers = minPlayers,
+        maxPlayers = maxPlayers,
+        minPlayTimeMinutes = minPlayTimeMinutes,
+        maxPlayTimeMinutes = maxPlayTimeMinutes,
+        numPlays = numPlays
     )
 }

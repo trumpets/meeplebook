@@ -21,6 +21,18 @@ class CollectionLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override fun observeCollectionByName(nameQuery: String): Flow<List<CollectionItem>> {
+        return dao.observeCollectionByName(nameQuery).map { entities ->
+            entities.map { it.toCollectionItem() }
+        }
+    }
+
+    override fun observeCollectionUnplayed(): Flow<List<CollectionItem>> {
+        return dao.observeCollectionUnplayed().map { entities ->
+            entities.map { it.toCollectionItem() }
+        }
+    }
+
     override suspend fun getCollection(): List<CollectionItem> {
         return dao.getCollection().map { it.toCollectionItem() }
     }
@@ -32,5 +44,25 @@ class CollectionLocalDataSourceImpl @Inject constructor(
 
     override suspend fun clearCollection() {
         dao.deleteAll()
+    }
+
+    override fun observeCollectionCount(): Flow<Long> {
+        return dao.observeCollectionCount()
+    }
+
+    override fun observeUnplayedGamesCount(): Flow<Long> {
+        return dao.observeUnplayedGamesCount()
+    }
+
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
+        return dao.observeMostRecentlyAddedItem().map { itemEntity ->
+            itemEntity?.toCollectionItem()
+        }
+    }
+
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
+        return dao.observeFirstUnplayedGame().map { itemEntity ->
+            itemEntity?.toCollectionItem()
+        }
     }
 }

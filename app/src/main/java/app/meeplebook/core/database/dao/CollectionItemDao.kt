@@ -17,13 +17,29 @@ interface CollectionItemDao {
     /**
      * Observes all collection items.
      */
-    @Query("SELECT * FROM collection_items ORDER BY name ASC")
+    @Query("SELECT * FROM collection_items ORDER BY name COLLATE NOCASE ASC")
     fun observeCollection(): Flow<List<CollectionItemEntity>>
+
+    @Query("""
+        SELECT * FROM collection_items
+        WHERE name LIKE '%' || :nameQuery || '%'
+        ORDER BY name COLLATE NOCASE ASC
+    """)
+    fun observeCollectionByName(
+        nameQuery: String
+    ): Flow<List<CollectionItemEntity>>
+
+    @Query("""
+        SELECT * FROM collection_items
+        WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
+        ORDER BY name COLLATE NOCASE ASC
+    """)
+    fun observeCollectionUnplayed(): Flow<List<CollectionItemEntity>>
 
     /**
      * Gets all collection items.
      */
-    @Query("SELECT * FROM collection_items ORDER BY name ASC")
+    @Query("SELECT * FROM collection_items ORDER BY name COLLATE NOCASE ASC")
     suspend fun getCollection(): List<CollectionItemEntity>
 
     /**
@@ -52,4 +68,36 @@ interface CollectionItemDao {
         deleteAll()
         insertAll(items)
     }
+
+    /**
+     * Observe the count of items in the collection.
+     */
+    @Query("SELECT COUNT(*) FROM collection_items")
+    fun observeCollectionCount(): Flow<Long>
+
+    /**
+     * Observe the count of unplayed games (games in collection that are not in plays table).
+     */
+    @Query("""
+        SELECT COUNT(*) FROM collection_items 
+        WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
+    """)
+    fun observeUnplayedGamesCount(): Flow<Long>
+
+    /**
+     * Observe the collection item most recently added or updated on BGG (based on lastModifiedDate from BGG).
+     */
+    @Query("SELECT * FROM collection_items WHERE lastModifiedDate IS NOT NULL ORDER BY lastModifiedDate DESC LIMIT 1")
+    fun observeMostRecentlyAddedItem(): Flow<CollectionItemEntity?>
+
+    /**
+     * Observe an unplayed game (first game in collection that has no plays).
+     */
+    @Query("""
+        SELECT * FROM collection_items
+        WHERE NOT EXISTS (SELECT 1 FROM plays WHERE plays.gameId = collection_items.gameId)
+        ORDER BY name COLLATE NOCASE ASC
+        LIMIT 1
+    """)
+    fun observeFirstUnplayedGame(): Flow<CollectionItemEntity?>
 }

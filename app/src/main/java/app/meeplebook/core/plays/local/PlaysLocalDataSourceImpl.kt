@@ -9,6 +9,7 @@ import app.meeplebook.core.database.entity.toPlay
 import app.meeplebook.core.plays.model.Play
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import javax.inject.Inject
 
 /**
@@ -26,7 +27,7 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         }
     }
 
-    override fun observePlaysForGame(gameId: Int): Flow<List<Play>> {
+    override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return playDao.observePlaysWithPlayersForGame(gameId).map { playsWithPlayers ->
             playsWithPlayers.map { it.toPlay() }
         }
@@ -36,7 +37,7 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         return playDao.getPlaysWithPlayers().map { it.toPlay() }
     }
 
-    override suspend fun getPlaysForGame(gameId: Int): List<Play> {
+    override suspend fun getPlaysForGame(gameId: Long): List<Play> {
         return playDao.getPlaysWithPlayersForGame(gameId).map { it.toPlay() }
     }
 
@@ -68,6 +69,20 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         database.withTransaction {
             playerDao.deleteAll()
             playDao.deleteAll()
+        }
+    }
+
+    override fun observeTotalPlaysCount(): Flow<Long> {
+        return playDao.observeTotalPlaysCount()
+    }
+
+    override fun observePlaysCountForMonth(start: Instant, end: Instant): Flow<Long> {
+        return playDao.observePlaysCountForMonth(start, end)
+    }
+
+    override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
+        return playDao.observeRecentPlaysWithPlayers(limit).map { entities ->
+            entities.map { it.toPlay() }
         }
     }
 }

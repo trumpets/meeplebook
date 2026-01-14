@@ -1,8 +1,10 @@
 package app.meeplebook.core.collection
 
 import app.meeplebook.core.collection.local.CollectionLocalDataSource
+import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.collection.remote.CollectionFetchException
 import app.meeplebook.core.collection.remote.CollectionRemoteDataSource
 import app.meeplebook.core.network.RetryException
@@ -19,8 +21,18 @@ class CollectionRepositoryImpl @Inject constructor(
     private val remote: CollectionRemoteDataSource
 ) : CollectionRepository {
 
-    override fun observeCollection(): Flow<List<CollectionItem>> {
-        return local.observeCollection()
+    override fun observeCollection(query: CollectionDataQuery?): Flow<List<CollectionItem>> {
+        return when (query?.quickFilter) {
+            QuickFilter.UNPLAYED -> local.observeCollectionUnplayed()
+            else -> {
+                val searchQuery = query?.searchQuery.orEmpty()
+                if (searchQuery.isBlank()) {
+                    local.observeCollection()
+                } else {
+                    local.observeCollectionByName(searchQuery)
+                }
+            }
+        }
     }
 
     override suspend fun getCollection(): List<CollectionItem> {
@@ -45,5 +57,21 @@ class CollectionRepositoryImpl @Inject constructor(
 
     override suspend fun clearCollection() {
         local.clearCollection()
+    }
+
+    override fun observeCollectionCount(): Flow<Long> {
+        return local.observeCollectionCount()
+    }
+
+    override fun observeUnplayedGamesCount(): Flow<Long> {
+        return local.observeUnplayedGamesCount()
+    }
+
+    override fun observeMostRecentlyAddedItem(): Flow<CollectionItem?> {
+        return local.observeMostRecentlyAddedItem()
+    }
+
+    override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
+        return local.observeFirstUnplayedGame()
     }
 }

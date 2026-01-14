@@ -5,6 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.Player
+import java.time.Instant
 
 /**
  * Room entity representing a play stored locally.
@@ -15,13 +16,13 @@ import app.meeplebook.core.plays.model.Player
 )
 data class PlayEntity(
     @PrimaryKey
-    val id: Int,
-    val date: String,
+    val id: Long,
+    val date: Instant,
     val quantity: Int,
     val length: Int?,
     val incomplete: Boolean,
     val location: String?,
-    val gameId: Int,
+    val gameId: Long,
     val gameName: String,
     val comments: String?
 )

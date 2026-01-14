@@ -32,7 +32,6 @@ model/             // shared data classes (Game, Play, User, AuthToken)
 network/           // retrofit interfaces, xml parsers
 database/          // Room entities, DAOs, Mappers
 util/              // helpers, date utils, xml utils
-di/                // hilt modules (app-wide)
 feature/
 login/
 LoginScreen.kt
@@ -65,6 +64,13 @@ LoginScreen(state: LoginUiState, onEvent: (LoginEvent)->Unit)
 UiState: immutable data class representing all info the screen needs.
 
 UiEvent: sealed class of user actions (object SubmitLogin, data class UsernameChanged(String)).
+
+!!! IMPORTANT !!! No hardcoded strings throughout the app. Use string resources. Use stringResource(id = R.string.xxx) in composables. Don't resolve strings in ViewModel.
+
+!!! IMPORTANT !!! No direct navigation calls in composables. Emit events to ViewModel.
+
+!!! IMPORTANT !!! User facing dates (in UI) should follow EU format DD/MM/YYYY. Time is HH:MM 24h format.
+
 
 ### ViewModel
 Exposes val uiState: StateFlow<UiState> (read-only).
@@ -184,6 +190,7 @@ Use Result<T> or sealed Either type from repository to differentiate success/fai
 ## 10 — Testing strategy
 
 Prefer fakes to Mockks!!! Only use Mockks for 3rd party classes. If a class can't be faked, abstract it to an interface so it can be!
+When adding a new feature, examine the types of tests of similar existing features and replicate the strategy.
 
 ### Unit tests
 

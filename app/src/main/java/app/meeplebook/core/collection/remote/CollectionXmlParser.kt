@@ -2,9 +2,11 @@ package app.meeplebook.core.collection.remote
 
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
+import app.meeplebook.core.util.parseBggDateTime
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.Reader
+import java.time.Instant
 
 /**
  * Parses BGG collection XML responses into domain models.
@@ -35,7 +37,7 @@ object CollectionXmlParser {
                 XmlPullParser.START_TAG -> {
                     when (parser.name) {
                         "item" -> {
-                            val gameId = parser.getAttributeValue(null, "objectid")?.toIntOrNull()
+                            val gameId = parser.getAttributeValue(null, "objectid")?.toLongOrNull()
                             val subtype = parser.getAttributeValue(null, "subtype")
                             if (gameId != null) {
                                 currentItem = CollectionItemBuilder(
@@ -52,6 +54,23 @@ object CollectionXmlParser {
                         }
                         "thumbnail" -> {
                             currentItem?.thumbnail = safeNextText(parser)
+                        }
+                        "status" -> {
+                            val lastModifiedStr = parser.getAttributeValue(null, "lastmodified")
+                            currentItem?.lastModifiedDate = parseBggDateTime(lastModifiedStr)
+                        }
+                        "stats" -> {
+                            currentItem?.minPlayers =
+                                parser.getAttributeValue(null, "minplayers")?.toIntOrNull()
+                            currentItem?.maxPlayers =
+                                parser.getAttributeValue(null, "maxplayers")?.toIntOrNull()
+                            currentItem?.minPlayTimeMinutes =
+                                parser.getAttributeValue(null, "minplaytime")?.toIntOrNull()
+                            currentItem?.maxPlayTimeMinutes =
+                                parser.getAttributeValue(null, "maxplaytime")?.toIntOrNull()
+                        }
+                        "numplays" -> {
+                            currentItem?.numPlays = safeNextText(parser)?.toIntOrNull() ?: 0
                         }
                     }
                 }
@@ -89,12 +108,18 @@ object CollectionXmlParser {
     }
 
     private class CollectionItemBuilder(
-        val gameId: Int,
+        val gameId: Long,
         val subtype: GameSubtype
     ) {
         var name: String? = null
         var yearPublished: Int? = null
         var thumbnail: String? = null
+        var lastModifiedDate: Instant? = null
+        var minPlayers: Int? = null
+        var maxPlayers: Int? = null
+        var minPlayTimeMinutes: Int? = null
+        var maxPlayTimeMinutes: Int? = null
+        var numPlays: Int = 0
 
         fun build(): CollectionItem? {
             val itemName = name ?: return null
@@ -103,7 +128,13 @@ object CollectionXmlParser {
                 subtype = subtype,
                 name = itemName,
                 yearPublished = yearPublished,
-                thumbnail = thumbnail
+                thumbnail = thumbnail,
+                lastModifiedDate = lastModifiedDate,
+                minPlayers = minPlayers,
+                maxPlayers = maxPlayers,
+                minPlayTimeMinutes = minPlayTimeMinutes,
+                maxPlayTimeMinutes = maxPlayTimeMinutes,
+                numPlays = numPlays
             )
         }
     }

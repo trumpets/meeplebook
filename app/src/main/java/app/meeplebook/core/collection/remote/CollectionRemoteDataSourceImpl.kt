@@ -2,7 +2,6 @@ package app.meeplebook.core.collection.remote
 
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.network.BggApi
-import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.network.RetrySignal
 import app.meeplebook.core.network.retryWithBackoff
 import kotlinx.coroutines.delay

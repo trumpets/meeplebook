@@ -8,4 +8,68 @@
     <string name="msg_empty_credentials_error">Username and password cannot be empty</string>
     <string name="msg_invalid_credentials_error">Invalid username or password</string>
     <string name="msg_login_failed_error">Login failed</string>
+
+    <!-- Home Screen -->
+    <string name="nav_home">Home</string>
+    <string name="nav_collection">Collection</string>
+    <string name="nav_plays">Plays</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Overview Screen -->
+    <string name="profile_action_description">Profile</string>
+    <string name="more_options_description">More options</string>
+    <string name="log_play_description">Log a play</string>
+    <string name="your_stats_title">Your Stats</string>
+    <string name="stat_games">Games</string>
+    <string name="stat_total_plays">Total Plays</string>
+    <string name="stat_this_month">This Month</string>
+    <string name="stat_unplayed">Unplayed</string>
+    <string name="recent_activity_title">Recent Activity</string>
+    <string name="collection_highlights_title">Collection Highlights</string>
+    <string name="play_date_players">%1$s • %2$d players</string>
+    <string name="empty_recent_plays_message">No recent plays. Start logging your game sessions!</string>
+    <string name="loading_message">Loading your games…</string>
+
+    <!-- Game Highlights -->
+    <string name="game_highlight_recently_added">Recently Added</string>
+    <string name="game_highlight_try_tonight">Try Tonight?</string>
+
+    <!-- Date formatting -->
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="date_days_ago">%d days ago</string>
+    <string name="date_in_future">In the future</string>
+    <string name="players_none">No players</string>
+    <string name="players_more">+%d</string>
+
+    <!-- Sync status -->
+    <string name="sync_never">Never synced</string>
+    <string name="sync_just_now">just now</string>
+    <string name="sync_minutes_ago">%d min ago</string>
+    <string name="sync_one_hour_ago">1 hour ago</string>
+    <string name="sync_hours_ago">%d hours ago</string>
+    <string name="sync_one_day_ago">1 day ago</string>
+    <string name="sync_days_ago">%d days ago</string>
+    <string name="sync_last_synced">Last synced: %s</string>
+    <string name="sync_not_logged_in_error">Failed to sync data. User not logged in.</string>
+    <string name="sync_collections_failed_error">Failed to sync collections data. Please try again.</string>
+    <string name="sync_plays_failed_error">Failed to sync plays data. Please try again.</string>
+
+    <!-- Collection Screen -->
+    <string name="collection_loading">Loading collection…</string>
+    <string name="collection_empty">Your collection is empty. Add games to your BGG collection to see them here.</string>
+    <string name="collection_search_no_results">No games match your search</string>
+    <string name="collection_filter_no_results">No games match your filter</string>
+    <string name="collection_search_games">Search games</string>
+    <string name="collection_filter_all">All (%d)</string>
+    <string name="collection_filter_unplayed">Unplayed</string>
+    <string name="collection_filter_more">More</string>
+    <string name="collection_view_grid">Grid</string>
+    <string name="collection_view_list">List</string>
+    <string name="collection_sort">Sort</string>
+    <string name="collection_log_play">Log play</string>
+    <string name="collection_plays_count">%d plays</string>
+    <string name="collection_player_count">%d-%dp</string>
+    <string name="collection_play_time">%d-%dm</string>
+
 </resources>

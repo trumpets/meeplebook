@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -16,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Instant
 
 /**
  * Room DAO tests for [PlayDao].
@@ -54,7 +56,7 @@ class PlayDaoTest {
         // Insert a single play
         val play = createTestPlay(
             id = 1,
-            date = "2024-01-15",
+            date = parseDateString("2024-01-15"),
             gameId = 174430,
             gameName = "Gloomhaven"
         )
@@ -71,9 +73,9 @@ class PlayDaoTest {
     fun insertMultiplePlaysAndReadThemBack() = runTest {
         // Insert multiple plays
         val plays = listOf(
-            createTestPlay(1, "2024-01-15", 174430, "Gloomhaven"),
-            createTestPlay(2, "2024-01-16", 13, "Catan"),
-            createTestPlay(3, "2024-01-17", 120677, "Terra Mystica")
+            createTestPlay(1, parseDateString("2024-01-15"), 174430, "Gloomhaven"),
+            createTestPlay(2, parseDateString("2024-01-16"), 13, "Catan"),
+            createTestPlay(3, parseDateString("2024-01-17"), 120677, "Terra Mystica")
         )
         playDao.insertAll(plays)
 
@@ -89,7 +91,7 @@ class PlayDaoTest {
         // Insert play with null optional fields
         val play = createTestPlay(
             id = 100,
-            date = "2024-01-01",
+            date = parseDateString("2024-01-01"),
             gameId = 1,
             gameName = "Test Game",
             length = null,
@@ -114,11 +116,11 @@ class PlayDaoTest {
     fun playsAreSortedByDateDescending() = runTest {
         // Insert plays in random order
         val plays = listOf(
-            createTestPlay(1, "2024-01-10", 1, "Game 1"),
-            createTestPlay(2, "2024-03-15", 2, "Game 2"),
-            createTestPlay(3, "2024-01-01", 3, "Game 3"),
-            createTestPlay(4, "2024-02-20", 4, "Game 4"),
-            createTestPlay(5, "2024-04-01", 5, "Game 5")
+            createTestPlay(1, parseDateString("2024-01-10"), 1, "Game 1"),
+            createTestPlay(2, parseDateString("2024-03-15"), 2, "Game 2"),
+            createTestPlay(3, parseDateString("2024-01-01"), 3, "Game 3"),
+            createTestPlay(4, parseDateString("2024-02-20"), 4, "Game 4"),
+            createTestPlay(5, parseDateString("2024-04-01"), 5, "Game 5")
         )
         playDao.insertAll(plays)
 
@@ -127,11 +129,11 @@ class PlayDaoTest {
 
         // Verify descending order by date
         assertEquals(5, result.size)
-        assertEquals("2024-04-01", result[0].date)
-        assertEquals("2024-03-15", result[1].date)
-        assertEquals("2024-02-20", result[2].date)
-        assertEquals("2024-01-10", result[3].date)
-        assertEquals("2024-01-01", result[4].date)
+        assertEquals(parseDateString("2024-04-01"), result[0].date)
+        assertEquals(parseDateString("2024-03-15"), result[1].date)
+        assertEquals(parseDateString("2024-02-20"), result[2].date)
+        assertEquals(parseDateString("2024-01-10"), result[3].date)
+        assertEquals(parseDateString("2024-01-01"), result[4].date)
     }
 
     // --- Test 3: Upsert behavior with OnConflictStrategy.REPLACE ---
@@ -141,7 +143,7 @@ class PlayDaoTest {
         // Insert initial play
         val originalPlay = createTestPlay(
             id = 1,
-            date = "2024-01-01",
+            date = parseDateString("2024-01-01"),
             gameId = 100,
             gameName = "Original Game",
             length = 60
@@ -157,7 +159,7 @@ class PlayDaoTest {
         // Insert same id with different fields (upsert)
         val updatedPlay = createTestPlay(
             id = 1, // Same ID
-            date = "2024-01-15",
+            date = parseDateString("2024-01-15"),
             gameId = 200,
             gameName = "Updated Game",
             length = 120
@@ -169,22 +171,22 @@ class PlayDaoTest {
         assertEquals(1, result.size)
         assertEquals("Updated Game", result[0].gameName)
         assertEquals(120, result[0].length)
-        assertEquals("2024-01-15", result[0].date)
+        assertEquals(parseDateString("2024-01-15"), result[0].date)
     }
 
     @Test
     fun insertAllWithDuplicatesReplacesExisting() = runTest {
         // Insert initial plays
         val initialPlays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game A"),
-            createTestPlay(2, "2024-01-02", 200, "Game B")
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B")
         )
         playDao.insertAll(initialPlays)
 
         // Insert overlapping plays with some new and some updates
         val newPlays = listOf(
-            createTestPlay(2, "2024-01-10", 200, "Game B Updated"), // Update
-            createTestPlay(3, "2024-01-03", 300, "Game C") // New
+            createTestPlay(2, parseDateString("2024-01-10"), 200, "Game B Updated"), // Update
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game C") // New
         )
         playDao.insertAll(newPlays)
 
@@ -193,18 +195,18 @@ class PlayDaoTest {
         assertEquals(3, result.size)
         
         // Game A should remain unchanged
-        val gameA = result.find { it.id == 1 }
+        val gameA = result.find { it.id == 1L }
         assertNotNull(gameA)
         assertEquals("Game A", gameA?.gameName)
 
         // Game B should be updated
-        val gameB = result.find { it.id == 2 }
+        val gameB = result.find { it.id == 2L }
         assertNotNull(gameB)
         assertEquals("Game B Updated", gameB?.gameName)
-        assertEquals("2024-01-10", gameB?.date)
+        assertEquals(parseDateString("2024-01-10"), gameB?.date)
 
         // Game C should be new
-        val gameC = result.find { it.id == 3 }
+        val gameC = result.find { it.id == 3L }
         assertNotNull(gameC)
         assertEquals("Game C", gameC?.gameName)
     }
@@ -215,9 +217,9 @@ class PlayDaoTest {
     fun getPlayByIdReturnsCorrectPlay() = runTest {
         // Insert multiple plays
         val plays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game 1"),
-            createTestPlay(2, "2024-01-02", 200, "Game 2"),
-            createTestPlay(3, "2024-01-03", 300, "Game 3")
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3")
         )
         playDao.insertAll(plays)
 
@@ -225,14 +227,14 @@ class PlayDaoTest {
         val result = playDao.getPlayById(2)
 
         assertNotNull(result)
-        assertEquals(2, result?.id)
+        assertEquals(2L, result?.id)
         assertEquals("Game 2", result?.gameName)
     }
 
     @Test
     fun getPlayByIdReturnsNullForNonExistentId() = runTest {
         // Insert a play
-        playDao.insert(createTestPlay(1, "2024-01-01", 100, "Game 1"))
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
 
         // Try to get non-existent play
         val result = playDao.getPlayById(999)
@@ -246,10 +248,10 @@ class PlayDaoTest {
     fun getPlaysForGameReturnsOnlyMatchingPlays() = runTest {
         // Insert plays for different games
         val plays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game A"),
-            createTestPlay(2, "2024-01-02", 100, "Game A"), // Same game
-            createTestPlay(3, "2024-01-03", 200, "Game B"),
-            createTestPlay(4, "2024-01-04", 100, "Game A")  // Same game
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"),
+            createTestPlay(2, parseDateString("2024-01-02"), 100, "Game A"), // Same game
+            createTestPlay(3, parseDateString("2024-01-03"), 200, "Game B"),
+            createTestPlay(4, parseDateString("2024-01-04"), 100, "Game A")  // Same game
         )
         playDao.insertAll(plays)
 
@@ -257,17 +259,17 @@ class PlayDaoTest {
         val result = playDao.getPlaysForGame(100)
 
         assertEquals(3, result.size)
-        assertTrue(result.all { it.gameId == 100 })
+        assertTrue(result.all { it.gameId == 100L })
         // Verify descending date order
-        assertEquals("2024-01-04", result[0].date)
-        assertEquals("2024-01-02", result[1].date)
-        assertEquals("2024-01-01", result[2].date)
+        assertEquals(parseDateString("2024-01-04"), result[0].date)
+        assertEquals(parseDateString("2024-01-02"), result[1].date)
+        assertEquals(parseDateString("2024-01-01"), result[2].date)
     }
 
     @Test
     fun getPlaysForGameReturnsEmptyListForNonExistentGame() = runTest {
         // Insert plays for game 100
-        playDao.insert(createTestPlay(1, "2024-01-01", 100, "Game A"))
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"))
 
         // Query plays for non-existent game
         val result = playDao.getPlaysForGame(999)
@@ -280,7 +282,7 @@ class PlayDaoTest {
     @Test
     fun getPlayWithPlayersIncludesPlayers() = runTest {
         // Insert play
-        val play = createTestPlay(1, "2024-01-15", 100, "Test Game")
+        val play = createTestPlay(1, parseDateString("2024-01-15"), 100, "Test Game")
         playDao.insert(play)
 
         // Insert players for this play
@@ -295,7 +297,7 @@ class PlayDaoTest {
         val result = playDao.getPlayWithPlayersById(1)
 
         assertNotNull(result)
-        assertEquals(1, result?.play?.id)
+        assertEquals(1L, result?.play?.id)
         assertEquals(3, result?.players?.size)
         assertEquals("Alice", result?.players?.get(0)?.name)
     }
@@ -304,8 +306,8 @@ class PlayDaoTest {
     fun getPlaysWithPlayersReturnsAllPlaysWithTheirPlayers() = runTest {
         // Insert multiple plays
         val plays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game 1"),
-            createTestPlay(2, "2024-01-02", 200, "Game 2")
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
         )
         playDao.insertAll(plays)
 
@@ -339,9 +341,9 @@ class PlayDaoTest {
     fun getPlaysWithPlayersForGameReturnsOnlyMatchingPlays() = runTest {
         // Insert plays for different games
         val plays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game A"),
-            createTestPlay(2, "2024-01-02", 200, "Game B"),
-            createTestPlay(3, "2024-01-03", 100, "Game A")
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B"),
+            createTestPlay(3, parseDateString("2024-01-03"), 100, "Game A")
         )
         playDao.insertAll(plays)
 
@@ -354,7 +356,7 @@ class PlayDaoTest {
         val result = playDao.getPlaysWithPlayersForGame(100)
 
         assertEquals(2, result.size)
-        assertTrue(result.all { it.play.gameId == 100 })
+        assertTrue(result.all { it.play.gameId == 100L })
     }
 
     // --- Test 7: Observe plays as Flow ---
@@ -371,8 +373,8 @@ class PlayDaoTest {
     fun observePlaysEmitsAfterInsert() = runTest {
         // Insert plays
         val plays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game 1"),
-            createTestPlay(2, "2024-01-02", 200, "Game 2")
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
         )
         playDao.insertAll(plays)
 
@@ -388,9 +390,9 @@ class PlayDaoTest {
         // Insert plays in random order
         playDao.insertAll(
             listOf(
-                createTestPlay(1, "2024-01-01", 100, "Game 1"),
-                createTestPlay(2, "2024-03-01", 200, "Game 2"),
-                createTestPlay(3, "2024-02-01", 300, "Game 3")
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-03-01"), 200, "Game 2"),
+                createTestPlay(3, parseDateString("2024-02-01"), 300, "Game 3")
             )
         )
 
@@ -399,9 +401,9 @@ class PlayDaoTest {
 
         // Verify descending date order
         assertEquals(3, result.size)
-        assertEquals("2024-03-01", result[0].date)
-        assertEquals("2024-02-01", result[1].date)
-        assertEquals("2024-01-01", result[2].date)
+        assertEquals(parseDateString("2024-03-01"), result[0].date)
+        assertEquals(parseDateString("2024-02-01"), result[1].date)
+        assertEquals(parseDateString("2024-01-01"), result[2].date)
     }
 
     @Test
@@ -409,9 +411,9 @@ class PlayDaoTest {
         // Insert plays for different games
         playDao.insertAll(
             listOf(
-                createTestPlay(1, "2024-01-01", 100, "Game A"),
-                createTestPlay(2, "2024-01-02", 200, "Game B"),
-                createTestPlay(3, "2024-01-03", 100, "Game A")
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B"),
+                createTestPlay(3, parseDateString("2024-01-03"), 100, "Game A")
             )
         )
 
@@ -419,13 +421,13 @@ class PlayDaoTest {
         val result = playDao.observePlaysForGame(100).first()
 
         assertEquals(2, result.size)
-        assertTrue(result.all { it.gameId == 100 })
+        assertTrue(result.all { it.gameId == 100L })
     }
 
     @Test
     fun observePlayWithPlayersByIdEmitsPlay() = runTest {
         // Insert play and players
-        playDao.insert(createTestPlay(1, "2024-01-01", 100, "Game 1"))
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
         playerDao.insertAll(
             listOf(
                 createTestPlayer(0, 1, "Alice", true),
@@ -446,9 +448,9 @@ class PlayDaoTest {
     fun deleteAllRemovesAllPlays() = runTest {
         // Insert plays
         val plays = listOf(
-            createTestPlay(1, "2024-01-01", 100, "Game 1"),
-            createTestPlay(2, "2024-01-02", 200, "Game 2"),
-            createTestPlay(3, "2024-01-03", 300, "Game 3")
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3")
         )
         playDao.insertAll(plays)
 
@@ -477,7 +479,7 @@ class PlayDaoTest {
     @Test
     fun deletingPlayCascadesToPlayers() = runTest {
         // Insert play
-        playDao.insert(createTestPlay(1, "2024-01-01", 100, "Game 1"))
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
         
         // Insert players for this play
         playerDao.insertAll(
@@ -499,12 +501,203 @@ class PlayDaoTest {
         assertTrue(players.isEmpty())
     }
 
+    // --- Test 9: Observe total plays count ---
+
+    @Test
+    fun observeTotalPlaysCountReturnsCorrectSum() = runTest {
+        // Initially should be 0
+        var count = playDao.observeTotalPlaysCount().first()
+        assertEquals(0L, count)
+
+        // Insert plays with different quantities
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1", quantity = 2),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2", quantity = 1),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3", quantity = 3)
+        )
+        playDao.insertAll(plays)
+
+        // Verify count sums quantities
+        count = playDao.observeTotalPlaysCount().first()
+        assertEquals(6L, count) // 2 + 1 + 3
+    }
+
+    @Test
+    fun observeTotalPlaysCountUpdatesAfterDelete() = runTest {
+        // Insert plays
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1", quantity = 2),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2", quantity = 3)
+            )
+        )
+
+        // Verify initial count
+        var count = playDao.observeTotalPlaysCount().first()
+        assertEquals(5L, count)
+
+        // Delete all
+        playDao.deleteAll()
+
+        // Verify count updated
+        count = playDao.observeTotalPlaysCount().first()
+        assertEquals(0L, count)
+    }
+
+    // --- Test 10: Observe plays count for month ---
+
+    @Test
+    fun observePlaysCountForMonthReturnsCorrectSum() = runTest {
+        // Insert plays across different months
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-15"), 100, "Game 1", quantity = 2), // Jan
+            createTestPlay(2, parseDateString("2024-01-20"), 200, "Game 2", quantity = 1), // Jan
+            createTestPlay(3, parseDateString("2024-02-10"), 300, "Game 3", quantity = 3), // Feb
+            createTestPlay(4, parseDateString("2024-02-20"), 400, "Game 4", quantity = 1)  // Feb
+        )
+        playDao.insertAll(plays)
+
+        // Query for January
+        val janStart = parseDateString("2024-01-01")
+        val janEnd = parseDateString("2024-02-01")
+        val janCount = playDao.observePlaysCountForMonth(janStart, janEnd).first()
+
+        assertEquals(3L, janCount) // 2 + 1
+
+        // Query for February
+        val febStart = parseDateString("2024-02-01")
+        val febEnd = parseDateString("2024-03-01")
+        val febCount = playDao.observePlaysCountForMonth(febStart, febEnd).first()
+
+        assertEquals(4L, febCount) // 3 + 1
+    }
+
+    @Test
+    fun observePlaysCountForMonthReturnsZeroForEmptyPeriod() = runTest {
+        // Insert plays in January
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-15"), 100, "Game 1", quantity = 2))
+
+        // Query for March (no plays)
+        val marchStart = parseDateString("2024-03-01")
+        val marchEnd = parseDateString("2024-04-01")
+        val count = playDao.observePlaysCountForMonth(marchStart, marchEnd).first()
+
+        assertEquals(0L, count)
+    }
+
+    @Test
+    fun observePlaysCountForMonthIncludesStartExcludesEnd() = runTest {
+        // Insert plays exactly on boundaries
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-02-01"), 100, "Game 1", quantity = 1), // Start boundary
+            createTestPlay(2, parseDateString("2024-02-15"), 200, "Game 2", quantity = 2), // Middle
+            createTestPlay(3, parseDateString("2024-03-01"), 300, "Game 3", quantity = 3)  // End boundary
+        )
+        playDao.insertAll(plays)
+
+        // Query for February (start inclusive, end exclusive)
+        val febStart = parseDateString("2024-02-01")
+        val febEnd = parseDateString("2024-03-01")
+        val count = playDao.observePlaysCountForMonth(febStart, febEnd).first()
+
+        // Should include plays on start date but exclude end date
+        assertEquals(3L, count) // 1 + 2 (play 3 is excluded)
+    }
+
+    // --- Test 11: Observe recent plays with players ---
+
+    @Test
+    fun observeRecentPlaysWithPlayersReturnsLimitedResults() = runTest {
+        // Insert multiple plays
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3"),
+            createTestPlay(4, parseDateString("2024-01-04"), 400, "Game 4"),
+            createTestPlay(5, parseDateString("2024-01-05"), 500, "Game 5")
+        )
+        playDao.insertAll(plays)
+
+        // Insert players for each play
+        for (playId in 1L..5L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Observe recent plays with limit of 3
+        val result = playDao.observeRecentPlaysWithPlayers(3).first()
+
+        // Should return 3 most recent plays
+        assertEquals(3, result.size)
+        // Verify descending order (most recent first)
+        assertEquals(5L, result[0].play.id)
+        assertEquals(4L, result[1].play.id)
+        assertEquals(3L, result[2].play.id)
+    }
+
+    @Test
+    fun observeRecentPlaysWithPlayersIncludesPlayerData() = runTest {
+        // Insert plays
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
+            )
+        )
+
+        // Insert players
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", true),
+                createTestPlayer(0, 1, "Bob", false),
+                createTestPlayer(0, 2, "Charlie", true)
+            )
+        )
+
+        // Observe recent plays
+        val result = playDao.observeRecentPlaysWithPlayers(2).first()
+
+        assertEquals(2, result.size)
+        // Most recent play (id=2) should have 1 player
+        assertEquals(2L, result[0].play.id)
+        assertEquals(1, result[0].players.size)
+        assertEquals("Charlie", result[0].players[0].name)
+        
+        // Second play (id=1) should have 2 players
+        assertEquals(1L, result[1].play.id)
+        assertEquals(2, result[1].players.size)
+    }
+
+    @Test
+    fun observeRecentPlaysWithPlayersReturnsEmptyWhenNoPlays() = runTest {
+        // Observe with no plays
+        val result = playDao.observeRecentPlaysWithPlayers(5).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observeRecentPlaysWithPlayersHandlesLimitLargerThanCount() = runTest {
+        // Insert 2 plays
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
+            )
+        )
+
+        // Request limit of 10 (more than available)
+        val result = playDao.observeRecentPlaysWithPlayers(10).first()
+
+        // Should return all 2 plays
+        assertEquals(2, result.size)
+    }
+
     // --- Helper functions ---
 
     private fun createTestPlay(
-        id: Int,
-        date: String,
-        gameId: Int,
+        id: Long,
+        date: Instant,
+        gameId: Long,
         gameName: String,
         quantity: Int = 1,
         length: Int? = 60,
@@ -526,12 +719,12 @@ class PlayDaoTest {
     }
 
     private fun createTestPlayer(
-        id: Int,
-        playId: Int,
+        id: Long,
+        playId: Long,
         name: String,
         win: Boolean,
         username: String? = null,
-        userId: Int? = null,
+        userId: Long? = null,
         startPosition: String? = null,
         color: String? = null,
         score: String? = null

@@ -14,6 +14,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.time.Instant
 
 class CollectionRepositoryImplTest {
 
@@ -142,19 +143,104 @@ class CollectionRepositoryImplTest {
         assertEquals(1, fakeLocalDataSource.clearCollectionCallCount)
     }
 
+    // --- observeCollectionCount tests ---
+
+    @Test
+    fun `observeCollectionCount returns flow from local data source`() = runTest {
+        fakeLocalDataSource.setCollectionCount(5L)
+
+        val result = repository.observeCollectionCount().first()
+
+        assertEquals(5L, result)
+    }
+
+    @Test
+    fun `observeCollectionCount returns zero when no collection`() = runTest {
+        val result = repository.observeCollectionCount().first()
+
+        assertEquals(0L, result)
+    }
+
+    // --- observeUnplayedGamesCount tests ---
+
+    @Test
+    fun `observeUnplayedGamesCount returns flow from local data source`() = runTest {
+        fakeLocalDataSource.setUnplayedGamesCount(3L)
+
+        val result = repository.observeUnplayedGamesCount().first()
+
+        assertEquals(3L, result)
+    }
+
+    @Test
+    fun `observeUnplayedGamesCount returns zero when all games played`() = runTest {
+        fakeLocalDataSource.setUnplayedGamesCount(0L)
+
+        val result = repository.observeUnplayedGamesCount().first()
+
+        assertEquals(0L, result)
+    }
+
+    // --- observeMostRecentlyAddedItem tests ---
+
+    @Test
+    fun `observeMostRecentlyAddedItem returns item from local data source`() = runTest {
+        val item = createTestItem(1, "Recent Game")
+        fakeLocalDataSource.setMostRecentlyAddedItem(item)
+
+        val result = repository.observeMostRecentlyAddedItem().first()
+
+        assertEquals(item, result)
+    }
+
+    @Test
+    fun `observeMostRecentlyAddedItem returns null when no items`() = runTest {
+        val result = repository.observeMostRecentlyAddedItem().first()
+
+        assertEquals(null, result)
+    }
+
+    // --- observeFirstUnplayedGame tests ---
+
+    @Test
+    fun `observeFirstUnplayedGame returns game from local data source`() = runTest {
+        val game = createTestItem(1, "Unplayed Game")
+        fakeLocalDataSource.setFirstUnplayedGame(game)
+
+        val result = repository.observeFirstUnplayedGame().first()
+
+        assertEquals(game, result)
+    }
+
+    @Test
+    fun `observeFirstUnplayedGame returns null when all games played`() = runTest {
+        fakeLocalDataSource.setFirstUnplayedGame(null)
+
+        val result = repository.observeFirstUnplayedGame().first()
+
+        assertEquals(null, result)
+    }
+
     // --- Helper functions ---
 
     private fun createTestItem(
-        gameId: Int,
+        gameId: Long,
         name: String,
         subtype: GameSubtype = GameSubtype.BOARDGAME,
         yearPublished: Int? = 2020,
-        thumbnail: String? = "https://example.com/thumb.jpg"
+        thumbnail: String? = "https://example.com/thumb.jpg",
+        lastModifiedDate: Instant = Instant.now()
     ) = CollectionItem(
         gameId = gameId,
         subtype = subtype,
         name = name,
         yearPublished = yearPublished,
-        thumbnail = thumbnail
+        thumbnail = thumbnail,
+        lastModifiedDate = lastModifiedDate,
+        minPlayers = null,
+        maxPlayers = null,
+        minPlayTimeMinutes = null,
+        maxPlayTimeMinutes = null,
+        numPlays = 0
     )
 }

@@ -115,6 +115,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.navigation)
 
     // Hilt
@@ -148,6 +149,7 @@ dependencies {
     testImplementation(libs.room.testing)
     testImplementation(libs.xmlpull)
     testImplementation(libs.kxml2)
+    testImplementation(libs.turbine)
     
     // Instrumented tests (src/androidTest)
     androidTestImplementation(libs.androidx.junit)
@@ -156,6 +158,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.kotlinx.coroutines.test) // For runTest in androidTest
     androidTestImplementation(libs.room.testing) // For in-memory Room database in androidTest
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

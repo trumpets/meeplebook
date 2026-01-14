@@ -38,7 +38,11 @@ class FakeAuthRepository : AuthRepository {
     var lastLoginPassword: String? = null
         private set
 
-    override fun currentUser(): Flow<AuthCredentials?> = _currentUser
+    override fun observeCurrentUser(): Flow<AuthCredentials?> = _currentUser
+
+    override suspend fun getCurrentUser(): AuthCredentials? {
+        return _currentUser.value
+    }
 
     override suspend fun login(username: String, password: String): AppResult<AuthCredentials, AuthError> {
         loginCallCount++
@@ -58,4 +62,13 @@ class FakeAuthRepository : AuthRepository {
     }
 
     override fun isLoggedIn(): Flow<Boolean> = _currentUser.map { it != null }
+
+    /**
+     * Directly sets the current user for testing purposes.
+     * This is useful for tests that need to simulate an authenticated state
+     * without going through the full login flow.
+     */
+    fun setCurrentUser(credentials: AuthCredentials?) {
+        _currentUser.value = credentials
+    }
 }

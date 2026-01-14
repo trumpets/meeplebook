@@ -17,13 +17,13 @@ interface PlayerDao {
      * Observe all players for a specific play.
      */
     @Query("SELECT * FROM players WHERE playId = :playId")
-    fun observePlayersForPlay(playId: Int): Flow<List<PlayerEntity>>
+    fun observePlayersForPlay(playId: Long): Flow<List<PlayerEntity>>
 
     /**
      * Gets all players for a specific play.
      */
     @Query("SELECT * FROM players WHERE playId = :playId")
-    suspend fun getPlayersForPlay(playId: Int): List<PlayerEntity>
+    suspend fun getPlayersForPlay(playId: Long): List<PlayerEntity>
 
     /**
      * Inserts a player, replacing on conflict.
@@ -41,7 +41,7 @@ interface PlayerDao {
      * Deletes all players for a specific play.
      */
     @Query("DELETE FROM players WHERE playId = :playId")
-    suspend fun deletePlayersForPlay(playId: Int)
+    suspend fun deletePlayersForPlay(playId: Long)
 
     /**
      * Deletes all players.
