@@ -6,6 +6,7 @@ import app.meeplebook.core.ui.StringProvider
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,7 +35,7 @@ class CollectionViewModel @Inject constructor(
     @OptIn(FlowPreview::class)
     private val debouncedSearchQuery: StateFlow<String> =
         rawSearchQuery
-            .debounce(300)
+            .debounce(DebounceDurations.SearchQuery.inWholeMilliseconds)
             .distinctUntilChanged()
             .stateIn(
                 viewModelScope,

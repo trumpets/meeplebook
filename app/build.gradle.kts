@@ -149,6 +149,7 @@ dependencies {
     testImplementation(libs.room.testing)
     testImplementation(libs.xmlpull)
     testImplementation(libs.kxml2)
+    testImplementation(libs.turbine)
     
     // Instrumented tests (src/androidTest)
     androidTestImplementation(libs.androidx.junit)

@@ -1,5 +1,6 @@
 package app.meeplebook.feature.collection
 
+import app.cash.turbine.test
 import app.meeplebook.R
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
@@ -8,12 +9,16 @@ import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.FakeStringProvider
+import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
+import app.meeplebook.testutils.assertState
+import app.meeplebook.testutils.awaitUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -88,13 +93,9 @@ class CollectionViewModelTest {
         // Given - empty collection
         fakeCollectionRepository.setCollection(emptyList())
 
-        // When - allow state to update
-        advanceUntilIdle()
-
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Empty)
-        assertEquals(EmptyReason.NO_GAMES, (state as CollectionUiState.Empty).reason)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_GAMES, state.reason)
     }
 
     @Test
@@ -106,15 +107,11 @@ class CollectionViewModelTest {
         )
         fakeCollectionRepository.setCollection(items)
 
-        // When
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        val contentState = state as CollectionUiState.Content
-        assertEquals(2, contentState.totalGameCount)
-        assertEquals(2, contentState.sections.size)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(2, state.totalGameCount)
+        assertEquals(2, state.sections.size)
     }
 
     @Test
@@ -122,16 +119,13 @@ class CollectionViewModelTest {
         // Given
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
         // When
         viewModel.onEvent(CollectionEvent.SearchChanged("test query"))
-        advanceUntilIdle()
 
         // Then - search query should be updated immediately
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertEquals("test query", (state as CollectionUiState.Content).searchQuery)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals("test query", state.searchQuery)
     }
 
     @Test
@@ -142,24 +136,41 @@ class CollectionViewModelTest {
             createCollectionItem(gameId = 2, name = "Brass: Birmingham")
         )
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
-        // When - send search query
-        viewModel.onEvent(CollectionEvent.SearchChanged("Azul"))
-        
-        // Then - before debounce time, no filtering should occur
-        advanceTimeBy(200) // Less than 300ms debounce
-        val stateBeforeDebounce = viewModel.uiState.value
-        assertTrue(stateBeforeDebounce is CollectionUiState.Content)
-        assertEquals(2, (stateBeforeDebounce as CollectionUiState.Content).totalGameCount)
+        viewModel.uiState.test {
+            advanceUntilIdle()
 
-        // When - debounce time passes
-        advanceTimeBy(150) // Total 350ms > 300ms debounce
-        advanceUntilIdle()
+            // Drain initial Loading states to avoid flakiness from assuming a fixed number of emissions
+            var current: CollectionUiState
+            do {
+                current = awaitItem()
+            } while (current is CollectionUiState.Loading)
 
-        // Then - filtering should occur (note: actual filtering happens in repository query)
-        val stateAfterDebounce = viewModel.uiState.value
-        assertTrue(stateAfterDebounce is CollectionUiState.Content)
+            val initial = current.assertState<CollectionUiState.Content>()
+            assertEquals("", initial.searchQuery)
+            assertEquals(2, initial.totalGameCount)
+
+            // Initial content state
+            // When - send search query
+            viewModel.onEvent(CollectionEvent.SearchChanged("Azul"))
+
+            // Then: UI state updates immediately with raw query, but not filtered yet.
+            val immediate = awaitItem().assertState<CollectionUiState.Content>()
+            assertEquals("Azul", immediate.searchQuery)
+            assertEquals(2, immediate.totalGameCount)
+
+            // And: before debounce expires, nothing else should be emitted.
+            advanceTimeBy(DebounceDurations.SearchQuery.inWholeMilliseconds - 1)
+            expectNoEvents()
+
+            // After debounce: advance past boundary and flush.
+            advanceTimeBy(2)
+            advanceUntilIdle()
+
+            expectNoEvents()
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -167,34 +178,27 @@ class CollectionViewModelTest {
         // Given - collection with games
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
         // When - search returns no results (simulated by empty collection)
         viewModel.onEvent(CollectionEvent.SearchChanged("NonexistentGame"))
         fakeCollectionRepository.setCollection(emptyList())
-        advanceTimeBy(350)
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Empty)
-        assertEquals(EmptyReason.NO_SEARCH_RESULTS, (state as CollectionUiState.Empty).reason)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_SEARCH_RESULTS, state.reason)
     }
 
     @Test
     fun `QuickFilterSelected updates filter and shows appropriate empty state`() = runTest {
         // Given - empty collection
         fakeCollectionRepository.setCollection(emptyList())
-        advanceUntilIdle()
 
         // When - select non-ALL filter
         viewModel.onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
-        advanceUntilIdle()
 
         // Then - should show NO_FILTER_RESULTS
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Empty)
-        assertEquals(EmptyReason.NO_FILTER_RESULTS, (state as CollectionUiState.Empty).reason)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_FILTER_RESULTS, state.reason)
     }
 
     @Test
@@ -205,16 +209,13 @@ class CollectionViewModelTest {
             createCollectionItem(gameId = 2, name = "Brass: Birmingham", yearPublished = 2018)
         )
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
         // When
         viewModel.onEvent(CollectionEvent.SortSelected(CollectionSort.YEAR_PUBLISHED_NEWEST))
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertEquals(CollectionSort.YEAR_PUBLISHED_NEWEST, (state as CollectionUiState.Content).sort)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(CollectionSort.YEAR_PUBLISHED_NEWEST, state.sort)
     }
 
     @Test
@@ -222,16 +223,13 @@ class CollectionViewModelTest {
         // Given
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
         // When
         viewModel.onEvent(CollectionEvent.ViewModeSelected(CollectionViewMode.GRID))
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertEquals(CollectionViewMode.GRID, (state as CollectionUiState.Content).viewMode)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(CollectionViewMode.GRID, state.viewMode)
     }
 
     @Test
@@ -245,21 +243,17 @@ class CollectionViewModelTest {
         )
         fakeCollectionRepository.setCollection(items)
 
-        // When
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        val contentState = state as CollectionUiState.Content
-        
-        assertEquals(3, contentState.sections.size)
-        assertEquals('A', contentState.sections[0].key)
-        assertEquals(2, contentState.sections[0].games.size)
-        assertEquals('B', contentState.sections[1].key)
-        assertEquals(1, contentState.sections[1].games.size)
-        assertEquals('C', contentState.sections[2].key)
-        assertEquals(1, contentState.sections[2].games.size)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+
+        assertEquals(3, state.sections.size)
+        assertEquals('A', state.sections[0].key)
+        assertEquals(2, state.sections[0].games.size)
+        assertEquals('B', state.sections[1].key)
+        assertEquals(1, state.sections[1].games.size)
+        assertEquals('C', state.sections[2].key)
+        assertEquals(1, state.sections[2].games.size)
     }
 
     @Test
@@ -272,21 +266,16 @@ class CollectionViewModelTest {
         )
         fakeCollectionRepository.setCollection(items)
 
-        // When
-        advanceUntilIdle()
-
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        val contentState = state as CollectionUiState.Content
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
         
         // Section indices should account for headers + items
         // A: index 0 (header), items at 1
         // B: index 2 (header), items at 3
         // C: index 4 (header), items at 5
-        assertEquals(0, contentState.sectionIndices['A'])
-        assertEquals(2, contentState.sectionIndices['B'])
-        assertEquals(4, contentState.sectionIndices['C'])
+        assertEquals(0, state.sectionIndices['A'])
+        assertEquals(2, state.sectionIndices['B'])
+        assertEquals(4, state.sectionIndices['C'])
     }
 
     @Test
@@ -297,12 +286,10 @@ class CollectionViewModelTest {
             createCollectionItem(gameId = 2, name = "Brass: Birmingham")
         )
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertTrue((state as CollectionUiState.Content).showAlphabetJump)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertTrue(state.showAlphabetJump)
     }
 
     @Test
@@ -313,12 +300,10 @@ class CollectionViewModelTest {
             createCollectionItem(gameId = 2, name = "Ark Nova")
         )
         fakeCollectionRepository.setCollection(items)
-        advanceUntilIdle()
 
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertFalse((state as CollectionUiState.Content).showAlphabetJump)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertFalse(state.showAlphabetJump)
     }
 
     @Test
@@ -404,11 +389,9 @@ class CollectionViewModelTest {
         // Given - initial state with one game
         val initialItems = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(initialItems)
-        advanceUntilIdle()
 
-        val initialState = viewModel.uiState.value
-        assertTrue(initialState is CollectionUiState.Content)
-        assertEquals(1, (initialState as CollectionUiState.Content).totalGameCount)
+        val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(1, initialState.totalGameCount)
 
         // When - repository data changes
         val updatedItems = listOf(
@@ -416,12 +399,10 @@ class CollectionViewModelTest {
             createCollectionItem(gameId = 2, name = "Brass: Birmingham")
         )
         fakeCollectionRepository.setCollection(updatedItems)
-        advanceUntilIdle()
 
         // Then - state should update
-        val updatedState = viewModel.uiState.value
-        assertTrue(updatedState is CollectionUiState.Content)
-        assertEquals(2, (updatedState as CollectionUiState.Content).totalGameCount)
+        val updatedState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(2, updatedState.totalGameCount)
     }
 
     @Test
@@ -440,14 +421,9 @@ class CollectionViewModelTest {
         )
         fakeCollectionRepository.setCollection(listOf(item))
 
-        // When
-        advanceUntilIdle()
-
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        val contentState = state as CollectionUiState.Content
-        val game = contentState.sections[0].games[0]
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        val game = state.sections[0].games[0]
         
         assertEquals(123L, game.gameId)
         assertEquals("Wingspan", game.name)
@@ -464,14 +440,9 @@ class CollectionViewModelTest {
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
 
-        // When
-        advanceUntilIdle()
-
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        val contentState = state as CollectionUiState.Content
-        assertEquals(CollectionSort.entries, contentState.availableSortOptions)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(CollectionSort.entries, state.availableSortOptions)
     }
 
     @Test
@@ -480,13 +451,9 @@ class CollectionViewModelTest {
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
 
-        // When
-        advanceUntilIdle()
-
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertFalse((state as CollectionUiState.Content).isRefreshing)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertFalse(state.isRefreshing)
     }
 
     @Test
@@ -495,13 +462,9 @@ class CollectionViewModelTest {
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
 
-        // When
-        advanceUntilIdle()
-
         // Then
-        val state = viewModel.uiState.value
-        assertTrue(state is CollectionUiState.Content)
-        assertFalse((state as CollectionUiState.Content).isSortSheetVisible)
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertFalse(state.isSortSheetVisible)
     }
 
     // Helper function to create test collection items
@@ -529,5 +492,11 @@ class CollectionViewModelTest {
             maxPlayTimeMinutes = maxPlayTimeMinutes,
             numPlays = numPlays
         )
+    }
+
+    suspend inline fun <reified T: CollectionUiState> TestScope.awaitUiStateAfterDebounce(
+        viewModel: CollectionViewModel
+    ): T {
+        return awaitUiState(viewModel.uiState, DebounceDurations.SearchQuery, skipWhile = { it is CollectionUiState.Loading })
     }
 }

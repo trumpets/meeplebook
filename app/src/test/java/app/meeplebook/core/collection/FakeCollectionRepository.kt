@@ -27,6 +27,8 @@ class FakeCollectionRepository : CollectionRepository {
     var lastSyncUsername: String? = null
         private set
 
+    var beforeSync: (suspend () -> Unit)? = null
+
     var lastObserveCollectionQuery: CollectionDataQuery? = null
         private set
 
@@ -38,6 +40,8 @@ class FakeCollectionRepository : CollectionRepository {
     override suspend fun getCollection(): List<CollectionItem> = _collection.value
 
     override suspend fun syncCollection(username: String): AppResult<List<CollectionItem>, CollectionError> {
+        beforeSync?.invoke()
+
         syncCallCount++
         lastSyncUsername = username
 
