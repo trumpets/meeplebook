@@ -19,6 +19,13 @@ Initially only friends will use it but I will distribute it through Google Play 
 Decided on a name: MeepleBook
 Decided on a package: app.meeplebook
 
+## When implementing a task (in addition to the task instructions):
+
+1. Read the progress log at `progress.txt` (check Codebase Patterns section first)
+2. Implement the task
+3. Update AGENTS.md files if you discover reusable patterns (see below)
+4. Append your progress to `progress.txt`
+
 Follow Google's NowInAndroid design and code and theming principles:
 
 ## 1 — Modules & folders (start single-module, plan multi-module)
@@ -194,7 +201,8 @@ When adding a new feature, examine the types of tests of similar existing featur
 
 ### Unit tests
 
-ViewModel: provide fake repositories (pure Kotlin). Test state transitions.
+ViewModel: provide fake repositories (pure Kotlin). Test state transitions. If ViewModel uses SharingStarted.WhileSubscribed() or other complex logic, use Turbine for StateFlow testing as
+in the current ViewModel tests.
 
 Repositories: test mappers & business rules.
 
@@ -232,3 +240,64 @@ Store minimal personal data locally; obfuscate sensitive logs.
 
 ## 13 — Metrics & analytics (optional)
 Add optional pluggable analytics interface for events (not baked in core).
+
+## 14 - AI Learnings
+
+### Progress Report Format
+After completing each PR, you must document your learnings to help future iterations. This is critical for maintaining and improving the codebase over time.
+
+APPEND to progress.md (never replace, always append):
+
+```
+## [Date/Time]
+PR Link: <link_here>
+- What was implemented
+- Files changed
+- **Learnings for future iterations:**
+    - Patterns discovered (e.g., "this codebase uses X for Y")
+    - Gotchas encountered (e.g., "don't forget to update Z when changing W")
+    - Useful context (e.g., "the evaluation panel is in component X")
+---
+```
+
+The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
+
+### Consolidate Patterns
+If you discover a **reusable pattern** that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of progress.txt (create it if it doesn't exist). This section should consolidate the most important learnings:
+
+```
+## Codebase Patterns
+- Example: Use `sql<number>` template for aggregations
+- Example: Always use `IF NOT EXISTS` for migrations
+- Example: Make Compose Previews for all new UI components light and dark mode
+- Example: Use Turbine when testing StateFlows in ViewModels
+- Example: Use Fake implementations for repositories in unit tests instead of Mockks
+- Example: Use Retrofit with Simple XML converter for BGG API calls
+```
+
+Only add patterns that are **general and reusable**, not story-specific details.
+
+### Update AGENTS.md Files
+Before committing, check if any edited files have learnings worth preserving in nearby AGENTS.md files:
+
+1. **Identify directories with edited files** - Look at which directories you modified
+2. **Check for existing AGENTS.md** - Look for AGENTS.md in those directories or parent directories
+3. **Add valuable learnings** - If you discovered something future developers/agents should know:
+    - API patterns or conventions specific to that module
+    - Gotchas or non-obvious requirements
+    - Dependencies between files
+    - Testing approaches for that area
+    - Configuration or environment requirements
+
+**Examples of good AGENTS.md additions:**
+- "When modifying X, also update Y to keep them in sync"
+- "This module uses pattern Z for all API calls"
+- "Tests require the dev server running on PORT 3000"
+- "Field names must match the template exactly"
+
+**Do NOT add:**
+- Story-specific implementation details
+- Temporary debugging notes
+- Information already in progress.txt
+
+Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
