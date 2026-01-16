@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.feature.overview.GameHighlight
+import coil3.compose.AsyncImage
 
 /** Aspect ratio for game thumbnail images (16:9). */
 private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f
@@ -53,12 +54,21 @@ fun GameHighlightCard(
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Casino,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(32.dp)
+                AsyncImage(
+                    model = highlight.thumbnailUrl,
+                    contentDescription = highlight.gameName,
+                    modifier = Modifier.fillMaxSize()
                 )
+                
+                // Fallback icon if no image
+                if (highlight.thumbnailUrl == null) {
+                    Icon(
+                        imageVector = Icons.Outlined.Casino,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.overview.RecentPlay
+import coil3.compose.AsyncImage
 
 @Composable
 fun RecentPlayCard(
@@ -56,12 +57,21 @@ fun RecentPlayCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Casino,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(32.dp)
+                AsyncImage(
+                    model = play.thumbnailUrl,
+                    contentDescription = play.gameName,
+                    modifier = Modifier.size(56.dp)
                 )
+                
+                // Fallback icon if no image
+                if (play.thumbnailUrl == null) {
+                    Icon(
+                        imageVector = Icons.Outlined.Casino,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(

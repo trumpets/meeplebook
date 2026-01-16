@@ -40,6 +40,7 @@ import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.ui.theme.MeepleBookTheme
+import coil3.compose.AsyncImage
 
 /**
  * Collection screen entry point that wires the ViewModel to the UI.
@@ -474,6 +475,12 @@ private fun GameGridCard(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
+                AsyncImage(
+                    model = game.thumbnailUrl,
+                    contentDescription = game.name,
+                    modifier = Modifier.fillMaxSize()
+                )
+                
                 if (game.isNew) {
                     Icon(
                         Icons.Default.AutoAwesome,
@@ -524,7 +531,13 @@ private fun GameListRow(
             modifier = Modifier
                 .size(56.dp)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+        ) {
+            AsyncImage(
+                model = game.thumbnailUrl,
+                contentDescription = game.name,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
         Spacer(Modifier.width(12.dp))
 

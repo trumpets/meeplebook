@@ -140,6 +140,9 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    // Image loading
+    implementation(libs.coil)
+
     // Testing
     // Unit tests (src/test)
     testImplementation(libs.junit)
