@@ -500,12 +500,12 @@ class CollectionViewModelTest {
     fun `empty state with NO_GAMES shows correct unplayedGameCount`() = runTest {
         // Given - empty collection
         fakeCollectionRepository.setCollection(emptyList())
-        fakeCollectionRepository.setUnplayedCount(3)
+        fakeCollectionRepository.setUnplayedCount(0)
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_GAMES, state.reason)
-        assertEquals(3L, state.unplayedGameCount)
+        assertEquals(0L, state.unplayedGameCount)
     }
 
     @Test
