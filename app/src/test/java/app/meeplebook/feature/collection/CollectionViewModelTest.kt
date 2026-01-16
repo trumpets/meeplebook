@@ -527,12 +527,14 @@ class CollectionViewModelTest {
 
     @Test
     fun `empty state with NO_FILTER_RESULTS shows correct unplayedGameCount`() = runTest {
-        // Given - empty collection
-        fakeCollectionRepository.setCollection(emptyList())
+        // Given - collection with games but none match filter
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
         fakeCollectionRepository.setUnplayedCount(7)
 
-        // When - select non-ALL filter
+        // When - select non-ALL filter, then set empty collection to simulate filter results
         viewModel.onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
+        fakeCollectionRepository.setCollection(emptyList())
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
