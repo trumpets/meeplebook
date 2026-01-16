@@ -28,8 +28,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.overview.RecentPlay
+import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
-import coil3.compose.SubcomposeAsyncImage
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
 @Composable
 fun RecentPlayCard(
@@ -51,7 +52,7 @@ fun RecentPlayCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Game thumbnail placeholder
-            SubcomposeAsyncImage(
+            AsyncImage(
                 model = play.thumbnailUrl,
                 contentDescription = play.gameName,
                 contentScale = ContentScale.Crop,
@@ -59,32 +60,7 @@ fun RecentPlayCard(
                     .size(56.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
-                loading = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Casino,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                },
-                error = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Casino,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                }
+                placeholder = rememberVectorPainter(Icons.Outlined.Casino)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(

@@ -40,8 +40,10 @@ import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.ui.theme.MeepleBookTheme
+import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
-import coil3.compose.SubcomposeAsyncImage
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.outlined.Casino
 
 /**
  * Collection screen entry point that wires the ViewModel to the UI.
@@ -477,17 +479,12 @@ private fun GameGridCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                SubcomposeAsyncImage(
+                AsyncImage(
                     model = game.thumbnailUrl,
                     contentDescription = game.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
-                    loading = {
-                        Box(modifier = Modifier.fillMaxSize())
-                    },
-                    error = {
-                        Box(modifier = Modifier.fillMaxSize())
-                    }
+                    placeholder = rememberVectorPainter(Icons.Outlined.Casino)
                 )
                 
                 if (game.isNew) {
@@ -550,17 +547,12 @@ private fun GameListRow(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            SubcomposeAsyncImage(
+            AsyncImage(
                 model = game.thumbnailUrl,
                 contentDescription = game.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
-                loading = {
-                    Box(modifier = Modifier.fillMaxSize())
-                },
-                error = {
-                    Box(modifier = Modifier.fillMaxSize())
-                }
+                placeholder = rememberVectorPainter(Icons.Outlined.Casino)
             )
         }
 

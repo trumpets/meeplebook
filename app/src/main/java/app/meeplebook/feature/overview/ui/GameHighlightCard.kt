@@ -26,8 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.feature.overview.GameHighlight
+import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
-import coil3.compose.SubcomposeAsyncImage
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
 /** Aspect ratio for game thumbnail images (16:9). */
 private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f
@@ -47,7 +48,7 @@ fun GameHighlightCard(
             modifier = Modifier.padding(8.dp)
         ) {
             // Game thumbnail placeholder
-            SubcomposeAsyncImage(
+            AsyncImage(
                 model = highlight.thumbnailUrl,
                 contentDescription = highlight.gameName,
                 contentScale = ContentScale.Crop,
@@ -56,32 +57,7 @@ fun GameHighlightCard(
                     .aspectRatio(GAME_THUMBNAIL_ASPECT_RATIO)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer),
-                loading = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Casino,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                },
-                error = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Casino,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                }
+                placeholder = rememberVectorPainter(Icons.Outlined.Casino)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
