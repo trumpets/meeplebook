@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.overview.RecentPlay
 import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun RecentPlayCard(
@@ -61,6 +62,7 @@ fun RecentPlayCard(
                     AsyncImage(
                         model = play.thumbnailUrl,
                         contentDescription = play.gameName,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier.size(56.dp)
                     )
                 } else {

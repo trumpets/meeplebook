@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.feature.overview.GameHighlight
 import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 /** Aspect ratio for game thumbnail images (16:9). */
 private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f
@@ -58,6 +59,7 @@ fun GameHighlightCard(
                     AsyncImage(
                         model = highlight.thumbnailUrl,
                         contentDescription = highlight.gameName,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
