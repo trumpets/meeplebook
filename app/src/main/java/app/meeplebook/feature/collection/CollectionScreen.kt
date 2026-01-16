@@ -42,6 +42,7 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.ui.theme.MeepleBookTheme
 import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
+import coil3.compose.SubcomposeAsyncImage
 
 /**
  * Collection screen entry point that wires the ViewModel to the UI.
@@ -477,14 +478,18 @@ private fun GameGridCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                if (game.thumbnailUrl != null) {
-                    AsyncImage(
-                        model = game.thumbnailUrl,
-                        contentDescription = game.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                SubcomposeAsyncImage(
+                    model = game.thumbnailUrl,
+                    contentDescription = game.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    loading = {
+                        Box(modifier = Modifier.fillMaxSize())
+                    },
+                    error = {
+                        Box(modifier = Modifier.fillMaxSize())
+                    }
+                )
                 
                 if (game.isNew) {
                     Icon(
@@ -546,14 +551,18 @@ private fun GameListRow(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            if (game.thumbnailUrl != null) {
-                AsyncImage(
-                    model = game.thumbnailUrl,
-                    contentDescription = game.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            SubcomposeAsyncImage(
+                model = game.thumbnailUrl,
+                contentDescription = game.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                loading = {
+                    Box(modifier = Modifier.fillMaxSize())
+                },
+                error = {
+                    Box(modifier = Modifier.fillMaxSize())
+                }
+            )
         }
 
         Spacer(Modifier.width(12.dp))

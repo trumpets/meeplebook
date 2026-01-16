@@ -30,6 +30,7 @@ import app.meeplebook.R
 import app.meeplebook.feature.overview.RecentPlay
 import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
+import coil3.compose.SubcomposeAsyncImage
 
 @Composable
 fun RecentPlayCard(
@@ -51,29 +52,41 @@ fun RecentPlayCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Game thumbnail placeholder
-            Box(
+            SubcomposeAsyncImage(
+                model = play.thumbnailUrl,
+                contentDescription = play.gameName,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                if (play.thumbnailUrl != null) {
-                    AsyncImage(
-                        model = play.thumbnailUrl,
-                        contentDescription = play.gameName,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.Casino,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(32.dp)
-                    )
+                loading = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Casino,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                },
+                error = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Casino,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
-            }
+            )
             Spacer(modifier = Modifier.width(12.dp))
             Column(
                 modifier = Modifier.weight(1f)
