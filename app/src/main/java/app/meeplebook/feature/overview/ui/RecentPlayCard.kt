@@ -63,7 +63,7 @@ fun RecentPlayCard(
                         model = play.thumbnailUrl,
                         contentDescription = play.gameName,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.fillMaxSize()
                     )
                 } else {
                     Icon(

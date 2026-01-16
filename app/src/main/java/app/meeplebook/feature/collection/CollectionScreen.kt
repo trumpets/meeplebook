@@ -490,9 +490,15 @@ private fun GameGridCard(
                     Icon(
                         Icons.Default.AutoAwesome,
                         contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .padding(4.dp)
                             .align(Alignment.TopStart)
+                            .background(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(2.dp)
                     )
                 }
             }
