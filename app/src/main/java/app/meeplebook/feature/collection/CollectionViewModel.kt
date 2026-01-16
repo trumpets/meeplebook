@@ -35,6 +35,7 @@ class CollectionViewModel @Inject constructor(
     @OptIn(FlowPreview::class)
     private val debouncedSearchQuery: StateFlow<String> =
         rawSearchQuery
+            .map { it.trim() }
             .debounce(DebounceDurations.SearchQuery.inWholeMilliseconds)
             .distinctUntilChanged()
             .stateIn(
@@ -78,25 +79,33 @@ class CollectionViewModel @Inject constructor(
                 val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
 
                 if (uiSections.isEmpty()) {
-                    CollectionUiState.Empty(emptyReason(
+                    CollectionUiState.Empty(
+                        reason = emptyReason(
+                            searchQuery = rawSearchQuery.value,
+                            quickFilter = quickFilter.value
+                        ),
+
                         searchQuery = rawSearchQuery.value,
-                        quickFilter = quickFilter.value
-                    ))
+                        activeQuickFilter = quickFilter.value,
+                        totalGameCount = uiSections.sumOf { it.games.size },
+                        isRefreshing = false
+                    )
                 } else {
                     val sectionIndices = buildSectionIndices(uiSections)
 
                     CollectionUiState.Content(
-                        searchQuery = rawSearchQuery.value,
                         viewMode = viewMode.value,
                         sort = sort.value,
-                        activeQuickFilter = quickFilter.value,
                         availableSortOptions = CollectionSort.entries,
                         sections = uiSections,
                         sectionIndices = sectionIndices,
-                        totalGameCount = uiSections.sumOf { it.games.size },
-                        isRefreshing = false,
                         showAlphabetJump = uiSections.size > 1,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+
+                        searchQuery = rawSearchQuery.value,
+                        activeQuickFilter = quickFilter.value,
+                        totalGameCount = uiSections.sumOf { it.games.size },
+                        isRefreshing = false
                     )
                 }
             }
@@ -110,13 +119,21 @@ class CollectionViewModel @Inject constructor(
         combine(
             contentState,
             viewMode,
-            rawSearchQuery
-        ) { state, viewMode, rawQuery ->
+            rawSearchQuery,
+            quickFilter
+        ) { state, viewMode, rawQuery, filter ->
             when (state) {
                 is CollectionUiState.Content ->
                     state.copy(
                         viewMode = viewMode,
-                        searchQuery = rawQuery
+                        searchQuery = rawQuery,
+                        activeQuickFilter = filter
+                    )
+
+                is CollectionUiState.Empty ->
+                    state.copy(
+                        searchQuery = rawQuery,
+                        activeQuickFilter = filter
                     )
 
                 else -> state
@@ -171,7 +188,6 @@ class CollectionViewModel @Inject constructor(
             is CollectionEvent.LogPlayClicked -> {
                 // TODO: Implement navigation or handling for logging a play.
             }
-            else -> Unit
         }
     }
 
