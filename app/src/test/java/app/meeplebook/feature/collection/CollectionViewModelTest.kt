@@ -469,6 +469,77 @@ class CollectionViewModelTest {
         assertFalse(state.isSortSheetVisible)
     }
 
+    @Test
+    fun `content state shows correct unplayedGameCount when set`() = runTest {
+        // Given
+        val items = listOf(
+            createCollectionItem(gameId = 1, name = "Azul"),
+            createCollectionItem(gameId = 2, name = "Brass: Birmingham")
+        )
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(5)
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(5L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `content state shows zero unplayedGameCount when not set`() = runTest {
+        // Given
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(0)
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(0L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `empty state with NO_GAMES shows correct unplayedGameCount`() = runTest {
+        // Given - empty collection
+        fakeCollectionRepository.setCollection(emptyList())
+        fakeCollectionRepository.setUnplayedCount(3)
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_GAMES, state.reason)
+        assertEquals(3L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `empty state with NO_SEARCH_RESULTS shows correct unplayedGameCount`() = runTest {
+        // Given - collection with games
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(2)
+
+        // When - search returns no results
+        viewModel.onEvent(CollectionEvent.SearchChanged("NonexistentGame"))
+        fakeCollectionRepository.setCollection(emptyList())
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_SEARCH_RESULTS, state.reason)
+        assertEquals(2L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `empty state with NO_FILTER_RESULTS shows correct unplayedGameCount`() = runTest {
+        // Given - empty collection
+        fakeCollectionRepository.setCollection(emptyList())
+        fakeCollectionRepository.setUnplayedCount(7)
+
+        // When - select non-ALL filter
+        viewModel.onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_FILTER_RESULTS, state.reason)
+        assertEquals(7L, state.unplayedGameCount)
+    }
+
     // Helper function to create test collection items
     private fun createCollectionItem(
         gameId: Long,
