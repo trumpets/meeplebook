@@ -1,6 +1,7 @@
 package app.meeplebook.core.stats.domain
 
 import app.meeplebook.core.collection.FakeCollectionRepository
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.stats.model.CollectionPlayStats
 import kotlinx.coroutines.flow.first
@@ -32,7 +33,7 @@ class ObserveCollectionPlayStatsUseCaseTest {
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
         useCase = ObserveCollectionPlayStatsUseCase(
-            collectionRepository = fakeCollectionRepository,
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
             playsRepository = fakePlaysRepository,
             clock = testClock
         )

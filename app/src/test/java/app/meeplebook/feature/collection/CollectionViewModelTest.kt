@@ -3,6 +3,7 @@ package app.meeplebook.feature.collection
 import app.cash.turbine.test
 import app.meeplebook.R
 import app.meeplebook.core.collection.FakeCollectionRepository
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.CollectionSort
@@ -72,7 +73,8 @@ class CollectionViewModelTest {
         
         // Create ViewModel
         viewModel = CollectionViewModel(
-            observeCollectionDomainSectionsUseCase = observeCollectionDomainSectionsUseCase,
+            observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
             stringProvider = fakeStringProvider
         )
     }

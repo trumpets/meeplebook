@@ -1,6 +1,7 @@
 package app.meeplebook.core.stats.domain
 
 import app.meeplebook.core.collection.CollectionRepository
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.core.stats.model.CollectionPlayStats
 import app.meeplebook.core.util.Range
@@ -21,7 +22,7 @@ import javax.inject.Inject
  * underlying collection or plays data changes in the database.
  */
 class ObserveCollectionPlayStatsUseCase @Inject constructor(
-    private val collectionRepository: CollectionRepository,
+    private val observeCollectionSummary: ObserveCollectionSummaryUseCase,
     private val playsRepository: PlaysRepository,
     private val clock: Clock
 ) {
@@ -29,16 +30,15 @@ class ObserveCollectionPlayStatsUseCase @Inject constructor(
         val range = currentMonthRange(clock)
 
         return combine(
-            collectionRepository.observeCollectionCount(),
+            observeCollectionSummary(),
             playsRepository.observeTotalPlaysCount(),
-            playsRepository.observePlaysCountForPeriod(range.start, range.end),
-            collectionRepository.observeUnplayedGamesCount()
-        ) { games, totalPlays, playsThisMonth, unplayed ->
+            playsRepository.observePlaysCountForPeriod(range.start, range.end)
+        ) { summary, totalPlays, playsThisMonth ->
             CollectionPlayStats(
-                gamesCount = games,
+                gamesCount = summary.totalGames,
+                unplayedCount = summary.unplayedGames,
                 totalPlays = totalPlays,
                 playsInPeriod = playsThisMonth,
-                unplayedCount = unplayed
             )
         }
     }
