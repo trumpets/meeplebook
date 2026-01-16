@@ -631,11 +631,11 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
         sampleContentState(),
         sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
         CollectionUiState.Empty(
-            EmptyReason.NO_SEARCH_RESULTS,
-            "search term",
-            QuickFilter.ALL,
-            0,
-            false
+            reason = EmptyReason.NO_SEARCH_RESULTS,
+            searchQuery = "search term",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 0,
+            isRefreshing = false
         ),
         CollectionUiState.Loading,
         sampleContentState(isRefreshing = true),
