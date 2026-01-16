@@ -1,6 +1,5 @@
 package app.meeplebook.core.stats.domain
 
-import app.meeplebook.core.collection.CollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.core.stats.model.CollectionPlayStats
