@@ -22,6 +22,12 @@ import org.junit.runner.RunWith
 /**
  * UI Compose tests for [CollectionScreenRoot].
  * Tests UI rendering and interaction behavior for different collection screen states.
+ *
+ * Test structure:
+ * - State Testing (5 tests): Loading, Empty (3 variants), Error
+ * - Content Testing (3 tests): Grid mode, List mode, Multiple sections
+ * - Interaction Testing (4 tests): Search, Quick filter, View mode, Sort
+ * - Integration Testing (2 tests): Search/filters in Empty/Error states
  */
 @RunWith(AndroidJUnit4::class)
 class CollectionScreenRootTest {
@@ -320,7 +326,7 @@ class CollectionScreenRootTest {
 
     @Test
     fun collectionScreenRoot_viewModeToggle_triggersCallback() {
-        var viewModeChangedToList = false
+        var capturedViewMode: CollectionViewMode? = null
 
         val sampleGames = listOf(
             CollectionGameItem(
@@ -357,8 +363,8 @@ class CollectionScreenRootTest {
                         isSortSheetVisible = false
                     ),
                     onEvent = { event ->
-                        if (event is CollectionEvent.ViewModeSelected && event.viewMode == CollectionViewMode.LIST) {
-                            viewModeChangedToList = true
+                        if (event is CollectionEvent.ViewModeSelected) {
+                            capturedViewMode = event.viewMode
                         }
                     },
                     listState = LazyListState(),
@@ -370,13 +376,13 @@ class CollectionScreenRootTest {
         // Click on the List view button
         composeTestRule.onNodeWithText("List").performClick()
 
-        // Verify callback was triggered
-        assertTrue(viewModeChangedToList)
+        // Verify callback was triggered with correct view mode
+        assertEquals(CollectionViewMode.LIST, capturedViewMode)
     }
 
     @Test
     fun collectionScreenRoot_sortButtonClick_triggersCallback() {
-        var sortButtonClicked = false
+        var capturedEvent: CollectionEvent? = null
 
         val sampleGames = listOf(
             CollectionGameItem(
@@ -413,9 +419,7 @@ class CollectionScreenRootTest {
                         isSortSheetVisible = false
                     ),
                     onEvent = { event ->
-                        if (event is CollectionEvent.OpenSortSheet) {
-                            sortButtonClicked = true
-                        }
+                        capturedEvent = event
                     },
                     listState = LazyListState(),
                     gridState = LazyGridState()
@@ -426,8 +430,8 @@ class CollectionScreenRootTest {
         // Click on the Sort button
         composeTestRule.onNodeWithText("Sort").performClick()
 
-        // Verify callback was triggered
-        assertTrue(sortButtonClicked)
+        // Verify callback was triggered with correct event type
+        assertTrue(capturedEvent is CollectionEvent.OpenSortSheet)
     }
 
     @Test
