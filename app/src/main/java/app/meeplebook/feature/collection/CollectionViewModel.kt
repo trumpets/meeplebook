@@ -74,7 +74,7 @@ class CollectionViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val contentState: StateFlow<CollectionUiState> =
         combine(
-        collectionDataQuery.flatMapLatest {
+            collectionDataQuery.flatMapLatest {
                 observeCollectionDomainSections(it)
             },
             observeCollectionSummary()
