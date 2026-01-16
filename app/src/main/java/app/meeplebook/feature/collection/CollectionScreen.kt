@@ -473,19 +473,24 @@ private fun GameGridCard(
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = game.thumbnailUrl,
-                    contentDescription = game.name,
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (game.thumbnailUrl != null) {
+                    AsyncImage(
+                        model = game.thumbnailUrl,
+                        contentDescription = game.name,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
                 
                 if (game.isNew) {
                     Icon(
                         Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.TopStart)
                     )
                 }
             }
@@ -530,13 +535,16 @@ private fun GameListRow(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = game.thumbnailUrl,
-                contentDescription = game.name,
-                modifier = Modifier.fillMaxSize()
-            )
+            if (game.thumbnailUrl != null) {
+                AsyncImage(
+                    model = game.thumbnailUrl,
+                    contentDescription = game.name,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
 
         Spacer(Modifier.width(12.dp))

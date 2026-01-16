@@ -57,14 +57,13 @@ fun RecentPlayCard(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = play.thumbnailUrl,
-                    contentDescription = play.gameName,
-                    modifier = Modifier.size(56.dp)
-                )
-                
-                // Fallback icon if no image
-                if (play.thumbnailUrl == null) {
+                if (play.thumbnailUrl != null) {
+                    AsyncImage(
+                        model = play.thumbnailUrl,
+                        contentDescription = play.gameName,
+                        modifier = Modifier.size(56.dp)
+                    )
+                } else {
                     Icon(
                         imageVector = Icons.Outlined.Casino,
                         contentDescription = null,

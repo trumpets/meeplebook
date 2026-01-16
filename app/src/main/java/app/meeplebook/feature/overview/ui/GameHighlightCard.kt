@@ -54,14 +54,13 @@ fun GameHighlightCard(
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = highlight.thumbnailUrl,
-                    contentDescription = highlight.gameName,
-                    modifier = Modifier.fillMaxSize()
-                )
-                
-                // Fallback icon if no image
-                if (highlight.thumbnailUrl == null) {
+                if (highlight.thumbnailUrl != null) {
+                    AsyncImage(
+                        model = highlight.thumbnailUrl,
+                        contentDescription = highlight.gameName,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
                     Icon(
                         imageVector = Icons.Outlined.Casino,
                         contentDescription = null,
