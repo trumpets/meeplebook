@@ -120,7 +120,12 @@ fun CollectionScreenRoot(
                 }
 
             is CollectionUiState.Error ->
-                ErrorState(uiState.errorMessageResId)
+                CollectionScaffold(
+                    uiState = uiState,
+                    onEvent = onEvent
+                ) {
+                    ErrorState(uiState.errorMessageResId)
+                }
 
             is CollectionUiState.Content ->
                 CollectionScaffold(
@@ -625,9 +630,22 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
     override val values: Sequence<CollectionUiState> = sequenceOf(
         sampleContentState(),
         sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
-        CollectionUiState.Empty(EmptyReason.NO_GAMES, "search term", QuickFilter.ALL, 0, false),
+        CollectionUiState.Empty(
+            EmptyReason.NO_SEARCH_RESULTS,
+            "search term",
+            QuickFilter.ALL,
+            0,
+            false
+        ),
         CollectionUiState.Loading,
-        sampleContentState(isRefreshing = true)
+        sampleContentState(isRefreshing = true),
+        CollectionUiState.Error(
+            R.string.sync_collections_failed_error,
+            searchQuery = "azul",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 0,
+            isRefreshing = false
+        )
     )
 
     private fun sampleContentState(

@@ -217,7 +217,7 @@ class CollectionViewModel @Inject constructor(
         quickFilter: QuickFilter
     ): EmptyReason =
         when {
-            searchQuery.isNotBlank() ->
+            searchQuery.isNotEmpty() ->
                 EmptyReason.NO_SEARCH_RESULTS
 
             quickFilter != QuickFilter.ALL ->
