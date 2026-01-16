@@ -21,14 +21,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.feature.overview.GameHighlight
 import coil3.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
 /** Aspect ratio for game thumbnail images (16:9). */
 private const val GAME_THUMBNAIL_ASPECT_RATIO = 16f / 9f

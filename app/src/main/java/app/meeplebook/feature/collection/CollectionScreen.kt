@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,9 +42,6 @@ import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.ui.theme.MeepleBookTheme
 import coil3.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.material.icons.outlined.Casino
 
 /**
  * Collection screen entry point that wires the ViewModel to the UI.
