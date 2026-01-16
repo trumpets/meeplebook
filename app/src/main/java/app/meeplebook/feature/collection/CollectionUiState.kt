@@ -16,13 +16,15 @@ sealed interface CollectionUiState {
 
     val searchQuery: String
     val activeQuickFilter: QuickFilter
-    val totalGameCount: Int
+    val totalGameCount: Long
+    val unplayedGameCount: Long
     val isRefreshing: Boolean
 
     data object Loading : CollectionUiState {
         override val searchQuery = ""
         override val activeQuickFilter = QuickFilter.ALL
-        override val totalGameCount = 0
+        override val totalGameCount = 0L
+        override val unplayedGameCount = 0L
         override val isRefreshing = false
     }
 
@@ -30,7 +32,8 @@ sealed interface CollectionUiState {
         val reason: EmptyReason,
         override val searchQuery: String,
         override val activeQuickFilter: QuickFilter,
-        override val totalGameCount: Int,
+        override val totalGameCount: Long,
+        override val unplayedGameCount: Long,
         override val isRefreshing: Boolean
     ) : CollectionUiState
 
@@ -51,7 +54,8 @@ sealed interface CollectionUiState {
 
         override val searchQuery: String,
         override val activeQuickFilter: QuickFilter,
-        override val totalGameCount: Int,
+        override val totalGameCount: Long,
+        override val unplayedGameCount: Long,
         override val isRefreshing: Boolean
     ) : CollectionUiState
 
@@ -59,7 +63,8 @@ sealed interface CollectionUiState {
         @StringRes val errorMessageResId: Int,
         override val searchQuery: String,
         override val activeQuickFilter: QuickFilter,
-        override val totalGameCount: Int,
+        override val totalGameCount: Long,
+        override val unplayedGameCount: Long,
         override val isRefreshing: Boolean
     ) : CollectionUiState
 }

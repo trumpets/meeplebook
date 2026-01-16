@@ -322,7 +322,7 @@ private fun QuickFiltersRow(
             FilterChip(
                 selected = state.activeQuickFilter == QuickFilter.UNPLAYED,
                 onClick = { onFilterSelected(QuickFilter.UNPLAYED) },
-                label = { Text(stringResource(R.string.collection_filter_unplayed)) }
+                label = { Text(stringResource(R.string.collection_filter_unplayed, state.unplayedGameCount)) }
             )
         }
     }
@@ -634,7 +634,8 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             reason = EmptyReason.NO_SEARCH_RESULTS,
             searchQuery = "search term",
             activeQuickFilter = QuickFilter.ALL,
-            totalGameCount = 0,
+            totalGameCount = 100,
+            unplayedGameCount = 27,
             isRefreshing = false
         ),
         CollectionUiState.Loading,
@@ -643,7 +644,8 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             R.string.sync_collections_failed_error,
             searchQuery = "azul",
             activeQuickFilter = QuickFilter.ALL,
-            totalGameCount = 0,
+            totalGameCount = 100,
+            unplayedGameCount = 27,
             isRefreshing = false
         )
     )
@@ -662,7 +664,8 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             availableSortOptions = CollectionSort.entries,
             sections = buildSections(games),
             sectionIndices = LinkedHashMap(),
-            totalGameCount = games.size,
+            totalGameCount = games.size.toLong(),
+            unplayedGameCount = games.size - 3L,
             isRefreshing = isRefreshing,
             showAlphabetJump = true,
             isSortSheetVisible = isSortSheetVisible

@@ -2,6 +2,7 @@ package app.meeplebook.feature.collection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.ui.StringProvider
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
@@ -27,7 +28,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor(
-    private val observeCollectionDomainSectionsUseCase: ObserveCollectionDomainSectionsUseCase,
+    private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
+    private val observeCollectionSummary: ObserveCollectionSummaryUseCase,
     private val stringProvider: StringProvider
 ) : ViewModel() {
 
@@ -71,11 +73,13 @@ class CollectionViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val contentState: StateFlow<CollectionUiState> =
-        collectionDataQuery
-            .flatMapLatest { query ->
-                observeCollectionDomainSectionsUseCase(query)
-            }
-            .map { domainSections ->
+        combine(
+            collectionDataQuery.flatMapLatest {
+                observeCollectionDomainSections(it)
+            },
+            observeCollectionSummary()
+        ) { domainSections, summary ->
+
                 val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
 
                 if (uiSections.isEmpty()) {
@@ -87,7 +91,8 @@ class CollectionViewModel @Inject constructor(
 
                         searchQuery = rawSearchQuery.value,
                         activeQuickFilter = quickFilter.value,
-                        totalGameCount = uiSections.sumOf { it.games.size },
+                        totalGameCount = summary.totalGames,
+                        unplayedGameCount = summary.unplayedGames,
                         isRefreshing = false
                     )
                 } else {
@@ -104,7 +109,8 @@ class CollectionViewModel @Inject constructor(
 
                         searchQuery = rawSearchQuery.value,
                         activeQuickFilter = quickFilter.value,
-                        totalGameCount = uiSections.sumOf { it.games.size },
+                        totalGameCount = summary.totalGames,
+                        unplayedGameCount = summary.unplayedGames,
                         isRefreshing = false
                     )
                 }
