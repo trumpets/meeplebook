@@ -112,18 +112,33 @@ fun CollectionScreenRoot(
                 LoadingState()
 
             is CollectionUiState.Empty ->
-                EmptyState(reason = uiState.reason)
+                CollectionScaffold(
+                    uiState = uiState,
+                    onEvent = onEvent
+                ) {
+                    EmptyState(reason = uiState.reason)
+                }
 
             is CollectionUiState.Error ->
-                ErrorState(uiState.errorMessageResId)
+                CollectionScaffold(
+                    uiState = uiState,
+                    onEvent = onEvent
+                ) {
+                    ErrorState(uiState.errorMessageResId)
+                }
 
             is CollectionUiState.Content ->
-                CollectionScreenContent(
+                CollectionScaffold(
                     uiState = uiState,
-                    onEvent = onEvent,
-                    listState = listState,
-                    gridState = gridState
-                )
+                    onEvent = onEvent
+                ) {
+                    CollectionScreenContent(
+                        uiState = uiState,
+                        onEvent = onEvent,
+                        listState = listState,
+                        gridState = gridState
+                    )
+                }
         }
     }
 }
@@ -147,6 +162,33 @@ fun LoadingState() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun CollectionScaffold(
+    uiState: CollectionUiState,
+    onEvent: (CollectionEvent) -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Box {
+        Column {
+
+            /* --- SEARCH (always visible) --- */
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
+
+            )
+
+            /* --- QUICK FILTERS (always visible) --- */
+            QuickFiltersRow(
+                state = uiState,
+                onFilterSelected = { onEvent(CollectionEvent.QuickFilterSelected(it)) }
+            )
+
+            content()
         }
     }
 }
@@ -198,16 +240,6 @@ fun CollectionScreenContent(
 ) {
     Box {
         Column {
-            SearchBar(
-                query = uiState.searchQuery,
-                onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
-            )
-
-            QuickFiltersRow(
-                state = uiState,
-                onEvent = onEvent
-            )
-
             CollectionToolbar(
                 selectedViewMode = uiState.viewMode,
                 onViewModeChanged = {
@@ -270,8 +302,8 @@ private fun SearchBar(
 
 @Composable
 private fun QuickFiltersRow(
-    state: CollectionUiState.Content,
-    onEvent: (CollectionEvent) -> Unit
+    state: CollectionUiState,
+    onFilterSelected: (QuickFilter) -> Unit
 ) {
     LazyRow(
         modifier = Modifier.padding(horizontal = 12.dp),
@@ -281,9 +313,7 @@ private fun QuickFiltersRow(
         item {
             FilterChip(
                 selected = state.activeQuickFilter == QuickFilter.ALL,
-                onClick = {
-                    onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.ALL))
-                },
+                onClick = { onFilterSelected(QuickFilter.ALL) },
                 label = { Text(stringResource(R.string.collection_filter_all, state.totalGameCount)) }
             )
         }
@@ -291,9 +321,7 @@ private fun QuickFiltersRow(
         item {
             FilterChip(
                 selected = state.activeQuickFilter == QuickFilter.UNPLAYED,
-                onClick = {
-                    onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
-                },
+                onClick = { onFilterSelected(QuickFilter.UNPLAYED) },
                 label = { Text(stringResource(R.string.collection_filter_unplayed)) }
             )
         }
@@ -601,15 +629,29 @@ private fun SortBottomSheet(
 class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<CollectionUiState> {
     override val values: Sequence<CollectionUiState> = sequenceOf(
         sampleContentState(),
-        sampleContentState(viewMode = CollectionViewMode.LIST),
-        CollectionUiState.Empty(EmptyReason.NO_GAMES),
+        sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
+        CollectionUiState.Empty(
+            reason = EmptyReason.NO_SEARCH_RESULTS,
+            searchQuery = "search term",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 0,
+            isRefreshing = false
+        ),
         CollectionUiState.Loading,
-        sampleContentState(isRefreshing = true)
+        sampleContentState(isRefreshing = true),
+        CollectionUiState.Error(
+            R.string.sync_collections_failed_error,
+            searchQuery = "azul",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 0,
+            isRefreshing = false
+        )
     )
 
     private fun sampleContentState(
         viewMode: CollectionViewMode = CollectionViewMode.GRID,
-        isRefreshing: Boolean = false
+        isRefreshing: Boolean = false,
+        isSortSheetVisible: Boolean = false
     ): CollectionUiState.Content {
         val games = sampleGames()
         return CollectionUiState.Content(
@@ -617,13 +659,13 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             viewMode = viewMode,
             sort = CollectionSort.ALPHABETICAL,
             activeQuickFilter = QuickFilter.ALL,
-            availableSortOptions = emptyList(),
+            availableSortOptions = CollectionSort.entries,
             sections = buildSections(games),
             sectionIndices = LinkedHashMap(),
             totalGameCount = games.size,
             isRefreshing = isRefreshing,
             showAlphabetJump = true,
-            isSortSheetVisible = false
+            isSortSheetVisible = isSortSheetVisible
         )
     }
 

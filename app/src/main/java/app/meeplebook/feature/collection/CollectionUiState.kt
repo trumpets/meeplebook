@@ -7,38 +7,60 @@ import app.meeplebook.core.collection.model.CollectionSort
 
 /**
  * UI state for the Collection screen.
+ *
+ * IMPORTANT for Ivo:
+ * - Capabilities are shared.
+ * - Renderers are conditional.
  */
 sealed interface CollectionUiState {
 
-    data object Loading : CollectionUiState
+    val searchQuery: String
+    val activeQuickFilter: QuickFilter
+    val totalGameCount: Int
+    val isRefreshing: Boolean
+
+    data object Loading : CollectionUiState {
+        override val searchQuery = ""
+        override val activeQuickFilter = QuickFilter.ALL
+        override val totalGameCount = 0
+        override val isRefreshing = false
+    }
 
     data class Empty(
-        val reason: EmptyReason
+        val reason: EmptyReason,
+        override val searchQuery: String,
+        override val activeQuickFilter: QuickFilter,
+        override val totalGameCount: Int,
+        override val isRefreshing: Boolean
     ) : CollectionUiState
 
     data class Content(
-        val searchQuery: String,
-
         // Presentation
         val viewMode: CollectionViewMode, // GRID or LIST
         val sort: CollectionSort,
-        val activeQuickFilter: QuickFilter,
 
         val availableSortOptions: List<CollectionSort>,
 
         // Data
         val sections: List<CollectionSection>,
         val sectionIndices: Map<Char, Int>,
-        val totalGameCount: Int,
 
         // UI chrome
-        val isRefreshing: Boolean,
         val showAlphabetJump: Boolean,
-        val isSortSheetVisible: Boolean
+        val isSortSheetVisible: Boolean,
+
+        override val searchQuery: String,
+        override val activeQuickFilter: QuickFilter,
+        override val totalGameCount: Int,
+        override val isRefreshing: Boolean
     ) : CollectionUiState
 
     data class Error(
-        @StringRes val errorMessageResId: Int
+        @StringRes val errorMessageResId: Int,
+        override val searchQuery: String,
+        override val activeQuickFilter: QuickFilter,
+        override val totalGameCount: Int,
+        override val isRefreshing: Boolean
     ) : CollectionUiState
 }
 
