@@ -109,7 +109,7 @@ Avoid generic names like:
 * UI must not perform IO
 * ViewModels expose immutable UiState
 * Repositories hide data source logic
-* Room is the source of truth for all data.
+* Room is the source of truth for all data
 
 Tests must respect these boundaries.
 
