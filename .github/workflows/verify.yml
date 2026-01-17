@@ -50,6 +50,10 @@ jobs:
             run_android_tests:
               - app/src/androidTest/**
               - app/src/main/**
+              - app/build.gradle.kts
+              - gradle.properties
+              - gradle/libs.versions.toml
+              - build.gradle.kts
 
       - name: Default to true for non-PR events
         id: default
