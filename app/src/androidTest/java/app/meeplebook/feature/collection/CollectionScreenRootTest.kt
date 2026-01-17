@@ -380,7 +380,7 @@ class CollectionScreenRootTest {
         }
 
         // Click on the List view button
-        composeTestRule.onNodeWithContentDescription("List").performClick()
+        composeTestRule.onNodeWithContentDescription(stringRes(R.string.collection_view_list)).performClick()
 
         // Verify callback was triggered with correct view mode
         assertEquals(CollectionViewMode.LIST, capturedViewMode)
@@ -434,7 +434,7 @@ class CollectionScreenRootTest {
         }
 
         // Click on the Sort button
-        composeTestRule.onNodeWithContentDescription("Sort").performClick()
+        composeTestRule.onNodeWithContentDescription(stringRes(R.string.collection_sort)).performClick()
 
         // Verify callback was triggered with correct event type
         assertTrue(capturedEvent is CollectionEvent.OpenSortSheet)
@@ -575,7 +575,7 @@ class CollectionScreenRootTest {
         composeTestRule.assertSectionHeader('W')
     }
 
-    fun ComposeTestRule.assertSectionHeader(letter: Char) {
+    private fun ComposeTestRule.assertSectionHeader(letter: Char) {
         onNodeWithTag("sectionHeader_$letter").assertExists()
     }
 }
