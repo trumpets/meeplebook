@@ -94,7 +94,6 @@ jobs:
           key: avd-34
 
       - name: Instrumented tests
-        if: ${{ github.event_name != 'pull_request' || needs.android-changes.outputs.run_android_tests == 'true' }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
