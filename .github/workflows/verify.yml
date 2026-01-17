@@ -37,7 +37,7 @@ jobs:
   android-changes:
     runs-on: ubuntu-latest
     outputs:
-      run_android_tests: ${{ steps.changes.outputs.run_android_tests }}
+      run_android_tests: ${{ steps.changes.outputs.run_android_tests || steps.default.outputs.run_android_tests }}
     steps:
       - uses: actions/checkout@v4
 
