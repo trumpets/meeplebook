@@ -93,23 +93,48 @@ jobs:
 
       - name: Cache Android Emulator
         uses: actions/cache@v4
+        id: avd-cache
         with:
           path: |
             ~/.android/avd
             ~/.android/adb*
-          key: avd-34
+          key: avd-27
+
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 27
+          force-avd-creation: false
+          emulator-options: >
+            -no-window 
+            -gpu swiftshader_indirect 
+            -noaudio
+            -no-boot-anim 
+            -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
 
       - name: Instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         env:
           BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
         with:
-          api-level: 34
+          api-level: 27
           target: google_apis
           arch: x86_64
+          force-avd-creation: false
           emulator-options: >
             -no-window
-            -no-audio
+            -noaudio
             -gpu swiftshader_indirect
+            -no-boot-anim 
+            -camera-back none
+            -no-snapshot-save
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest
+          boot-timeout: 900
+          # Sometimes Gradle races ADB. Prewarm and wait for device to be ready.
+          script: |
+            adb wait-for-device 
+            adb shell getprop sys.boot_completed
+            ./gradlew connectedDebugAndroidTest
