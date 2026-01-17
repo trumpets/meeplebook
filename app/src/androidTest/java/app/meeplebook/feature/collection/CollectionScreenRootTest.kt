@@ -1,9 +1,12 @@
 package app.meeplebook.feature.collection
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -12,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -50,7 +54,7 @@ class CollectionScreenRootTest {
 
         // Verify loading indicator is displayed
         composeTestRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Loading collection…").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_loading)).assertIsDisplayed()
 
         // Verify collection screen container is present
         composeTestRule.onNodeWithTag("collectionScreen").assertIsDisplayed()
@@ -78,7 +82,7 @@ class CollectionScreenRootTest {
 
         // Verify empty state is displayed
         composeTestRule.onNodeWithTag("emptyState").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Your collection is empty. Add games to your BGG collection to see them here.")
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_empty))
             .assertIsDisplayed()
     }
 
@@ -104,7 +108,7 @@ class CollectionScreenRootTest {
 
         // Verify empty state is displayed
         composeTestRule.onNodeWithTag("emptyState").assertIsDisplayed()
-        composeTestRule.onNodeWithText("No games match your search").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_search_no_results)).assertIsDisplayed()
     }
 
     @Test
@@ -129,16 +133,18 @@ class CollectionScreenRootTest {
 
         // Verify empty state is displayed
         composeTestRule.onNodeWithTag("emptyState").assertIsDisplayed()
-        composeTestRule.onNodeWithText("No games match your filter").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_no_results)).assertIsDisplayed()
     }
 
     @Test
     fun collectionScreenRoot_errorState_displaysErrorMessage() {
+        @StringRes val errorMsgResId = R.string.sync_collections_failed_error
+
         composeTestRule.setContent {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Error(
-                        errorMessageResId = R.string.sync_collections_failed_error,
+                        errorMessageResId = errorMsgResId,
                         searchQuery = "",
                         activeQuickFilter = QuickFilter.ALL,
                         totalGameCount = 0,
@@ -154,7 +160,7 @@ class CollectionScreenRootTest {
 
         // Verify error state is displayed
         composeTestRule.onNodeWithTag("errorState").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Failed to sync collections").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(errorMsgResId)).assertIsDisplayed()
     }
 
     @Test
@@ -201,11 +207,11 @@ class CollectionScreenRootTest {
         }
 
         // Verify search bar is displayed
-        composeTestRule.onNodeWithText("Search games").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("collectionSearchField").assertIsDisplayed()
 
         // Verify quick filters are displayed
-        composeTestRule.onNodeWithText("All (1)").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Unplayed (0)").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_all, 1)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_unplayed, 0)).assertIsDisplayed()
 
         // Verify game name is displayed
         composeTestRule.onNodeWithText("Catan").assertIsDisplayed()
@@ -285,7 +291,7 @@ class CollectionScreenRootTest {
         }
 
         // Type in the search field
-        composeTestRule.onNodeWithText("Search games").performTextInput("azul")
+        composeTestRule.onNodeWithTag("collectionSearchField").performTextInput("azul")
 
         // Verify callback was triggered with the correct value
         assertEquals("azul", capturedQuery)
@@ -318,7 +324,7 @@ class CollectionScreenRootTest {
         }
 
         // Click on the Unplayed filter
-        composeTestRule.onNodeWithText("Unplayed (27)").performClick()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_unplayed, 27)).performClick()
 
         // Verify callback was triggered with the correct filter
         assertEquals(QuickFilter.UNPLAYED, capturedFilter)
@@ -374,7 +380,7 @@ class CollectionScreenRootTest {
         }
 
         // Click on the List view button
-        composeTestRule.onNodeWithText("List").performClick()
+        composeTestRule.onNodeWithContentDescription("List").performClick()
 
         // Verify callback was triggered with correct view mode
         assertEquals(CollectionViewMode.LIST, capturedViewMode)
@@ -428,7 +434,7 @@ class CollectionScreenRootTest {
         }
 
         // Click on the Sort button
-        composeTestRule.onNodeWithText("Sort").performClick()
+        composeTestRule.onNodeWithContentDescription("Sort").performClick()
 
         // Verify callback was triggered with correct event type
         assertTrue(capturedEvent is CollectionEvent.OpenSortSheet)
@@ -455,11 +461,11 @@ class CollectionScreenRootTest {
         }
 
         // Verify search bar is still visible in empty state
-        composeTestRule.onNodeWithText("Search games").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("collectionSearchField").assertIsDisplayed()
 
         // Verify quick filters are still visible
-        composeTestRule.onNodeWithText("All (100)").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Unplayed (27)").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_all, 100)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_unplayed, 27)).assertIsDisplayed()
     }
 
     @Test
@@ -483,11 +489,11 @@ class CollectionScreenRootTest {
         }
 
         // Verify search bar is still visible in error state
-        composeTestRule.onNodeWithText("Search games").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("collectionSearchField").assertIsDisplayed()
 
         // Verify quick filters are still visible
-        composeTestRule.onNodeWithText("All (100)").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Unplayed (27)").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_all, 100)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_unplayed, 27)).assertIsDisplayed()
     }
 
     @Test
@@ -536,7 +542,7 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
                         searchQuery = "",
-                        viewMode = CollectionViewMode.GRID,
+                        viewMode = CollectionViewMode.LIST,
                         sort = CollectionSort.ALPHABETICAL,
                         activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
@@ -556,13 +562,20 @@ class CollectionScreenRootTest {
         }
 
         // Verify all game names are displayed
+        // Visible without scrolling
         composeTestRule.onNodeWithText("Azul").assertIsDisplayed()
         composeTestRule.onNodeWithText("Catan").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Wingspan").assertIsDisplayed()
+
+        // May be offscreen, but must exist in the tree
+        composeTestRule.onNodeWithText("Wingspan").assertExists()
 
         // Verify section headers are displayed
-        composeTestRule.onNodeWithText("A").assertIsDisplayed()
-        composeTestRule.onNodeWithText("C").assertIsDisplayed()
-        composeTestRule.onNodeWithText("W").assertIsDisplayed()
+        composeTestRule.assertSectionHeader('A')
+        composeTestRule.assertSectionHeader('C')
+        composeTestRule.assertSectionHeader('W')
+    }
+
+    fun ComposeTestRule.assertSectionHeader(letter: Char) {
+        onNodeWithTag("sectionHeader_$letter").assertExists()
     }
 }

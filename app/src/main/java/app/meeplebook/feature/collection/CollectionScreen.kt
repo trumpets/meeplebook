@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -292,7 +293,8 @@ private fun SearchBar(
         placeholder = { Text(stringResource(R.string.collection_search_games)) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag("collectionSearchField"),
         singleLine = true,
         shape = RoundedCornerShape(12.dp)
     )
@@ -563,7 +565,8 @@ private fun SectionHeader(letter: Char) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .testTag("sectionHeader_${letter}"),
         fontWeight = FontWeight.Bold
     )
 }
