@@ -7,6 +7,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.meeplebook.R
+import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -35,10 +37,10 @@ class HomeNavigationBarTest {
         }
 
         // Verify all navigation items are displayed
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Collection").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Plays").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Profile").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_home)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_collection)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_plays)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_profile)).assertIsDisplayed()
     }
 
     @Test
@@ -55,7 +57,7 @@ class HomeNavigationBarTest {
         }
 
         // Click on Collection nav item
-        composeTestRule.onNodeWithText("Collection").performClick()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_collection)).performClick()
 
         // Verify callback was triggered with correct destination
         assertEquals(HomeNavigationDestination.COLLECTION, selectedDestination)
@@ -72,12 +74,12 @@ class HomeNavigationBarTest {
         }
 
         // Verify Collection is selected
-        composeTestRule.onNodeWithText("Collection").assertIsSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_collection)).assertIsSelected()
 
         // Verify other items are not selected
-        composeTestRule.onNodeWithText("Home").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_home)).assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_plays)).assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_profile)).assertIsNotSelected()
     }
 
     @Test
@@ -91,15 +93,15 @@ class HomeNavigationBarTest {
         }
 
         // Verify all navigation items are displayed
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Collection").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Plays").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Profile").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_home)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_collection)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_plays)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_profile)).assertIsDisplayed()
 
         // Verify no items are selected
-        composeTestRule.onNodeWithText("Home").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Collection").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Plays").assertIsNotSelected()
-        composeTestRule.onNodeWithText("Profile").assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_home)).assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_collection)).assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_plays)).assertIsNotSelected()
+        composeTestRule.onNodeWithText(stringRes(R.string.nav_profile)).assertIsNotSelected()
     }
 }

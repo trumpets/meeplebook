@@ -8,6 +8,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.meeplebook.R
+import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -249,7 +251,7 @@ class OverviewContentTest {
 
         // Verify loading indicator is displayed
         composeTestRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Loading your games…").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.loading_message)).assertIsDisplayed()
 
         // Verify overview content is not displayed
         composeTestRule.onNodeWithTag("overviewContent").assertDoesNotExist()
@@ -270,7 +272,7 @@ class OverviewContentTest {
 
         // Verify empty state message is displayed
         composeTestRule.onNodeWithTag("emptyRecentPlays").assertIsDisplayed()
-        composeTestRule.onNodeWithText("No recent plays. Start logging your game sessions!").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.empty_recent_plays_message)).assertIsDisplayed()
     }
 
     @Test

@@ -292,7 +292,8 @@ private fun SearchBar(
         placeholder = { Text(stringResource(R.string.collection_search_games)) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag("collectionSearchField"),
         singleLine = true,
         shape = RoundedCornerShape(12.dp)
     )
@@ -563,7 +564,8 @@ private fun SectionHeader(letter: Char) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .testTag("sectionHeader_${letter}"),
         fontWeight = FontWeight.Bold
     )
 }

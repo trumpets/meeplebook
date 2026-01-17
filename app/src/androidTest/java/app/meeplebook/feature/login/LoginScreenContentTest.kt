@@ -1,5 +1,6 @@
 package app.meeplebook.feature.login
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
+import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,17 +44,17 @@ class LoginScreenContentTest {
         }
 
         // Verify title is displayed
-        composeTestRule.onNodeWithText("MeepleBook Login").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.login_title)).assertIsDisplayed()
 
         // Verify username field is displayed with label
-        composeTestRule.onNodeWithText("Username").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.username)).assertIsDisplayed()
 
         // Verify password field is displayed with label
-        composeTestRule.onNodeWithText("Password").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.password)).assertIsDisplayed()
 
         // Verify login button is displayed and enabled
-        composeTestRule.onNodeWithText("Login").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Login").assertIsEnabled()
+        composeTestRule.onNodeWithText(stringRes(R.string.login)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.login)).assertIsEnabled()
     }
 
     @Test
@@ -95,19 +97,21 @@ class LoginScreenContentTest {
         }
 
         // Verify login button is displayed but disabled during loading
-        composeTestRule.onNodeWithText("Login").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Login").assertIsNotEnabled()
+        composeTestRule.onNodeWithText(stringRes(R.string.login)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(R.string.login)).assertIsNotEnabled()
     }
 
     @Test
     fun loginScreen_errorState_displaysErrorMessage() {
+        @StringRes val errorMsgResId = R.string.msg_invalid_credentials_error
+
         composeTestRule.setContent {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(
                         username = "wrongUser",
                         password = "wrongPass",
-                        errorMessageResId = R.string.msg_invalid_credentials_error
+                        errorMessageResId = errorMsgResId
                     ),
                     onUsernameChange = {},
                     onPasswordChange = {},
@@ -117,16 +121,18 @@ class LoginScreenContentTest {
         }
 
         // Verify error message is displayed
-        composeTestRule.onNodeWithText("Invalid username or password").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(errorMsgResId)).assertIsDisplayed()
     }
 
     @Test
     fun loginScreen_emptyCredentialsError_displaysErrorMessage() {
+        @StringRes val errorMsgResId = R.string.msg_empty_credentials_error
+
         composeTestRule.setContent {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(
-                        errorMessageResId = R.string.msg_empty_credentials_error
+                        errorMessageResId = errorMsgResId
                     ),
                     onUsernameChange = {},
                     onPasswordChange = {},
@@ -136,18 +142,20 @@ class LoginScreenContentTest {
         }
 
         // Verify empty credentials error message is displayed
-        composeTestRule.onNodeWithText("Username and password cannot be empty").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(errorMsgResId)).assertIsDisplayed()
     }
 
     @Test
     fun loginScreen_networkError_displaysErrorMessage() {
+        @StringRes val errorMsgResId = R.string.msg_login_failed_error
+
         composeTestRule.setContent {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(
                         username = "user",
                         password = "pass",
-                        errorMessageResId = R.string.msg_login_failed_error
+                        errorMessageResId = errorMsgResId
                     ),
                     onUsernameChange = {},
                     onPasswordChange = {},
@@ -157,7 +165,7 @@ class LoginScreenContentTest {
         }
 
         // Verify login failed error message is displayed
-        composeTestRule.onNodeWithText("Login failed").assertIsDisplayed()
+        composeTestRule.onNodeWithText(stringRes(errorMsgResId)).assertIsDisplayed()
     }
 
     @Test
@@ -176,7 +184,7 @@ class LoginScreenContentTest {
         }
 
         // Click login button
-        composeTestRule.onNodeWithText("Login").performClick()
+        composeTestRule.onNodeWithText(stringRes(R.string.login)).performClick()
 
         // Verify callback was triggered
         assertTrue(loginClicked)
@@ -242,7 +250,7 @@ class LoginScreenContentTest {
         }
 
         // Try to click the disabled login button
-        composeTestRule.onNodeWithText("Login").performClick()
+        composeTestRule.onNodeWithText(stringRes(R.string.login)).performClick()
 
         // Verify callback was NOT triggered (button is disabled during loading)
         assertFalse(loginClicked)
