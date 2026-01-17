@@ -484,7 +484,6 @@ private fun GameGridCard(
                     modifier = Modifier.fillMaxSize(),
                     placeholder = rememberVectorPainter(Icons.Outlined.Casino)
                 )
-                
                 if (game.isNew) {
                     Icon(
                         Icons.Default.AutoAwesome,

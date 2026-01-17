@@ -52,16 +52,21 @@ fun RecentPlayCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Game thumbnail placeholder
-            AsyncImage(
-                model = play.thumbnailUrl,
-                contentDescription = play.gameName,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
-                placeholder = rememberVectorPainter(Icons.Outlined.Casino)
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = play.thumbnailUrl,
+                    contentDescription = play.gameName,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    placeholder = rememberVectorPainter(Icons.Outlined.Casino)
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Column(
                 modifier = Modifier.weight(1f)

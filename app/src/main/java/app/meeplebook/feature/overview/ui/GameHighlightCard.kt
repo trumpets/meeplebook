@@ -48,17 +48,22 @@ fun GameHighlightCard(
             modifier = Modifier.padding(8.dp)
         ) {
             // Game thumbnail placeholder
-            AsyncImage(
-                model = highlight.thumbnailUrl,
-                contentDescription = highlight.gameName,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(GAME_THUMBNAIL_ASPECT_RATIO)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer),
-                placeholder = rememberVectorPainter(Icons.Outlined.Casino)
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = highlight.thumbnailUrl,
+                    contentDescription = highlight.gameName,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    placeholder = rememberVectorPainter(Icons.Outlined.Casino)
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = highlight.gameName,
