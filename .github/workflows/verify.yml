@@ -33,6 +33,8 @@ jobs:
 
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
+        env:
+          BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
 
   android-changes:
     runs-on: ubuntu-latest
@@ -96,6 +98,8 @@ jobs:
       - name: Instrumented tests
         if: ${{ github.event_name != 'pull_request' || needs.android-changes.outputs.run_android_tests == 'true' }}
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
         with:
           api-level: 34
           target: google_apis
