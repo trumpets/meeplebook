@@ -86,8 +86,9 @@ All tests must follow:
 Unit tests:
 
 ```
-Use the Kotlin/JUnit backtick style with a **behavior--description** convention:
-methodUnderTest + context/condition + expected result
+Use the Kotlin/JUnit backtick style with descriptive names.
+Recommended pattern: methodUnderTest + context/condition + expected result
+Example: fun `login with valid credentials returns success`()
 ```
 
 UI tests:
