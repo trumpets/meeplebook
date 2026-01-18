@@ -131,7 +131,7 @@ jobs:
             -camera-back none
             -no-snapshot-save
           disable-animations: true
-          boot-timeout: 900
+          emulator-boot-timeout: 900
           # Sometimes Gradle races ADB. Prewarm and wait for device to be ready.
           script: |
             adb wait-for-device 
