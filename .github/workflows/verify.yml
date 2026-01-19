@@ -5,6 +5,7 @@ on:
     types: [review_requested]
   push:
     branches: [ master ]
+  workflow_dispatch:
 
 env:
   BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
