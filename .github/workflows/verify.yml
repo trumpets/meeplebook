@@ -2,6 +2,7 @@ name: Verify
 
 on:
   pull_request:
+    types: [review_requested]
   push:
     branches: [ master ]
 
@@ -105,7 +106,7 @@ jobs:
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 27
+          api-level: 28
           target: google_apis
           arch: x86_64
           force-avd-creation: false
@@ -121,7 +122,7 @@ jobs:
       - name: Instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 27
+          api-level: 28
           target: google_apis
           arch: x86_64
           force-avd-creation: false
@@ -136,6 +137,6 @@ jobs:
           emulator-boot-timeout: 900
           # Sometimes Gradle races ADB. Prewarm and wait for device to be ready.
           script: |
-            adb wait-for-device 
+            adb wait-for-device
             adb shell getprop sys.boot_completed
             ./gradlew connectedDebugAndroidTest
