@@ -45,19 +45,13 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        val token = getBggBearerTokenOrNull()
+        buildConfigField("String", "BGG_TOKEN", "\"$token\"")
     }
 
     buildTypes {
-        debug {
-            val token = getBggBearerTokenOrNull()
-            buildConfigField("String", "BGG_TOKEN", "\"$token\"")
-        }
-
         release {
-            val token = getBggBearerTokenOrNull()
-                ?: throw GradleException("Missing BGG token. Set `bgg.bearer.token` in `local.properties` or env `BGG_BEARER_TOKEN`.")
-            buildConfigField("String", "BGG_TOKEN", "\"$token\"")
-
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -98,6 +92,18 @@ kotlin {
         freeCompilerArgs.addAll(
             "-opt-in=kotlin.RequiresOptIn",
             "-Xcontext-receivers"
+        )
+    }
+}
+
+gradle.taskGraph.whenReady {
+    val isReleaseBuild = allTasks.any {
+        it.name.contains("Release", ignoreCase = true)
+    }
+
+    if (isReleaseBuild && getBggBearerTokenOrNull() == null) {
+        throw GradleException(
+            "Missing BGG token. Set `bgg.bearer.token` or env `BGG_BEARER_TOKEN`."
         )
     }
 }

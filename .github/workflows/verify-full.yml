@@ -81,7 +81,7 @@ jobs:
             -noaudio
             -no-boot-anim
             -camera-back none
-          disable-animations: false
+          disable-animations: true
           script: echo "Generated AVD snapshot for caching."
 
       - name: Instrumented tests
@@ -100,8 +100,4 @@ jobs:
             -no-snapshot-save
           disable-animations: true
           emulator-boot-timeout: 900
-          # Sometimes Gradle races ADB. Prewarm and wait for device to be ready.
-          script: |
-            adb wait-for-device
-            adb shell getprop sys.boot_completed
-            ./gradlew connectedDebugAndroidTest
+          script: ./gradlew connectedDebugAndroidTest

@@ -1,0 +1,35 @@
+name: Main Build (Tests + APK)
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  full-tests:
+    uses: ./.github/workflows/verify-full.yml
+
+  build:
+    runs-on: ubuntu-latest
+    needs: full-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble debug APK
+        env:
+          BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
+        run: ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meeplebook-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
