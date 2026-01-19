@@ -47,7 +47,8 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         val token = getBggBearerTokenOrNull()
-        buildConfigField("String", "BGG_TOKEN", "\"$token\"")
+        val tokenForBuildConfig = token ?: ""
+        buildConfigField("String", "BGG_TOKEN", "\"$tokenForBuildConfig\"")
     }
 
     buildTypes {
