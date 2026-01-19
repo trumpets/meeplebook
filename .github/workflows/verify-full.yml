@@ -1,10 +1,8 @@
-name: Verify
+name: Verify (Unit + Instrumentation Tests)
 
 on:
   pull_request:
-#    types: [review_requested]
-  push:
-    branches: [ master ]
+  #    types: [review_requested]
   workflow_dispatch:
 
 env:
@@ -12,32 +10,7 @@ env:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/*.gradle.kts', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
-      - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+    uses: ./.github/workflows/verify-unit.yml
 
   android-changes:
     runs-on: ubuntu-latest
@@ -101,19 +74,19 @@ jobs:
           path: |
             ~/.android/avd
             ~/.android/adb*
-          key: avd-28
+          key: avd-33
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 28
+          api-level: 33
           target: google_apis
           arch: x86_64
           force-avd-creation: false
           emulator-options: >
             -no-window
-            -gpu swiftshader_indirect
+            -gpu off
             -noaudio
             -no-boot-anim
             -camera-back none
@@ -123,14 +96,14 @@ jobs:
       - name: Instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 28
+          api-level: 33
           target: google_apis
           arch: x86_64
           force-avd-creation: false
           emulator-options: >
             -no-window
             -noaudio
-            -gpu swiftshader_indirect
+            -gpu off
             -no-boot-anim
             -camera-back none
             -no-snapshot-save
