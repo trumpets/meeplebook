@@ -15,9 +15,9 @@ plugins {
  * Retrieves the BGG bearer token from local.properties or environment variable.
  * For local builds: add `bgg.bearer.token=YOUR_TOKEN` to local.properties
  * For CI builds: set BGG_BEARER_TOKEN environment variable (from GitHub Secrets)
+ * Returns null when missing (caller decides whether it's required).
  */
-fun getBggBearerToken(): String {
-    // First try local.properties
+fun getBggBearerTokenOrNull(): String? {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         val properties = Properties().apply {
@@ -27,12 +27,7 @@ fun getBggBearerToken(): String {
     }
 
     // Fall back to environment variable (for CI builds)
-    val env = System.getenv("BGG_BEARER_TOKEN")
-    if (env.isNullOrBlank()) {
-        throw GradleException("BGG_BEARER_TOKEN environment variable is not set; aborting build.")
-    }
-
-    return env
+    return System.getenv("BGG_BEARER_TOKEN")?.takeIf { it.isNotBlank() }
 }
 
 android {
@@ -50,13 +45,19 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-
-        val token = getBggBearerToken() // from local.properties or env
-        buildConfigField("String", "BGG_TOKEN", "\"$token\"")
     }
 
     buildTypes {
+        debug {
+            val token = getBggBearerTokenOrNull()
+            buildConfigField("String", "BGG_TOKEN", "\"$token\"")
+        }
+
         release {
+            val token = getBggBearerTokenOrNull()
+                ?: throw GradleException("Missing BGG token. Set `bgg.bearer.token` in `local.properties` or env `BGG_BEARER_TOKEN`.")
+            buildConfigField("String", "BGG_TOKEN", "\"$token\"")
+
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
