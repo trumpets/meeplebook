@@ -2,7 +2,7 @@ name: Verify
 
 on:
   pull_request:
-    types: [review_requested]
+#    types: [review_requested]
   push:
     branches: [ master ]
   workflow_dispatch:
@@ -101,7 +101,7 @@ jobs:
           path: |
             ~/.android/avd
             ~/.android/adb*
-          key: avd-27
+          key: avd-28
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
