@@ -110,10 +110,10 @@ jobs:
           arch: x86_64
           force-avd-creation: false
           emulator-options: >
-            -no-window 
-            -gpu swiftshader_indirect 
+            -no-window
+            -gpu swiftshader_indirect
             -noaudio
-            -no-boot-anim 
+            -no-boot-anim
             -camera-back none
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
