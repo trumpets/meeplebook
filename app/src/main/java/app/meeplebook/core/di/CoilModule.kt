@@ -1,14 +1,14 @@
 package app.meeplebook.core.di
 
-import coil3.disk.directory
-import coil3.request.crossfade
 import android.content.Context
 import app.meeplebook.R
 import coil3.ImageLoader
 import coil3.asImage
 import coil3.disk.DiskCache
+import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
