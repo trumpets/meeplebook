@@ -14,6 +14,7 @@ import javax.inject.Inject
  * Synchronizes collection data for the currently logged-in user.
  *
  * Updates sync timestamp on successful synchronization.
+ * Returns CollectionError.NotLoggedIn if no user is currently authenticated.
  */
 class SyncCollectionUseCase @Inject constructor(
     private val authRepository: AuthRepository,
@@ -24,7 +25,9 @@ class SyncCollectionUseCase @Inject constructor(
     /**
      * Performs a sync of collection data from BGG.
      *
-     * If sync fails, returns the error. Sync timestamp is updated after successful sync.
+     * Returns CollectionError.NotLoggedIn if no user is authenticated.
+     * Returns the specific CollectionError if sync fails.
+     * Sync timestamp is updated only after successful sync.
      */
     suspend operator fun invoke(): AppResult<Unit, CollectionError> {
         // Get current user
