@@ -25,6 +25,8 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +41,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.ui.components.gameImageClip
 import app.meeplebook.ui.theme.MeepleBookTheme
+import coil3.compose.AsyncImage
 
 /**
  * Collection screen entry point that wires the ViewModel to the UI.
@@ -473,13 +477,28 @@ private fun GameGridCard(
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .gameImageClip(),
             ) {
+                AsyncImage(
+                    model = game.thumbnailUrl,
+                    contentDescription = game.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
                 if (game.isNew) {
                     Icon(
                         Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        modifier = Modifier.padding(4.dp)
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .align(Alignment.TopStart)
+                            .background(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(2.dp)
                     )
                 }
             }
@@ -524,8 +543,15 @@ private fun GameListRow(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+                .gameImageClip(),
+        ) {
+            AsyncImage(
+                model = game.thumbnailUrl,
+                contentDescription = game.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         Spacer(Modifier.width(12.dp))
 

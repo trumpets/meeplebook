@@ -150,6 +150,7 @@ dependencies {
 
     // Image loading
     implementation(libs.coil)
+    implementation(libs.coil.okhttp3)
 
     // Testing
     // Unit tests (src/test)
