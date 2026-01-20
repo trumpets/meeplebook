@@ -641,7 +641,7 @@ class CollectionViewModelTest {
         viewModel.onEvent(CollectionEvent.Refresh)
         advanceUntilIdle()
 
-        // Then - sync was attempted (but returned NotLoggedIn error)
+        // Then - sync was not called (use case returned NotLoggedIn error before attempting repository sync)
         assertEquals(0, fakeCollectionRepository.syncCallCount)
     }
 
