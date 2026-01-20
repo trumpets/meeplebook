@@ -486,7 +486,7 @@ private fun GameGridCard(
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                if (game.isNew) {
+                if (game.isUnplayed) {
                     Icon(
                         Icons.Default.AutoAwesome,
                         contentDescription = null,
@@ -709,7 +709,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "42 plays",
             playersSubtitle = "3–4p",
             playTimeSubtitle = "75 min",
-            isNew = false
+            isUnplayed = false
         ),
         CollectionGameItem(
             gameId = 2,
@@ -719,7 +719,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "18 plays",
             playersSubtitle = "1–5p",
             playTimeSubtitle = "90 min",
-            isNew = false
+            isUnplayed = false
         ),
         CollectionGameItem(
             gameId = 3,
@@ -729,7 +729,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "25 plays",
             playersSubtitle = "2p",
             playTimeSubtitle = "30 min",
-            isNew = false
+            isUnplayed = false
         ),
         CollectionGameItem(
             gameId = 4,
@@ -739,7 +739,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "0 plays",
             playersSubtitle = "2–4p",
             playTimeSubtitle = "45 min",
-            isNew = true
+            isUnplayed = true
         ),
         CollectionGameItem(
             gameId = 40,
@@ -749,7 +749,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "0 plays",
             playersSubtitle = "2–4p",
             playTimeSubtitle = "45 min",
-            isNew = true
+            isUnplayed = true
         ),
         CollectionGameItem(
             gameId = 5,
@@ -759,7 +759,7 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             playsSubtitle = "33 plays",
             playersSubtitle = "2–5p",
             playTimeSubtitle = "60 min",
-            isNew = false
+            isUnplayed = false
         )
     )
 

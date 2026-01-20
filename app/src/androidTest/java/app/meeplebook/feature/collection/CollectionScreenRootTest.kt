@@ -174,7 +174,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "42 plays",
                 playersSubtitle = "3–4p",
                 playTimeSubtitle = "75 min",
-                isNew = false
+                isUnplayed = false
             )
         )
 
@@ -228,7 +228,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "18 plays",
                 playersSubtitle = "1–5p",
                 playTimeSubtitle = "90 min",
-                isNew = false
+                isUnplayed = false
             )
         )
 
@@ -343,7 +343,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "42 plays",
                 playersSubtitle = "3–4p",
                 playTimeSubtitle = "75 min",
-                isNew = false
+                isUnplayed = false
             )
         )
 
@@ -399,7 +399,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "42 plays",
                 playersSubtitle = "3–4p",
                 playTimeSubtitle = "75 min",
-                isNew = false
+                isUnplayed = false
             )
         )
 
@@ -507,7 +507,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "25 plays",
                 playersSubtitle = "2–4p",
                 playTimeSubtitle = "30 min",
-                isNew = false
+                isUnplayed = false
             ),
             CollectionGameItem(
                 gameId = 2,
@@ -517,7 +517,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "42 plays",
                 playersSubtitle = "3–4p",
                 playTimeSubtitle = "75 min",
-                isNew = false
+                isUnplayed = false
             ),
             CollectionGameItem(
                 gameId = 3,
@@ -527,7 +527,7 @@ class CollectionScreenRootTest {
                 playsSubtitle = "18 plays",
                 playersSubtitle = "1–5p",
                 playTimeSubtitle = "90 min",
-                isNew = false
+                isUnplayed = false
             )
         )
 
