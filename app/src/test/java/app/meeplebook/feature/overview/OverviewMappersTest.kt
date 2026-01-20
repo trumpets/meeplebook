@@ -111,7 +111,7 @@ class OverviewMappersTest {
         // Then
         assertEquals(10L, result.id)
         assertEquals("Wingspan", result.gameName)
-        assertNull(result.thumbnailUrl) // Always null per mapper implementation
+        assertEquals("https://example.com/wingspan.jpg", result.thumbnailUrl)
         assertEquals(1, result.playerCount)
         assert(result.dateText.isNotEmpty())
         assert(result.playerNames.isNotEmpty())

@@ -98,7 +98,7 @@ data class CollectionGameItem(
     val playTimeSubtitle: String, // "30–60m"
 
     // Flags
-    val isNew: Boolean
+    val isUnplayed: Boolean
 )
 
 /**

@@ -35,7 +35,7 @@ fun DomainRecentPlay.toRecentPlay(stringProvider: StringProvider): RecentPlay {
     return RecentPlay(
         id = id,
         gameName = gameName,
-        thumbnailUrl = null, // TODO: Add thumbnail support from CollectionRepository by mapping Play.gameId to collection items
+        thumbnailUrl = thumbnailUrl,
         dateText = formatRelativeDate(stringProvider, date),
         playerCount = playerCount,
         playerNames = formatPlayerNames(stringProvider, playerNames)

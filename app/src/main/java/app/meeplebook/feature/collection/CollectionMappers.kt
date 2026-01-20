@@ -37,7 +37,7 @@ fun DomainCollectionItem.toCollectionGameItem(stringProvider: StringProvider): C
         playsSubtitle = stringProvider.get(R.string.collection_plays_count, playCount),
         playersSubtitle = playersSubtitle,
         playTimeSubtitle = playTimeSubtitle,
-        isNew = playCount == 0
+        isUnplayed = playCount == 0
     )
 }
 
