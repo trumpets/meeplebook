@@ -49,12 +49,16 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -88,6 +92,7 @@ fun CollectionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
@@ -119,7 +124,7 @@ fun CollectionScreen(
                 }
 
                 is CollectionUiEffects.ShowSnackbar -> {
-//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
+                    snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
             }
         }
@@ -129,7 +134,8 @@ fun CollectionScreen(
         uiState = uiState,
         onEvent = { viewModel.onEvent(it) },
         listState = listState,
-        gridState = gridState
+        gridState = gridState,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -139,45 +145,54 @@ fun CollectionScreenRoot(
     uiState: CollectionUiState,
     onEvent: (CollectionEvent) -> Unit,
     listState: LazyListState,
-    gridState: LazyGridState
+    gridState: LazyGridState,
+    snackbarHostState: SnackbarHostState
 ) {
-    Box(
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .testTag("collectionScreen")
-    ) {
-        when (uiState) {
-            CollectionUiState.Loading ->
-                LoadingState()
+            .testTag("collectionScreen"),
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            when (uiState) {
+                CollectionUiState.Loading ->
+                    LoadingState()
 
-            is CollectionUiState.Empty ->
-                CollectionScaffold(
-                    uiState = uiState,
-                    onEvent = onEvent
-                ) {
-                    EmptyState(reason = uiState.reason)
-                }
-
-            is CollectionUiState.Error ->
-                CollectionScaffold(
-                    uiState = uiState,
-                    onEvent = onEvent
-                ) {
-                    ErrorState(uiState.errorMessageResId)
-                }
-
-            is CollectionUiState.Content ->
-                CollectionScaffold(
-                    uiState = uiState,
-                    onEvent = onEvent
-                ) {
-                    CollectionScreenContent(
+                is CollectionUiState.Empty ->
+                    CollectionScaffold(
                         uiState = uiState,
-                        onEvent = onEvent,
-                        listState = listState,
-                        gridState = gridState
-                    )
-                }
+                        onEvent = onEvent
+                    ) {
+                        EmptyState(reason = uiState.reason)
+                    }
+
+                is CollectionUiState.Error ->
+                    CollectionScaffold(
+                        uiState = uiState,
+                        onEvent = onEvent
+                    ) {
+                        ErrorState(uiState.errorMessageResId)
+                    }
+
+                is CollectionUiState.Content ->
+                    CollectionScaffold(
+                        uiState = uiState,
+                        onEvent = onEvent
+                    ) {
+                        CollectionScreenContent(
+                            uiState = uiState,
+                            onEvent = onEvent,
+                            listState = listState,
+                            gridState = gridState
+                        )
+                    }
+            }
         }
     }
 }
@@ -824,7 +839,8 @@ fun CollectionScreenPreview(
             uiState = uiState,
             onEvent = {},
             rememberLazyListState(),
-            rememberLazyGridState()
+            rememberLazyGridState(),
+            remember { SnackbarHostState() }
         )
     }
 }
