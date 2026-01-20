@@ -1,8 +1,6 @@
 name: Verify (Unit + Instrumentation Tests)
 
 on:
-  pull_request:
-  #    types: [review_requested]
   workflow_call:
   workflow_dispatch:
 
