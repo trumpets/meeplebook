@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.CollectionItemEntity
+import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -27,6 +28,9 @@ import java.time.Instant
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class CollectionItemDaoTest {
+
+    private val FIXED_INSTANT =
+        Instant.parse("2024-01-01T00:00:00Z")
 
     private lateinit var database: MeepleBookDatabase
     private lateinit var dao: CollectionItemDao
@@ -484,7 +488,7 @@ class CollectionItemDaoTest {
         // Insert a play for game 1
         val playDao = database.playDao()
         playDao.insert(
-            app.meeplebook.core.database.entity.PlayEntity(
+            PlayEntity(
                 id = 1,
                 date = parseDateString("2024-01-01"),
                 quantity = 1,
@@ -516,7 +520,7 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insertAll(
             listOf(
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 1,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
@@ -527,7 +531,7 @@ class CollectionItemDaoTest {
                     gameName = "Game 1",
                     comments = null
                 ),
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 2,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
@@ -630,7 +634,7 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insertAll(
             listOf(
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 1,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
@@ -641,7 +645,7 @@ class CollectionItemDaoTest {
                     gameName = "Agricola",
                     comments = null
                 ),
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 2,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
@@ -675,7 +679,7 @@ class CollectionItemDaoTest {
         // Insert play for the game
         val playDao = database.playDao()
         playDao.insert(
-            app.meeplebook.core.database.entity.PlayEntity(
+            PlayEntity(
                 id = 1,
                 date = parseDateString("2024-01-01"),
                 quantity = 1,
@@ -881,7 +885,7 @@ class CollectionItemDaoTest {
         // Insert play for game 2 (Pandemic)
         val playDao = database.playDao()
         playDao.insert(
-            app.meeplebook.core.database.entity.PlayEntity(
+            PlayEntity(
                 id = 1,
                 date = parseDateString("2024-01-01"),
                 quantity = 1,
@@ -917,7 +921,7 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insertAll(
             listOf(
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 1,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
@@ -928,7 +932,7 @@ class CollectionItemDaoTest {
                     gameName = "Catan",
                     comments = null
                 ),
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 2,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
@@ -990,7 +994,7 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insertAll(
             listOf(
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 1,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
@@ -1001,7 +1005,7 @@ class CollectionItemDaoTest {
                     gameName = "Catan",
                     comments = null
                 ),
-                app.meeplebook.core.database.entity.PlayEntity(
+                PlayEntity(
                     id = 2,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
@@ -1038,7 +1042,7 @@ class CollectionItemDaoTest {
         subtype: GameSubtype = GameSubtype.BOARDGAME,
         yearPublished: Int? = null,
         thumbnail: String? = null,
-        lastModifiedDate: Instant = Instant.now()
+        lastModifiedDate: Instant = FIXED_INSTANT
     ): CollectionItemEntity {
         return CollectionItemEntity(
             gameId = gameId,
