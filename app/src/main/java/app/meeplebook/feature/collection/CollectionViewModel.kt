@@ -3,10 +3,12 @@ package app.meeplebook.feature.collection
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
+import app.meeplebook.core.collection.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.StringProvider
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.result.fold
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +32,7 @@ import javax.inject.Inject
 class CollectionViewModel @Inject constructor(
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
     private val observeCollectionSummary: ObserveCollectionSummaryUseCase,
+    private val syncCollection: SyncCollectionUseCase,
     private val stringProvider: StringProvider
 ) : ViewModel() {
 
@@ -49,6 +52,7 @@ class CollectionViewModel @Inject constructor(
     private val quickFilter = MutableStateFlow(QuickFilter.ALL)
     private val sort = MutableStateFlow(CollectionSort.ALPHABETICAL)
     private val viewMode = MutableStateFlow(CollectionViewMode.LIST)
+    private val isRefreshing = MutableStateFlow(false)
 
     private val collectionDataQuery: StateFlow<CollectionDataQuery> =
         combine(
@@ -77,8 +81,9 @@ class CollectionViewModel @Inject constructor(
             collectionDataQuery.flatMapLatest {
                 observeCollectionDomainSections(it)
             },
-            observeCollectionSummary()
-        ) { domainSections, summary ->
+            observeCollectionSummary(),
+            isRefreshing
+        ) { domainSections, summary, refreshing ->
 
                 val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
 
@@ -93,7 +98,7 @@ class CollectionViewModel @Inject constructor(
                         activeQuickFilter = quickFilter.value,
                         totalGameCount = summary.totalGames,
                         unplayedGameCount = summary.unplayedGames,
-                        isRefreshing = false
+                        isRefreshing = refreshing
                     )
                 } else {
                     val sectionIndices = buildSectionIndices(uiSections)
@@ -111,7 +116,7 @@ class CollectionViewModel @Inject constructor(
                         activeQuickFilter = quickFilter.value,
                         totalGameCount = summary.totalGames,
                         unplayedGameCount = summary.unplayedGames,
-                        isRefreshing = false
+                        isRefreshing = refreshing
                     )
                 }
             }
@@ -188,7 +193,18 @@ class CollectionViewModel @Inject constructor(
             }
 
             is CollectionEvent.Refresh -> {
-                // TODO: Implement manual collection refresh handling.
+                viewModelScope.launch {
+                    isRefreshing.value = true
+                    syncCollection().fold(
+                        onSuccess = {
+                            // Sync successful, data will update automatically via flows
+                        },
+                        onFailure = { error ->
+                            // TODO: Show error to user (e.g., via SnackBar or UI effect)
+                        }
+                    )
+                    isRefreshing.value = false
+                }
             }
 
             is CollectionEvent.LogPlayClicked -> {
