@@ -78,11 +78,18 @@ android {
     testOptions {
         animationsDisabled = true
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
     }
 
     room {
         schemaDirectory("$projectDir/schemas")
         generateKotlin = true
+    }
+
+    splits {
+        abi {
+            isEnable = false
+        }
     }
 }
 
