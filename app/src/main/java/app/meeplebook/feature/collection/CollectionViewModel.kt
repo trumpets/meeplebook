@@ -195,18 +195,21 @@ class CollectionViewModel @Inject constructor(
             is CollectionEvent.Refresh -> {
                 viewModelScope.launch {
                     isRefreshing.value = true
-                    syncCollection().fold(
-                        onSuccess = {
-                            // Sync successful, data will update automatically via flows
-                        },
-                        onFailure = { error ->
-                            // TODO: Implement error notification mechanism
-                            // Options: Add error state to CollectionUiState.Error,
-                            // or create a new UI effect for showing SnackBar
-                            // Error is silently ignored for now, refresh indicator will disappear
-                        }
-                    )
-                    isRefreshing.value = false
+                    try {
+                        syncCollection().fold(
+                            onSuccess = {
+                                // Sync successful, data will update automatically via flows
+                            },
+                            onFailure = { error ->
+                                // TODO: Implement error notification mechanism
+                                // Options: Add error state to CollectionUiState.Error,
+                                // or create a new UI effect for showing SnackBar
+                                // Error is silently ignored for now, refresh indicator will disappear
+                            }
+                        )
+                    } finally {
+                        isRefreshing.value = false
+                    }
                 }
             }
 
