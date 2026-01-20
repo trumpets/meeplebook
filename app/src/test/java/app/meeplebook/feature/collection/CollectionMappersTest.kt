@@ -53,7 +53,7 @@ class CollectionMappersTest {
         assertEquals("42 plays", result.playsSubtitle)
         assertEquals("2-4p", result.playersSubtitle)
         assertEquals("30-45m", result.playTimeSubtitle)
-        assertFalse(result.isNew)
+        assertFalse(result.isUnplayed)
     }
 
     @Test
@@ -78,7 +78,7 @@ class CollectionMappersTest {
         assertEquals(200L, result.gameId)
         assertEquals("Wingspan", result.name)
         assertEquals("0 plays", result.playsSubtitle)
-        assertTrue(result.isNew)
+        assertTrue(result.isUnplayed)
     }
 
     @Test
