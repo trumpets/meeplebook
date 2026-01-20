@@ -373,7 +373,7 @@ private fun CollectionToolbar(
 
 /* ---------- CONTENT ---------- */
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun CollectionContent(
     state: CollectionUiState.Content,
@@ -381,9 +381,15 @@ private fun CollectionContent(
     listState: LazyListState,
     gridState: LazyGridState
 ) {
-    when (state.viewMode) {
-        CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
-        CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
+    PullToRefreshBox(
+        isRefreshing = state.isRefreshing,
+        onRefresh = { onEvent(CollectionEvent.Refresh) },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (state.viewMode) {
+            CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
+            CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
+        }
     }
 }
 
