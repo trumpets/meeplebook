@@ -6,7 +6,6 @@ import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
-import app.meeplebook.core.collection.domain.SyncCollectionUseCase
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.CollectionSort
@@ -15,6 +14,7 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase

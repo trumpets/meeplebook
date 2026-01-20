@@ -51,6 +51,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -115,6 +116,10 @@ fun CollectionScreen(
 
                 CollectionUiEffects.DismissSortSheet -> {
                     // hideModalBottomSheet()
+                }
+
+                is CollectionUiEffects.ShowSnackbar -> {
+//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
             }
         }
@@ -407,7 +412,6 @@ private fun CollectionToolbar(
 
 /* ---------- CONTENT ---------- */
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun CollectionContent(
     state: CollectionUiState.Content,

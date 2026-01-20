@@ -2,18 +2,20 @@ package app.meeplebook.feature.collection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.meeplebook.R
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
-import app.meeplebook.core.collection.domain.SyncCollectionUseCase
-import app.meeplebook.core.ui.StringProvider
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.sync.domain.SyncCollectionUseCase
+import app.meeplebook.core.ui.StringProvider
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -158,6 +160,8 @@ class CollectionViewModel @Inject constructor(
     private val _uiEffect = MutableSharedFlow<CollectionUiEffects>()
     val uiEffect = _uiEffect.asSharedFlow()
 
+    private var refreshJob: Job? = null
+
     fun onEvent(event: CollectionEvent) {
         when (event) {
             is CollectionEvent.SearchChanged -> {
@@ -193,18 +197,20 @@ class CollectionViewModel @Inject constructor(
             }
 
             is CollectionEvent.Refresh -> {
-                viewModelScope.launch {
+                refreshJob?.cancel()
+                refreshJob = viewModelScope.launch {
                     isRefreshing.value = true
                     try {
                         syncCollection().fold(
                             onSuccess = {
                                 // Sync successful, data will update automatically via flows
                             },
-                            onFailure = { error ->
-                                // TODO: Implement error notification mechanism
-                                // Options: Add error state to CollectionUiState.Error,
-                                // or create a new UI effect for showing SnackBar
-                                // Error is silently ignored for now, refresh indicator will disappear
+                            onFailure = { _ ->
+                                emitEffect(
+                                    CollectionUiEffects.ShowSnackbar(
+                                        messageResId = R.string.sync_collections_failed_error
+                                    )
+                                )
                             }
                         )
                     } finally {

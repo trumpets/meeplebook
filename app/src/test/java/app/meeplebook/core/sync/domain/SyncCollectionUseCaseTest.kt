@@ -1,4 +1,4 @@
-package app.meeplebook.core.collection.domain
+package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
@@ -8,6 +8,7 @@ import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.model.SyncUserDataError
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -94,7 +95,7 @@ class SyncCollectionUseCaseTest {
 
         // Then
         assertTrue(result is AppResult.Failure)
-        assertEquals(CollectionError.NotLoggedIn, (result as AppResult.Failure).error)
+        assertEquals(SyncUserDataError.NotLoggedIn, (result as AppResult.Failure).error)
         assertEquals(0, fakeCollectionRepository.syncCallCount)
 
         // Verify sync time was not updated
@@ -119,7 +120,7 @@ class SyncCollectionUseCaseTest {
         // Then
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
-        assertEquals(collectionError, error)
+        assertEquals(SyncUserDataError.CollectionSyncFailed(collectionError), error)
 
         // Verify sync time was not updated
         assertNull(fakeSyncTimeRepository.getLastCollectionSync())

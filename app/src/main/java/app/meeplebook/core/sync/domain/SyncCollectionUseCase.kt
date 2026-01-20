@@ -1,11 +1,11 @@
-package app.meeplebook.core.collection.domain
+package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.collection.CollectionRepository
-import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.sync.SyncTimeRepository
+import app.meeplebook.core.sync.model.SyncUserDataError
 import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
@@ -29,10 +29,10 @@ class SyncCollectionUseCase @Inject constructor(
      * Returns the specific CollectionError if sync fails.
      * Sync timestamp is updated only after successful sync.
      */
-    suspend operator fun invoke(): AppResult<Unit, CollectionError> {
+    suspend operator fun invoke(): AppResult<Unit, SyncUserDataError> {
         // Get current user
         val user = authRepository.getCurrentUser()
-            ?: return AppResult.Failure(CollectionError.NotLoggedIn)
+            ?: return AppResult.Failure(SyncUserDataError.NotLoggedIn)
 
         // Sync collection
         val collectionResult = collectionRepository.syncCollection(user.username)
@@ -42,7 +42,7 @@ class SyncCollectionUseCase @Inject constructor(
                 syncTimeRepository.updateCollectionSyncTime(Instant.now(clock))
             },
             onFailure = { error ->
-                return AppResult.Failure(error)
+                return AppResult.Failure(SyncUserDataError.CollectionSyncFailed(error))
             }
         )
 
