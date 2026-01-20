@@ -48,7 +48,7 @@ class SyncCollectionUseCaseTest {
     }
 
     @Test
-    fun `invoke succeeds when collection sync successfully`() = runTest {
+    fun `invoke succeeds when collection syncs successfully`() = runTest {
         // Given
         val user = AuthCredentials(
             username = "testuser",
