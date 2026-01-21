@@ -194,6 +194,8 @@ Retry strategies for network; bubble offline status to UI.
 
 Use Result<T> or sealed Either type from repository to differentiate success/failure.
 
+AsyncImage whenever we have a remote URL.
+
 ## 10 — Testing strategy
 
 Prefer fakes to Mockks!!! Only use Mockks for 3rd party classes. If a class can't be faked, abstract it to an interface so it can be!

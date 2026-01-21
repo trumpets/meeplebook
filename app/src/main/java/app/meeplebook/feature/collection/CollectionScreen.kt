@@ -1,6 +1,7 @@
 package app.meeplebook.feature.collection
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -51,12 +52,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -88,6 +91,10 @@ fun CollectionScreen(
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
 
+    val context = LocalContext.current
+
+    // TODO Consistent padding between screen contents. Overview list is a bit narrower than collections list
+
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -115,6 +122,11 @@ fun CollectionScreen(
 
                 CollectionUiEffects.DismissSortSheet -> {
                     // hideModalBottomSheet()
+                }
+
+                is CollectionUiEffects.ShowSnackbar -> {
+                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
             }
         }
@@ -407,7 +419,6 @@ private fun CollectionToolbar(
 
 /* ---------- CONTENT ---------- */
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CollectionContent(
     state: CollectionUiState.Content,
@@ -415,9 +426,15 @@ private fun CollectionContent(
     listState: LazyListState,
     gridState: LazyGridState
 ) {
-    when (state.viewMode) {
-        CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
-        CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
+    PullToRefreshBox(
+        isRefreshing = state.isRefreshing,
+        onRefresh = { onEvent(CollectionEvent.Refresh) },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (state.viewMode) {
+            CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
+            CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
+        }
     }
 }
 

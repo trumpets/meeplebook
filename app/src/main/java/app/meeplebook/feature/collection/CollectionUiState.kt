@@ -2,8 +2,8 @@ package app.meeplebook.feature.collection
 
 import androidx.annotation.StringRes
 import app.meeplebook.R
-import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.QuickFilter
 
 /**
  * UI state for the Collection screen.
@@ -114,4 +114,5 @@ sealed interface CollectionUiEffects {
     data class NavigateToGame(val gameId: Long) : CollectionUiEffects
     data object OpenSortSheet : CollectionUiEffects
     data object DismissSortSheet : CollectionUiEffects
+    data class ShowSnackbar(val message: String) : CollectionUiEffects
 }
