@@ -10,24 +10,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -39,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.ui.scaffold.FabEffect
+import app.meeplebook.core.ui.scaffold.FabState
+import app.meeplebook.core.ui.scaffold.LocalScaffoldController
 import app.meeplebook.feature.overview.ui.EmptyStateMessage
 import app.meeplebook.feature.overview.ui.GameHighlightCard
 import app.meeplebook.feature.overview.ui.RecentPlayCard
@@ -87,41 +81,52 @@ fun OverviewContent(
     onSuggestedGameClick: () -> Unit = {},
     onLogPlayClick: () -> Unit = {}
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-
     // Resolve error message string when errorMessageResId is not null
     val errorMessage = uiState.errorMessageResId?.let { stringResource(id = it) }
+
+    val scaffoldController = LocalScaffoldController.current
 
     // Show snackbar when there's an error
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
-            snackbarHostState.showSnackbar(message = it)
+            scaffoldController.showSnackbar(message = it)
             onErrorShown()
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .padding(16.dp)
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onLogPlayClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag("logPlayFab")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.log_play_description)
-                )
-            }
-        }
-    ) { paddingValues ->
+//    Scaffold(
+//        modifier = modifier.fillMaxSize(),
+//        snackbarHost = {
+//            SnackbarHost(
+//                hostState = snackbarHostState,
+//                modifier = Modifier
+//                    .padding(16.dp)
+//            )
+//        },
+//        floatingActionButton = {
+//            FloatingActionButton(
+//                onClick = onLogPlayClick,
+//                containerColor = MaterialTheme.colorScheme.primary,
+//                modifier = Modifier.testTag("logPlayFab")
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Add,
+//                    contentDescription = stringResource(R.string.log_play_description)
+//                )
+//            }
+//        }
+//    ) { paddingValues ->
+
+    FabEffect(
+        key = "overview",
+        state = FabState(
+            onClick = onLogPlayClick,
+            contentDescription = stringResource(R.string.log_play_description),
+            testTag = "logPlayFab",
+        )
+    )
+
+    Box(modifier = modifier.fillMaxSize()) {
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = onRefresh,

@@ -208,7 +208,7 @@ class CollectionViewModel @Inject constructor(
                             onFailure = { _ ->
                                 emitEffect(
                                     CollectionUiEffects.ShowSnackbar(
-                                        messageResId = R.string.sync_collections_failed_error
+                                        stringProvider.get(R.string.sync_collections_failed_error)
                                     )
                                 )
                             }

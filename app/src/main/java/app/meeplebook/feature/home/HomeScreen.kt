@@ -1,6 +1,11 @@
 package app.meeplebook.feature.home
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -8,22 +13,35 @@ import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.meeplebook.R
+import app.meeplebook.core.ui.scaffold.DefaultScaffoldController
+import app.meeplebook.core.ui.scaffold.LocalScaffoldController
 import app.meeplebook.feature.home.navigation.HomeNavHost
 import app.meeplebook.feature.home.navigation.HomeTabScreen
 import app.meeplebook.ui.theme.MeepleBookTheme
@@ -55,21 +73,24 @@ fun HomeScreen(
     refreshOnLogin: Boolean
 ) {
     val tabNavController = rememberNavController()
+    val scaffoldController = rememberScaffoldController()
 
-    HomeScreenContent(
-        refreshOnLogin,
-        onNavItemClick = { destination ->
-            tabNavController.navigate(destination.route) {
-                // Pop up to start destination to avoid building up back stack
-                popUpTo(tabNavController.graph.startDestinationId) {
-                    saveState = true
+    CompositionLocalProvider(LocalScaffoldController provides scaffoldController) {
+        HomeScreenContent(
+            refreshOnLogin,
+            onNavItemClick = { destination ->
+                tabNavController.navigate(destination.route) {
+                    // Pop up to start destination to avoid building up back stack
+                    popUpTo(tabNavController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
                 }
-                launchSingleTop = true
-                restoreState = true
-            }
-        },
-        tabNavController = tabNavController
-    )
+            },
+            tabNavController = tabNavController
+        )
+    }
 }
 
 /**
@@ -110,7 +131,51 @@ fun HomeScreenContent(
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
 ) {
+    val scaffoldController = LocalScaffoldController.current
+    val fabState by scaffoldController.fabState.collectAsState()
+
+    val currentBackStackEntry by tabNavController.currentBackStackEntryAsState()
+
+    // Track previous destination to detect *changes* (not initial load)
+    val previousDestination = remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(currentBackStackEntry) {
+        val currentRoute = currentBackStackEntry?.destination?.route
+
+        // Only clear if this is a navigation *change*, not initial load
+        if (previousDestination.value != null && previousDestination.value != currentRoute) {
+            scaffoldController.clearFab()
+        }
+
+        previousDestination.value = currentRoute
+    }
+
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = scaffoldController.snackbarHostState
+            )
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = fabState != null,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
+            ) {
+                val state = fabState ?: return@AnimatedVisibility
+
+                FloatingActionButton(
+                    onClick = { state.onClick.invoke() },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag(state.testTag ?: "")
+                ) {
+                    Icon(
+                        imageVector = state.icon,
+                        contentDescription = state.contentDescription
+                    )
+                }
+            }
+        },
         bottomBar = {
             val navBackStackEntry = tabNavController.currentBackStackEntryAsState().value
             val currentDestination = navBackStackEntry?.destination
@@ -134,6 +199,16 @@ fun HomeScreenContent(
         )
     }
 }
+
+@Composable
+fun rememberScaffoldController(
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+): DefaultScaffoldController {
+    return remember(snackbarHostState) {
+        DefaultScaffoldController(snackbarHostState)
+    }
+}
+
 
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)

@@ -72,6 +72,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.ui.scaffold.FabEffect
+import app.meeplebook.core.ui.scaffold.FabState
+import app.meeplebook.core.ui.scaffold.LocalScaffoldController
 import app.meeplebook.ui.components.gameImageClip
 import app.meeplebook.ui.theme.MeepleBookTheme
 import coil3.compose.AsyncImage
@@ -88,6 +91,8 @@ fun CollectionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
+
+    val scaffoldController = LocalScaffoldController.current
 
     // TODO Consistent padding between screen contents. Overview list is a bit narrower than collections list
 
@@ -121,11 +126,20 @@ fun CollectionScreen(
                 }
 
                 is CollectionUiEffects.ShowSnackbar -> {
-//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
+                    scaffoldController.showSnackbar(effect.message)
                 }
             }
         }
     }
+
+    FabEffect(
+        key = "collection",
+        state = FabState(
+            onClick = {
+                viewModel.onEvent(CollectionEvent.Refresh)
+            }
+        )
+    )
 
     CollectionScreenRoot(
         uiState = uiState,

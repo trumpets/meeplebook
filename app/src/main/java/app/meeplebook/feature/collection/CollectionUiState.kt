@@ -114,5 +114,5 @@ sealed interface CollectionUiEffects {
     data class NavigateToGame(val gameId: Long) : CollectionUiEffects
     data object OpenSortSheet : CollectionUiEffects
     data object DismissSortSheet : CollectionUiEffects
-    data class ShowSnackbar(@StringRes val messageResId: Int) : CollectionUiEffects
+    data class ShowSnackbar(val message: String) : CollectionUiEffects
 }
