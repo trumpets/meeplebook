@@ -14,6 +14,7 @@ import app.meeplebook.feature.profile.ProfileScreen
  * Navigation host for managing tabs within the Home screen.
  * Routes between Overview, Collection, Plays, and Profile screens.
  *
+ * @param refreshOnLogin Whether to refresh data on login
  * @param navController The NavController for tab navigation
  * @param modifier Modifier to be applied to the NavHost
  */
