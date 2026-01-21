@@ -639,7 +639,7 @@ class CollectionViewModelTest {
         assertTrue(effects[0] is CollectionUiEffects.ShowSnackbar)
         // Verify the message contains the expected error text
         val snackbarEffect = effects[0] as CollectionUiEffects.ShowSnackbar
-        assertTrue(snackbarEffect.message.isNotEmpty())
+        assertEquals("Failed to sync collections data. Please try again.", snackbarEffect.message)
         
         job.cancel()
     }
