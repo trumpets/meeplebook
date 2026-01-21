@@ -47,8 +47,7 @@ class CollectionScreenRootTest {
                     uiState = CollectionUiState.Loading,
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -76,8 +75,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -103,8 +101,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -129,8 +126,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -157,8 +153,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -206,8 +201,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -261,8 +255,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -292,8 +285,7 @@ class CollectionScreenRootTest {
                         }
                     },
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -326,8 +318,7 @@ class CollectionScreenRootTest {
                         }
                     },
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -383,8 +374,7 @@ class CollectionScreenRootTest {
                         }
                     },
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -438,8 +428,7 @@ class CollectionScreenRootTest {
                         capturedEvent = event
                     },
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -466,8 +455,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -495,8 +483,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
@@ -569,8 +556,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
