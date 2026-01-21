@@ -617,6 +617,12 @@ class CollectionViewModelTest {
         val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
         assertFalse(initialState.isRefreshing)
 
+        // Given - collect effects
+        val effects = mutableListOf<CollectionUiEffects>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
         // When - Refresh event is triggered
         viewModel.onEvent(CollectionEvent.Refresh)
         advanceUntilIdle()
@@ -627,6 +633,15 @@ class CollectionViewModelTest {
         // And - isRefreshing returns to false even after error
         val finalState = viewModel.uiState.value as CollectionUiState.Content
         assertFalse(finalState.isRefreshing)
+        
+        // And - ShowSnackbar effect was emitted
+        assertEquals(1, effects.size)
+        assertTrue(effects[0] is CollectionUiEffects.ShowSnackbar)
+        // Verify the message contains the expected error text
+        val snackbarEffect = effects[0] as CollectionUiEffects.ShowSnackbar
+        assertEquals("Failed to sync collections data. Please try again.", snackbarEffect.message)
+        
+        job.cancel()
     }
 
     @Test
