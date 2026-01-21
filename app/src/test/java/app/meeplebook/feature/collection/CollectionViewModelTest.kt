@@ -640,7 +640,7 @@ class CollectionViewModelTest {
 
         // Verify the message contains the expected error text
         val snackbarEffect = effects[0] as CollectionUiEffects.ShowSnackbar
-        assertEquals("Failed to sync collections data. Please try again.", snackbarEffect.message)
+        assertEquals("string_${R.string.sync_collections_failed_error}", snackbarEffect.message)
 
         job.cancel()
     }

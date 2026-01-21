@@ -613,8 +613,7 @@ class CollectionScreenRootTest {
                     ),
                     onEvent = {},
                     listState = LazyListState(),
-                    gridState = LazyGridState(),
-                    snackbarHostState = SnackbarHostState()
+                    gridState = LazyGridState()
                 )
             }
         }
