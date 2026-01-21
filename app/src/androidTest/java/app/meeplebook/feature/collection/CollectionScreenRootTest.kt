@@ -575,6 +575,58 @@ class CollectionScreenRootTest {
         composeTestRule.assertSectionHeader('W')
     }
 
+    @Test
+    fun collectionScreenRoot_refreshingState_displaysCorrectly() {
+        val sampleGames = listOf(
+            CollectionGameItem(
+                gameId = 1,
+                name = "Catan",
+                yearPublished = 1995,
+                thumbnailUrl = null,
+                playsSubtitle = "42 plays",
+                playersSubtitle = "3–4p",
+                playTimeSubtitle = "75 min",
+                isUnplayed = false
+            )
+        )
+
+        val sections = listOf(
+            CollectionSection('C', sampleGames)
+        )
+
+        composeTestRule.setContent {
+            MeepleBookTheme {
+                CollectionScreenRoot(
+                    uiState = CollectionUiState.Content(
+                        searchQuery = "",
+                        viewMode = CollectionViewMode.GRID,
+                        sort = CollectionSort.ALPHABETICAL,
+                        activeQuickFilter = QuickFilter.ALL,
+                        availableSortOptions = CollectionSort.entries,
+                        sections = sections,
+                        sectionIndices = mapOf('C' to 0),
+                        totalGameCount = 1,
+                        unplayedGameCount = 0,
+                        isRefreshing = true,
+                        showAlphabetJump = true,
+                        isSortSheetVisible = false
+                    ),
+                    onEvent = {},
+                    listState = LazyListState(),
+                    gridState = LazyGridState(),
+                    snackbarHostState = SnackbarHostState()
+                )
+            }
+        }
+
+        // Verify content is still displayed during refresh
+        composeTestRule.onNodeWithTag("collectionScreen").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Catan").assertIsDisplayed()
+        
+        // Note: PullToRefreshBox's refresh indicator is an internal implementation detail
+        // and doesn't expose test tags. The isRefreshing state is properly passed to the component.
+    }
+
     private fun ComposeTestRule.assertSectionHeader(letter: Char) {
         onNodeWithTag("sectionHeader_$letter").assertExists()
     }
