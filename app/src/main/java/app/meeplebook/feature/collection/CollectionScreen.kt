@@ -94,6 +94,8 @@ fun CollectionScreen(
     val gridState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // TODO Consistent padding between screen contents. Overview list is a bit narrower than collections list
+
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
