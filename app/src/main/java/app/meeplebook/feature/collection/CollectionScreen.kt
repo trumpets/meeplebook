@@ -125,8 +125,7 @@ fun CollectionScreen(
                 }
 
                 is CollectionUiEffects.ShowSnackbar -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
-//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
+                    snackbarHostState.showSnackbar(effect.message)
                 }
             }
         }
