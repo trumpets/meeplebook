@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: .github/workflows/.java-version
+          java-version-file: .github/workflows/.java-version
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5

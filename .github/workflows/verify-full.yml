@@ -57,7 +57,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: .github/workflows/.java-version
+          java-version-file: .github/workflows/.java-version
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
