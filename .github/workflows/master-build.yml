@@ -5,6 +5,9 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+
 jobs:
   full-tests:
     uses: ./.github/workflows/verify-full.yml
