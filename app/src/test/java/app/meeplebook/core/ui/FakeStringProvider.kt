@@ -11,7 +11,7 @@ import androidx.annotation.StringRes
 class FakeStringProvider : StringProvider {
 
     private val customStrings = mutableMapOf<Int, String>()
-    private val plurals = mutableMapOf<Int, Map<Int, String>>()
+    private val plurals = mutableMapOf<Int, MutableMap<Int, String>>()
 
     override fun get(@StringRes resId: Int, vararg args: Any): String {
         val customString = customStrings[resId]
@@ -62,7 +62,7 @@ class FakeStringProvider : StringProvider {
         quantity: Int,
         value: String
     ) {
-        val map = plurals.getOrPut(resId) { mutableMapOf() } as MutableMap
+        val map = plurals.getOrPut(resId) { mutableMapOf() }
         map[quantity] = value
     }
 
