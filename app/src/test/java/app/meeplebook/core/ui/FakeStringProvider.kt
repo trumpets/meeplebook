@@ -28,7 +28,7 @@ class FakeStringProvider : StringProvider {
     }
 
     override fun getPlural(
-        resId: Int,
+        @PluralsRes resId: Int,
         quantity: Int,
         vararg args: Any
     ): String {
