@@ -1,19 +1,25 @@
 package app.meeplebook.core.ui
 
-import androidx.annotation.StringRes
+import androidx.annotation.PluralsRes
 import app.meeplebook.R
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 class UiTextTest {
 
-    private val strings = FakeStringProvider()
+    private lateinit var fakeStringProvider: FakeStringProvider
+
+    @Before
+    fun setUp() {
+        fakeStringProvider = FakeStringProvider()
+    }
 
     @Test
     fun `plain text returns value as is`() {
         val uiText = uiText("Something went wrong")
 
-        val resolved = uiText.asString(strings)
+        val resolved = uiText.asString(fakeStringProvider)
 
         assertEquals(
             "Something went wrong",
@@ -23,14 +29,14 @@ class UiTextTest {
 
     @Test
     fun `string resource without args resolves correctly`() {
-        strings.setString(
+        fakeStringProvider.setString(
             R.string.sync_never,
             "Never synced"
         )
 
         val uiText = uiTextRes(R.string.sync_never)
 
-        val resolved = uiText.asString(strings)
+        val resolved = uiText.asString(fakeStringProvider)
 
         assertEquals(
             "Never synced",
@@ -40,7 +46,7 @@ class UiTextTest {
 
     @Test
     fun `string resource with args resolves correctly`() {
-        strings.setString(
+        fakeStringProvider.setString(
             R.string.collection_filter_all,
             "All (%d)"
         )
@@ -50,7 +56,7 @@ class UiTextTest {
             3
         )
 
-        val resolved = uiText.asString(strings)
+        val resolved = uiText.asString(fakeStringProvider)
 
         assertEquals(
             "All (3)",
@@ -60,14 +66,14 @@ class UiTextTest {
 
     @Test
     fun `plural resource uses singular form`() {
-        @StringRes val fakePluralResId = 157
+        @PluralsRes val fakePluralResId = 157
 
-        strings.setPlural(
+        fakeStringProvider.setPlural(
             resId = fakePluralResId,
             quantity = 1,
             value = "%d game"
         )
-        strings.setPlural(
+        fakeStringProvider.setPlural(
             resId = fakePluralResId,
             quantity = -1, // fallback / other
             value = "%d games"
@@ -78,7 +84,7 @@ class UiTextTest {
             quantity = 1
         )
 
-        val resolved = uiText.asString(strings)
+        val resolved = uiText.asString(fakeStringProvider)
 
         assertEquals(
             "1 game",
@@ -88,14 +94,14 @@ class UiTextTest {
 
     @Test
     fun `plural resource uses plural form`() {
-        @StringRes val fakePluralResId = 157
+        @PluralsRes val fakePluralResId = 157
 
-        strings.setPlural(
+        fakeStringProvider.setPlural(
             resId = fakePluralResId,
             quantity = 1,
             value = "%d game"
         )
-        strings.setPlural(
+        fakeStringProvider.setPlural(
             resId = fakePluralResId,
             quantity = -1,
             value = "%d games"
@@ -106,7 +112,7 @@ class UiTextTest {
             quantity = 5
         )
 
-        val resolved = uiText.asString(strings)
+        val resolved = uiText.asString(fakeStringProvider)
 
         assertEquals(
             "5 games",
@@ -116,9 +122,9 @@ class UiTextTest {
 
     @Test
     fun `plural resource respects explicit args`() {
-        @StringRes val fakePluralResId = 157
+        @PluralsRes val fakePluralResId = 157
 
-        strings.setPlural(
+        fakeStringProvider.setPlural(
             resId = fakePluralResId,
             quantity = -1,
             value = "%d total games"
@@ -130,7 +136,7 @@ class UiTextTest {
             42 // explicit arg overrides default quantity insertion
         )
 
-        val resolved = uiText.asString(strings)
+        val resolved = uiText.asString(fakeStringProvider)
 
         assertEquals(
             "42 total games",
