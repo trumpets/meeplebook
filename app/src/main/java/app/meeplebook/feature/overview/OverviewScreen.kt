@@ -1,5 +1,6 @@
 package app.meeplebook.feature.overview
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,6 +78,7 @@ fun OverviewScreen(
     )
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // TODO remove once you rework screen with scaffold stuff
 @Composable
 fun OverviewContent(
     uiState: OverviewUiState,
