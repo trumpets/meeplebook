@@ -18,12 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.overview.RecentPlay
+import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.components.gameImageClip
 import coil3.compose.AsyncImage
 
@@ -71,13 +72,13 @@ fun RecentPlayCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = stringResource(R.string.play_date_players, play.dateText, play.playerCount),
+                UiTextText(
+                    text = uiTextRes(R.string.play_date_players, play.dateUiText, play.playerCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = play.playerNames,
+                UiTextText(
+                    text = play.playerNamesUiText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     maxLines = 1,

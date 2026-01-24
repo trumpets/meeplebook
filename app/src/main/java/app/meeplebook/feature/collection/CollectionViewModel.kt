@@ -9,7 +9,7 @@ import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
-import app.meeplebook.core.ui.StringProvider
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,8 +34,7 @@ import javax.inject.Inject
 class CollectionViewModel @Inject constructor(
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
     private val observeCollectionSummary: ObserveCollectionSummaryUseCase,
-    private val syncCollection: SyncCollectionUseCase,
-    private val stringProvider: StringProvider
+    private val syncCollection: SyncCollectionUseCase
 ) : ViewModel() {
 
     private val rawSearchQuery = MutableStateFlow("")
@@ -87,7 +86,7 @@ class CollectionViewModel @Inject constructor(
             isRefreshing
         ) { domainSections, summary, refreshing ->
 
-                val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
+                val uiSections = domainSections.map { it.toCollectionSection() }
 
                 if (uiSections.isEmpty()) {
                     CollectionUiState.Empty(
@@ -208,7 +207,7 @@ class CollectionViewModel @Inject constructor(
                             onFailure = { _ ->
                                 emitEffect(
                                     CollectionUiEffects.ShowSnackbar(
-                                        message = stringProvider.get(R.string.sync_collections_failed_error)
+                                        messageUiText = uiTextRes(R.string.sync_collections_failed_error)
                                     )
                                 )
                             }

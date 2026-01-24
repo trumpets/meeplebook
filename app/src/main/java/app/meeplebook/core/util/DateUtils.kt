@@ -1,7 +1,9 @@
 package app.meeplebook.core.util
 
 import app.meeplebook.R
-import app.meeplebook.core.ui.StringProvider
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextRes
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -51,41 +53,41 @@ fun parseBggDate(value: String?): Instant? {
 /**
  * Formats an Instant into a human-readable date text (relative).
  */
-fun formatRelativeDate(stringProvider: StringProvider, dateInstant: Instant): String {
+fun formatRelativeDate(dateInstant: Instant): UiText {
     val zone = ZoneId.systemDefault()
     val playDate = dateInstant.atZone(zone).toLocalDate()
     val today = LocalDate.now(zone)
     val daysDiff = ChronoUnit.DAYS.between(playDate, today)
 
     return when {
-        daysDiff < 0L -> stringProvider.get(R.string.date_in_future)
-        daysDiff == 0L -> stringProvider.get(R.string.date_today)
-        daysDiff == 1L -> stringProvider.get(R.string.date_yesterday)
-        daysDiff < 7L -> stringProvider.get(R.string.date_days_ago, daysDiff)
-        else -> playDate.format(DateTimeFormatter.ofPattern("d MMM"))
+        daysDiff < 0L -> uiTextRes(R.string.date_in_future)
+        daysDiff == 0L -> uiTextRes(R.string.date_today)
+        daysDiff == 1L -> uiTextRes(R.string.date_yesterday)
+        daysDiff < 7L -> uiTextRes(R.string.date_days_ago, daysDiff)
+        else -> uiText(playDate.format(DateTimeFormatter.ofPattern("d MMM")))
     }
 }
 
 /**
  * Formats a timestamp into a human-readable "time ago" string.
  */
-fun formatTimeAgo(stringProvider: StringProvider, time: Instant?): String {
-    if (time == null) return stringProvider.get(R.string.sync_never)
+fun formatTimeAgo(time: Instant?): UiText {
+    if (time == null) return uiTextRes(R.string.sync_never)
 
     val now = Instant.now()
     val minutesAgo = ChronoUnit.MINUTES.between(time, now)
 
     return when {
-        minutesAgo < 1L -> stringProvider.get(R.string.sync_just_now)
-        minutesAgo < MINUTES_IN_HOUR -> stringProvider.get(R.string.sync_minutes_ago, minutesAgo)
-        minutesAgo < MINUTES_IN_TWO_HOURS -> stringProvider.get(R.string.sync_one_hour_ago)
-        minutesAgo < MINUTES_IN_DAY -> stringProvider.get(R.string.sync_hours_ago, minutesAgo / MINUTES_IN_HOUR)
+        minutesAgo < 1L -> uiTextRes(R.string.sync_just_now)
+        minutesAgo < MINUTES_IN_HOUR -> uiTextRes(R.string.sync_minutes_ago, minutesAgo)
+        minutesAgo < MINUTES_IN_TWO_HOURS -> uiTextRes(R.string.sync_one_hour_ago)
+        minutesAgo < MINUTES_IN_DAY -> uiTextRes(R.string.sync_hours_ago, minutesAgo / MINUTES_IN_HOUR)
         else -> {
             val daysAgo = minutesAgo / MINUTES_IN_DAY
             if (daysAgo == 1L) {
-                stringProvider.get(R.string.sync_one_day_ago)
+                uiTextRes(R.string.sync_one_day_ago)
             } else {
-                stringProvider.get(R.string.sync_days_ago, daysAgo)
+                uiTextRes(R.string.sync_days_ago, daysAgo)
             }
         }
     }
@@ -94,11 +96,11 @@ fun formatTimeAgo(stringProvider: StringProvider, time: Instant?): String {
 /**
  * Formats sync time with "Last synced:" prefix.
  */
-fun formatLastSynced(stringProvider: StringProvider, time: Instant?): String {
+fun formatLastSynced(time: Instant?): UiText {
     return if (time == null) {
-        stringProvider.get(R.string.sync_never)
+        uiTextRes(R.string.sync_never)
     } else {
-        stringProvider.get(R.string.sync_last_synced, formatTimeAgo(stringProvider, time))
+        uiTextRes(R.string.sync_last_synced, formatTimeAgo(time))
     }
 }
 

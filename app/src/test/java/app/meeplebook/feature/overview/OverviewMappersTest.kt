@@ -6,6 +6,8 @@ import app.meeplebook.core.collection.domain.HighlightType
 import app.meeplebook.core.plays.domain.DomainRecentPlay
 import app.meeplebook.core.stats.domain.DomainOverviewStats
 import app.meeplebook.core.ui.FakeStringProvider
+import app.meeplebook.core.ui.asString
+import app.meeplebook.core.ui.isNotEmpty
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -37,13 +39,13 @@ class OverviewMappersTest {
         )
 
         // When
-        val result = domain.toGameHighlight(fakeStringProvider)
+        val result = domain.toGameHighlight()
 
         // Then
         assertEquals(100L, result.id)
         assertEquals("Azul", result.gameName)
         assertEquals("https://example.com/azul.jpg", result.thumbnailUrl)
-        assertEquals("Recently Added", result.subtitleText)
+        assertEquals("Recently Added", result.subtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -57,13 +59,13 @@ class OverviewMappersTest {
         )
 
         // When
-        val result = domain.toGameHighlight(fakeStringProvider)
+        val result = domain.toGameHighlight()
 
         // Then
         assertEquals(200L, result.id)
         assertEquals("Wingspan", result.gameName)
         assertNull(result.thumbnailUrl)
-        assertEquals("Try Tonight?", result.subtitleText)
+        assertEquals("Try Tonight?", result.subtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -80,7 +82,7 @@ class OverviewMappersTest {
         )
 
         // When
-        val result = domain.toRecentPlay(fakeStringProvider)
+        val result = domain.toRecentPlay()
 
         // Then
         assertEquals(42L, result.id)
@@ -89,8 +91,8 @@ class OverviewMappersTest {
         assertEquals(4, result.playerCount)
         // Date and player names formatting is handled by utility functions
         // Just verify they're not empty
-        assert(result.dateText.isNotEmpty())
-        assert(result.playerNames.isNotEmpty())
+        assert(result.dateUiText.isNotEmpty())
+        assert(result.playerNamesUiText.isNotEmpty())
     }
 
     @Test
@@ -106,15 +108,15 @@ class OverviewMappersTest {
         )
 
         // When
-        val result = domain.toRecentPlay(fakeStringProvider)
+        val result = domain.toRecentPlay()
 
         // Then
         assertEquals(10L, result.id)
         assertEquals("Wingspan", result.gameName)
         assertEquals("https://example.com/wingspan.jpg", result.thumbnailUrl)
         assertEquals(1, result.playerCount)
-        assert(result.dateText.isNotEmpty())
-        assert(result.playerNames.isNotEmpty())
+        assert(result.dateUiText.isNotEmpty())
+        assert(result.playerNamesUiText.isNotEmpty())
     }
 
     @Test

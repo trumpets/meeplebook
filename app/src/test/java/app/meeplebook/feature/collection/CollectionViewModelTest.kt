@@ -16,6 +16,7 @@ import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.FakeStringProvider
+import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
@@ -100,8 +101,7 @@ class CollectionViewModelTest {
         viewModel = CollectionViewModel(
             observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
-            syncCollection = syncCollectionUseCase,
-            stringProvider = fakeStringProvider
+            syncCollection = syncCollectionUseCase
         )
     }
 
@@ -457,9 +457,9 @@ class CollectionViewModelTest {
         assertEquals("Wingspan", game.name)
         assertEquals(2019, game.yearPublished)
         assertEquals("https://example.com/wingspan.jpg", game.thumbnailUrl)
-        assertEquals("15 plays", game.playsSubtitle)
-        assertEquals("1-5p", game.playersSubtitle)
-        assertEquals("40-70m", game.playTimeSubtitle)
+        assertEquals("15 plays", game.playsSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("1-5p", game.playersSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("40-70m", game.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -640,7 +640,7 @@ class CollectionViewModelTest {
 
         // Verify the message contains the expected error text
         val snackbarEffect = effects[0] as CollectionUiEffects.ShowSnackbar
-        assertEquals("string_${R.string.sync_collections_failed_error}", snackbarEffect.message)
+        assertEquals("string_${R.string.sync_collections_failed_error}", snackbarEffect.messageUiText.asString(fakeStringProvider))
 
         job.cancel()
     }

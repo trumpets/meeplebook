@@ -3,6 +3,7 @@ package app.meeplebook.feature.collection
 import app.meeplebook.R
 import app.meeplebook.core.collection.domain.DomainCollectionItem
 import app.meeplebook.core.ui.FakeStringProvider
+import app.meeplebook.core.ui.asString
 import app.meeplebook.feature.collection.domain.DomainCollectionSection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -43,16 +44,16 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(100L, result.gameId)
         assertEquals("Azul", result.name)
         assertEquals(2017, result.yearPublished)
         assertEquals("https://example.com/azul.jpg", result.thumbnailUrl)
-        assertEquals("42 plays", result.playsSubtitle)
-        assertEquals("2-4p", result.playersSubtitle)
-        assertEquals("30-45m", result.playTimeSubtitle)
+        assertEquals("42 plays", result.playsSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("2-4p", result.playersSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("30-45m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
         assertFalse(result.isUnplayed)
     }
 
@@ -72,12 +73,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(200L, result.gameId)
         assertEquals("Wingspan", result.name)
-        assertEquals("0 plays", result.playsSubtitle)
+        assertEquals("0 plays", result.playsSubtitleUiText.asString(fakeStringProvider))
         assertTrue(result.isUnplayed)
     }
 
@@ -97,13 +98,13 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(300L, result.gameId)
         assertEquals("Mystery Game", result.name)
         assertEquals(null, result.yearPublished)
-        assertEquals("5 plays", result.playsSubtitle)
+        assertEquals("5 plays", result.playsSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -122,13 +123,13 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(400L, result.gameId)
         assertEquals("Solo Adventure", result.name)
-        assertEquals("", result.playersSubtitle)
-        assertEquals("15-30m", result.playTimeSubtitle)
+        assertEquals("", result.playersSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("15-30m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -147,12 +148,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(500L, result.gameId)
         assertEquals("Party Game", result.name)
-        assertEquals("4-4p", result.playersSubtitle)
+        assertEquals("4-4p", result.playersSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -171,12 +172,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(600L, result.gameId)
         assertEquals("Strategy Game", result.name)
-        assertEquals("6-6p", result.playersSubtitle)
+        assertEquals("6-6p", result.playersSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -195,13 +196,13 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(700L, result.gameId)
         assertEquals("Unknown Duration", result.name)
-        assertEquals("2-4p", result.playersSubtitle)
-        assertEquals("", result.playTimeSubtitle)
+        assertEquals("2-4p", result.playersSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("", result.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -220,12 +221,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(800L, result.gameId)
         assertEquals("Quick Game", result.name)
-        assertEquals("15-15m", result.playTimeSubtitle)
+        assertEquals("15-15m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -244,12 +245,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(900L, result.gameId)
         assertEquals("Long Game", result.name)
-        assertEquals("180-180m", result.playTimeSubtitle)
+        assertEquals("180-180m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -268,14 +269,14 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(1000L, result.gameId)
         assertEquals("Solo Card Game", result.name)
-        assertEquals("1-1p", result.playersSubtitle)
-        assertEquals("10-15m", result.playTimeSubtitle)
-        assertEquals("20 plays", result.playsSubtitle)
+        assertEquals("1-1p", result.playersSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("10-15m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("20 plays", result.playsSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -294,12 +295,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(1100L, result.gameId)
         assertEquals("Party Game Extreme", result.name)
-        assertEquals("5-20p", result.playersSubtitle)
+        assertEquals("5-20p", result.playersSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -318,12 +319,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(1200L, result.gameId)
         assertEquals("Micro Game", result.name)
-        assertEquals("5-10m", result.playTimeSubtitle)
+        assertEquals("5-10m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -342,12 +343,12 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domain.toCollectionGameItem(fakeStringProvider)
+        val result = domain.toCollectionGameItem()
 
         // Then
         assertEquals(1300L, result.gameId)
         assertEquals("Epic Campaign", result.name)
-        assertEquals("240-480m", result.playTimeSubtitle)
+        assertEquals("240-480m", result.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     // toCollectionSection tests
@@ -385,15 +386,15 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domainSection.toCollectionSection(fakeStringProvider)
+        val result = domainSection.toCollectionSection()
 
         // Then
         assertEquals('A', result.key)
         assertEquals(2, result.games.size)
         assertEquals("Azul", result.games[0].name)
         assertEquals("Ark Nova", result.games[1].name)
-        assertEquals("10 plays", result.games[0].playsSubtitle)
-        assertEquals("5 plays", result.games[1].playsSubtitle)
+        assertEquals("10 plays", result.games[0].playsSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("5 plays", result.games[1].playsSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -418,13 +419,13 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domainSection.toCollectionSection(fakeStringProvider)
+        val result = domainSection.toCollectionSection()
 
         // Then
         assertEquals('W', result.key)
         assertEquals(1, result.games.size)
         assertEquals("Wingspan", result.games[0].name)
-        assertEquals("15 plays", result.games[0].playsSubtitle)
+        assertEquals("15 plays", result.games[0].playsSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -436,7 +437,7 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domainSection.toCollectionSection(fakeStringProvider)
+        val result = domainSection.toCollectionSection()
 
         // Then
         assertEquals('Z', result.key)
@@ -465,7 +466,7 @@ class CollectionMappersTest {
         )
 
         // When
-        val result = domainSection.toCollectionSection(fakeStringProvider)
+        val result = domainSection.toCollectionSection()
 
         // Then
         assertEquals('#', result.key)
