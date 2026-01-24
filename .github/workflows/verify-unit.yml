@@ -22,4 +22,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDebugUnitTest :lint-rules:test
+
+      - name: Lint check
+        run: ./gradlew lint

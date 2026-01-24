@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MeepleBook"
 include(":app")
- 
+include(":lint-rules")
