@@ -11,4 +11,7 @@ dependencies {
     compileOnly(libs.lint.checks)
 
     testImplementation(libs.junit)
+    testImplementation(libs.lint.api)
+    testImplementation(libs.lint.checks)
+    testImplementation(libs.lint.tests)
 }
