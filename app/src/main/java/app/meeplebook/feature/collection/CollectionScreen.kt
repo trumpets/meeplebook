@@ -60,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +75,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.ui.asString
+import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextJoin
+import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.components.gameImageClip
 import app.meeplebook.ui.theme.MeepleBookTheme
 import coil3.compose.AsyncImage
@@ -94,6 +99,8 @@ fun CollectionScreen(
     val context = LocalContext.current
 
     // TODO Consistent padding between screen contents. Overview list is a bit narrower than collections list
+
+    val resources = LocalResources.current
 
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
@@ -125,7 +132,7 @@ fun CollectionScreen(
                 }
 
                 is CollectionUiEffects.ShowSnackbar -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, effect.messageUiText.asString(resources), Toast.LENGTH_SHORT).show()
 //                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
             }
@@ -557,11 +564,11 @@ private fun GameGridCard(
                 fontWeight = FontWeight.SemiBold
             )
 
-            Text(
-                listOfNotNull(
-                    game.yearPublished?.toString(),
-                    game.playersSubtitle
-                ).joinToString(separator = " • ")
+            UiTextText(
+                uiTextJoin(
+                    uiText(game.yearPublished?.toString()),
+                    game.playersSubtitleUiText,
+                    separator = " • ")
             )
 
             IconButton(
@@ -608,16 +615,16 @@ private fun GameListRow(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                text = listOfNotNull(
-                    game.yearPublished?.toString(),
-                    game.playersSubtitle,
-                    game.playTimeSubtitle
-                ).joinToString(separator = " • "),
+            UiTextText(
+                text = uiTextJoin(
+                    uiText(game.yearPublished?.toString()),
+                    game.playersSubtitleUiText,
+                    game.playTimeSubtitleUiText,
+                    separator = " • "),
                 style = MaterialTheme.typography.bodySmall
             )
-            Text(
-                text = game.playsSubtitle,
+            UiTextText(
+                text = game.playsSubtitleUiText,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -753,9 +760,9 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Catan",
             yearPublished = 1995,
             thumbnailUrl = null,
-            playsSubtitle = "42 plays",
-            playersSubtitle = "3–4p",
-            playTimeSubtitle = "75 min",
+            playsSubtitleUiText = uiText("42 plays"),
+            playersSubtitleUiText = uiText("3–4p"),
+            playTimeSubtitleUiText = uiText("75 min"),
             isUnplayed = false
         ),
         CollectionGameItem(
@@ -763,9 +770,9 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Wingspan",
             yearPublished = 2019,
             thumbnailUrl = null,
-            playsSubtitle = "18 plays",
-            playersSubtitle = "1–5p",
-            playTimeSubtitle = "90 min",
+            playsSubtitleUiText = uiText("18 plays"),
+            playersSubtitleUiText = uiText("1–5p"),
+            playTimeSubtitleUiText = uiText("90 min"),
             isUnplayed = false
         ),
         CollectionGameItem(
@@ -773,9 +780,9 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Abyss",
             yearPublished = 2015,
             thumbnailUrl = null,
-            playsSubtitle = "25 plays",
-            playersSubtitle = "2p",
-            playTimeSubtitle = "30 min",
+            playsSubtitleUiText = uiText("25 plays"),
+            playersSubtitleUiText = uiText("2p"),
+            playTimeSubtitleUiText = uiText("30 min"),
             isUnplayed = false
         ),
         CollectionGameItem(
@@ -783,9 +790,9 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Azul",
             yearPublished = 2017,
             thumbnailUrl = null,
-            playsSubtitle = "0 plays",
-            playersSubtitle = "2–4p",
-            playTimeSubtitle = "45 min",
+            playsSubtitleUiText = uiText("0 plays"),
+            playersSubtitleUiText = uiText("2–4p"),
+            playTimeSubtitleUiText = uiText("45 min"),
             isUnplayed = true
         ),
         CollectionGameItem(
@@ -793,9 +800,9 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Azul Duel",
             yearPublished = 2017,
             thumbnailUrl = null,
-            playsSubtitle = "0 plays",
-            playersSubtitle = "2–4p",
-            playTimeSubtitle = "45 min",
+            playsSubtitleUiText = uiText("0 plays"),
+            playersSubtitleUiText = uiText("2–4p"),
+            playTimeSubtitleUiText = uiText("45 min"),
             isUnplayed = true
         ),
         CollectionGameItem(
@@ -803,9 +810,9 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Ticket to Ride",
             yearPublished = 2004,
             thumbnailUrl = null,
-            playsSubtitle = "33 plays",
-            playersSubtitle = "2–5p",
-            playTimeSubtitle = "60 min",
+            playsSubtitleUiText = uiText("33 plays"),
+            playersSubtitleUiText = uiText("2–5p"),
+            playTimeSubtitleUiText = uiText("60 min"),
             isUnplayed = false
         )
     )

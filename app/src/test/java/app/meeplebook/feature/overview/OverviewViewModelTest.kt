@@ -18,7 +18,6 @@ import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
-import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
 import app.meeplebook.testutils.awaitUiState
 import kotlinx.coroutines.CompletableDeferred
@@ -50,7 +49,6 @@ class OverviewViewModelTest {
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
-    private lateinit var fakeStringProvider: FakeStringProvider
     private lateinit var viewModel: OverviewViewModel
 
     private val testDispatcher = StandardTestDispatcher()
@@ -67,17 +65,11 @@ class OverviewViewModelTest {
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
-        fakeStringProvider = FakeStringProvider()
 
         // Set a default user to ensure a consistent state for most tests.
         // Tests requiring no user can clear it.
         val user = AuthCredentials(username = "testuser", password = "password")
         fakeAuthRepository.setCurrentUser(user)
-
-        // Setup string resources
-        fakeStringProvider.setString(R.string.game_highlight_recently_added, "Recently Added")
-        fakeStringProvider.setString(R.string.game_highlight_try_tonight, "Try Tonight?")
-        fakeStringProvider.setString(R.string.sync_never, "Never synced")
 
         val observeStats = ObserveCollectionPlayStatsUseCase(
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
@@ -105,8 +97,7 @@ class OverviewViewModelTest {
 
         viewModel = OverviewViewModel(
             observeOverviewUseCase = observeOverviewUseCase,
-            syncUserDataUseCase = syncUserDataUseCase,
-            stringProvider = fakeStringProvider
+            syncUserDataUseCase = syncUserDataUseCase
         )
     }
 

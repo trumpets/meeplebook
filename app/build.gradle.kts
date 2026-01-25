@@ -91,6 +91,10 @@ android {
             isEnable = false
         }
     }
+
+    lint {
+        abortOnError = true
+    }
 }
 
 kotlin {
@@ -117,6 +121,9 @@ gradle.taskGraph.whenReady {
 }
 
 dependencies {
+    lintChecks(project(":lint-rules"))
+    lintPublish(project(":lint-rules"))
+    
     // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -169,7 +176,7 @@ dependencies {
     testImplementation(libs.xmlpull)
     testImplementation(libs.kxml2)
     testImplementation(libs.turbine)
-    
+
     // Instrumented tests (src/androidTest)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

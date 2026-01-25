@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
+import app.meeplebook.core.ui.uiText
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
@@ -39,7 +40,7 @@ class OverviewContentTest {
                             playsThisMonth = 18,
                             unplayedCount = 23
                         ),
-                        lastSyncedText = "Last synced: 5 min ago"
+                        lastSyncedUiText = uiText("Last synced: 5 min ago")
                     )
                 )
             }
@@ -69,17 +70,17 @@ class OverviewContentTest {
                                 id = 1,
                                 gameName = "Catan",
                                 thumbnailUrl = null,
-                                dateText = "Today, 8:30 PM",
+                                dateUiText = uiText("Today, 8:30 PM"),
                                 playerCount = 4,
-                                playerNames = "You, Alex, Jordan, Sam"
+                                playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                             ),
                             RecentPlay(
                                 id = 2,
                                 gameName = "Wingspan",
                                 thumbnailUrl = null,
-                                dateText = "Yesterday",
+                                dateUiText = uiText("Yesterday"),
                                 playerCount = 2,
-                                playerNames = "You, Chris"
+                                playerNamesUiText = uiText("You, Chris")
                             )
                         )
                     )
@@ -109,9 +110,9 @@ class OverviewContentTest {
                                 id = 42,
                                 gameName = "Test Game",
                                 thumbnailUrl = null,
-                                dateText = "Today",
+                                dateUiText = uiText("Today"),
                                 playerCount = 2,
-                                playerNames = "You, Player"
+                                playerNamesUiText = uiText("You, Player")
                             )
                         )
                     ),
@@ -157,13 +158,13 @@ class OverviewContentTest {
                             id = 100,
                             gameName = "Azul",
                             thumbnailUrl = null,
-                            subtitleText = "Added 2 days ago"
+                            subtitleUiText = uiText("Added 2 days ago")
                         ),
                         suggestedGame = GameHighlight(
                             id = 101,
                             gameName = "Ticket to Ride",
                             thumbnailUrl = null,
-                            subtitleText = "Try Tonight?"
+                            subtitleUiText = uiText("Try Tonight?")
                         )
                     )
                 )
@@ -186,7 +187,7 @@ class OverviewContentTest {
                 OverviewContent(
                     uiState = OverviewUiState(
                         stats = OverviewStats(),
-                        lastSyncedText = "Never synced"
+                        lastSyncedUiText = uiText("Never synced")
                     )
                 )
             }
@@ -215,13 +216,13 @@ class OverviewContentTest {
                             id = 100,
                             gameName = "Azul",
                             thumbnailUrl = null,
-                            subtitleText = "Added 2 days ago"
+                            subtitleUiText = uiText("Added 2 days ago")
                         ),
                         suggestedGame = GameHighlight(
                             id = 101,
                             gameName = "Ticket to Ride",
                             thumbnailUrl = null,
-                            subtitleText = "Try Tonight?"
+                            subtitleUiText = uiText("Try Tonight?")
                         )
                     ),
                     onRecentlyAddedClick = { recentlyAddedClicked = true },
@@ -287,9 +288,9 @@ class OverviewContentTest {
                                 id = 1,
                                 gameName = "Catan",
                                 thumbnailUrl = null,
-                                dateText = "Today",
+                                dateUiText = uiText("Today"),
                                 playerCount = 4,
-                                playerNames = "You, Alex, Jordan, Sam"
+                                playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                             )
                         )
                     )

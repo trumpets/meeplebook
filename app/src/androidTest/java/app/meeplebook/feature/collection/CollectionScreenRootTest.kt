@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.ui.uiText
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
@@ -171,9 +172,9 @@ class CollectionScreenRootTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnailUrl = null,
-                playsSubtitle = "42 plays",
-                playersSubtitle = "3–4p",
-                playTimeSubtitle = "75 min",
+                playsSubtitleUiText = uiText("42 plays"),
+                playersSubtitleUiText = uiText("3–4p"),
+                playTimeSubtitleUiText = uiText("75 min"),
                 isUnplayed = false
             )
         )
@@ -225,9 +226,9 @@ class CollectionScreenRootTest {
                 name = "Wingspan",
                 yearPublished = 2019,
                 thumbnailUrl = null,
-                playsSubtitle = "18 plays",
-                playersSubtitle = "1–5p",
-                playTimeSubtitle = "90 min",
+                playsSubtitleUiText = uiText("18 plays"),
+                playersSubtitleUiText = uiText("1–5p"),
+                playTimeSubtitleUiText = uiText("90 min"),
                 isUnplayed = false
             )
         )
@@ -340,9 +341,9 @@ class CollectionScreenRootTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnailUrl = null,
-                playsSubtitle = "42 plays",
-                playersSubtitle = "3–4p",
-                playTimeSubtitle = "75 min",
+                playsSubtitleUiText = uiText("42 plays"),
+                playersSubtitleUiText = uiText("3–4p"),
+                playTimeSubtitleUiText = uiText("75 min"),
                 isUnplayed = false
             )
         )
@@ -396,9 +397,9 @@ class CollectionScreenRootTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnailUrl = null,
-                playsSubtitle = "42 plays",
-                playersSubtitle = "3–4p",
-                playTimeSubtitle = "75 min",
+                playsSubtitleUiText = uiText("42 plays"),
+                playersSubtitleUiText = uiText("3–4p"),
+                playTimeSubtitleUiText = uiText("75 min"),
                 isUnplayed = false
             )
         )
@@ -504,9 +505,9 @@ class CollectionScreenRootTest {
                 name = "Azul",
                 yearPublished = 2017,
                 thumbnailUrl = null,
-                playsSubtitle = "25 plays",
-                playersSubtitle = "2–4p",
-                playTimeSubtitle = "30 min",
+                playsSubtitleUiText = uiText("25 plays"),
+                playersSubtitleUiText = uiText("2–4p"),
+                playTimeSubtitleUiText = uiText("30 min"),
                 isUnplayed = false
             ),
             CollectionGameItem(
@@ -514,9 +515,9 @@ class CollectionScreenRootTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnailUrl = null,
-                playsSubtitle = "42 plays",
-                playersSubtitle = "3–4p",
-                playTimeSubtitle = "75 min",
+                playsSubtitleUiText = uiText("42 plays"),
+                playersSubtitleUiText = uiText("3–4p"),
+                playTimeSubtitleUiText = uiText("75 min"),
                 isUnplayed = false
             ),
             CollectionGameItem(
@@ -524,9 +525,9 @@ class CollectionScreenRootTest {
                 name = "Wingspan",
                 yearPublished = 2019,
                 thumbnailUrl = null,
-                playsSubtitle = "18 plays",
-                playersSubtitle = "1–5p",
-                playTimeSubtitle = "90 min",
+                playsSubtitleUiText = uiText("18 plays"),
+                playersSubtitleUiText = uiText("1–5p"),
+                playTimeSubtitleUiText = uiText("90 min"),
                 isUnplayed = false
             )
         )
@@ -583,9 +584,9 @@ class CollectionScreenRootTest {
                 name = "Catan",
                 yearPublished = 1995,
                 thumbnailUrl = null,
-                playsSubtitle = "42 plays",
-                playersSubtitle = "3–4p",
-                playTimeSubtitle = "75 min",
+                playsSubtitleUiText = uiText("42 plays"),
+                playersSubtitleUiText = uiText("3–4p"),
+                playTimeSubtitleUiText = uiText("75 min"),
                 isUnplayed = false
             )
         )

@@ -19,4 +19,8 @@ sealed interface UiText {
         val quantity: Int,
         val args: List<Any> = emptyList()
     ) : UiText
+
+    object Empty : UiText
+
+    data class Composite(val parts: List<UiText>) : UiText
 }

@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.ui.UiText
 
 /**
  * UI state for the Collection screen.
@@ -93,9 +94,9 @@ data class CollectionGameItem(
     val thumbnailUrl: String?,
 
     // Subtitles
-    val playsSubtitle: String, // "42 plays"
-    val playersSubtitle: String,   // "2–4p"
-    val playTimeSubtitle: String, // "30–60m"
+    val playsSubtitleUiText: UiText, // "42 plays"
+    val playersSubtitleUiText: UiText,   // "2–4p"
+    val playTimeSubtitleUiText: UiText, // "30–60m"
 
     // Flags
     val isUnplayed: Boolean
@@ -114,5 +115,5 @@ sealed interface CollectionUiEffects {
     data class NavigateToGame(val gameId: Long) : CollectionUiEffects
     data object OpenSortSheet : CollectionUiEffects
     data object DismissSortSheet : CollectionUiEffects
-    data class ShowSnackbar(val message: String) : CollectionUiEffects
+    data class ShowSnackbar(val messageUiText: UiText) : CollectionUiEffects
 }

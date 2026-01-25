@@ -7,7 +7,6 @@ import app.meeplebook.R
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
 import app.meeplebook.core.sync.model.SyncUserDataError
-import app.meeplebook.core.ui.StringProvider
 import app.meeplebook.core.util.formatLastSynced
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,8 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OverviewViewModel @Inject constructor(
     private val observeOverviewUseCase: ObserveOverviewUseCase,
-    private val syncUserDataUseCase: SyncUserDataUseCase,
-    private val stringProvider: StringProvider
+    private val syncUserDataUseCase: SyncUserDataUseCase
 ) : ViewModel() {
 
     private val _uiEffects = MutableStateFlow(OverviewUiEffects(isRefreshing = false, errorMessageResId = null))
@@ -37,10 +35,10 @@ class OverviewViewModel @Inject constructor(
                 .map { domain ->
                     OverviewUiState(
                         stats = domain.stats.toOverviewStats(),
-                        recentPlays = domain.recentPlays.map { it.toRecentPlay(stringProvider) },
-                        recentlyAddedGame = domain.recentlyAddedGame?.toGameHighlight(stringProvider),
-                        suggestedGame = domain.suggestedGame?.toGameHighlight(stringProvider),
-                        lastSyncedText = formatLastSynced(stringProvider, domain.lastSyncedDate),
+                        recentPlays = domain.recentPlays.map { it.toRecentPlay() },
+                        recentlyAddedGame = domain.recentlyAddedGame?.toGameHighlight(),
+                        suggestedGame = domain.suggestedGame?.toGameHighlight(),
+                        lastSyncedUiText = formatLastSynced(domain.lastSyncedDate),
                         isLoading = false
                     )
                 },

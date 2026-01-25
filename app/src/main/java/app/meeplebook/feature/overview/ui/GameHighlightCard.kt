@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meeplebook.feature.overview.GameHighlight
+import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.components.gameImageClip
 import coil3.compose.AsyncImage
 
@@ -63,8 +64,8 @@ fun GameHighlightCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                text = highlight.subtitleText,
+            UiTextText(
+                text = highlight.subtitleUiText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
