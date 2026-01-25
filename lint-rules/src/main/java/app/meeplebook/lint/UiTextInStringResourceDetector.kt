@@ -46,6 +46,8 @@ class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String> =
         listOf("stringResource", "pluralStringResource")
 
+    // TODO detect Text(text = UiText) as well
+    // TODO update lint tests with those cases
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val methodName = method.name
         val args = node.valueArguments
@@ -66,7 +68,7 @@ class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
                     node,
                     context.getNameLocation(arg),
                     "UiText should not be passed directly to $methodName; convert it to a String first",
-                    createFix(arg)
+                    createFix(methodName, node, arg, context)
                 )
             }
         }
@@ -122,12 +124,52 @@ class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
         return false
     }
 
-    private fun createFix(arg: UExpression): LintFix {
-        return LintFix.create()
+    private fun createFix(
+        methodName: String,
+        call: UCallExpression,
+        arg: UExpression,
+        context: JavaContext
+    ): LintFix? {
+
+        val originalTextForAsStringFix = arg.sourcePsi?.text ?: return null
+
+        val asStringFix = LintFix.create()
             .replace()
             .name("Convert UiText to String")
-            .text(arg.sourcePsi?.text ?: "")
-            .with("${arg.sourcePsi?.text}.asString()")
+            .text(originalTextForAsStringFix)
+            .with("$originalTextForAsStringFix.asString()")
             .build()
+
+        val uiTextWrapperFix = when (methodName) {
+            "stringResource", "pluralStringResource" -> {
+                val methodIdentifier = call.methodIdentifier ?: return null
+
+                val replacementMethod = when (methodName) {
+                    "stringResource" -> "uiTextRes"
+                    "pluralStringResource" -> "uiTextPlural"
+                    else -> methodName
+                }
+
+                // Keep all arguments, just change the method name
+                LintFix.create()
+                    .replace()
+                    .name("Use $replacementMethod")
+                    .range(context.getLocation(methodIdentifier))
+                    .with(replacementMethod)
+                    .build()
+            }
+
+            else -> null
+        }
+
+        return if (uiTextWrapperFix != null) {
+            LintFix.create()
+                .alternatives(
+                    uiTextWrapperFix,
+                    asStringFix
+                )
+        } else {
+            asStringFix
+        }
     }
 }
