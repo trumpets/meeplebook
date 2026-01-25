@@ -2,27 +2,28 @@ package app.meeplebook.feature.collection
 
 import app.meeplebook.R
 import app.meeplebook.core.collection.domain.DomainCollectionItem
-import app.meeplebook.core.ui.StringProvider
+import app.meeplebook.core.ui.uiTextEmpty
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.collection.domain.DomainCollectionSection
 
 /**
  * Maps a [DomainCollectionItem] to a [CollectionGameItem] for collection display.
  */
-fun DomainCollectionItem.toCollectionGameItem(stringProvider: StringProvider): CollectionGameItem {
-    val playersSubtitle = if (minPlayers == null && maxPlayers == null) {
-        ""
+fun DomainCollectionItem.toCollectionGameItem(): CollectionGameItem {
+    val playersSubtitleUiText = if (minPlayers == null && maxPlayers == null) {
+        uiTextEmpty()
     } else {
-        stringProvider.get(
+        uiTextRes(
             R.string.collection_player_count,
             minPlayers ?: maxPlayers ?: 0,
             maxPlayers ?: minPlayers ?: 0
         )
     }
 
-    val playTimeSubtitle = if (minPlayTimeMinutes == null && maxPlayTimeMinutes == null) {
-        ""
+    val playTimeSubtitleUiText = if (minPlayTimeMinutes == null && maxPlayTimeMinutes == null) {
+        uiTextEmpty()
     } else {
-        stringProvider.get(
+        uiTextRes(
             R.string.collection_play_time,
             minPlayTimeMinutes ?: maxPlayTimeMinutes ?: 0,
             maxPlayTimeMinutes ?: minPlayTimeMinutes ?: 0
@@ -34,19 +35,19 @@ fun DomainCollectionItem.toCollectionGameItem(stringProvider: StringProvider): C
         name = name,
         yearPublished = yearPublished,
         thumbnailUrl = thumbnailUrl,
-        playsSubtitle = stringProvider.get(R.string.collection_plays_count, playCount),
-        playersSubtitle = playersSubtitle,
-        playTimeSubtitle = playTimeSubtitle,
-        isNew = playCount == 0
+        playsSubtitleUiText = uiTextRes(R.string.collection_plays_count, playCount),
+        playersSubtitleUiText = playersSubtitleUiText,
+        playTimeSubtitleUiText = playTimeSubtitleUiText,
+        isUnplayed = playCount == 0
     )
 }
 
 /**
  * Maps a [DomainCollectionSection] to a [CollectionSection] for collection display.
  */
-fun DomainCollectionSection.toCollectionSection(stringProvider: StringProvider): CollectionSection {
+fun DomainCollectionSection.toCollectionSection(): CollectionSection {
     return CollectionSection(
         key = key,
-        games = items.map { it.toCollectionGameItem(stringProvider) }
+        games = items.map { it.toCollectionGameItem() }
     )
 }

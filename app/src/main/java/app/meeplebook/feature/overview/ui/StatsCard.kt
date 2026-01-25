@@ -18,12 +18,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.feature.overview.OverviewStats
+import app.meeplebook.ui.components.UiTextText
 
 @Composable
 fun StatsCard(
     stats: OverviewStats,
-    lastSyncedText: String,
+    lastSyncedUiText: UiText,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -62,10 +65,10 @@ fun StatsCard(
                     label = stringResource(R.string.stat_unplayed)
                 )
             }
-            if (lastSyncedText.isNotEmpty()) {
+            if (lastSyncedUiText.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = lastSyncedText,
+                UiTextText(
+                    text = lastSyncedUiText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

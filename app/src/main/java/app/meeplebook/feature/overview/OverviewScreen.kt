@@ -1,5 +1,6 @@
 package app.meeplebook.feature.overview
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.ui.uiText
 import app.meeplebook.feature.overview.ui.EmptyStateMessage
 import app.meeplebook.feature.overview.ui.GameHighlightCard
 import app.meeplebook.feature.overview.ui.RecentPlayCard
@@ -76,6 +78,7 @@ fun OverviewScreen(
     )
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // TODO remove once you rework screen with scaffold stuff
 @Composable
 fun OverviewContent(
     uiState: OverviewUiState,
@@ -158,7 +161,7 @@ fun OverviewContent(
                     item {
                         StatsCard(
                             stats = uiState.stats,
-                            lastSyncedText = uiState.lastSyncedText
+                            lastSyncedUiText = uiState.lastSyncedUiText
                         )
                     }
 
@@ -243,45 +246,45 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     id = 1,
                     gameName = "Catan",
                     thumbnailUrl = null,
-                    dateText = "Today, 8:30 PM",
+                    dateUiText = uiText("Today, 8:30 PM"),
                     playerCount = 4,
-                    playerNames = "You, Alex, Jordan, Sam"
+                    playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                 ),
                 RecentPlay(
                     id = 2,
                     gameName = "Wingspan",
                     thumbnailUrl = null,
-                    dateText = "Yesterday",
+                    dateUiText = uiText("Yesterday"),
                     playerCount = 2,
-                    playerNames = "You, Chris"
+                    playerNamesUiText = uiText("You, Chris")
                 ),
                 RecentPlay(
                     id = 3,
                     gameName = "7 Wonders Duel",
                     thumbnailUrl = null,
-                    dateText = "Dec 2",
+                    dateUiText = uiText("Dec 2"),
                     playerCount = 2,
-                    playerNames = "You, Morgan"
+                    playerNamesUiText = uiText("You, Morgan")
                 )
             ),
             recentlyAddedGame = GameHighlight(
                 id = 100,
                 gameName = "Azul",
                 thumbnailUrl = null,
-                subtitleText = "Recently Added"
+                subtitleUiText = uiText("Recently Added")
             ),
             suggestedGame = GameHighlight(
                 id = 101,
                 gameName = "Ticket to Ride",
                 thumbnailUrl = null,
-                subtitleText = "Try tonight"
+                subtitleUiText = uiText("Try tonight")
             ),
-            lastSyncedText = "Last synced: 5 min ago"
+            lastSyncedUiText = uiText("Last synced: 5 min ago")
         ),
         // Empty state
         OverviewUiState(
             stats = OverviewStats(),
-            lastSyncedText = "Never synced"
+            lastSyncedUiText = uiText("Never synced")
         ),
         // Loading state
         OverviewUiState(
@@ -300,9 +303,9 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     id = 1,
                     gameName = "Catan",
                     thumbnailUrl = null,
-                    dateText = "Today",
+                    dateUiText = uiText("Today"),
                     playerCount = 4,
-                    playerNames = "You, Alex, Jordan, Sam"
+                    playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                 )
             ),
             isRefreshing = true
@@ -320,9 +323,9 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     id = 1,
                     gameName = "Catan",
                     thumbnailUrl = null,
-                    dateText = "Today",
+                    dateUiText = uiText("Today"),
                     playerCount = 4,
-                    playerNames = "You, Alex, Jordan, Sam"
+                    playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                 )
             ),
             errorMessageResId = R.string.sync_plays_failed_error

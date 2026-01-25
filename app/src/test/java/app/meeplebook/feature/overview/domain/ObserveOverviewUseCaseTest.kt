@@ -2,6 +2,7 @@ package app.meeplebook.feature.overview.domain
 
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionHighlightsUseCase
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.plays.FakePlaysRepository
@@ -43,7 +44,7 @@ class ObserveOverviewUseCaseTest {
         fakeSyncTimeRepository = FakeSyncTimeRepository()
 
         val observeStats = ObserveCollectionPlayStatsUseCase(
-            collectionRepository = fakeCollectionRepository,
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
             playsRepository = fakePlaysRepository,
             clock = testClock
         )

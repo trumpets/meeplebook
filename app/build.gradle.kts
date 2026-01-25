@@ -15,9 +15,9 @@ plugins {
  * Retrieves the BGG bearer token from local.properties or environment variable.
  * For local builds: add `bgg.bearer.token=YOUR_TOKEN` to local.properties
  * For CI builds: set BGG_BEARER_TOKEN environment variable (from GitHub Secrets)
+ * Returns null when missing (caller decides whether it's required).
  */
-fun getBggBearerToken(): String {
-    // First try local.properties
+fun getBggBearerTokenOrNull(): String? {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         val properties = Properties().apply {
@@ -27,12 +27,7 @@ fun getBggBearerToken(): String {
     }
 
     // Fall back to environment variable (for CI builds)
-    val env = System.getenv("BGG_BEARER_TOKEN")
-    if (env.isNullOrBlank()) {
-        throw GradleException("BGG_BEARER_TOKEN environment variable is not set; aborting build.")
-    }
-
-    return env
+    return System.getenv("BGG_BEARER_TOKEN")?.takeIf { it.isNotBlank() }
 }
 
 android {
@@ -51,8 +46,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
-        val token = getBggBearerToken() // from local.properties or env
-        buildConfigField("String", "BGG_TOKEN", "\"$token\"")
+        val token = getBggBearerTokenOrNull()
+        val tokenForBuildConfig = token ?: ""
+        buildConfigField("String", "BGG_TOKEN", "\"$tokenForBuildConfig\"")
     }
 
     buildTypes {
@@ -82,11 +78,22 @@ android {
     testOptions {
         animationsDisabled = true
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
     }
 
     room {
         schemaDirectory("$projectDir/schemas")
         generateKotlin = true
+    }
+
+    splits {
+        abi {
+            isEnable = false
+        }
+    }
+
+    lint {
+        abortOnError = true
     }
 }
 
@@ -101,7 +108,22 @@ kotlin {
     }
 }
 
+gradle.taskGraph.whenReady {
+    val isReleaseBuild = allTasks.any {
+        it.name.contains("Release", ignoreCase = true)
+    }
+
+    if (isReleaseBuild && getBggBearerTokenOrNull() == null) {
+        throw GradleException(
+            "Missing BGG token. Set `bgg.bearer.token` or env `BGG_BEARER_TOKEN`."
+        )
+    }
+}
+
 dependencies {
+    lintChecks(project(":lint-rules"))
+    lintPublish(project(":lint-rules"))
+    
     // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -140,6 +162,10 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    // Image loading
+    implementation(libs.coil)
+    implementation(libs.coil.okhttp3)
+
     // Testing
     // Unit tests (src/test)
     testImplementation(libs.junit)
@@ -150,7 +176,7 @@ dependencies {
     testImplementation(libs.xmlpull)
     testImplementation(libs.kxml2)
     testImplementation(libs.turbine)
-    
+
     // Instrumented tests (src/androidTest)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

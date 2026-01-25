@@ -62,7 +62,7 @@
     <string name="collection_filter_no_results">No games match your filter</string>
     <string name="collection_search_games">Search games</string>
     <string name="collection_filter_all">All (%d)</string>
-    <string name="collection_filter_unplayed">Unplayed</string>
+    <string name="collection_filter_unplayed">Unplayed (%d)</string>
     <string name="collection_filter_more">More</string>
     <string name="collection_view_grid">Grid</string>
     <string name="collection_view_list">List</string>

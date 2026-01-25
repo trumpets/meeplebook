@@ -1,25 +1,24 @@
 package app.meeplebook.feature.overview
 
 import app.meeplebook.R
-import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.domain.DomainGameHighlight
+import app.meeplebook.core.collection.domain.HighlightType
+import app.meeplebook.core.plays.domain.DomainRecentPlay
+import app.meeplebook.core.stats.domain.DomainOverviewStats
 import app.meeplebook.core.stats.model.CollectionPlayStats
-import app.meeplebook.core.ui.StringProvider
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.formatPlayerNames
 import app.meeplebook.core.util.formatRelativeDate
-import app.meeplebook.core.collection.domain.DomainGameHighlight
-import app.meeplebook.core.stats.domain.DomainOverviewStats
-import app.meeplebook.core.plays.domain.DomainRecentPlay
-import app.meeplebook.core.collection.domain.HighlightType
 
 /**
  * Maps a [DomainGameHighlight] to a [GameHighlight] for overview display.
  */
-fun DomainGameHighlight.toGameHighlight(stringProvider: StringProvider): GameHighlight {
+fun DomainGameHighlight.toGameHighlight(): GameHighlight {
     return GameHighlight(
         id = id,
         gameName = gameName,
         thumbnailUrl = thumbnailUrl,
-        subtitleText = stringProvider.get(
+        subtitleUiText = uiTextRes(
             when (highlightType) {
                 HighlightType.RECENTLY_ADDED -> R.string.game_highlight_recently_added
                 HighlightType.SUGGESTED -> R.string.game_highlight_try_tonight
@@ -31,14 +30,14 @@ fun DomainGameHighlight.toGameHighlight(stringProvider: StringProvider): GameHig
 /**
  * Maps a [DomainRecentPlay] to a [RecentPlay] for overview display.
  */
-fun DomainRecentPlay.toRecentPlay(stringProvider: StringProvider): RecentPlay {
+fun DomainRecentPlay.toRecentPlay(): RecentPlay {
     return RecentPlay(
         id = id,
         gameName = gameName,
-        thumbnailUrl = null, // TODO: Add thumbnail support from CollectionRepository by mapping Play.gameId to collection items
-        dateText = formatRelativeDate(stringProvider, date),
+        thumbnailUrl = thumbnailUrl,
+        dateUiText = formatRelativeDate(date),
         playerCount = playerCount,
-        playerNames = formatPlayerNames(stringProvider, playerNames)
+        playerNamesUiText = formatPlayerNames(playerNames)
     )
 }
 

@@ -2,15 +2,20 @@ package app.meeplebook.feature.collection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.meeplebook.core.ui.StringProvider
+import app.meeplebook.R
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.result.fold
+import app.meeplebook.core.sync.domain.SyncCollectionUseCase
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,14 +32,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor(
-    private val observeCollectionDomainSectionsUseCase: ObserveCollectionDomainSectionsUseCase,
-    private val stringProvider: StringProvider
+    private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
+    private val observeCollectionSummary: ObserveCollectionSummaryUseCase,
+    private val syncCollection: SyncCollectionUseCase
 ) : ViewModel() {
 
     private val rawSearchQuery = MutableStateFlow("")
     @OptIn(FlowPreview::class)
     private val debouncedSearchQuery: StateFlow<String> =
         rawSearchQuery
+            .map { it.trim() }
             .debounce(DebounceDurations.SearchQuery.inWholeMilliseconds)
             .distinctUntilChanged()
             .stateIn(
@@ -46,6 +53,7 @@ class CollectionViewModel @Inject constructor(
     private val quickFilter = MutableStateFlow(QuickFilter.ALL)
     private val sort = MutableStateFlow(CollectionSort.ALPHABETICAL)
     private val viewMode = MutableStateFlow(CollectionViewMode.LIST)
+    private val isRefreshing = MutableStateFlow(false)
 
     private val collectionDataQuery: StateFlow<CollectionDataQuery> =
         combine(
@@ -70,33 +78,46 @@ class CollectionViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val contentState: StateFlow<CollectionUiState> =
-        collectionDataQuery
-            .flatMapLatest { query ->
-                observeCollectionDomainSectionsUseCase(query)
-            }
-            .map { domainSections ->
-                val uiSections = domainSections.map { it.toCollectionSection(stringProvider) }
+        combine(
+            collectionDataQuery.flatMapLatest {
+                observeCollectionDomainSections(it)
+            },
+            observeCollectionSummary(),
+            isRefreshing
+        ) { domainSections, summary, refreshing ->
+
+                val uiSections = domainSections.map { it.toCollectionSection() }
 
                 if (uiSections.isEmpty()) {
-                    CollectionUiState.Empty(emptyReason(
+                    CollectionUiState.Empty(
+                        reason = emptyReason(
+                            searchQuery = rawSearchQuery.value,
+                            quickFilter = quickFilter.value
+                        ),
+
                         searchQuery = rawSearchQuery.value,
-                        quickFilter = quickFilter.value
-                    ))
+                        activeQuickFilter = quickFilter.value,
+                        totalGameCount = summary.totalGames,
+                        unplayedGameCount = summary.unplayedGames,
+                        isRefreshing = refreshing
+                    )
                 } else {
                     val sectionIndices = buildSectionIndices(uiSections)
 
                     CollectionUiState.Content(
-                        searchQuery = rawSearchQuery.value,
                         viewMode = viewMode.value,
                         sort = sort.value,
-                        activeQuickFilter = quickFilter.value,
                         availableSortOptions = CollectionSort.entries,
                         sections = uiSections,
                         sectionIndices = sectionIndices,
-                        totalGameCount = uiSections.sumOf { it.games.size },
-                        isRefreshing = false,
                         showAlphabetJump = uiSections.size > 1,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+
+                        searchQuery = rawSearchQuery.value,
+                        activeQuickFilter = quickFilter.value,
+                        totalGameCount = summary.totalGames,
+                        unplayedGameCount = summary.unplayedGames,
+                        isRefreshing = refreshing
                     )
                 }
             }
@@ -110,13 +131,21 @@ class CollectionViewModel @Inject constructor(
         combine(
             contentState,
             viewMode,
-            rawSearchQuery
-        ) { state, viewMode, rawQuery ->
+            rawSearchQuery,
+            quickFilter
+        ) { state, viewMode, rawQuery, filter ->
             when (state) {
                 is CollectionUiState.Content ->
                     state.copy(
                         viewMode = viewMode,
-                        searchQuery = rawQuery
+                        searchQuery = rawQuery,
+                        activeQuickFilter = filter
+                    )
+
+                is CollectionUiState.Empty ->
+                    state.copy(
+                        searchQuery = rawQuery,
+                        activeQuickFilter = filter
                     )
 
                 else -> state
@@ -129,6 +158,8 @@ class CollectionViewModel @Inject constructor(
 
     private val _uiEffect = MutableSharedFlow<CollectionUiEffects>()
     val uiEffect = _uiEffect.asSharedFlow()
+
+    private var refreshJob: Job? = null
 
     fun onEvent(event: CollectionEvent) {
         when (event) {
@@ -165,13 +196,31 @@ class CollectionViewModel @Inject constructor(
             }
 
             is CollectionEvent.Refresh -> {
-                // TODO: Implement manual collection refresh handling.
+                refreshJob?.cancel()
+                refreshJob = viewModelScope.launch {
+                    isRefreshing.value = true
+                    try {
+                        syncCollection().fold(
+                            onSuccess = {
+                                // Sync successful, data will update automatically via flows
+                            },
+                            onFailure = { _ ->
+                                emitEffect(
+                                    CollectionUiEffects.ShowSnackbar(
+                                        messageUiText = uiTextRes(R.string.sync_collections_failed_error)
+                                    )
+                                )
+                            }
+                        )
+                    } finally {
+                        isRefreshing.value = false
+                    }
+                }
             }
 
             is CollectionEvent.LogPlayClicked -> {
                 // TODO: Implement navigation or handling for logging a play.
             }
-            else -> Unit
         }
     }
 

@@ -2,43 +2,71 @@ package app.meeplebook.feature.collection
 
 import androidx.annotation.StringRes
 import app.meeplebook.R
-import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.ui.UiText
 
 /**
  * UI state for the Collection screen.
+ *
+ * IMPORTANT for Ivo:
+ * - Capabilities are shared.
+ * - Renderers are conditional.
  */
 sealed interface CollectionUiState {
 
-    data object Loading : CollectionUiState
+    val searchQuery: String
+    val activeQuickFilter: QuickFilter
+    val totalGameCount: Long
+    val unplayedGameCount: Long
+    val isRefreshing: Boolean
+
+    data object Loading : CollectionUiState {
+        override val searchQuery = ""
+        override val activeQuickFilter = QuickFilter.ALL
+        override val totalGameCount = 0L
+        override val unplayedGameCount = 0L
+        override val isRefreshing = false
+    }
 
     data class Empty(
-        val reason: EmptyReason
+        val reason: EmptyReason,
+        override val searchQuery: String,
+        override val activeQuickFilter: QuickFilter,
+        override val totalGameCount: Long,
+        override val unplayedGameCount: Long,
+        override val isRefreshing: Boolean
     ) : CollectionUiState
 
     data class Content(
-        val searchQuery: String,
-
         // Presentation
         val viewMode: CollectionViewMode, // GRID or LIST
         val sort: CollectionSort,
-        val activeQuickFilter: QuickFilter,
 
         val availableSortOptions: List<CollectionSort>,
 
         // Data
         val sections: List<CollectionSection>,
         val sectionIndices: Map<Char, Int>,
-        val totalGameCount: Int,
 
         // UI chrome
-        val isRefreshing: Boolean,
         val showAlphabetJump: Boolean,
-        val isSortSheetVisible: Boolean
+        val isSortSheetVisible: Boolean,
+
+        override val searchQuery: String,
+        override val activeQuickFilter: QuickFilter,
+        override val totalGameCount: Long,
+        override val unplayedGameCount: Long,
+        override val isRefreshing: Boolean
     ) : CollectionUiState
 
     data class Error(
-        @StringRes val errorMessageResId: Int
+        @StringRes val errorMessageResId: Int,
+        override val searchQuery: String,
+        override val activeQuickFilter: QuickFilter,
+        override val totalGameCount: Long,
+        override val unplayedGameCount: Long,
+        override val isRefreshing: Boolean
     ) : CollectionUiState
 }
 
@@ -66,12 +94,12 @@ data class CollectionGameItem(
     val thumbnailUrl: String?,
 
     // Subtitles
-    val playsSubtitle: String, // "42 plays"
-    val playersSubtitle: String,   // "2–4p"
-    val playTimeSubtitle: String, // "30–60m"
+    val playsSubtitleUiText: UiText, // "42 plays"
+    val playersSubtitleUiText: UiText,   // "2–4p"
+    val playTimeSubtitleUiText: UiText, // "30–60m"
 
     // Flags
-    val isNew: Boolean
+    val isUnplayed: Boolean
 )
 
 /**
@@ -87,4 +115,5 @@ sealed interface CollectionUiEffects {
     data class NavigateToGame(val gameId: Long) : CollectionUiEffects
     data object OpenSortSheet : CollectionUiEffects
     data object DismissSortSheet : CollectionUiEffects
+    data class ShowSnackbar(val messageUiText: UiText) : CollectionUiEffects
 }

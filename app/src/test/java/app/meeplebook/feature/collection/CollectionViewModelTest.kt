@@ -2,13 +2,21 @@ package app.meeplebook.feature.collection
 
 import app.cash.turbine.test
 import app.meeplebook.R
+import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
+import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
+import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.result.AppResult
+import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.FakeStringProvider
+import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
@@ -31,7 +39,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 
 /**
  * Unit tests for [CollectionViewModel].
@@ -43,25 +53,42 @@ import java.time.Instant
 class CollectionViewModelTest {
 
     private lateinit var viewModel: CollectionViewModel
+    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
+    private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var observeCollectionUseCase: ObserveCollectionUseCase
     private lateinit var buildSectionsUseCase: BuildCollectionSectionsUseCase
     private lateinit var observeCollectionDomainSectionsUseCase: ObserveCollectionDomainSectionsUseCase
+    private lateinit var syncCollectionUseCase: SyncCollectionUseCase
     private lateinit var fakeStringProvider: FakeStringProvider
     
     private val testDispatcher = StandardTestDispatcher()
+    
+    // Fixed clock for predictable testing
+    private val testClock = Clock.fixed(
+        Instant.parse("2024-01-15T12:00:00Z"),
+        ZoneOffset.UTC
+    )
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         
         // Set up dependencies
+        fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
+        fakeSyncTimeRepository = FakeSyncTimeRepository()
         observeCollectionUseCase = ObserveCollectionUseCase(fakeCollectionRepository)
         buildSectionsUseCase = BuildCollectionSectionsUseCase()
         observeCollectionDomainSectionsUseCase = ObserveCollectionDomainSectionsUseCase(
             observeCollection = observeCollectionUseCase,
             sectionBuilder = buildSectionsUseCase
+        )
+        syncCollectionUseCase = SyncCollectionUseCase(
+            authRepository = fakeAuthRepository,
+            collectionRepository = fakeCollectionRepository,
+            syncTimeRepository = fakeSyncTimeRepository,
+            clock = testClock
         )
         fakeStringProvider = FakeStringProvider()
         
@@ -72,8 +99,9 @@ class CollectionViewModelTest {
         
         // Create ViewModel
         viewModel = CollectionViewModel(
-            observeCollectionDomainSectionsUseCase = observeCollectionDomainSectionsUseCase,
-            stringProvider = fakeStringProvider
+            observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
+            syncCollection = syncCollectionUseCase
         )
     }
 
@@ -429,9 +457,9 @@ class CollectionViewModelTest {
         assertEquals("Wingspan", game.name)
         assertEquals(2019, game.yearPublished)
         assertEquals("https://example.com/wingspan.jpg", game.thumbnailUrl)
-        assertEquals("15 plays", game.playsSubtitle)
-        assertEquals("1-5p", game.playersSubtitle)
-        assertEquals("40-70m", game.playTimeSubtitle)
+        assertEquals("15 plays", game.playsSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("1-5p", game.playersSubtitleUiText.asString(fakeStringProvider))
+        assertEquals("40-70m", game.playTimeSubtitleUiText.asString(fakeStringProvider))
     }
 
     @Test
@@ -465,6 +493,172 @@ class CollectionViewModelTest {
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
         assertFalse(state.isSortSheetVisible)
+    }
+
+    @Test
+    fun `content state shows correct unplayedGameCount when set`() = runTest {
+        // Given
+        val items = listOf(
+            createCollectionItem(gameId = 1, name = "Azul"),
+            createCollectionItem(gameId = 2, name = "Brass: Birmingham")
+        )
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(5)
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(5L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `content state shows zero unplayedGameCount when not set`() = runTest {
+        // Given
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(0)
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertEquals(0L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `empty state with NO_GAMES shows correct unplayedGameCount`() = runTest {
+        // Given - empty collection
+        fakeCollectionRepository.setCollection(emptyList())
+        fakeCollectionRepository.setUnplayedCount(0)
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_GAMES, state.reason)
+        assertEquals(0L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `empty state with NO_SEARCH_RESULTS shows correct unplayedGameCount`() = runTest {
+        // Given - collection with games
+        val items = listOf(
+            createCollectionItem(gameId = 1, name = "Azul"),
+            createCollectionItem(gameId = 2, name = "Catan"),
+            createCollectionItem(gameId = 3, name = "Wingspan"),
+            createCollectionItem(gameId = 4, name = "Abyss"),
+            createCollectionItem(gameId = 5, name = "Ticket to Ride")
+        )
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(2)
+
+        // When - search returns no results
+        viewModel.onEvent(CollectionEvent.SearchChanged("NonexistentGame"))
+        fakeCollectionRepository.setCollection(emptyList())
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_SEARCH_RESULTS, state.reason)
+        assertEquals(2L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `empty state with NO_FILTER_RESULTS shows correct unplayedGameCount`() = runTest {
+        // Given - collection with games but none match filter
+        val items = listOf(
+            createCollectionItem(gameId = 1, name = "Azul"),
+            createCollectionItem(gameId = 2, name = "Catan"),
+            createCollectionItem(gameId = 3, name = "Wingspan"),
+            createCollectionItem(gameId = 4, name = "Abyss"),
+            createCollectionItem(gameId = 5, name = "Ticket to Ride")
+        )
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.setUnplayedCount(4)
+
+        // When - select non-ALL filter, then set empty collection to simulate filter results
+        viewModel.onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
+        fakeCollectionRepository.setCollection(emptyList())
+
+        // Then
+        val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
+        assertEquals(EmptyReason.NO_FILTER_RESULTS, state.reason)
+        assertEquals(4L, state.unplayedGameCount)
+    }
+
+    @Test
+    fun `Refresh event triggers sync and sets isRefreshing to true then false`() = runTest {
+        // Given - logged in user and collection
+        val user = AuthCredentials(username = "testuser", password = "password")
+        fakeAuthRepository.setCurrentUser(user)
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.syncCollectionResult = AppResult.Success(items)
+        
+        val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertFalse(initialState.isRefreshing)
+
+        // When - Refresh event is triggered
+        viewModel.onEvent(CollectionEvent.Refresh)
+        advanceUntilIdle()
+
+        // Then - sync was called
+        assertEquals(1, fakeCollectionRepository.syncCallCount)
+        assertEquals("testuser", fakeCollectionRepository.lastSyncUsername)
+        
+        // And - isRefreshing returns to false
+        val finalState = viewModel.uiState.value as CollectionUiState.Content
+        assertFalse(finalState.isRefreshing)
+    }
+
+    @Test
+    fun `Refresh event handles sync failure gracefully`() = runTest {
+        // Given - logged in user and collection
+        val user = AuthCredentials(username = "testuser", password = "password")
+        fakeAuthRepository.setCurrentUser(user)
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
+        
+        val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        assertFalse(initialState.isRefreshing)
+
+        // Given - collect effects
+        val effects = mutableListOf<CollectionUiEffects>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
+        // When - Refresh event is triggered
+        viewModel.onEvent(CollectionEvent.Refresh)
+        advanceUntilIdle()
+
+        // Then - sync was attempted
+        assertEquals(1, fakeCollectionRepository.syncCallCount)
+        
+        // And - isRefreshing returns to false even after error
+        val finalState = viewModel.uiState.value as CollectionUiState.Content
+        assertFalse(finalState.isRefreshing)
+        
+        // And - ShowSnackbar effect was emitted
+        assertEquals(1, effects.size)
+        assertTrue(effects[0] is CollectionUiEffects.ShowSnackbar)
+
+        // Verify the message contains the expected error text
+        val snackbarEffect = effects[0] as CollectionUiEffects.ShowSnackbar
+        assertEquals("string_${R.string.sync_collections_failed_error}", snackbarEffect.messageUiText.asString(fakeStringProvider))
+
+        job.cancel()
+    }
+
+    @Test
+    fun `Refresh event when not logged in does not call sync`() = runTest {
+        // Given - no logged in user but collection exists
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+
+        // When - Refresh event is triggered
+        viewModel.onEvent(CollectionEvent.Refresh)
+        advanceUntilIdle()
+
+        // Then - sync was not called (use case returned NotLoggedIn error before attempting repository sync)
+        assertEquals(0, fakeCollectionRepository.syncCallCount)
     }
 
     // Helper function to create test collection items

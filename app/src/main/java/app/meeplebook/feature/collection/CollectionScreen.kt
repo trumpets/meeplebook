@@ -1,18 +1,36 @@
 package app.meeplebook.feature.collection
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -22,9 +40,27 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.GridView
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +75,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.ui.asString
+import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextJoin
+import app.meeplebook.ui.components.UiTextText
+import app.meeplebook.ui.components.gameImageClip
 import app.meeplebook.ui.theme.MeepleBookTheme
+import coil3.compose.AsyncImage
 
 /**
  * Collection screen entry point that wires the ViewModel to the UI.
@@ -53,6 +95,12 @@ fun CollectionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
+
+    val context = LocalContext.current
+
+    // TODO Consistent padding between screen contents. Overview list is a bit narrower than collections list
+
+    val resources = LocalResources.current
 
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
@@ -81,6 +129,11 @@ fun CollectionScreen(
 
                 CollectionUiEffects.DismissSortSheet -> {
                     // hideModalBottomSheet()
+                }
+
+                is CollectionUiEffects.ShowSnackbar -> {
+                    Toast.makeText(context, effect.messageUiText.asString(resources), Toast.LENGTH_SHORT).show()
+//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
             }
         }
@@ -112,18 +165,33 @@ fun CollectionScreenRoot(
                 LoadingState()
 
             is CollectionUiState.Empty ->
-                EmptyState(reason = uiState.reason)
+                CollectionScaffold(
+                    uiState = uiState,
+                    onEvent = onEvent
+                ) {
+                    EmptyState(reason = uiState.reason)
+                }
 
             is CollectionUiState.Error ->
-                ErrorState(uiState.errorMessageResId)
+                CollectionScaffold(
+                    uiState = uiState,
+                    onEvent = onEvent
+                ) {
+                    ErrorState(uiState.errorMessageResId)
+                }
 
             is CollectionUiState.Content ->
-                CollectionScreenContent(
+                CollectionScaffold(
                     uiState = uiState,
-                    onEvent = onEvent,
-                    listState = listState,
-                    gridState = gridState
-                )
+                    onEvent = onEvent
+                ) {
+                    CollectionScreenContent(
+                        uiState = uiState,
+                        onEvent = onEvent,
+                        listState = listState,
+                        gridState = gridState
+                    )
+                }
         }
     }
 }
@@ -147,6 +215,33 @@ fun LoadingState() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun CollectionScaffold(
+    uiState: CollectionUiState,
+    onEvent: (CollectionEvent) -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Box {
+        Column {
+
+            /* --- SEARCH (always visible) --- */
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
+
+            )
+
+            /* --- QUICK FILTERS (always visible) --- */
+            QuickFiltersRow(
+                state = uiState,
+                onFilterSelected = { onEvent(CollectionEvent.QuickFilterSelected(it)) }
+            )
+
+            content()
         }
     }
 }
@@ -198,16 +293,6 @@ fun CollectionScreenContent(
 ) {
     Box {
         Column {
-            SearchBar(
-                query = uiState.searchQuery,
-                onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
-            )
-
-            QuickFiltersRow(
-                state = uiState,
-                onEvent = onEvent
-            )
-
             CollectionToolbar(
                 selectedViewMode = uiState.viewMode,
                 onViewModeChanged = {
@@ -260,7 +345,8 @@ private fun SearchBar(
         placeholder = { Text(stringResource(R.string.collection_search_games)) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag("collectionSearchField"),
         singleLine = true,
         shape = RoundedCornerShape(12.dp)
     )
@@ -270,8 +356,8 @@ private fun SearchBar(
 
 @Composable
 private fun QuickFiltersRow(
-    state: CollectionUiState.Content,
-    onEvent: (CollectionEvent) -> Unit
+    state: CollectionUiState,
+    onFilterSelected: (QuickFilter) -> Unit
 ) {
     LazyRow(
         modifier = Modifier.padding(horizontal = 12.dp),
@@ -281,9 +367,7 @@ private fun QuickFiltersRow(
         item {
             FilterChip(
                 selected = state.activeQuickFilter == QuickFilter.ALL,
-                onClick = {
-                    onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.ALL))
-                },
+                onClick = { onFilterSelected(QuickFilter.ALL) },
                 label = { Text(stringResource(R.string.collection_filter_all, state.totalGameCount)) }
             )
         }
@@ -291,10 +375,8 @@ private fun QuickFiltersRow(
         item {
             FilterChip(
                 selected = state.activeQuickFilter == QuickFilter.UNPLAYED,
-                onClick = {
-                    onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
-                },
-                label = { Text(stringResource(R.string.collection_filter_unplayed)) }
+                onClick = { onFilterSelected(QuickFilter.UNPLAYED) },
+                label = { Text(stringResource(R.string.collection_filter_unplayed, state.unplayedGameCount)) }
             )
         }
     }
@@ -344,7 +426,6 @@ private fun CollectionToolbar(
 
 /* ---------- CONTENT ---------- */
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CollectionContent(
     state: CollectionUiState.Content,
@@ -352,9 +433,15 @@ private fun CollectionContent(
     listState: LazyListState,
     gridState: LazyGridState
 ) {
-    when (state.viewMode) {
-        CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
-        CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
+    PullToRefreshBox(
+        isRefreshing = state.isRefreshing,
+        onRefresh = { onEvent(CollectionEvent.Refresh) },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (state.viewMode) {
+            CollectionViewMode.GRID -> CollectionGrid(state, onEvent, gridState)
+            CollectionViewMode.LIST -> CollectionList(state, onEvent, listState)
+        }
     }
 }
 
@@ -444,13 +531,28 @@ private fun GameGridCard(
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .gameImageClip(),
             ) {
-                if (game.isNew) {
+                AsyncImage(
+                    model = game.thumbnailUrl,
+                    contentDescription = game.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                if (game.isUnplayed) {
                     Icon(
                         Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier.padding(4.dp)
+                        contentDescription = stringResource(R.string.stat_unplayed),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .align(Alignment.TopStart)
+                            .background(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(2.dp)
                     )
                 }
             }
@@ -462,11 +564,11 @@ private fun GameGridCard(
                 fontWeight = FontWeight.SemiBold
             )
 
-            Text(
-                listOfNotNull(
-                    game.yearPublished?.toString(),
-                    game.playersSubtitle
-                ).joinToString(separator = " • ")
+            UiTextText(
+                uiTextJoin(
+                    uiText(game.yearPublished?.toString()),
+                    game.playersSubtitleUiText,
+                    separator = " • ")
             )
 
             IconButton(
@@ -495,8 +597,15 @@ private fun GameListRow(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+                .gameImageClip(),
+        ) {
+            AsyncImage(
+                model = game.thumbnailUrl,
+                contentDescription = game.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         Spacer(Modifier.width(12.dp))
 
@@ -506,16 +615,16 @@ private fun GameListRow(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                text = listOfNotNull(
-                    game.yearPublished?.toString(),
-                    game.playersSubtitle,
-                    game.playTimeSubtitle
-                ).joinToString(separator = " • "),
+            UiTextText(
+                text = uiTextJoin(
+                    uiText(game.yearPublished?.toString()),
+                    game.playersSubtitleUiText,
+                    game.playTimeSubtitleUiText,
+                    separator = " • "),
                 style = MaterialTheme.typography.bodySmall
             )
-            Text(
-                text = game.playsSubtitle,
+            UiTextText(
+                text = game.playsSubtitleUiText,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -535,7 +644,8 @@ private fun SectionHeader(letter: Char) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .testTag("sectionHeader_${letter}"),
         fontWeight = FontWeight.Bold
     )
 }
@@ -601,15 +711,31 @@ private fun SortBottomSheet(
 class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<CollectionUiState> {
     override val values: Sequence<CollectionUiState> = sequenceOf(
         sampleContentState(),
-        sampleContentState(viewMode = CollectionViewMode.LIST),
-        CollectionUiState.Empty(EmptyReason.NO_GAMES),
+        sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
+        CollectionUiState.Empty(
+            reason = EmptyReason.NO_SEARCH_RESULTS,
+            searchQuery = "search term",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 100,
+            unplayedGameCount = 27,
+            isRefreshing = false
+        ),
         CollectionUiState.Loading,
-        sampleContentState(isRefreshing = true)
+        sampleContentState(isRefreshing = true),
+        CollectionUiState.Error(
+            R.string.sync_collections_failed_error,
+            searchQuery = "azul",
+            activeQuickFilter = QuickFilter.ALL,
+            totalGameCount = 100,
+            unplayedGameCount = 27,
+            isRefreshing = false
+        )
     )
 
     private fun sampleContentState(
         viewMode: CollectionViewMode = CollectionViewMode.GRID,
-        isRefreshing: Boolean = false
+        isRefreshing: Boolean = false,
+        isSortSheetVisible: Boolean = false
     ): CollectionUiState.Content {
         val games = sampleGames()
         return CollectionUiState.Content(
@@ -617,13 +743,14 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             viewMode = viewMode,
             sort = CollectionSort.ALPHABETICAL,
             activeQuickFilter = QuickFilter.ALL,
-            availableSortOptions = emptyList(),
+            availableSortOptions = CollectionSort.entries,
             sections = buildSections(games),
             sectionIndices = LinkedHashMap(),
-            totalGameCount = games.size,
+            totalGameCount = games.size.toLong(),
+            unplayedGameCount = games.size - 3L,
             isRefreshing = isRefreshing,
             showAlphabetJump = true,
-            isSortSheetVisible = false
+            isSortSheetVisible = isSortSheetVisible
         )
     }
 
@@ -633,60 +760,60 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
             name = "Catan",
             yearPublished = 1995,
             thumbnailUrl = null,
-            playsSubtitle = "42 plays",
-            playersSubtitle = "3–4p",
-            playTimeSubtitle = "75 min",
-            isNew = false
+            playsSubtitleUiText = uiText("42 plays"),
+            playersSubtitleUiText = uiText("3–4p"),
+            playTimeSubtitleUiText = uiText("75 min"),
+            isUnplayed = false
         ),
         CollectionGameItem(
             gameId = 2,
             name = "Wingspan",
             yearPublished = 2019,
             thumbnailUrl = null,
-            playsSubtitle = "18 plays",
-            playersSubtitle = "1–5p",
-            playTimeSubtitle = "90 min",
-            isNew = false
+            playsSubtitleUiText = uiText("18 plays"),
+            playersSubtitleUiText = uiText("1–5p"),
+            playTimeSubtitleUiText = uiText("90 min"),
+            isUnplayed = false
         ),
         CollectionGameItem(
             gameId = 3,
             name = "Abyss",
             yearPublished = 2015,
             thumbnailUrl = null,
-            playsSubtitle = "25 plays",
-            playersSubtitle = "2p",
-            playTimeSubtitle = "30 min",
-            isNew = false
+            playsSubtitleUiText = uiText("25 plays"),
+            playersSubtitleUiText = uiText("2p"),
+            playTimeSubtitleUiText = uiText("30 min"),
+            isUnplayed = false
         ),
         CollectionGameItem(
             gameId = 4,
             name = "Azul",
             yearPublished = 2017,
             thumbnailUrl = null,
-            playsSubtitle = "0 plays",
-            playersSubtitle = "2–4p",
-            playTimeSubtitle = "45 min",
-            isNew = true
+            playsSubtitleUiText = uiText("0 plays"),
+            playersSubtitleUiText = uiText("2–4p"),
+            playTimeSubtitleUiText = uiText("45 min"),
+            isUnplayed = true
         ),
         CollectionGameItem(
             gameId = 40,
             name = "Azul Duel",
             yearPublished = 2017,
             thumbnailUrl = null,
-            playsSubtitle = "0 plays",
-            playersSubtitle = "2–4p",
-            playTimeSubtitle = "45 min",
-            isNew = true
+            playsSubtitleUiText = uiText("0 plays"),
+            playersSubtitleUiText = uiText("2–4p"),
+            playTimeSubtitleUiText = uiText("45 min"),
+            isUnplayed = true
         ),
         CollectionGameItem(
             gameId = 5,
             name = "Ticket to Ride",
             yearPublished = 2004,
             thumbnailUrl = null,
-            playsSubtitle = "33 plays",
-            playersSubtitle = "2–5p",
-            playTimeSubtitle = "60 min",
-            isNew = false
+            playsSubtitleUiText = uiText("33 plays"),
+            playersSubtitleUiText = uiText("2–5p"),
+            playTimeSubtitleUiText = uiText("60 min"),
+            isUnplayed = false
         )
     )
 

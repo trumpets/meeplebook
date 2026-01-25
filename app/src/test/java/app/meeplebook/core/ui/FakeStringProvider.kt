@@ -1,5 +1,6 @@
 package app.meeplebook.core.ui
 
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 
 /**
@@ -10,9 +11,9 @@ import androidx.annotation.StringRes
 class FakeStringProvider : StringProvider {
 
     private val customStrings = mutableMapOf<Int, String>()
+    private val plurals = mutableMapOf<Int, MutableMap<Int, String>>()
 
     override fun get(@StringRes resId: Int, vararg args: Any): String {
-        // Check custom mappings first
         val customString = customStrings[resId]
         if (customString != null) {
             return if (args.isEmpty()) {
@@ -26,6 +27,24 @@ class FakeStringProvider : StringProvider {
         return "string_$resId"
     }
 
+    override fun getPlural(
+        @PluralsRes resId: Int,
+        quantity: Int,
+        vararg args: Any
+    ): String {
+        val quantityMap = plurals[resId]
+        val template =
+            quantityMap?.get(quantity)
+                ?: quantityMap?.get(-1) // fallback
+                ?: return "plural_$resId($quantity)" // early return if no template found
+
+        return if (args.isEmpty()) {
+            String.format(template, quantity) // use quantity as default arg
+        } else {
+            String.format(template, *args) // use explicit args
+        }
+    }
+
     /**
      * Sets a custom string for a specific resource ID.
      * Useful for testing specific string formatting scenarios.
@@ -35,9 +54,29 @@ class FakeStringProvider : StringProvider {
     }
 
     /**
+     * quantity = exact match
+     * quantity = -1 -> fallback (e.g. "other")
+     */
+    fun setPlural(
+        @PluralsRes resId: Int,
+        quantity: Int,
+        value: String
+    ) {
+        val map = plurals.getOrPut(resId) { mutableMapOf() }
+        map[quantity] = value
+    }
+
+    /**
      * Clears all custom string mappings.
      */
-    fun clear() {
+    fun clearStrings() {
         customStrings.clear()
+    }
+
+    /**
+     * Clears all custom plural string mappings.
+     */
+    fun clearPlurals() {
+        plurals.clear()
     }
 }
