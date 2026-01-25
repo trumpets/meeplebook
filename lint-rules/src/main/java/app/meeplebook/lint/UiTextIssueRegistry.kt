@@ -7,7 +7,7 @@ import com.android.tools.lint.detector.api.Issue
 @Suppress("unused") // Lint loads this via reflection
 class UiTextIssueRegistry : IssueRegistry() {
     override val issues: List<Issue>
-        get() = listOf(UiTextInStringResourceDetector.ISSUE)
+        get() = listOf(UiTextInStringResourceDetector.ISSUE, UiTextInTextComposableDetector.ISSUE)
 
     override val api = CURRENT_API
 

@@ -10,10 +10,8 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.UReferenceExpression
 
 class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
 
@@ -23,7 +21,7 @@ class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
             "Passing a UiText object to stringResource or pluralStringResource is not allowed."
         private const val EXPLANATION =
             "Convert UiText to a String before passing it to stringResource or pluralStringResource, " +
-                    "e.g., use UiText.asString(context)."
+                    "e.g., use UiText.asString(context). Or use uiTextRes / uiTextPlural instead of stringResource / pluralStringResource."
         private val IMPLEMENTATION = Implementation(
             UiTextInStringResourceDetector::class.java,
             Scope.JAVA_FILE_SCOPE
@@ -38,16 +36,11 @@ class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
             severity = Severity.ERROR,
             implementation = IMPLEMENTATION
         )
-
-        // Fully-qualified UiText type
-        private const val UITEXT_FQN = "app.meeplebook.core.ui.UiText"
     }
 
     override fun getApplicableMethodNames(): List<String> =
         listOf("stringResource", "pluralStringResource")
 
-    // TODO detect Text(text = UiText) as well
-    // TODO update lint tests with those cases
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val methodName = method.name
         val args = node.valueArguments
@@ -67,61 +60,11 @@ class UiTextInStringResourceDetector : Detector(), SourceCodeScanner {
                     ISSUE,
                     node,
                     context.getNameLocation(arg),
-                    "UiText should not be passed directly to $methodName; convert it to a String first",
+                    "UiText should not be passed directly to $methodName; convert it to a String first or use uiTextRes / uiTextPlural",
                     createFix(methodName, node, arg, context)
                 )
             }
         }
-    }
-
-    private fun isSafeUiTextConversion(
-        context: JavaContext,
-        expression: UExpression
-    ): Boolean {
-        if (expression !is UCallExpression) return false
-        if (expression.methodName != "asString") return false
-
-        val receiver = expression.receiver ?: return false
-        val type = receiver.getExpressionType()
-        val cls = type?.let { context.evaluator.getTypeClass(it) }
-
-        return cls != null &&
-                context.evaluator.extendsClass(cls, UITEXT_FQN, false)
-    }
-
-    private fun isUiTextExpression(
-        context: JavaContext,
-        expression: UExpression
-    ): Boolean {
-
-        // Case 1: direct constructor call
-        if (expression is UCallExpression) {
-            val type = expression.getExpressionType()
-            val cls = type?.let { context.evaluator.getTypeClass(it) }
-            if (cls != null &&
-                context.evaluator.extendsClass(cls, UITEXT_FQN, false)
-            ) {
-                return true
-            }
-        }
-
-        // Case 2: variable reference
-        if (expression is UReferenceExpression) {
-            val resolved = expression.resolve()
-
-            // val dateUiText: UiText
-            if (resolved is PsiVariable) {
-                val type = resolved.type
-                val cls = context.evaluator.getTypeClass(type)
-                if (cls != null &&
-                    context.evaluator.extendsClass(cls, UITEXT_FQN, false)
-                ) {
-                    return true
-                }
-            }
-        }
-
-        return false
     }
 
     private fun createFix(

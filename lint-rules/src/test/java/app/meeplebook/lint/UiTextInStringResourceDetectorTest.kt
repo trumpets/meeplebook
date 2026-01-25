@@ -42,7 +42,7 @@ class UiTextInStringResourceDetectorTest : LintDetectorTest() {
             .run()
             .expect(
                 """
-                src/test/test.kt:13: Error: UiText should not be passed directly to stringResource; convert it to a String first [UiTextInStringResource]
+                src/test/test.kt:13: Error: UiText should not be passed directly to stringResource; convert it to a String first or use uiTextRes / uiTextPlural [UiTextInStringResource]
                                             dateUiText
                                             ~~~~~~~~~~
                 1 errors, 0 warnings
@@ -83,7 +83,7 @@ class UiTextInStringResourceDetectorTest : LintDetectorTest() {
             .run()
             .expect(
                 """
-                src/test/test.kt:14: Error: UiText should not be passed directly to pluralStringResource; convert it to a String first [UiTextInStringResource]
+                src/test/test.kt:14: Error: UiText should not be passed directly to pluralStringResource; convert it to a String first or use uiTextRes / uiTextPlural [UiTextInStringResource]
                                             uiText
                                             ~~~~~~
                 1 errors, 0 warnings
@@ -209,7 +209,7 @@ class UiTextInStringResourceDetectorTest : LintDetectorTest() {
             .run()
             .expect(
                 """
-                src/test/test.kt:13: Error: UiText should not be passed directly to stringResource; convert it to a String first [UiTextInStringResource]
+                src/test/test.kt:13: Error: UiText should not be passed directly to stringResource; convert it to a String first or use uiTextRes / uiTextPlural [UiTextInStringResource]
                                             dateUiText
                                             ~~~~~~~~~~
                 1 errors, 0 warnings
@@ -261,7 +261,7 @@ class UiTextInStringResourceDetectorTest : LintDetectorTest() {
             .run()
             .expect(
                 """
-                src/test/test.kt:14: Error: UiText should not be passed directly to pluralStringResource; convert it to a String first [UiTextInStringResource]
+                src/test/test.kt:14: Error: UiText should not be passed directly to pluralStringResource; convert it to a String first or use uiTextRes / uiTextPlural [UiTextInStringResource]
                                             uiText
                                             ~~~~~~
                 1 errors, 0 warnings
@@ -280,56 +280,4 @@ class UiTextInStringResourceDetectorTest : LintDetectorTest() {
                 """.trimIndent()
             )
     }
-
-    // ---------------------------------------------------------------------
-    // Test stubs
-    // ---------------------------------------------------------------------
-
-    private fun uiTextStub() = kotlin(
-        """
-        package app.meeplebook.core.ui
-
-        sealed class UiText {
-            data class Plain(val value: String) : UiText()
-            data class Res(val resId: Int) : UiText()
-        }
-        """
-    )
-
-    private fun composeStubs() = kotlin(
-        """
-        package androidx.compose.runtime
-
-        annotation class Composable
-        """
-    )
-
-    private fun resourceStubs() = kotlin(
-        """
-        package androidx.compose.ui.res
-
-        fun stringResource(id: Int, vararg formatArgs: Any): String {
-            return ""
-        }
-
-        fun pluralStringResource(id: Int, count: Int, vararg formatArgs: Any): String {
-            return ""
-        }
-        """
-    )
-
-    private fun resourceIdsStub() = kotlin(
-        """
-        package test
-
-        object R {
-            object string {
-                const val sync_plays_failed_error: Int = 1
-            }
-            object plurals {
-                const val items_count: Int = 2
-            }
-        }
-        """
-    )
 }
