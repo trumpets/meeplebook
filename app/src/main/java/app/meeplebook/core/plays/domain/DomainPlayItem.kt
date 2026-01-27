@@ -20,7 +20,7 @@ import java.time.Instant
  * @property comments Optional user comments about the play.
  * @property syncStatus Current synchronization status with BGG.
  */
-data class DomainPlayItem (
+data class DomainPlayItem(
     val id: Long,
     val gameName: String,
     val thumbnailUrl: String?,
