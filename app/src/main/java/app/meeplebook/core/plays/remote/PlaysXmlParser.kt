@@ -72,7 +72,7 @@ object PlaysXmlParser {
                                 val name = parser.getAttributeValue(null, "name")
                                 val startPosition = parser.getAttributeValue(null, "startposition")
                                 val color = parser.getAttributeValue(null, "color")
-                                val score = parser.getAttributeValue(null, "score")
+                                val score = parser.getAttributeValue(null, "score")?.toIntOrNull()
                                 val win = parser.getAttributeValue(null, "win")?.toIntOrNull() == 1
 
                                 if (!name.isNullOrBlank()) {
@@ -83,7 +83,7 @@ object PlaysXmlParser {
                                         name = name,
                                         startPosition = startPosition?.takeIf { it.isNotBlank() },
                                         color = color?.takeIf { it.isNotBlank() },
-                                        score = score?.takeIf { it.isNotBlank() },
+                                        score = score,
                                         win = win
                                     )
                                     play.players.add(player)
