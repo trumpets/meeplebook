@@ -14,7 +14,7 @@ import java.time.Instant
  * @property gameName Name of the game that was played.
  * @property thumbnailUrl Optional URL to the game's thumbnail image.
  * @property date The instant when the play occurred.
- * @property length Duration of the play in minutes, if recorded.
+ * @property durationMinutes Duration of the play in minutes, if recorded.
  * @property players List of players who participated in the play.
  * @property location Optional location where the game was played.
  * @property comments Optional user comments about the play.
@@ -25,7 +25,7 @@ data class DomainPlayItem (
     val gameName: String,
     val thumbnailUrl: String?,
     val date: Instant,
-    val length: Int?,
+    val durationMinutes: Int?,
     val players: List<DomainPlayerItem>,
     val location: String?,
     val comments: String?,
@@ -41,7 +41,7 @@ fun Play.toDomainPlayItem(): DomainPlayItem {
         gameName = gameName,
         thumbnailUrl = null, // TODO: Add thumbnail support from CollectionRepository by mapping Play.gameId to collection items
         date = date,
-        length = length,
+        durationMinutes = length,
         players = players.map { it.toDomainPlayerItem() },
         location = location,
         comments = comments,

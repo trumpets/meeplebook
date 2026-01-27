@@ -30,7 +30,7 @@ data class PlayerEntity(
     val name: String,
     val startPosition: String?,
     val color: String?,
-    val score: String?,
+    val score: Int?,
     val win: Boolean
 )
 

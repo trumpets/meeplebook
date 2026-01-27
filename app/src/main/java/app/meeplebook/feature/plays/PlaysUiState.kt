@@ -11,20 +11,12 @@ import java.time.YearMonth
  */
 sealed interface PlaysUiState {
 
-    /** Current search query text entered by the user. */
-    val searchQuery: String
-
-    /** Aggregated statistics about the user's plays. */
-    val playStats: PlayStats
-
-    /** Whether a refresh operation is currently in progress. */
-    val isRefreshing: Boolean
+    /** Common state shared across all UI state variants. */
+    val common: PlaysCommonState
 
     /** Loading state shown while initial data is being fetched. */
     data object Loading : PlaysUiState {
-        override val searchQuery = ""
-        override val playStats = PlayStats()
-        override val isRefreshing = false
+        override val common = PlaysCommonState()
     }
 
     /**
@@ -34,9 +26,7 @@ sealed interface PlaysUiState {
      */
     data class Empty(
         val reason: EmptyReason,
-        override val searchQuery: String,
-        override val playStats: PlayStats,
-        override val isRefreshing: Boolean
+        override val common: PlaysCommonState
     ) : PlaysUiState
 
     /**
@@ -46,24 +36,35 @@ sealed interface PlaysUiState {
      */
     data class Content(
         val sections: List<PlaysSection>,
-
-        override val searchQuery: String,
-        override val playStats: PlayStats,
-        override val isRefreshing: Boolean
+        override val common: PlaysCommonState
     ) : PlaysUiState
 
     /**
      * Error state shown when data loading fails.
      *
-     * @property errorMessageResId String resource ID for the error message to display.
+     * @property errorMessageUiText UiText representing the error message to display.
      */
     data class Error(
-        @StringRes val errorMessageResId: Int,
-        override val searchQuery: String,
-        override val playStats: PlayStats,
-        override val isRefreshing: Boolean
+        val errorMessageUiText: UiText,
+        override val common: PlaysCommonState
     ) : PlaysUiState
 }
+
+/**
+ * Common state shared across all [PlaysUiState] variants.
+ *
+ * This includes properties that are always present regardless of whether
+ * the screen is loading, empty, showing content, or displaying an error.
+ *
+ * @property searchQuery Current search query text entered by the user.
+ * @property playStats Aggregated statistics about the user's plays.
+ * @property isRefreshing Whether a refresh operation is currently in progress.
+ */
+data class PlaysCommonState(
+    val searchQuery: String = "",
+    val playStats: PlayStats = PlayStats(),
+    val isRefreshing: Boolean = false
+)
 
 /**
  * Reasons why the plays screen might be empty.
@@ -84,11 +85,11 @@ enum class EmptyReason(
  * A section of plays grouped by month/year.
  *
  * @property monthYearDate The month/year that this section represents.
- * @property games List of play items recorded during this month.
+ * @property plays List of play items recorded during this month.
  */
 data class PlaysSection(
     val monthYearDate: YearMonth,
-    val games: List<PlayItem>
+    val plays: List<PlayItem>
 )
 
 /**
@@ -128,7 +129,7 @@ data class PlayStats(
     val uniqueGamesCount: Long = 0,
     val totalPlays: Long = 0,
     val playsThisYear: Long = 0,
-    val currentYear: Long = 0
+    val currentYear: Int = 0
 )
 
 /**
