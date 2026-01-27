@@ -2,8 +2,9 @@ package app.meeplebook.feature.plays
 
 import androidx.annotation.StringRes
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.UiText
-import java.time.Instant
+import java.time.YearMonth
 
 /**
  * UI state for the Plays screen.
@@ -82,11 +83,11 @@ enum class EmptyReason(
 /**
  * A section of plays grouped by month/year.
  *
- * @property monthYearDate The first instant of the month/year that this section represents.
+ * @property monthYearDate The month/year that this section represents.
  * @property games List of play items recorded during this month.
  */
 data class PlaysSection(
-    val monthYearDate: Instant,
+    val monthYearDate: YearMonth,
     val games: List<PlayItem>
 )
 
@@ -109,25 +110,11 @@ data class PlayItem(
     val thumbnailUrl: String?,
     val dateUiText: UiText,
     val durationUiText: UiText,
-    val playerSummaryUiText: String,
+    val playerSummaryUiText: UiText,
     val location: String?,
     val comments: String?,
-    val syncStatus: SyncStatus
+    val syncStatus: PlaySyncStatus
 )
-
-/**
- * Synchronization status of a play record with BGG.
- */
-enum class SyncStatus {
-    /** Play has been successfully synced with BGG. */
-    SYNCED,
-
-    /** Play is waiting to be synced with BGG. */
-    PENDING,
-
-    /** Sync attempt failed; will retry later. */
-    FAILED
-}
 
 /**
  * Statistics summary shown on the plays screen.

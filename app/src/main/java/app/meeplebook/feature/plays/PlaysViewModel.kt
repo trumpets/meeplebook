@@ -11,6 +11,6 @@ import javax.inject.Inject
 class PlaysViewModel @Inject constructor(
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PlaysUiState())
+    private val _uiState = MutableStateFlow(PlaysUiState.Loading)
     val uiState: StateFlow<PlaysUiState> = _uiState.asStateFlow()
 }
