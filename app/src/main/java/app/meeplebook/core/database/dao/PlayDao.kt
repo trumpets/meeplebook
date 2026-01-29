@@ -89,6 +89,12 @@ interface PlayDao {
     suspend fun getPlaysForGame(gameId: Long): List<PlayEntity>
 
     /**
+     * Observes the count of unique games that have been played.
+     */
+    @Query("SELECT COUNT(DISTINCT gameId) FROM plays")
+    fun observeUniqueGamesCount(): Flow<Long>
+
+    /**
      * Inserts a play, replacing on conflict.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)

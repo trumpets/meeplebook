@@ -7,6 +7,7 @@ import app.meeplebook.core.ui.uiTextRes
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Year
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -25,6 +26,12 @@ data class Range(
 fun monthRangeFor(yearMonth: YearMonth, zoneId: ZoneId = ZoneOffset.UTC): Range {
     val start = yearMonth.atDay(1).atStartOfDay(zoneId).toInstant()
     val end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(zoneId).toInstant()
+    return Range(start, end)
+}
+
+fun yearRangeFor(year: Year, zoneId: ZoneId = ZoneOffset.UTC): Range {
+    val start = year.atDay(1).atStartOfDay(zoneId).toInstant()
+    val end = year.plusYears(1).atDay(1).atStartOfDay(zoneId).toInstant()
     return Range(start, end)
 }
 

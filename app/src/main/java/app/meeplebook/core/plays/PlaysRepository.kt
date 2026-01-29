@@ -69,4 +69,9 @@ interface PlaysRepository {
      * Observes the most recent plays with a limit.
      */
     fun observeRecentPlays(limit: Int): Flow<List<Play>>
+
+    /**
+     * Observes the count of unique games that have been played.
+     */
+    fun observeUniqueGamesCount(): Flow<Long>
 }

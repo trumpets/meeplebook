@@ -85,4 +85,8 @@ class PlaysLocalDataSourceImpl @Inject constructor(
             entities.map { it.toPlay() }
         }
     }
+
+    override fun observeUniqueGamesCount(): Flow<Long> {
+        return playDao.observeUniqueGamesCount()
+    }
 }

@@ -98,4 +98,8 @@ class PlaysRepositoryImpl @Inject constructor(
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
         return local.observeRecentPlays(limit)
     }
+
+    override fun observeUniqueGamesCount(): Flow<Long> {
+        return local.observeUniqueGamesCount()
+    }
 }
