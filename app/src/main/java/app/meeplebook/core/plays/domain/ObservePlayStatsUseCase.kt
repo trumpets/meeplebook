@@ -2,9 +2,15 @@ package app.meeplebook.core.plays.domain
 
 import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.core.util.yearRangeFor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.time.delay
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.Year
 import java.time.ZoneOffset
@@ -32,26 +38,42 @@ class ObservePlayStatsUseCase @Inject constructor(
      *
      * @return Flow emitting [DomainPlayStatsSummary] whenever play data changes.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<DomainPlayStatsSummary> {
 
-        val now = Instant.now(clock)
-        val currentYear = Year.from(
-            now.atZone(ZoneOffset.UTC)
-        )
+        return observeCurrentYear().flatMapLatest { year ->
+            val range = yearRangeFor(year, ZoneOffset.UTC)
 
-        val range = yearRangeFor(currentYear, ZoneOffset.UTC)
-
-        return combine(
-            playsRepository.observeTotalPlaysCount(),
-            playsRepository.observeUniqueGamesCount(),
-            playsRepository.observePlaysCountForPeriod(range.start, range.end)
-        ) { total, unique, thisYear ->
-            DomainPlayStatsSummary(
-                totalPlays = total,
-                uniqueGamesCount = unique,
-                playsThisYear = thisYear,
-                currentYear = currentYear.value
-            )
+            combine(
+                playsRepository.observeTotalPlaysCount(),
+                playsRepository.observeUniqueGamesCount(),
+                playsRepository.observePlaysCountForPeriod(range.start, range.end)
+            ) { total, unique, thisYear ->
+                DomainPlayStatsSummary(
+                    totalPlays = total,
+                    uniqueGamesCount = unique,
+                    playsThisYear = thisYear,
+                    currentYear = year.value
+                )
+            }
         }
     }
+
+    /**
+     * Observes the current year, emitting updates at least every hour.
+     * This ensures that the current year is accurate even if the app remains open across
+     * a year boundary.
+     */
+    private fun observeCurrentYear(): Flow<Year> =
+        flow {
+            while (true) {
+                val now = Instant.now(clock)
+                val currentYear = Year.from(
+                    now.atZone(ZoneOffset.UTC)
+                )
+
+                emit(currentYear)
+                delay(Duration.ofHours(1))
+            }
+        }.distinctUntilChanged()
 }
