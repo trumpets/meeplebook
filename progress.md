@@ -29,12 +29,17 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
 - Enhanced player mapping test with comprehensive assertions for all fields (`startPosition`, `score`, `win`)
 - Refactored flow reactivity test to use Turbine for true reactive testing (single collector receives multiple emissions)
 - Updated boolean assertions to use idiomatic `assertTrue`/`assertFalse` instead of `assertEquals`
+- Improved blank query test to verify behavior (returns all plays) instead of implementation details
+- Fixed progress.md ordering to follow chronological append-only pattern
 - Files changed:
   - `app/src/test/java/app/meeplebook/core/plays/domain/ObservePlaysUseCaseTest.kt` (improved)
+  - `progress.md` (reordered)
 - **Learnings for future iterations:**
     - When testing domain mapping, assert ALL fields to catch regressions, not just a subset
     - Use Turbine's `.test {}` to verify true flow reactivity (single collector getting multiple emissions)
     - Use `assertTrue`/`assertFalse` for boolean assertions instead of `assertEquals(true/false, ...)`
     - True reactivity testing requires observing the flow once and verifying subsequent emissions, not re-subscribing
+    - Test behavior (what the function returns) rather than implementation details (what gets passed to dependencies)
+    - Always append to progress.md, never prepend - maintain chronological order
 ---
 
