@@ -264,4 +264,33 @@ class PlaysRepositoryImplTest {
 
         assertTrue(result.isEmpty())
     }
+
+    // --- observeUniqueGamesCount tests ---
+
+    @Test
+    fun `observeUniqueGamesCount returns count from local data source`() = runTest {
+        local.setUniqueGamesCount(7L)
+
+        val result = repository.observeUniqueGamesCount().first()
+
+        assertEquals(7L, result)
+    }
+
+    @Test
+    fun `observeUniqueGamesCount returns zero when no plays`() = runTest {
+        val result = repository.observeUniqueGamesCount().first()
+
+        assertEquals(0L, result)
+    }
+
+    @Test
+    fun `observeUniqueGamesCount updates when unique games count changes`() = runTest {
+        local.setUniqueGamesCount(3L)
+        val result1 = repository.observeUniqueGamesCount().first()
+        assertEquals(3L, result1)
+
+        local.setUniqueGamesCount(5L)
+        val result2 = repository.observeUniqueGamesCount().first()
+        assertEquals(5L, result2)
+    }
 }
