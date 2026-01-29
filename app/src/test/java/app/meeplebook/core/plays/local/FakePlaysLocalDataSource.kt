@@ -47,6 +47,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
 
     override suspend fun clearPlays() {
         playsFlow.value = emptyList()
+        uniqueGamesCount.value = 0L
     }
 
     override fun observeTotalPlaysCount(): Flow<Long> {
