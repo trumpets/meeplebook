@@ -22,10 +22,11 @@ class PlaysRepositoryImpl @Inject constructor(
 ) : PlaysRepository {
 
     override fun observePlays(gameNameOrLocationQuery: String?): Flow<List<Play>> {
-        return if (gameNameOrLocationQuery.isNullOrBlank()) {
+        val query = gameNameOrLocationQuery?.trim()
+        return if (query.isNullOrEmpty()) {
             local.observePlays()
         } else {
-            local.observePlaysByGameNameOrLocation(gameNameOrLocationQuery)
+            local.observePlaysByGameNameOrLocation(query)
         }
     }
 

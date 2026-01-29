@@ -27,7 +27,7 @@ interface PlayDao {
     @Query("""
         SELECT * FROM plays
         WHERE gameName LIKE '%' || :gameNameOrLocationQuery || '%'
-           OR location LIKE '%' || :gameNameOrLocationQuery || '%'
+           OR (location IS NOT NULL AND location LIKE '%' || :gameNameOrLocationQuery || '%')
         ORDER BY date DESC
     """)
     fun observePlaysWithPlayersByGameNameOrLocation(

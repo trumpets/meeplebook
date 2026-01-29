@@ -2,6 +2,7 @@ package app.meeplebook.core.plays.domain
 
 import app.meeplebook.core.plays.PlaysRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -27,6 +28,6 @@ class ObservePlaysUseCase @Inject constructor(
     operator fun invoke(gameOrLocationQuery: String? = null): Flow<List<DomainPlayItem>> {
         return playsRepository.observePlays(gameOrLocationQuery).map { items ->
             items.map { item -> item.toDomainPlayItem() }
-        }
+        }.distinctUntilChanged()
     }
 }

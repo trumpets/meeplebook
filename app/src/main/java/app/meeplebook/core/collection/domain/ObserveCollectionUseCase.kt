@@ -3,6 +3,7 @@ package app.meeplebook.core.collection.domain
 import app.meeplebook.core.collection.CollectionRepository
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -23,6 +24,6 @@ class ObserveCollectionUseCase @Inject constructor(
     operator fun invoke(query: CollectionDataQuery? = null): Flow<List<DomainCollectionItem>> {
         return collectionRepository.observeCollection(query).map { items ->
             items.map { item -> item.toDomainCollectionItem() }
-        }
+        }.distinctUntilChanged()
     }
 }
