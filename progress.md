@@ -11,3 +11,50 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
     - Test suites should cover: normal operation, empty state, reactivity to data changes, and edge cases like different time periods
     - Fake repositories should compute derived values (like unique games count) in `updateComputedValues` to keep all counters consistent when `setPlays` is called
 ---
+## 2026-01-29T22:20:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743783872)
+- Created comprehensive test suite `ObservePlaysUseCaseTest` with 8 test cases covering query passthrough, mapping correctness, and flow reactivity
+- Tests verify: null/blank query forwarding, non-blank query forwarding, Play->DomainPlayItem mapping, empty state, and reactive updates
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/domain/ObservePlaysUseCaseTest.kt` (new)
+- **Learnings for future iterations:**
+    - Test use cases follow pattern: use `FakePlaysRepository` for isolation, `PlayTestFactory` for creating test data
+    - FakePlaysRepository tracks `lastObservePlaysQuery` to verify query forwarding behavior
+    - Test mapping by creating plays with full details (players, location, comments) and verifying all fields in DomainPlayItem
+    - Test cases should cover: null/blank/non-blank query, empty list, mapping correctness, and flow reactivity
+---
+## 2026-01-29T22:40:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comments on PR #72)
+- Addressed code review feedback on `ObservePlaysUseCaseTest`
+- Enhanced player mapping test with comprehensive assertions for all fields (`startPosition`, `score`, `win`)
+- Refactored flow reactivity test to use Turbine for true reactive testing (single collector receives multiple emissions)
+- Updated boolean assertions to use idiomatic `assertTrue`/`assertFalse` instead of `assertEquals`
+- Improved blank query test to verify behavior (returns all plays) instead of implementation details
+- Fixed progress.md ordering to follow chronological append-only pattern
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/domain/ObservePlaysUseCaseTest.kt` (improved)
+  - `progress.md` (reordered)
+- **Learnings for future iterations:**
+    - When testing domain mapping, assert ALL fields to catch regressions, not just a subset
+    - Use Turbine's `.test {}` to verify true flow reactivity (single collector getting multiple emissions)
+    - Use `assertTrue`/`assertFalse` for boolean assertions instead of `assertEquals(true/false, ...)`
+    - True reactivity testing requires observing the flow once and verifying subsequent emissions, not re-subscribing
+    - Test behavior (what the function returns) rather than implementation details (what gets passed to dependencies)
+    - Always append to progress.md, never prepend - maintain chronological order
+---
+
+## 2026-01-29T23:07:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743896325)
+- Created comprehensive test suite `BuildPlaysSectionsUseCaseTest` with 11 test cases covering grouping/sorting behavior
+- Tests verify: YearMonth grouping, reverse chronological order (most recent first), stable in-section ordering
+- Test coverage includes: empty list, single/multiple month grouping, year boundaries, same-day plays, edge cases (same instant, far past/future dates), full year of monthly plays
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/plays/domain/BuildPlaysSectionsUseCaseTest.kt` (new)
+- **Learnings for future iterations:**
+    - Plays section tests follow same pattern as collection section tests but with YearMonth grouping and reverse chronological ordering
+    - Use `PlayTestFactory.createPlay()` and `.toDomainPlayItem()` for creating test data
+    - Test suites should verify: grouping logic, sort order (reverse chronological for plays), within-section ordering stability
+    - Edge cases to test: empty list, single item, all items in one section, year boundaries, same instant, far past/future dates
+    - Tests structured with Given/When/Then comments for clarity
+---
+

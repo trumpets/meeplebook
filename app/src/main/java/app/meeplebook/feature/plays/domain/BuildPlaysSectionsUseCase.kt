@@ -2,6 +2,7 @@ package app.meeplebook.feature.plays.domain
 
 import app.meeplebook.core.plays.domain.DomainPlayItem
 import java.time.YearMonth
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 /**
@@ -40,6 +41,6 @@ class BuildPlaysSectionsUseCase @Inject constructor() {
      * @return The [YearMonth] representing when this play occurred.
      */
     private fun DomainPlayItem.sectionKey(): YearMonth {
-        return YearMonth.from(this.date)
+        return YearMonth.from(date.atZone(ZoneOffset.UTC))
     }
 }
