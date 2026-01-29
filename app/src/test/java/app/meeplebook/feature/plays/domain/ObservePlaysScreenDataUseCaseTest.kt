@@ -110,6 +110,7 @@ class ObservePlaysScreenDataUseCaseTest {
             createPlay(id = 3, gameName = "Catan", gameId = 100, date = Instant.parse("2025-12-20T18:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
+        fakePlaysRepository.setPlaysCountForPeriod(2)
 
         // When
         val result = useCase().first()
