@@ -97,7 +97,7 @@ class ObservePlaysUseCaseTest {
         val domainPlay = result[0]
         assertEquals(1, domainPlay.id)
         assertEquals("Catan", domainPlay.gameName)
-        assertNull(domainPlay.thumbnailUrl) // TODO: Add thumbnail support
+        assertNull(domainPlay.thumbnailUrl) // Thumbnail not yet mapped from CollectionRepository
         assertEquals(Instant.parse("2024-01-15T20:00:00Z"), domainPlay.date)
         assertEquals(90, domainPlay.durationMinutes)
         assertEquals("Home", domainPlay.location)

@@ -1,5 +1,5 @@
 ## 2026-01-29T22:20:00Z
-PR Link: https://github.com/trumpets/meeplebook/pull/[TBD] (sub-PR for #69)
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743783872)
 - Created comprehensive test suite `ObservePlaysUseCaseTest` with 8 test cases covering query passthrough, mapping correctness, and flow reactivity
 - Tests verify: null/blank query forwarding, non-blank query forwarding, Play->DomainPlayItem mapping, empty state, and reactive updates
 - Files changed:
