@@ -45,7 +45,7 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
 
 ## 2026-01-29T23:07:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743896325)
-- Created comprehensive test suite `BuildPlaysSectionsUseCaseTest` with 12 test cases covering grouping/sorting behavior
+- Created comprehensive test suite `BuildPlaysSectionsUseCaseTest` with 11 test cases covering grouping/sorting behavior
 - Tests verify: YearMonth grouping, reverse chronological order (most recent first), stable in-section ordering
 - Test coverage includes: empty list, single/multiple month grouping, year boundaries, same-day plays, edge cases (same instant, far past/future dates), full year of monthly plays
 - Files changed:
