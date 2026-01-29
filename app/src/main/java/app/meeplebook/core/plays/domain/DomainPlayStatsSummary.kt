@@ -12,7 +12,7 @@ package app.meeplebook.core.plays.domain
  * @property currentYear The current calendar year for which [playsThisYear] is calculated.
  */
 data class DomainPlayStatsSummary(
-    val uniqueGamesCount: Long ,
+    val uniqueGamesCount: Long,
     val totalPlays: Long,
     val playsThisYear: Long,
     val currentYear: Int
