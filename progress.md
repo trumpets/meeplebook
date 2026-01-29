@@ -42,7 +42,20 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
     - Test behavior (what the function returns) rather than implementation details (what gets passed to dependencies)
     - Always append to progress.md, never prepend - maintain chronological order
 ---
-
+## 2026-01-29T23:05:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743896458)
+- Created comprehensive test suite `ObservePlaysScreenDataUseCaseTest` with 9 test cases
+- Tests cover: empty state, non-empty grouping by month/year, stats combination, flow reactivity (plays and stats independently), query forwarding, and edge cases
+- Verified tests follow established patterns from `ObserveCollectionDomainSectionsUseCaseTest` and `ObservePlaysUseCaseTest`
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/plays/domain/ObservePlaysScreenDataUseCaseTest.kt` (new)
+- **Learnings for future iterations:**
+    - Test use cases that combine multiple flows follow pattern: inject all dependencies (use cases and repositories), use fixed Clock for time-based testing
+    - When testing combined flows, verify both data streams independently update correctly using Turbine
+    - Test section-based use cases should cover: empty state, grouping logic, section ordering, data preservation within sections
+    - Always test reactive updates for use cases that combine flows - verify each source flow triggers updates independently
+    - Test coverage should match feedback requests: empty, non-empty grouping, and reactivity
+---
 ## 2026-01-29T23:07:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743896325)
 - Created comprehensive test suite `BuildPlaysSectionsUseCaseTest` with 11 test cases covering grouping/sorting behavior
@@ -56,5 +69,21 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
     - Test suites should verify: grouping logic, sort order (reverse chronological for plays), within-section ordering stability
     - Edge cases to test: empty list, single item, all items in one section, year boundaries, same instant, far past/future dates
     - Tests structured with Given/When/Then comments for clarity
+---
+
+## 2026-01-29T23:42:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing review comment #2743934926)
+- Fixed flaky test in `ObservePlaysScreenDataUseCaseTest.invoke updates when plays change`
+- Issue: `setPlays()` updates multiple StateFlows (_plays, _totalPlaysCount, _uniqueGamesCount), causing intermediate emissions in combined flow
+- Solution: consume emissions in a loop until reaching expected stable state (sections.size == 2 && uniqueGamesCount == 2L)
+- Verified other reactive test already follows correct pattern (updating one flow at a time)
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/plays/domain/ObservePlaysScreenDataUseCaseTest.kt`
+- **Learnings for future iterations:**
+    - When testing combined flows where upstream updates multiple StateFlows at once, expect multiple intermediate emissions
+    - Use a do-while loop to consume emissions until reaching the expected stable state
+    - Check both conditions that define the stable state (e.g., sections.size AND stats values)
+    - Alternative approach: update one flow at a time and assert each emission (as done in `invoke updates when stats change independently` test)
+    - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
 ---
 
