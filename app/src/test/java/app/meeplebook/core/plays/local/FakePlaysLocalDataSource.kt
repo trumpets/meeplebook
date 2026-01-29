@@ -15,6 +15,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
     private val totalPlaysCount = MutableStateFlow(0L)
     private val playsCountForMonth = MutableStateFlow<Map<Pair<Instant, Instant>, Long>>(emptyMap())
     private val recentPlays = MutableStateFlow<Map<Int, List<Play>>>(emptyMap())
+    private val uniqueGamesCount = MutableStateFlow(0L)
 
     override fun observePlays(): Flow<List<Play>> = playsFlow
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
@@ -63,6 +64,10 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         return recentPlays.map { map -> map[limit] ?: emptyList() }
     }
 
+    override fun observeUniqueGamesCount(): Flow<Long> {
+        return uniqueGamesCount
+    }
+
     /**
      * Sets the total plays count for testing.
      */
@@ -86,5 +91,12 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         val currentMap = recentPlays.value.toMutableMap()
         currentMap[limit] = plays
         recentPlays.value = currentMap
+    }
+
+    /**
+     * Sets the unique games count for testing.
+     */
+    fun setUniqueGamesCount(count: Long) {
+        uniqueGamesCount.value = count
     }
 }
