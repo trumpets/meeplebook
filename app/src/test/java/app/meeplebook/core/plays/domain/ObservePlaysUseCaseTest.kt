@@ -7,6 +7,7 @@ import app.meeplebook.core.plays.PlayTestFactory.createPlayer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -107,12 +108,12 @@ class ObservePlaysUseCaseTest {
         // Verify first player mapping
         assertEquals("Alice", domainPlay.players[0].name)
         assertEquals(10, domainPlay.players[0].score)
-        assertEquals(true, domainPlay.players[0].win)
+        assertTrue(domainPlay.players[0].win)
         assertNull(domainPlay.players[0].startPosition)
         // Verify second player mapping
         assertEquals("Bob", domainPlay.players[1].name)
         assertEquals(8, domainPlay.players[1].score)
-        assertEquals(false, domainPlay.players[1].win)
+        assertFalse(domainPlay.players[1].win)
         assertNull(domainPlay.players[1].startPosition)
     }
 
