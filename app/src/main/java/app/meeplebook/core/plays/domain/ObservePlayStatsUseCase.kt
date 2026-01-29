@@ -73,7 +73,14 @@ class ObservePlayStatsUseCase @Inject constructor(
                 )
 
                 emit(currentYear)
-                delay(Duration.ofHours(1))
+
+                val nextYearInstant = currentYear
+                    .plusYears(1)
+                    .atDay(1)
+                    .atStartOfDay(ZoneOffset.UTC)
+                    .toInstant()
+
+                delay(Duration.between(now, nextYearInstant))
             }
         }.distinctUntilChanged()
 }
