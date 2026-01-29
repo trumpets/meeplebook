@@ -71,3 +71,19 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
     - Tests structured with Given/When/Then comments for clarity
 ---
 
+## 2026-01-29T23:42:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing review comment #2743934926)
+- Fixed flaky test in `ObservePlaysScreenDataUseCaseTest.invoke updates when plays change`
+- Issue: `setPlays()` updates multiple StateFlows (_plays, _totalPlaysCount, _uniqueGamesCount), causing intermediate emissions in combined flow
+- Solution: consume emissions in a loop until reaching expected stable state (sections.size == 2 && uniqueGamesCount == 2L)
+- Verified other reactive test already follows correct pattern (updating one flow at a time)
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/plays/domain/ObservePlaysScreenDataUseCaseTest.kt`
+- **Learnings for future iterations:**
+    - When testing combined flows where upstream updates multiple StateFlows at once, expect multiple intermediate emissions
+    - Use a do-while loop to consume emissions until reaching the expected stable state
+    - Check both conditions that define the stable state (e.g., sections.size AND stats values)
+    - Alternative approach: update one flow at a time and assert each emission (as done in `invoke updates when stats change independently` test)
+    - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
+---
+

@@ -180,8 +180,14 @@ class ObservePlaysScreenDataUseCaseTest {
             )
             fakePlaysRepository.setPlays(updatedPlays)
 
-            // Then - second emission with updated data
-            val result2 = awaitItem()
+            // Then - consume emissions until we reach the final stable state
+            // setPlays() updates multiple StateFlows, which can cause intermediate emissions
+            var result2: DomainPlaysScreenData
+            do {
+                result2 = awaitItem()
+            } while (result2.sections.size != 2 || result2.stats.uniqueGamesCount != 2L)
+
+            // Assert final stable state
             assertEquals(2, result2.sections.size) // Now 2 months
             assertEquals(1, result2.sections[0].items.size) // Jan 2026
             assertEquals(1, result2.sections[1].items.size) // Dec 2025
