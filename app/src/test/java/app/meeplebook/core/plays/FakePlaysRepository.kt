@@ -16,6 +16,7 @@ class FakePlaysRepository : PlaysRepository {
     private val _totalPlaysCount = MutableStateFlow(0L)
     private val _playsCountForPeriod = MutableStateFlow(0L)
     private val _recentPlays = MutableStateFlow<List<Play>>(emptyList())
+    private val _uniqueGamesCount = MutableStateFlow(0L)
 
     var syncPlaysResult: AppResult<List<Play>, PlayError> =
         AppResult.Failure(PlayError.Unknown(IllegalStateException("FakePlaysRepository not configured")))
@@ -58,6 +59,7 @@ class FakePlaysRepository : PlaysRepository {
         _totalPlaysCount.value = 0L
         _playsCountForPeriod.value = 0L
         _recentPlays.value = emptyList()
+        _uniqueGamesCount.value = 0L
     }
 
     override fun observeTotalPlaysCount(): Flow<Long> = _totalPlaysCount
@@ -65,6 +67,8 @@ class FakePlaysRepository : PlaysRepository {
     override fun observePlaysCountForPeriod(start: Instant, end: Instant): Flow<Long> = _playsCountForPeriod
 
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> = _recentPlays
+
+    override fun observeUniqueGamesCount(): Flow<Long> = _uniqueGamesCount
 
     /**
      * Sets the plays directly for testing purposes.
@@ -93,6 +97,13 @@ class FakePlaysRepository : PlaysRepository {
      */
     fun setRecentPlays(plays: List<Play>) {
         _recentPlays.value = plays
+    }
+
+    /**
+     * Sets the unique games count directly for testing purposes.
+     */
+    fun setUniqueGamesCount(count: Long) {
+        _uniqueGamesCount.value = count
     }
 
     private fun updateComputedValues(plays: List<Play>) {
