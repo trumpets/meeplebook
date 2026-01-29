@@ -59,6 +59,7 @@ class FakePlaysRepository : PlaysRepository {
         _totalPlaysCount.value = 0L
         _playsCountForPeriod.value = 0L
         _recentPlays.value = emptyList()
+        _uniqueGamesCount.value = 0L
     }
 
     override fun observeTotalPlaysCount(): Flow<Long> = _totalPlaysCount
