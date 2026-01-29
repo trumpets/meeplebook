@@ -45,18 +45,21 @@ class ObservePlaysUseCaseTest {
     }
 
     @Test
-    fun `invoke with blank query passes blank to repository`() = runTest {
+    fun `invoke with blank query returns all plays`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan")
+            createPlay(id = 1, gameName = "Catan"),
+            createPlay(id = 2, gameName = "Wingspan")
         )
         fakePlaysRepository.setPlays(plays)
 
         // When
-        useCase(gameOrLocationQuery = "   ").first()
+        val result = useCase(gameOrLocationQuery = "   ").first()
 
-        // Then
-        assertEquals("   ", fakePlaysRepository.lastObservePlaysQuery)
+        // Then - blank query behaves like no filter, returns all plays
+        assertEquals(2, result.size)
+        assertEquals("Catan", result[0].gameName)
+        assertEquals("Wingspan", result[1].gameName)
     }
 
     @Test
