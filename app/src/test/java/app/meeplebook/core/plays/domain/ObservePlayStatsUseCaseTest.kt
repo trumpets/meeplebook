@@ -79,7 +79,7 @@ class ObservePlayStatsUseCaseTest {
         // When
         val stats = useCase().first()
 
-        // Then - verifies that the use case queries for the current year
+        // Then - verifies that the current year is derived from the clock and stats are mapped correctly
         assertEquals(2024, stats.currentYear)
         assertEquals(15L, stats.playsThisYear)
     }
