@@ -42,7 +42,6 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
     - Test behavior (what the function returns) rather than implementation details (what gets passed to dependencies)
     - Always append to progress.md, never prepend - maintain chronological order
 ---
-
 ## 2026-01-29T23:05:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743896458)
 - Created comprehensive test suite `ObservePlaysScreenDataUseCaseTest` with 9 test cases
@@ -56,5 +55,19 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
     - Test section-based use cases should cover: empty state, grouping logic, section ordering, data preservation within sections
     - Always test reactive updates for use cases that combine flows - verify each source flow triggers updates independently
     - Test coverage should match feedback requests: empty, non-empty grouping, and reactivity
+---
+## 2026-01-29T23:07:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743896325)
+- Created comprehensive test suite `BuildPlaysSectionsUseCaseTest` with 11 test cases covering grouping/sorting behavior
+- Tests verify: YearMonth grouping, reverse chronological order (most recent first), stable in-section ordering
+- Test coverage includes: empty list, single/multiple month grouping, year boundaries, same-day plays, edge cases (same instant, far past/future dates), full year of monthly plays
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/plays/domain/BuildPlaysSectionsUseCaseTest.kt` (new)
+- **Learnings for future iterations:**
+    - Plays section tests follow same pattern as collection section tests but with YearMonth grouping and reverse chronological ordering
+    - Use `PlayTestFactory.createPlay()` and `.toDomainPlayItem()` for creating test data
+    - Test suites should verify: grouping logic, sort order (reverse chronological for plays), within-section ordering stability
+    - Edge cases to test: empty list, single item, all items in one section, year boundaries, same instant, far past/future dates
+    - Tests structured with Given/When/Then comments for clarity
 ---
 
