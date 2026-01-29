@@ -1,5 +1,6 @@
 package app.meeplebook.core.plays.domain
 
+import app.cash.turbine.test
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.PlayTestFactory.createPlayer
@@ -103,8 +104,16 @@ class ObservePlaysUseCaseTest {
         assertEquals("Home", domainPlay.location)
         assertEquals("Great game!", domainPlay.comments)
         assertEquals(2, domainPlay.players.size)
+        // Verify first player mapping
         assertEquals("Alice", domainPlay.players[0].name)
+        assertEquals(10, domainPlay.players[0].score)
+        assertEquals(true, domainPlay.players[0].win)
+        assertNull(domainPlay.players[0].startPosition)
+        // Verify second player mapping
         assertEquals("Bob", domainPlay.players[1].name)
+        assertEquals(8, domainPlay.players[1].score)
+        assertEquals(false, domainPlay.players[1].win)
+        assertNull(domainPlay.players[1].startPosition)
     }
 
     @Test
@@ -146,25 +155,28 @@ class ObservePlaysUseCaseTest {
         )
         fakePlaysRepository.setPlays(initialPlays)
 
-        // When - first observation
-        val result1 = useCase().first()
+        // When - observe the flow and update data while observing
+        useCase().test {
+            // Then - first emission
+            val result1 = awaitItem()
+            assertEquals(1, result1.size)
+            assertEquals("Catan", result1[0].gameName)
 
-        // Then
-        assertEquals(1, result1.size)
-        assertEquals("Catan", result1[0].gameName)
+            // When - data changes
+            val updatedPlays = listOf(
+                createPlay(id = 2, gameName = "Wingspan"),
+                createPlay(id = 1, gameName = "Catan")
+            )
+            fakePlaysRepository.setPlays(updatedPlays)
 
-        // When - data changes
-        val updatedPlays = listOf(
-            createPlay(id = 2, gameName = "Wingspan"),
-            createPlay(id = 1, gameName = "Catan")
-        )
-        fakePlaysRepository.setPlays(updatedPlays)
-        val result2 = useCase().first()
+            // Then - second emission with updated data
+            val result2 = awaitItem()
+            assertEquals(2, result2.size)
+            assertEquals("Wingspan", result2[0].gameName)
+            assertEquals("Catan", result2[1].gameName)
 
-        // Then - plays are updated
-        assertEquals(2, result2.size)
-        assertEquals("Wingspan", result2[0].gameName)
-        assertEquals("Catan", result2[1].gameName)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
