@@ -27,6 +27,12 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override fun observePlaysByGameNameOrLocation(gameNameOrLocationQuery: String): Flow<List<Play>> {
+        return playDao.observePlaysWithPlayersByGameNameOrLocation(gameNameOrLocationQuery).map { playsWithPlayers ->
+            playsWithPlayers.map { it.toPlay() }
+        }
+    }
+
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return playDao.observePlaysWithPlayersForGame(gameId).map { playsWithPlayers ->
             playsWithPlayers.map { it.toPlay() }

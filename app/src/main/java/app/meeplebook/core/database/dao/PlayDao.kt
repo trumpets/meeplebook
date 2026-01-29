@@ -23,6 +23,17 @@ interface PlayDao {
     @Query("SELECT * FROM plays ORDER BY date DESC")
     fun observePlaysWithPlayers(): Flow<List<PlayWithPlayers>>
 
+    @Transaction
+    @Query("""
+        SELECT * FROM plays
+        WHERE gameName LIKE '%' || :gameNameOrLocationQuery || '%'
+           OR location LIKE '%' || :gameNameOrLocationQuery || '%'
+        ORDER BY date DESC
+    """)
+    fun observePlaysWithPlayersByGameNameOrLocation(
+        gameNameOrLocationQuery: String
+    ): Flow<List<PlayWithPlayers>>
+
     /**
      * Gets all plays with their players.
      */

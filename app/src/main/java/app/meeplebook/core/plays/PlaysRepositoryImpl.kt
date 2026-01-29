@@ -21,8 +21,12 @@ class PlaysRepositoryImpl @Inject constructor(
     private val remote: PlaysRemoteDataSource
 ) : PlaysRepository {
 
-    override fun observePlays(): Flow<List<Play>> {
-        return local.observePlays()
+    override fun observePlays(gameNameOrLocationQuery: String?): Flow<List<Play>> {
+        return if (gameNameOrLocationQuery.isNullOrBlank()) {
+            local.observePlays()
+        } else {
+            local.observePlaysByGameNameOrLocation(gameNameOrLocationQuery)
+        }
     }
 
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {

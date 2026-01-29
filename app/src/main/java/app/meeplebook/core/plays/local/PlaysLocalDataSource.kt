@@ -17,6 +17,13 @@ interface PlaysLocalDataSource {
     fun observePlays(): Flow<List<Play>>
 
     /**
+     * Observes all plays filtered by game name or location.
+     *
+     * @return Flow emitting the user's plays filtered by game name or location.
+     */
+    fun observePlaysByGameNameOrLocation(gameNameOrLocationQuery: String): Flow<List<Play>>
+
+    /**
      * Observes all plays for a specific game.
      *
      * @return Flow emitting the user's plays for a specific game.

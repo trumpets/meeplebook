@@ -18,6 +18,16 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
     private val uniqueGamesCount = MutableStateFlow(0L)
 
     override fun observePlays(): Flow<List<Play>> = playsFlow
+    
+    override fun observePlaysByGameNameOrLocation(gameNameOrLocationQuery: String): Flow<List<Play>> {
+        return playsFlow.map { items ->
+            items.filter { item ->
+                item.gameName.contains(gameNameOrLocationQuery, ignoreCase = true)
+                        || item.location?.contains(gameNameOrLocationQuery, ignoreCase = true) == true
+            }
+        }
+    }
+
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return playsFlow.map { list -> list.filter { it.gameId == gameId } }
     }

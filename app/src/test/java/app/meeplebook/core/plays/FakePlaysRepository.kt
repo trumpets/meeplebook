@@ -27,7 +27,13 @@ class FakePlaysRepository : PlaysRepository {
     var lastSyncUsername: String? = null
         private set
 
-    override fun observePlays(): Flow<List<Play>> = _plays
+    var lastObservePlaysQuery: String? = null
+        private set
+
+    override fun observePlays(gameNameOrLocationQuery: String?): Flow<List<Play>> {
+        lastObservePlaysQuery = gameNameOrLocationQuery
+        return _plays
+    }
 
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return MutableStateFlow(_plays.value.filter { it.gameId == gameId })
