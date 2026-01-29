@@ -205,24 +205,45 @@ class ObservePlaysScreenDataUseCaseTest {
 
         // When - observe the flow and update stats
         useCase().test {
-            // Then - first emission
+            // Then - first emission with initial stats
             val result1 = awaitItem()
             assertEquals(1L, result1.stats.totalPlays)
             assertEquals(1L, result1.stats.uniqueGamesCount)
+            assertEquals(1L, result1.stats.playsThisYear)
+            assertEquals(1, result1.sections.size)
 
-            // When - stats change without changing plays list
+            // When - total plays changes without changing plays list
             fakePlaysRepository.setTotalPlaysCount(5L)
-            fakePlaysRepository.setUniqueGamesCount(3L)
-            fakePlaysRepository.setPlaysCountForPeriod(2L)
 
-            // Then - second emission with updated stats
+            // Then - emission reflecting updated total plays only
             val result2 = awaitItem()
             assertEquals(5L, result2.stats.totalPlays)
-            assertEquals(3L, result2.stats.uniqueGamesCount)
-            assertEquals(2L, result2.stats.playsThisYear)
+            assertEquals(1L, result2.stats.uniqueGamesCount)
+            assertEquals(1L, result2.stats.playsThisYear)
             // Sections remain the same
             assertEquals(1, result2.sections.size)
 
+            // When - unique games count changes
+            fakePlaysRepository.setUniqueGamesCount(3L)
+
+            // Then - emission reflecting updated unique games count
+            val result3 = awaitItem()
+            assertEquals(5L, result3.stats.totalPlays)
+            assertEquals(3L, result3.stats.uniqueGamesCount)
+            assertEquals(1L, result3.stats.playsThisYear)
+            // Sections remain the same
+            assertEquals(1, result3.sections.size)
+
+            // When - plays count for period changes
+            fakePlaysRepository.setPlaysCountForPeriod(2L)
+
+            // Then - emission reflecting updated period plays count
+            val result4 = awaitItem()
+            assertEquals(5L, result4.stats.totalPlays)
+            assertEquals(3L, result4.stats.uniqueGamesCount)
+            assertEquals(2L, result4.stats.playsThisYear)
+            // Sections remain the same
+            assertEquals(1, result4.sections.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
