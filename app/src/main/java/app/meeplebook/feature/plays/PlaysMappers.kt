@@ -7,6 +7,7 @@ import app.meeplebook.core.plays.domain.DomainPlayerItem
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import app.meeplebook.core.ui.uiTextJoin
+import app.meeplebook.core.ui.uiTextPlural
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.formatDuration
 import app.meeplebook.core.util.formatRelativeDate
@@ -38,6 +39,10 @@ fun DomainPlayItem.toPlayItem(): PlayItem {
  * @return a UiText representing the formatted player summary
  */
 fun formatPlayerSummary(players: List<DomainPlayerItem>): UiText {
+    if (players.isEmpty()) {
+        return uiTextEmpty()
+    }
+
     val sortedPlayers = players.sortedBy { it.startPosition?.toIntOrNull() ?: Int.MAX_VALUE }
 
     val formattedPlayers = sortedPlayers.map { player ->
@@ -57,8 +62,9 @@ fun formatPlayerSummary(players: List<DomainPlayerItem>): UiText {
         }
     }
 
-    return uiTextRes(
-        R.string.play_players_formatted,
+    return uiTextPlural(
+        R.plurals.play_players_formatted,
+        formattedPlayers.size,
         formattedPlayers.size,
         uiTextJoin(", ", *formattedPlayers.toTypedArray())
     )
