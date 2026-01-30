@@ -78,3 +78,6 @@ fun UiText.isEmpty(): Boolean = when (this) {
 }
 
 fun UiText.isNotEmpty(): Boolean = !isEmpty()
+
+fun UiText.wrap(prefix: String, suffix: String): UiText =
+    uiTextCombine(uiText(prefix), this, uiText(suffix))

@@ -12,7 +12,11 @@ import java.time.Instant
  */
 @Entity(
     tableName = "plays",
-    indices = [Index(value = ["date"])]
+    indices = [
+        Index(value = ["date"]),
+        Index(value = ["gameId"]),
+        Index(value = ["date", "gameId"])
+    ]
 )
 data class PlayEntity(
     @PrimaryKey

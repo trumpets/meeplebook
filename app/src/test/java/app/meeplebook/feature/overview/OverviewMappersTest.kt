@@ -10,6 +10,7 @@ import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.isNotEmpty
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
@@ -91,8 +92,8 @@ class OverviewMappersTest {
         assertEquals(4, result.playerCount)
         // Date and player names formatting is handled by utility functions
         // Just verify they're not empty
-        assert(result.dateUiText.isNotEmpty())
-        assert(result.playerNamesUiText.isNotEmpty())
+        assertTrue(result.dateUiText.isNotEmpty())
+        assertTrue(result.playerNamesUiText.isNotEmpty())
     }
 
     @Test
@@ -115,8 +116,8 @@ class OverviewMappersTest {
         assertEquals("Wingspan", result.gameName)
         assertEquals("https://example.com/wingspan.jpg", result.thumbnailUrl)
         assertEquals(1, result.playerCount)
-        assert(result.dateUiText.isNotEmpty())
-        assert(result.playerNamesUiText.isNotEmpty())
+        assertTrue(result.dateUiText.isNotEmpty())
+        assertTrue(result.playerNamesUiText.isNotEmpty())
     }
 
     @Test

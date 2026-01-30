@@ -81,7 +81,7 @@ class PlaysXmlParserTest {
         assertEquals("Alice", player1.name)
         assertEquals("1", player1.startPosition)
         assertEquals("Red", player1.color)
-        assertEquals("10", player1.score)
+        assertEquals(10, player1.score)
         assertTrue(player1.win)
 
         val player2 = play.players[1]

@@ -20,7 +20,7 @@ import app.meeplebook.core.database.entity.PlayerEntity
         PlayEntity::class,
         PlayerEntity::class
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(DateTimeConverters::class)

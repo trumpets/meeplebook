@@ -23,6 +23,17 @@ interface PlayDao {
     @Query("SELECT * FROM plays ORDER BY date DESC")
     fun observePlaysWithPlayers(): Flow<List<PlayWithPlayers>>
 
+    @Transaction
+    @Query("""
+        SELECT * FROM plays
+        WHERE gameName LIKE '%' || :gameNameOrLocationQuery || '%'
+           OR (location IS NOT NULL AND location LIKE '%' || :gameNameOrLocationQuery || '%')
+        ORDER BY date DESC
+    """)
+    fun observePlaysWithPlayersByGameNameOrLocation(
+        gameNameOrLocationQuery: String
+    ): Flow<List<PlayWithPlayers>>
+
     /**
      * Gets all plays with their players.
      */
@@ -87,6 +98,12 @@ interface PlayDao {
      */
     @Query("SELECT * FROM plays WHERE gameId = :gameId ORDER BY date DESC")
     suspend fun getPlaysForGame(gameId: Long): List<PlayEntity>
+
+    /**
+     * Observes the count of unique games that have been played.
+     */
+    @Query("SELECT COUNT(DISTINCT gameId) FROM plays")
+    fun observeUniqueGamesCount(): Flow<Long>
 
     /**
      * Inserts a play, replacing on conflict.
