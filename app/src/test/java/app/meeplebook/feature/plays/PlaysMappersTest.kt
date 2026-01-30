@@ -7,6 +7,7 @@ import app.meeplebook.core.plays.domain.DomainPlayerItem
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.ui.asString
+import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.feature.plays.domain.DomainPlaysSection
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -70,8 +71,8 @@ class PlaysMappersTest {
         assertEquals(PlaySyncStatus.SYNCED, result.syncStatus)
         // Player summary should be formatted with player details
         val playerSummary = result.playerSummaryUiText.asString(fakeStringProvider)
-        assert(playerSummary.contains("2 players"))
         assertEquals("2 players: Alice (won, 80), Bob (65)", playerSummary)
+        assert(result.dateUiText.isNotEmpty())
     }
 
     @Test
@@ -102,6 +103,7 @@ class PlaysMappersTest {
         assertEquals(null, result.location)
         assertEquals(null, result.comments)
         assertEquals(PlaySyncStatus.PENDING, result.syncStatus)
+        assert(result.dateUiText.isNotEmpty())
     }
 
     @Test
@@ -129,6 +131,7 @@ class PlaysMappersTest {
         assertEquals("Twilight Imperium", result.gameName)
         assertEquals("6h 0min", result.durationUiText.asString(fakeStringProvider))
         assertEquals("Game Store", result.location)
+        assert(result.dateUiText.isNotEmpty())
     }
 
     @Test
@@ -156,6 +159,7 @@ class PlaysMappersTest {
         // Player summary should handle empty list
         val playerSummary = result.playerSummaryUiText.asString(fakeStringProvider)
         assertEquals("", playerSummary)
+        assert(result.dateUiText.isNotEmpty())
     }
 
     // formatPlayerSummary tests
@@ -235,9 +239,7 @@ class PlaysMappersTest {
         // Then
         val formatted = result.asString(fakeStringProvider)
         // Should be sorted by start position
-        assert(formatted.contains("3 players"))
-        assert(formatted.indexOf("Alice") < formatted.indexOf("Bob"))
-        assert(formatted.indexOf("Bob") < formatted.indexOf("Charlie"))
+        assertEquals("3 players: Alice (won, 80), Bob (70), Charlie (65)", formatted)
     }
 
     @Test
@@ -305,11 +307,6 @@ class PlaysMappersTest {
         // Then
         val formatted = result.asString(fakeStringProvider)
         assertEquals("4 players: Alice (won, 80), Bob, Charlie (65), Diana", formatted)
-        assert(formatted.contains("4 players"))
-        assert(formatted.contains("Alice (won, 80)"))
-        assert(formatted.contains("Bob"))
-        assert(formatted.contains("Charlie (65)"))
-        assert(formatted.contains("Diana"))
     }
 
     // toPlaysSection tests
