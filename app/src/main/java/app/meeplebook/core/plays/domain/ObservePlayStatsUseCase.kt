@@ -60,9 +60,11 @@ class ObservePlayStatsUseCase @Inject constructor(
     }
 
     /**
-     * Observes the current year, emitting updates at least every hour.
-     * This ensures that the current year is accurate even if the app remains open across
-     * a year boundary.
+     * Observes the current year.
+     *
+     * Emits the current year immediately, then suspends until the start of the next year
+     * before emitting again. This ensures that the current year is accurate even if the app
+     * remains open across a year boundary.
      */
     private fun observeCurrentYear(): Flow<Year> =
         flow {
