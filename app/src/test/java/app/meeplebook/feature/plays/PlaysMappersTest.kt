@@ -10,6 +10,7 @@ import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.feature.plays.domain.DomainPlaysSection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
@@ -72,7 +73,7 @@ class PlaysMappersTest {
         // Player summary should be formatted with player details
         val playerSummary = result.playerSummaryUiText.asString(fakeStringProvider)
         assertEquals("2 players: Alice (won, 80), Bob (65)", playerSummary)
-        assert(result.dateUiText.isNotEmpty())
+        assertTrue(result.dateUiText.isNotEmpty())
     }
 
     @Test
@@ -103,7 +104,7 @@ class PlaysMappersTest {
         assertEquals(null, result.location)
         assertEquals(null, result.comments)
         assertEquals(PlaySyncStatus.PENDING, result.syncStatus)
-        assert(result.dateUiText.isNotEmpty())
+        assertTrue(result.dateUiText.isNotEmpty())
     }
 
     @Test
@@ -131,7 +132,7 @@ class PlaysMappersTest {
         assertEquals("Twilight Imperium", result.gameName)
         assertEquals("6h 0min", result.durationUiText.asString(fakeStringProvider))
         assertEquals("Game Store", result.location)
-        assert(result.dateUiText.isNotEmpty())
+        assertTrue(result.dateUiText.isNotEmpty())
     }
 
     @Test
@@ -159,7 +160,7 @@ class PlaysMappersTest {
         // Player summary should handle empty list
         val playerSummary = result.playerSummaryUiText.asString(fakeStringProvider)
         assertEquals("", playerSummary)
-        assert(result.dateUiText.isNotEmpty())
+        assertTrue(result.dateUiText.isNotEmpty())
     }
 
     // formatPlayerSummary tests
@@ -256,7 +257,7 @@ class PlaysMappersTest {
         // Then
         val formatted = result.asString(fakeStringProvider)
         // Players with position should come first
-        assert(formatted.indexOf("Alice") < formatted.indexOf("Zoe"))
+        assertTrue(formatted.indexOf("Alice") < formatted.indexOf("Zoe"))
     }
 
     @Test
@@ -274,8 +275,8 @@ class PlaysMappersTest {
         // Then
         val formatted = result.asString(fakeStringProvider)
         // Numeric positions should come first, then non-numeric
-        assert(formatted.indexOf("Alice") < formatted.indexOf("Charlie"))
-        assert(formatted.indexOf("Charlie") < formatted.indexOf("Bob"))
+        assertTrue(formatted.indexOf("Alice") < formatted.indexOf("Charlie"))
+        assertTrue(formatted.indexOf("Charlie") < formatted.indexOf("Bob"))
     }
 
     @Test

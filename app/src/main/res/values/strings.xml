@@ -40,7 +40,7 @@
     <string name="date_days_ago">%d days ago</string>
     <string name="date_in_future">In the future</string>
     <string name="duration_format_h_min">%dh %dmin</string>
-    <string name="duration_format_min">%dmin</string>.
+    <string name="duration_format_min">%dmin</string>
 
     <string name="players_none">No players</string>
     <string name="players_more">+%d</string>

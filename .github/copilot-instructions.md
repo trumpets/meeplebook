@@ -201,6 +201,8 @@ AsyncImage whenever we have a remote URL.
 Prefer fakes to Mockks!!! Only use Mockks for 3rd party classes. If a class can't be faked, abstract it to an interface so it can be!
 When adding a new feature, examine the types of tests of similar existing features and replicate the strategy.
 
+Use `assertTrue()` instead of `assert()`.
+
 ### Unit tests
 
 ViewModel: provide fake repositories (pure Kotlin). Test state transitions. If ViewModel uses SharingStarted.WhileSubscribed() or other complex logic, use Turbine for StateFlow testing as
