@@ -24,7 +24,8 @@ class PlaysMappersTest {
     @Before
     fun setUp() {
         fakeStringProvider = FakeStringProvider()
-        fakeStringProvider.setString(R.string.play_players_formatted, "%d players: %s")
+        fakeStringProvider.setPlural(R.plurals.play_players_formatted, -1, "%d players: %s")
+        fakeStringProvider.setPlural(R.plurals.play_players_formatted, 1, "%d player: %s")
         fakeStringProvider.setString(R.string.play_player_name_only, "%1\$s")
         fakeStringProvider.setString(R.string.play_player_with_details, "%1\$s (%2\$s)")
         fakeStringProvider.setString(R.string.play_player_won, "won")
@@ -70,6 +71,7 @@ class PlaysMappersTest {
         // Player summary should be formatted with player details
         val playerSummary = result.playerSummaryUiText.asString(fakeStringProvider)
         assert(playerSummary.contains("2 players"))
+        assertEquals("2 players: Alice (won, 80), Bob (65)", playerSummary)
     }
 
     @Test
@@ -153,7 +155,7 @@ class PlaysMappersTest {
         assertEquals(PlaySyncStatus.FAILED, result.syncStatus)
         // Player summary should handle empty list
         val playerSummary = result.playerSummaryUiText.asString(fakeStringProvider)
-        assert(playerSummary.contains("0 players"))
+        assertEquals("", playerSummary)
     }
 
     // formatPlayerSummary tests
@@ -170,7 +172,7 @@ class PlaysMappersTest {
 
         // Then
         val formatted = result.asString(fakeStringProvider)
-        assertEquals("1 players: Alice", formatted)
+        assertEquals("1 player: Alice", formatted)
     }
 
     @Test
@@ -185,7 +187,7 @@ class PlaysMappersTest {
 
         // Then
         val formatted = result.asString(fakeStringProvider)
-        assertEquals("1 players: Bob (won)", formatted)
+        assertEquals("1 player: Bob (won)", formatted)
     }
 
     @Test
@@ -200,7 +202,7 @@ class PlaysMappersTest {
 
         // Then
         val formatted = result.asString(fakeStringProvider)
-        assertEquals("1 players: Charlie (75)", formatted)
+        assertEquals("1 player: Charlie (75)", formatted)
     }
 
     @Test
@@ -215,7 +217,7 @@ class PlaysMappersTest {
 
         // Then
         val formatted = result.asString(fakeStringProvider)
-        assertEquals("1 players: Diana (won, 100)", formatted)
+        assertEquals("1 player: Diana (won, 100)", formatted)
     }
 
     @Test
@@ -284,7 +286,7 @@ class PlaysMappersTest {
 
         // Then
         val formatted = result.asString(fakeStringProvider)
-        assertEquals("0 players: ", formatted)
+        assertEquals("", formatted)
     }
 
     @Test
@@ -302,6 +304,7 @@ class PlaysMappersTest {
 
         // Then
         val formatted = result.asString(fakeStringProvider)
+        assertEquals("4 players: Alice (won, 80), Bob, Charlie (65), Diana", formatted)
         assert(formatted.contains("4 players"))
         assert(formatted.contains("Alice (won, 80)"))
         assert(formatted.contains("Bob"))

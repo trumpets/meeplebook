@@ -78,7 +78,10 @@
     <!-- Plays Screen -->
     <string name="plays_empty">Your play history is empty. Log some plays to see them here.</string>
     <string name="plays_search_no_results">No plays match your search</string>
-    <string name="play_players_formatted">%d players: %s</string>
+    <plurals name="play_players_formatted">
+        <item quantity="one">%d player: %s</item>
+        <item quantity="other">%d players: %s</item>
+    </plurals>
     <string name="play_player_name_only">%1$s</string>
     <string name="play_player_with_details">%1$s (%2$s)</string>
     <string name="play_player_won">won</string>
