@@ -18,17 +18,17 @@ class BuildPlaysSectionsUseCase @Inject constructor() {
      * Organizes the provided play items into chronological sections by month/year.
      *
      * @param items The play items to organize into sections.
-     * @return A list of [DomainPlaySection] sorted in reverse chronological order
+     * @return A list of [DomainPlaysSection] sorted in reverse chronological order
      * (most recent month first). Preserves the existing order of items within each section.
      */
     operator fun invoke(
         items: List<DomainPlayItem>
-    ): List<DomainPlaySection> {
+    ): List<DomainPlaysSection> {
         return items
             .groupBy { it.sectionKey() }
             .toSortedMap(reverseOrder())
             .map { (monthYear, items) ->
-                DomainPlaySection(
+                DomainPlaysSection(
                     monthYearDate = monthYear,
                     items = items
                 )

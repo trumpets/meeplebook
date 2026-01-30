@@ -13,6 +13,6 @@ import app.meeplebook.core.plays.domain.DomainPlayStatsSummary
  * @property stats Aggregated statistics summary about the user's play history.
  */
 data class DomainPlaysScreenData(
-    val sections: List<DomainPlaySection>,
+    val sections: List<DomainPlaysSection>,
     val stats: DomainPlayStatsSummary
 )

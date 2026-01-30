@@ -566,9 +566,10 @@ private fun GameGridCard(
 
             UiTextText(
                 uiTextJoin(
+                    separator = " • ",
                     uiText(game.yearPublished?.toString()),
-                    game.playersSubtitleUiText,
-                    separator = " • ")
+                    game.playersSubtitleUiText
+                )
             )
 
             IconButton(
@@ -617,10 +618,11 @@ private fun GameListRow(
             )
             UiTextText(
                 text = uiTextJoin(
+                    separator = " • ",
                     uiText(game.yearPublished?.toString()),
                     game.playersSubtitleUiText,
-                    game.playTimeSubtitleUiText,
-                    separator = " • "),
+                    game.playTimeSubtitleUiText
+                ),
                 style = MaterialTheme.typography.bodySmall
             )
             UiTextText(

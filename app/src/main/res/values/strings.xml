@@ -39,6 +39,9 @@
     <string name="date_yesterday">Yesterday</string>
     <string name="date_days_ago">%d days ago</string>
     <string name="date_in_future">In the future</string>
+    <string name="duration_format_h_min">%dh %dmin</string>
+    <string name="duration_format_min">%dmin</string>.
+
     <string name="players_none">No players</string>
     <string name="players_more">+%d</string>
 
@@ -75,5 +78,10 @@
     <!-- Plays Screen -->
     <string name="plays_empty">Your play history is empty. Log some plays to see them here.</string>
     <string name="plays_search_no_results">No plays match your search</string>
+    <string name="play_players_formatted">%d players: %s</string>
+    <string name="play_player_name_only">%1$s</string>
+    <string name="play_player_with_details">%1$s (%2$s)</string>
+    <string name="play_player_won">won</string>
+    <string name="play_player_score">%1$d</string>
 
 </resources>

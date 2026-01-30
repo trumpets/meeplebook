@@ -12,7 +12,7 @@ import java.time.YearMonth
  * @property monthYearDate The section identifier - a month and a year.
  * @property items The list of plays belonging to this section.
  */
-data class DomainPlaySection(
+data class DomainPlaysSection(
     val monthYearDate: YearMonth,
     val items: List<DomainPlayItem>
 )

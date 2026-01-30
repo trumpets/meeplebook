@@ -71,7 +71,24 @@ fun formatRelativeDate(dateInstant: Instant): UiText {
         daysDiff == 0L -> uiTextRes(R.string.date_today)
         daysDiff == 1L -> uiTextRes(R.string.date_yesterday)
         daysDiff < 7L -> uiTextRes(R.string.date_days_ago, daysDiff)
-        else -> uiText(playDate.format(DateTimeFormatter.ofPattern("d MMM")))
+        daysDiff < 365L -> uiText(playDate.format(DateTimeFormatter.ofPattern("d MMM")))
+        else -> uiText(playDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+    }
+}
+
+/**
+ * Formats a duration in minutes into a human-readable string.
+ *
+ * @param minutes the total duration in minutes
+ * @return a UiText representing the formatted duration
+ */
+fun formatDuration(minutes: Int): UiText {
+    val hours = minutes / 60
+    val mins = minutes % 60
+    return if (hours > 0) {
+        uiTextRes(R.string.duration_format_h_min, hours, mins)
+    } else {
+        uiTextRes(R.string.duration_format_min, mins)
     }
 }
 
