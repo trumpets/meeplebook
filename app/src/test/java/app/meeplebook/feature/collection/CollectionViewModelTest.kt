@@ -271,7 +271,6 @@ class CollectionViewModelTest {
         )
         fakeCollectionRepository.setCollection(items)
 
-
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
 
