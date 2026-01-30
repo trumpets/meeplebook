@@ -11,7 +11,10 @@ sealed interface PlaysEvent {
     // Search
     data class SearchChanged(val query: String) : PlaysEvent
 
+    // Actions
     data class PlayClicked(val playId: Long) : PlaysEvent
+    data object LogPlayClicked : PlaysEvent
+
 
     // System
     data object Refresh : PlaysEvent
