@@ -52,6 +52,106 @@ class PlaysRepositoryImplTest {
     }
 
     @Test
+    fun `observePlays with null query returns all plays`() = runTest {
+        val plays = listOf(testPlay)
+        local.savePlays(plays)
+
+        val result = repository.observePlays(null).first()
+
+        assertEquals(plays, result)
+    }
+
+    @Test
+    fun `observePlays with empty query returns all plays`() = runTest {
+        val plays = listOf(testPlay)
+        local.savePlays(plays)
+
+        val result = repository.observePlays("").first()
+
+        assertEquals(plays, result)
+    }
+
+    @Test
+    fun `observePlays with blank query returns all plays`() = runTest {
+        val plays = listOf(testPlay)
+        local.savePlays(plays)
+
+        val result = repository.observePlays("   ").first()
+
+        assertEquals(plays, result)
+    }
+
+    @Test
+    fun `observePlays with non-blank query filters by game name`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameName = "Catan", location = "Home"),
+            testPlay.copy(id = 2, gameName = "Azul", location = "Home"),
+            testPlay.copy(id = 3, gameName = "Carcassonne", location = "Home")
+        )
+        local.savePlays(plays)
+
+        val result = repository.observePlays("Catan").first()
+
+        assertEquals(1, result.size)
+        assertEquals("Catan", result[0].gameName)
+    }
+
+    @Test
+    fun `observePlays with non-blank query filters by location`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameName = "Catan", location = "Home"),
+            testPlay.copy(id = 2, gameName = "Azul", location = "Game Store"),
+            testPlay.copy(id = 3, gameName = "Carcassonne", location = "Friend's House")
+        )
+        local.savePlays(plays)
+
+        val result = repository.observePlays("Store").first()
+
+        assertEquals(1, result.size)
+        assertEquals("Game Store", result[0].location)
+    }
+
+    @Test
+    fun `observePlays with non-blank query filters case-insensitively`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameName = "Catan", location = "Home"),
+            testPlay.copy(id = 2, gameName = "Azul", location = "Home")
+        )
+        local.savePlays(plays)
+
+        val result = repository.observePlays("catan").first()
+
+        assertEquals(1, result.size)
+        assertEquals("Catan", result[0].gameName)
+    }
+
+    @Test
+    fun `observePlays with non-blank query trims whitespace`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameName = "Catan", location = "Home"),
+            testPlay.copy(id = 2, gameName = "Azul", location = "Home")
+        )
+        local.savePlays(plays)
+
+        val result = repository.observePlays("  Catan  ").first()
+
+        assertEquals(1, result.size)
+        assertEquals("Catan", result[0].gameName)
+    }
+
+    @Test
+    fun `observePlays with non-blank query returns empty list when no matches`() = runTest {
+        val plays = listOf(
+            testPlay.copy(id = 1, gameName = "Catan", location = "Home")
+        )
+        local.savePlays(plays)
+
+        val result = repository.observePlays("Monopoly").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
     fun `getPlays returns data from local data source`() = runTest {
         val plays = listOf(testPlay)
         local.savePlays(plays)
