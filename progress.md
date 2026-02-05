@@ -118,6 +118,22 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
   - Follow existing test patterns in the file (helper methods, test structure, assertion style)
 ---
 
+## 2026-02-05T00:20:00Z
+PR Link: Sub-PR #80 for https://github.com/trumpets/meeplebook/pull/82 (addressing retry request)
+- Fixed `ObservePlayStatsUseCase.observeCurrentYear()` infinite loop causing UncompletedCoroutinesError in all PlaysViewModelTest tests (16 failures)
+- Fixed `SearchableFlow` debounce implementation to resolve timing issues in SearchableFlowTest (4 failures)
+- Changes:
+    - `ObservePlayStatsUseCase.kt`: Removed `while(true)` loop, year is now not flow
+    - `SearchableFlow.kt`: Simplified to use `debounce { }` lambda with conditional duration (0ms for empty, specified for non-empty queries)
+- Files changed:
+    - `app/src/main/java/app/meeplebook/core/plays/domain/ObservePlayStatsUseCase.kt`
+    - `app/src/main/java/app/meeplebook/core/ui/flow/SearchableFlow.kt`
+- **Learnings for future iterations:**
+    - Avoid `while(true)` loops in Flow builders - they prevent coroutines from completing and cause UncompletedCoroutinesError in runTest
+    - When conditionally applying debounce, use `debounce { duration }` lambda instead of nested flatMapLatest to avoid timing issues
+    - Test coroutines must complete within runTest timeout - any infinite loops or uncompleted coroutines cause failures
+---
+
 ## 2026-02-05T10:20:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2768119933)
 - Added comprehensive test suite for `PlaysRepositoryImpl.observePlays()` method covering query-dependent behavior

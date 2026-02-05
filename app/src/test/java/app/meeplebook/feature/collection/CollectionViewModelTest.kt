@@ -21,7 +21,7 @@ import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import app.meeplebook.testutils.assertState
-import app.meeplebook.testutils.awaitUiState
+import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -271,7 +271,6 @@ class CollectionViewModelTest {
         )
         fakeCollectionRepository.setCollection(items)
 
-
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
 
@@ -429,7 +428,10 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(updatedItems)
 
         // Then - state should update
-        val updatedState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        val updatedState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel) {
+            it !is CollectionUiState.Loading && it.totalGameCount == 2L
+        }
+
         assertEquals(2, updatedState.totalGameCount)
     }
 
@@ -689,8 +691,9 @@ class CollectionViewModelTest {
     }
 
     suspend inline fun <reified T: CollectionUiState> TestScope.awaitUiStateAfterDebounce(
-        viewModel: CollectionViewModel
+        viewModel: CollectionViewModel,
+        crossinline predicate: (CollectionUiState) -> Boolean = { it !is CollectionUiState.Loading }
     ): T {
-        return awaitUiState(viewModel.uiState, DebounceDurations.SearchQuery, skipWhile = { it is CollectionUiState.Loading })
+        return awaitUiStateMatching(viewModel.uiState, DebounceDurations.SearchQuery, predicate = predicate)
     }
 }
