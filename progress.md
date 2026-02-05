@@ -87,6 +87,37 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing r
     - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
 ---
 
+## 2026-02-05T00:10:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2748161760)
+- Added comprehensive DAO-level test suite for `observeUniqueGamesCount()` method in PlayDaoTest
+- Tests cover: empty database (0 count), single game with multiple plays (1 count), multiple distinct games with duplicates (correct distinct count)
+- Tests verify reactive behavior: updates on insert (new game increases count, duplicate game doesn't), updates on delete (count goes to 0)
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt` (5 new tests added)
+- **Learnings for future iterations:**
+  - DAO tests follow pattern: use in-memory Room database with `runTest` and `Flow.first()` for synchronous assertions
+  - Test COUNT(DISTINCT ...) queries should verify: empty state, single distinct value with duplicates, multiple distinct values, reactive updates
+  - Reactive Flow tests should check both insert and delete operations trigger emissions
+  - Use existing helper functions (createTestPlay) for consistency in test data creation
+  - DAO tests are instrumented tests (androidTest directory) and require Android environment to run
+---
+
+## 2026-02-05T00:11:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2748350390)
+- Added comprehensive instrumented DAO tests for `observePlaysWithPlayersByGameNameOrLocation` query method
+- Created 9 test cases covering: game name matching, location matching, combined matching, ordering (date DESC), case-insensitive behavior, players inclusion, and edge cases
+- Tests verify partial string matching using LIKE operator, null location handling, empty results, and proper @Transaction behavior
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt` (+206 lines)
+- **Learnings for future iterations:**
+  - SQLite LIKE operator is case-insensitive by default for ASCII characters
+  - Room @Transaction queries should be tested to ensure relations are properly loaded
+  - DAO tests should cover: positive matches, negative matches (empty results), ordering, null field handling, and edge cases
+  - Case-insensitive tests should verify both uppercase and lowercase variants match
+  - When testing search queries with OR conditions, test each condition independently and combined
+  - Follow existing test patterns in the file (helper methods, test structure, assertion style)
+---
+
 ## 2026-02-05T10:20:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2768119933)
 - Added comprehensive test suite for `PlaysRepositoryImpl.observePlays()` method covering query-dependent behavior
@@ -101,4 +132,3 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
   - Verify string transformation behavior (e.g., trimming) is working correctly
   - Use descriptive test data (e.g., "Catan", "Azul", "Game Store") to make tests more readable than generic values
 ---
-
