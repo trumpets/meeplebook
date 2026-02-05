@@ -87,3 +87,64 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing r
     - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
 ---
 
+## 2026-02-05T00:10:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2748161760)
+- Added comprehensive DAO-level test suite for `observeUniqueGamesCount()` method in PlayDaoTest
+- Tests cover: empty database (0 count), single game with multiple plays (1 count), multiple distinct games with duplicates (correct distinct count)
+- Tests verify reactive behavior: updates on insert (new game increases count, duplicate game doesn't), updates on delete (count goes to 0)
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt` (5 new tests added)
+- **Learnings for future iterations:**
+  - DAO tests follow pattern: use in-memory Room database with `runTest` and `Flow.first()` for synchronous assertions
+  - Test COUNT(DISTINCT ...) queries should verify: empty state, single distinct value with duplicates, multiple distinct values, reactive updates
+  - Reactive Flow tests should check both insert and delete operations trigger emissions
+  - Use existing helper functions (createTestPlay) for consistency in test data creation
+  - DAO tests are instrumented tests (androidTest directory) and require Android environment to run
+---
+
+## 2026-02-05T00:11:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2748350390)
+- Added comprehensive instrumented DAO tests for `observePlaysWithPlayersByGameNameOrLocation` query method
+- Created 9 test cases covering: game name matching, location matching, combined matching, ordering (date DESC), case-insensitive behavior, players inclusion, and edge cases
+- Tests verify partial string matching using LIKE operator, null location handling, empty results, and proper @Transaction behavior
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt` (+206 lines)
+- **Learnings for future iterations:**
+  - SQLite LIKE operator is case-insensitive by default for ASCII characters
+  - Room @Transaction queries should be tested to ensure relations are properly loaded
+  - DAO tests should cover: positive matches, negative matches (empty results), ordering, null field handling, and edge cases
+  - Case-insensitive tests should verify both uppercase and lowercase variants match
+  - When testing search queries with OR conditions, test each condition independently and combined
+  - Follow existing test patterns in the file (helper methods, test structure, assertion style)
+---
+
+## 2026-02-05T00:20:00Z
+PR Link: Sub-PR #80 for https://github.com/trumpets/meeplebook/pull/82 (addressing retry request)
+- Fixed `ObservePlayStatsUseCase.observeCurrentYear()` infinite loop causing UncompletedCoroutinesError in all PlaysViewModelTest tests (16 failures)
+- Fixed `SearchableFlow` debounce implementation to resolve timing issues in SearchableFlowTest (4 failures)
+- Changes:
+    - `ObservePlayStatsUseCase.kt`: Removed `while(true)` loop, year is now not flow
+    - `SearchableFlow.kt`: Simplified to use `debounce { }` lambda with conditional duration (0ms for empty, specified for non-empty queries)
+- Files changed:
+    - `app/src/main/java/app/meeplebook/core/plays/domain/ObservePlayStatsUseCase.kt`
+    - `app/src/main/java/app/meeplebook/core/ui/flow/SearchableFlow.kt`
+- **Learnings for future iterations:**
+    - Avoid `while(true)` loops in Flow builders - they prevent coroutines from completing and cause UncompletedCoroutinesError in runTest
+    - When conditionally applying debounce, use `debounce { duration }` lambda instead of nested flatMapLatest to avoid timing issues
+    - Test coroutines must complete within runTest timeout - any infinite loops or uncompleted coroutines cause failures
+---
+
+## 2026-02-05T10:20:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2768119933)
+- Added comprehensive test suite for `PlaysRepositoryImpl.observePlays()` method covering query-dependent behavior
+- Added 8 new test cases covering: null query, empty query, blank query, filtering by game name, filtering by location, case-insensitive filtering, whitespace trimming, and no matches scenario
+- Tests verify correct delegation to `local.observePlays()` for null/empty/blank queries and to `local.observePlaysByGameNameOrLocation()` for non-blank queries
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt` (added 8 tests, +100 lines)
+- **Learnings for future iterations:**
+  - When a repository method has branching logic (e.g., query-dependent behavior), test all branches thoroughly
+  - Test edge cases like null, empty string, blank string (whitespace-only) to verify proper handling
+  - Test both positive cases (matching results) and negative cases (no matches)
+  - Verify string transformation behavior (e.g., trimming) is working correctly
+  - Use descriptive test data (e.g., "Catan", "Azul", "Game Store") to make tests more readable than generic values
+---
