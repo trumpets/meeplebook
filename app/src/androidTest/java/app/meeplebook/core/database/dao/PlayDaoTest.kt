@@ -604,7 +604,105 @@ class PlayDaoTest {
         assertEquals(3L, count) // 1 + 2 (play 3 is excluded)
     }
 
-    // --- Test 11: Observe recent plays with players ---
+    // --- Test 11: Observe unique games count ---
+
+    @Test
+    fun observeUniqueGamesCountReturnsZeroForEmptyDatabase() = runTest {
+        // Observe unique games count with no plays
+        val count = playDao.observeUniqueGamesCount().first()
+
+        assertEquals(0L, count)
+    }
+
+    @Test
+    fun observeUniqueGamesCountReturnsSingleGame() = runTest {
+        // Insert multiple plays for the same game
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Gloomhaven"),
+            createTestPlay(2, parseDateString("2024-01-02"), 100, "Gloomhaven"),
+            createTestPlay(3, parseDateString("2024-01-03"), 100, "Gloomhaven")
+        )
+        playDao.insertAll(plays)
+
+        // Verify count is 1 (only 1 distinct game)
+        val count = playDao.observeUniqueGamesCount().first()
+        assertEquals(1L, count)
+    }
+
+    @Test
+    fun observeUniqueGamesCountReturnsDistinctGames() = runTest {
+        // Insert plays for multiple different games
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3"),
+            createTestPlay(4, parseDateString("2024-01-04"), 100, "Game 1"), // Duplicate
+            createTestPlay(5, parseDateString("2024-01-05"), 200, "Game 2")  // Duplicate
+        )
+        playDao.insertAll(plays)
+
+        // Verify count is 3 (3 distinct games)
+        val count = playDao.observeUniqueGamesCount().first()
+        assertEquals(3L, count)
+    }
+
+    @Test
+    fun observeUniqueGamesCountUpdatesReactivelyOnInsert() = runTest {
+        // Initially should be 0
+        var count = playDao.observeUniqueGamesCount().first()
+        assertEquals(0L, count)
+
+        // Insert plays for 2 games
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
+            )
+        )
+
+        // Verify count updated to 2
+        count = playDao.observeUniqueGamesCount().first()
+        assertEquals(2L, count)
+
+        // Insert play for a new game
+        playDao.insert(createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3"))
+
+        // Verify count updated to 3
+        count = playDao.observeUniqueGamesCount().first()
+        assertEquals(3L, count)
+
+        // Insert play for an existing game (duplicate gameId)
+        playDao.insert(createTestPlay(4, parseDateString("2024-01-04"), 100, "Game 1"))
+
+        // Verify count stays at 3 (no new unique game)
+        count = playDao.observeUniqueGamesCount().first()
+        assertEquals(3L, count)
+    }
+
+    @Test
+    fun observeUniqueGamesCountUpdatesReactivelyOnDelete() = runTest {
+        // Insert plays for 3 games
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+                createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3")
+            )
+        )
+
+        // Verify initial count
+        var count = playDao.observeUniqueGamesCount().first()
+        assertEquals(3L, count)
+
+        // Delete all plays
+        playDao.deleteAll()
+
+        // Verify count updated to 0
+        count = playDao.observeUniqueGamesCount().first()
+        assertEquals(0L, count)
+    }
+
+    // --- Test 12: Observe recent plays with players ---
 
     @Test
     fun observeRecentPlaysWithPlayersReturnsLimitedResults() = runTest {
