@@ -102,3 +102,19 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing r
   - DAO tests are instrumented tests (androidTest directory) and require Android environment to run
 ---
 
+## 2026-02-05T00:11:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2748350390)
+- Added comprehensive instrumented DAO tests for `observePlaysWithPlayersByGameNameOrLocation` query method
+- Created 9 test cases covering: game name matching, location matching, combined matching, ordering (date DESC), case-insensitive behavior, players inclusion, and edge cases
+- Tests verify partial string matching using LIKE operator, null location handling, empty results, and proper @Transaction behavior
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt` (+206 lines)
+- **Learnings for future iterations:**
+  - SQLite LIKE operator is case-insensitive by default for ASCII characters
+  - Room @Transaction queries should be tested to ensure relations are properly loaded
+  - DAO tests should cover: positive matches, negative matches (empty results), ordering, null field handling, and edge cases
+  - Case-insensitive tests should verify both uppercase and lowercase variants match
+  - When testing search queries with OR conditions, test each condition independently and combined
+  - Follow existing test patterns in the file (helper methods, test structure, assertion style)
+---
+
