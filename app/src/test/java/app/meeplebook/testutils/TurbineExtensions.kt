@@ -38,7 +38,7 @@ suspend fun <T> ReceiveTurbine<T>.awaitAfterDebounce(
 suspend inline fun <S, reified T: S> TestScope.awaitUiStateMatching(
     uiState: StateFlow<S>,
     debounceTime: Duration? = null,
-    crossinline predicate: (S) -> Boolean = { false }
+    crossinline predicate: (S) -> Boolean
 ): T {
     var content: T? = null
 
