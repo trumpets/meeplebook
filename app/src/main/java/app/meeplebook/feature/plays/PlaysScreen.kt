@@ -68,12 +68,19 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private val SYNC_COLOR_SYNCED = androidx.compose.ui.graphics.Color(0xFF4CAF50)
+private val SYNC_COLOR_PENDING = androidx.compose.ui.graphics.Color(0xFFFF9800)
+private val SYNC_COLOR_FAILED = androidx.compose.ui.graphics.Color(0xFFF44336)
+private const val LOCATION_PIN_EMOJI = "📍"
+private val MONTH_YEAR_FORMATTER = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+
 @Composable
 fun PlaysScreen(
     viewModel: PlaysViewModel = hiltViewModel()
 ) {
     val currentState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHost = remember { SnackbarHostState() }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
@@ -82,7 +89,7 @@ fun PlaysScreen(
                     // TODO: Navigate to play details
                 }
                 is PlaysUiEffects.ShowSnackbar -> {
-                    snackbarHost.showSnackbar(effect.messageUiText.asString())
+                    snackbarHost.showSnackbar(effect.messageUiText.asString(context))
                 }
             }
         }
@@ -275,8 +282,8 @@ private fun buildSearchBox(
     searchText: String,
     onSearchChange: (String) -> Unit
 ) {
-    val kbCtrl = LocalSoftwareKeyboardController.current
-    
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     OutlinedTextField(
         value = searchText,
         onValueChange = onSearchChange,
@@ -294,7 +301,7 @@ private fun buildSearchBox(
         placeholder = { Text(stringResource(R.string.plays_search_hint)) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { kbCtrl?.hide() }),
+        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
         shape = MaterialTheme.shapes.medium
     )
 }
@@ -304,9 +311,8 @@ private fun buildMonthSection(
     section: PlaysSection,
     onPlayClick: (Long) -> Unit
 ) {
-    val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-    val monthText = section.monthYearDate.format(monthFormatter)
-    
+    val monthText = section.monthYearDate.format(MONTH_YEAR_FORMATTER)
+
     Column(Modifier.fillMaxWidth()) {
         Row(
             Modifier
@@ -332,12 +338,12 @@ private fun buildMonthSection(
             thickness = 1.dp
         )
         Spacer(Modifier.height(8.dp))
-        
+
         section.plays.forEach { play ->
             buildPlayCard(play, { onPlayClick(play.id) })
             Spacer(Modifier.height(4.dp))
         }
-        
+
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -413,7 +419,7 @@ private fun buildPlayCard(
                 play.location?.takeIf { it.isNotBlank() }?.let { loc ->
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "📍 $loc",
+                        "$LOCATION_PIN_EMOJI $loc",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         maxLines = 1,
@@ -434,9 +440,9 @@ private fun buildPlayCard(
             }
             Spacer(Modifier.width(8.dp))
             val (icon, color) = when (play.syncStatus) {
-                PlaySyncStatus.SYNCED -> Icons.Default.CheckCircle to androidx.compose.ui.graphics.Color(0xFF4CAF50)
-                PlaySyncStatus.PENDING -> Icons.Default.Schedule to androidx.compose.ui.graphics.Color(0xFFFF9800)
-                PlaySyncStatus.FAILED -> Icons.Default.Error to androidx.compose.ui.graphics.Color(0xFFF44336)
+                PlaySyncStatus.SYNCED -> Icons.Default.CheckCircle to SYNC_COLOR_SYNCED
+                PlaySyncStatus.PENDING -> Icons.Default.Schedule to SYNC_COLOR_PENDING
+                PlaySyncStatus.FAILED -> Icons.Default.Error to SYNC_COLOR_FAILED
             }
             Box(
                 Modifier
