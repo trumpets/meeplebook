@@ -87,3 +87,20 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing r
     - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
 ---
 
+## 2026-02-05T00:20:00Z
+PR Link: Sub-PR #80 for https://github.com/trumpets/meeplebook/pull/69 (addressing retry request)
+- Fixed `ObservePlayStatsUseCase.observeCurrentYear()` infinite loop causing UncompletedCoroutinesError in all PlaysViewModelTest tests (16 failures)
+- Fixed `SearchableFlow` debounce implementation to resolve timing issues in SearchableFlowTest (4 failures)
+- Changes:
+  - `ObservePlayStatsUseCase.kt`: Removed `while(true)` loop, flow now emits current year, delays until next year, then emits once more and completes
+  - `SearchableFlow.kt`: Simplified to use `debounce { }` lambda with conditional duration (0ms for empty, specified for non-empty queries)
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/plays/domain/ObservePlayStatsUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/ui/flow/SearchableFlow.kt`
+- **Learnings for future iterations:**
+  - Avoid `while(true)` loops in Flow builders - they prevent coroutines from completing and cause UncompletedCoroutinesError in runTest
+  - For flows that need to emit at intervals, emit once, delay, emit again, then complete - don't loop forever
+  - When conditionally applying debounce, use `debounce { duration }` lambda instead of nested flatMapLatest to avoid timing issues
+  - Test coroutines must complete within runTest timeout - any infinite loops or uncompleted coroutines cause failures
+---
+
