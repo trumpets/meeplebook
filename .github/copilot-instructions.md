@@ -21,10 +21,10 @@ Decided on a package: app.meeplebook
 
 ## When implementing a task (in addition to the task instructions):
 
-1. Read the progress log at `progress.txt` (check Codebase Patterns section first)
+1. Read the progress log at `progress.md` (check Codebase Patterns section first)
 2. Implement the task
 3. Update AGENTS.md files if you discover reusable patterns (see below)
-4. Append your progress to `progress.txt`
+4. Append your progress to `progress.md`
 
 Follow Google's NowInAndroid design and code and theming principles:
 
