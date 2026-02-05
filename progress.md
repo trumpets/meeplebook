@@ -87,3 +87,18 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing r
     - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
 ---
 
+## 2026-02-05T00:10:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2748161760)
+- Added comprehensive DAO-level test suite for `observeUniqueGamesCount()` method in PlayDaoTest
+- Tests cover: empty database (0 count), single game with multiple plays (1 count), multiple distinct games with duplicates (correct distinct count)
+- Tests verify reactive behavior: updates on insert (new game increases count, duplicate game doesn't), updates on delete (count goes to 0)
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt` (5 new tests added)
+- **Learnings for future iterations:**
+  - DAO tests follow pattern: use in-memory Room database with `runTest` and `Flow.first()` for synchronous assertions
+  - Test COUNT(DISTINCT ...) queries should verify: empty state, single distinct value with duplicates, multiple distinct values, reactive updates
+  - Reactive Flow tests should check both insert and delete operations trigger emissions
+  - Use existing helper functions (createTestPlay) for consistency in test data creation
+  - DAO tests are instrumented tests (androidTest directory) and require Android environment to run
+---
+
