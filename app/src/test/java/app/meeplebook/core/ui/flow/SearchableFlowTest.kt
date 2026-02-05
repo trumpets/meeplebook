@@ -8,7 +8,6 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit tests for [searchableFlow].
@@ -107,7 +106,7 @@ class SearchableFlowTest {
     @Test
     fun `whitespace-only query is treated as empty`() = runTest {
         // Given
-        val queryFlow = MutableStateFlow("")
+        val queryFlow = MutableStateFlow("start")
         val debounceMs = 300L
 
         val searchFlow = searchableFlow(
@@ -117,8 +116,8 @@ class SearchableFlowTest {
         )
 
         searchFlow.test {
-            // Initial empty query
-            assertEquals("result:", awaitItem())
+            // Initial query for start
+            assertEquals("result:start", awaitItem())
 
             // When - send whitespace-only query
             queryFlow.value = "   "

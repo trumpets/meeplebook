@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /**
@@ -25,16 +24,12 @@ fun <T> searchableFlow(
     queryFlow: Flow<String>,
     debounceMillis: Long,
     block: (String) -> Flow<T>
-): Flow<T> =
-    queryFlow
+): Flow<T> {
+    return queryFlow
         .map { it.trim() }
         .distinctUntilChanged()
-        .flatMapLatest { query ->
-            if (query.isEmpty()) {
-                block(query) // No debounce for empty query to load immediately
-            } else {
-                flowOf(query)
-                    .debounce(debounceMillis)
-                    .flatMapLatest(block)
-            }
+        .debounce { query ->
+            if (query.isEmpty()) 0L else debounceMillis
         }
+        .flatMapLatest(block)
+}

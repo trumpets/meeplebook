@@ -1,24 +1,21 @@
 package app.meeplebook.feature.plays
 
 import app.cash.turbine.test
-import app.meeplebook.R
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObservePlayStatsUseCase
 import app.meeplebook.core.plays.domain.ObservePlaysUseCase
-import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
-import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.plays.domain.BuildPlaysSectionsUseCase
 import app.meeplebook.feature.plays.domain.ObservePlaysScreenDataUseCase
 import app.meeplebook.testutils.assertState
-import app.meeplebook.testutils.awaitUiState
+import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -115,8 +112,6 @@ class PlaysViewModelTest {
     fun `empty plays shows Empty state with NO_PLAYS reason`() = runTest {
         // Given - empty plays
         fakePlaysRepository.setPlays(emptyList())
-        fakePlaysRepository.setTotalPlaysCount(0)
-        fakePlaysRepository.setUniqueGamesCount(0)
 
         // Then
         val state = awaitUiStateAfterDebounce<PlaysUiState.Empty>(viewModel)
@@ -149,8 +144,6 @@ class PlaysViewModelTest {
         // Given
         val plays = listOf(createPlay(id = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
-        fakePlaysRepository.setTotalPlaysCount(1)
-        fakePlaysRepository.setUniqueGamesCount(1)
 
         // When
         viewModel.onEvent(PlaysEvent.SearchChanged("test query"))
@@ -294,7 +287,9 @@ class PlaysViewModelTest {
         fakePlaysRepository.setUniqueGamesCount(2)
 
         // Then - state should update
-        val updatedState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
+        val updatedState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel) {
+            it is PlaysUiState.Content && it.common.playStats.totalPlays == 2L
+        }
         assertEquals(2L, updatedState.common.playStats.totalPlays)
     }
 
@@ -309,6 +304,7 @@ class PlaysViewModelTest {
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(3)
         fakePlaysRepository.setUniqueGamesCount(3)
+        fakePlaysRepository.setPlaysCountForPeriod(2) // 2 plays in 2024
 
         // Then
         val state = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
@@ -487,6 +483,8 @@ class PlaysViewModelTest {
         // When - search returns no results
         viewModel.onEvent(PlaysEvent.SearchChanged("NonexistentGame"))
         fakePlaysRepository.setPlays(emptyList())
+        fakePlaysRepository.setTotalPlaysCount(3)
+        fakePlaysRepository.setUniqueGamesCount(3)
 
         // Then - stats should still reflect total data (not filtered)
         val state = awaitUiStateAfterDebounce<PlaysUiState.Empty>(viewModel)
@@ -498,12 +496,13 @@ class PlaysViewModelTest {
     }
 
     suspend inline fun <reified T : PlaysUiState> TestScope.awaitUiStateAfterDebounce(
-        viewModel: PlaysViewModel
+        viewModel: PlaysViewModel,
+        crossinline predicate: (PlaysUiState) -> Boolean = { it !is PlaysUiState.Loading }
     ): T {
-        return awaitUiState(
+        return awaitUiStateMatching(
             viewModel.uiState,
             DebounceDurations.SearchQuery,
-            skipWhile = { it is PlaysUiState.Loading }
+            predicate = predicate
         )
     }
 }

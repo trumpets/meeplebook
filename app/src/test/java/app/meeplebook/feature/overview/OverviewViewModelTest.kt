@@ -19,7 +19,7 @@ import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
-import app.meeplebook.testutils.awaitUiState
+import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -271,7 +271,9 @@ class OverviewViewModelTest {
         viewModel.clearError()
 
         // Then
-        state = awaitLoadedUiState(viewModel)
+        state = awaitLoadedUiState(viewModel) {
+                !it.isLoading && it.errorMessageResId == null
+        }
         assertNull(state.errorMessageResId)
     }
 
@@ -299,13 +301,16 @@ class OverviewViewModelTest {
         viewModel.refresh()
 
         // Then - error is cleared
-        state = awaitLoadedUiState(viewModel)
+        state = awaitLoadedUiState(viewModel) {
+                !it.isRefreshing && it.errorMessageResId == null
+        }
         assertNull(state.errorMessageResId)
     }
 
     suspend fun TestScope.awaitLoadedUiState(
-        viewModel: OverviewViewModel
+        viewModel: OverviewViewModel,
+        predicate: (OverviewUiState) -> Boolean = { !it.isLoading }
     ): OverviewUiState {
-        return awaitUiState(viewModel.uiState, skipWhile = { it.isLoading })
+        return awaitUiStateMatching(viewModel.uiState, predicate = predicate)
     }
 }

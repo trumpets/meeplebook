@@ -114,6 +114,7 @@ class FakePlaysRepository : PlaysRepository {
 
     private fun updateComputedValues(plays: List<Play>) {
         _totalPlaysCount.value = plays.sumOf { it.quantity.toLong() }
+        _playsCountForPeriod.value = plays.size.toLong() // Simplified; in real case, filter by period
         _recentPlays.value = plays.sortedByDescending { it.date }.take(5)
         _uniqueGamesCount.value = plays.map { it.gameId }.distinct().count().toLong()
     }

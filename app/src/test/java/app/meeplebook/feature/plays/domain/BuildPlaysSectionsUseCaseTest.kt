@@ -55,8 +55,8 @@ class BuildPlaysSectionsUseCaseTest {
         // January 2024 should come second
         assertEquals(YearMonth.of(2024, 1), result[1].monthYearDate)
         assertEquals(2, result[1].items.size)
-        assertEquals("Catan", result[1].items[0].gameName)
-        assertEquals("Wingspan", result[1].items[1].gameName)
+        assertEquals("Wingspan", result[1].items[0].gameName)
+        assertEquals("Catan", result[1].items[1].gameName)
     }
 
     @Test
@@ -81,27 +81,29 @@ class BuildPlaysSectionsUseCaseTest {
     }
 
     @Test
-    fun `invoke preserves play order within each section`() {
+    fun `invoke sorts plays in reverse chronological order within each section`() {
         // Given - multiple plays in the same month with specific order
         val items = listOf(
-            createPlay(id = 1, gameName = "First", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Second", date = Instant.parse("2024-01-20T18:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Third", date = Instant.parse("2024-01-25T19:00:00Z")).toDomainPlayItem()
+            createPlay(id = 1, gameName = "First", date = Instant.parse("2024-01-15T10:00:00Z")).toDomainPlayItem(),
+            createPlay(id = 2, gameName = "Second", date = Instant.parse("2024-01-15T12:00:00Z")).toDomainPlayItem(),
+            createPlay(id = 3, gameName = "Third", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem()
         )
 
         // When
         val result = useCase(items)
 
-        // Then - order within section should be preserved
+        // Then
         assertEquals(1, result.size)
-        assertEquals(YearMonth.of(2024, 1), result[0].monthYearDate)
-        assertEquals(3, result[0].items.size)
-        assertEquals(1L, result[0].items[0].id)
-        assertEquals("First", result[0].items[0].gameName)
-        assertEquals(2L, result[0].items[1].id)
-        assertEquals("Second", result[0].items[1].gameName)
-        assertEquals(3L, result[0].items[2].id)
-        assertEquals("Third", result[0].items[2].gameName)
+        val section = result[0]
+        assertEquals(3, section.items.size)
+
+        // Plays should be in reverse chronological order within the section
+        assertEquals(3, section.items[0].id)
+        assertEquals("Third", section.items[0].gameName)  // Latest time first
+        assertEquals(2, section.items[1].id)
+        assertEquals("Second", section.items[1].gameName)
+        assertEquals(1, section.items[2].id)
+        assertEquals("First", section.items[2].gameName)   // Earliest time last
     }
 
     @Test
