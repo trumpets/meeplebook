@@ -30,7 +30,7 @@ class BuildPlaysSectionsUseCase @Inject constructor() {
             .map { (monthYear, items) ->
                 DomainPlaysSection(
                     monthYearDate = monthYear,
-                    items = items
+                    items = items.sortedByDescending { it.date }
                 )
             }
     }

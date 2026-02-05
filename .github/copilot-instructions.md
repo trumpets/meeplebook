@@ -305,3 +305,90 @@ Before committing, check if any edited files have learnings worth preserving in 
 - Information already in progress.txt
 
 Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
+
+# ⚠️ Avoid Wall-Clock Reactive Flows (Lessons Learned)
+
+## Problem
+
+Do **not** model long-term wall-clock changes (e.g. year rollover, date boundaries) as infinite `Flow`s with `delay()` inside domain or ViewModel logic.
+
+Example of **overkill**:
+
+```kotlin
+flow {
+    while (true) {
+        emit(currentYear)
+        delay(untilNextYear)
+    }
+}
+```
+
+This pattern:
+
+* Introduces **infinite flows**
+* Requires **virtual time control** in tests
+* Can silently **block or hang tests**
+* Makes state propagation harder to reason about
+* Solves an edge case affecting a **negligible number of users**
+
+---
+
+## Why This Is a Bad Trade-off
+
+The only problem this solves is:
+
+> “User keeps the app open across a year boundary and expects live UI updates at midnight.”
+
+In real Android usage:
+
+* Apps are backgrounded, restarted, or refreshed frequently
+* Users accept stats updating on resume or interaction
+* Midnight live updates are not expected behavior
+
+The **complexity cost outweighs the UX benefit**.
+
+---
+
+## Recommended Approach
+
+✔️ **Compute time-based values on demand**, not reactively:
+
+```kotlin
+val year = Year.now(clock)
+val range = yearRangeFor(year)
+```
+
+Recalculate when:
+
+* Data changes
+* User refreshes
+* Screen is re-entered
+* App resumes
+* Process restarts
+
+This aligns with:
+
+* Android lifecycle reality
+* User expectations
+* Testability
+* Maintainable Flow graphs
+
+---
+
+## If Time-Boundary Handling Is Truly Required
+
+Prefer **explicit lifecycle or system triggers**:
+
+* Recalculate on `ON_RESUME`
+* Daily `WorkManager` job
+* Cache invalidation on date change
+
+Avoid infinite `Flow { while(true) delay(...) }` patterns.
+
+---
+
+## Rule of Thumb
+
+> **If a Flow needs `delay()` to model real time, it is probably the wrong abstraction.**
+
+Boring, finite flows are good flows.
