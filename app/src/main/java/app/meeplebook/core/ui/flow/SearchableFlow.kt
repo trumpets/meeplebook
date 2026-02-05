@@ -29,12 +29,8 @@ fun <T> searchableFlow(
     queryFlow
         .map { it.trim() }
         .distinctUntilChanged()
-        .flatMapLatest { query ->
-            if (query.isEmpty()) {
-                block(query) // No debounce for empty query to load immediately
-            } else {
-                flowOf(query)
-                    .debounce(debounceMillis)
-                    .flatMapLatest(block)
-            }
+        .debounce { query ->
+            // No debounce for empty queries, debounce non-empty queries
+            if (query.isEmpty()) 0L else debounceMillis
         }
+        .flatMapLatest(block)

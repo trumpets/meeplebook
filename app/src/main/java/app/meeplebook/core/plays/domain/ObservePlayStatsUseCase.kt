@@ -68,21 +68,28 @@ class ObservePlayStatsUseCase @Inject constructor(
      */
     private fun observeCurrentYear(): Flow<Year> =
         flow {
-            while (true) {
-                val now = Instant.now(clock)
-                val currentYear = Year.from(
-                    now.atZone(ZoneOffset.UTC)
+            val now = Instant.now(clock)
+            val currentYear = Year.from(
+                now.atZone(ZoneOffset.UTC)
+            )
+
+            emit(currentYear)
+
+            val nextYearInstant = currentYear
+                .plusYears(1)
+                .atDay(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+
+            val durationUntilNextYear = Duration.between(now, nextYearInstant)
+            if (!durationUntilNextYear.isNegative) {
+                delay(durationUntilNextYear)
+                
+                // Emit the new year after delay
+                val newYear = Year.from(
+                    Instant.now(clock).atZone(ZoneOffset.UTC)
                 )
-
-                emit(currentYear)
-
-                val nextYearInstant = currentYear
-                    .plusYears(1)
-                    .atDay(1)
-                    .atStartOfDay(ZoneOffset.UTC)
-                    .toInstant()
-
-                delay(Duration.between(now, nextYearInstant))
+                emit(newYear)
             }
         }.distinctUntilChanged()
 }
