@@ -23,7 +23,7 @@ fun uiTextEmpty(): UiText = UiText.Empty
 
 fun uiTextCombine(vararg parts: UiText) = UiText.Composite(parts.toList())
 
-fun uiTextJoin(vararg parts: UiText, separator: String = ", "): UiText {
+fun uiTextJoin(separator: String = ", ", vararg parts: UiText): UiText {
 
     // Flatten non-empty parts
     val nonEmptyParts = parts.filter { it.isNotEmpty() }
@@ -32,14 +32,19 @@ fun uiTextJoin(vararg parts: UiText, separator: String = ", "): UiText {
     if (nonEmptyParts.size == 1) return nonEmptyParts.first()
 
     // Insert separator between elements
+    val separatorUiText = uiText(separator)
     val compositeParts = mutableListOf<UiText>()
     nonEmptyParts.forEachIndexed { index, part ->
         if (index > 0) {
-            compositeParts += UiText.Plain(separator)
+            compositeParts += separatorUiText
         }
 
         compositeParts += part
     }
 
     return UiText.Composite(compositeParts)
+}
+
+fun uiTextIf(condition: Boolean, block: () -> UiText): UiText {
+    return if (condition) block() else uiTextEmpty()
 }

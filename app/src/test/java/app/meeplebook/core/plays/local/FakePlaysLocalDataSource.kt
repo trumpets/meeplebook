@@ -15,8 +15,19 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
     private val totalPlaysCount = MutableStateFlow(0L)
     private val playsCountForMonth = MutableStateFlow<Map<Pair<Instant, Instant>, Long>>(emptyMap())
     private val recentPlays = MutableStateFlow<Map<Int, List<Play>>>(emptyMap())
+    private val uniqueGamesCount = MutableStateFlow(0L)
 
     override fun observePlays(): Flow<List<Play>> = playsFlow
+    
+    override fun observePlaysByGameNameOrLocation(gameNameOrLocationQuery: String): Flow<List<Play>> {
+        return playsFlow.map { items ->
+            items.filter { item ->
+                item.gameName.contains(gameNameOrLocationQuery, ignoreCase = true)
+                        || item.location?.contains(gameNameOrLocationQuery, ignoreCase = true) == true
+            }
+        }
+    }
+
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
         return playsFlow.map { list -> list.filter { it.gameId == gameId } }
     }
@@ -46,6 +57,10 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
 
     override suspend fun clearPlays() {
         playsFlow.value = emptyList()
+        totalPlaysCount.value = 0L
+        playsCountForMonth.value = emptyMap()
+        recentPlays.value = emptyMap()
+        uniqueGamesCount.value = 0L
     }
 
     override fun observeTotalPlaysCount(): Flow<Long> {
@@ -61,6 +76,10 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
 
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
         return recentPlays.map { map -> map[limit] ?: emptyList() }
+    }
+
+    override fun observeUniqueGamesCount(): Flow<Long> {
+        return uniqueGamesCount
     }
 
     /**
@@ -86,5 +105,12 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         val currentMap = recentPlays.value.toMutableMap()
         currentMap[limit] = plays
         recentPlays.value = currentMap
+    }
+
+    /**
+     * Sets the unique games count for testing.
+     */
+    fun setUniqueGamesCount(count: Long) {
+        uniqueGamesCount.value = count
     }
 }

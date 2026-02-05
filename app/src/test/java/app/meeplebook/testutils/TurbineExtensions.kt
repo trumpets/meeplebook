@@ -31,33 +31,30 @@ suspend fun <T> ReceiveTurbine<T>.awaitAfterDebounce(
 }
 
 /**
- * Awaits the next non-skipped state from a [StateFlow] and asserts it is [T].
+ * Awaits the next candidate state from a [StateFlow] and asserts it is [T].
  *
- * - Skips the first emission (the current StateFlow value).
  * - If [debounceTime] is non-null, advances time before each awaited emission.
  */
-suspend inline fun <S, reified T: S> TestScope.awaitUiState(
+suspend inline fun <S, reified T: S> TestScope.awaitUiStateMatching(
     uiState: StateFlow<S>,
     debounceTime: Duration? = null,
-    crossinline skipWhile: (S) -> Boolean = { false }
+    crossinline predicate: (S) -> Boolean
 ): T {
     var content: T? = null
 
     uiState.test {
-        // Skip initial StateFlow value
-        skipItems(1)
-
-        // Drain initial states to avoid flakiness from assuming a fixed number of emissions
+        // Drain emissions until one satisfies the predicate
         var state: S
         do {
             state = if (debounceTime == null) {
                 awaitItem()
             } else {
-                awaitAfterDebounce(scope = this@awaitUiState, debounceTime = debounceTime)
+                awaitAfterDebounce(scope = this@awaitUiStateMatching, debounceTime = debounceTime)
             }
-        } while (skipWhile(state))
-
-        content = state.assertState<T>()
+            if (predicate(state)) {
+                content = state.assertState<T>()
+            }
+        } while (content == null)
 
         cancelAndIgnoreRemainingEvents()
     }
