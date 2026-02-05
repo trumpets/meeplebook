@@ -87,3 +87,18 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/74 (addressing r
     - Combined flows with multiple upstream StateFlows are inherently prone to intermediate emissions - tests must account for this
 ---
 
+## 2026-02-05T10:20:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2768119933)
+- Added comprehensive test suite for `PlaysRepositoryImpl.observePlays()` method covering query-dependent behavior
+- Added 8 new test cases covering: null query, empty query, blank query, filtering by game name, filtering by location, case-insensitive filtering, whitespace trimming, and no matches scenario
+- Tests verify correct delegation to `local.observePlays()` for null/empty/blank queries and to `local.observePlaysByGameNameOrLocation()` for non-blank queries
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt` (added 8 tests, +100 lines)
+- **Learnings for future iterations:**
+  - When a repository method has branching logic (e.g., query-dependent behavior), test all branches thoroughly
+  - Test edge cases like null, empty string, blank string (whitespace-only) to verify proper handling
+  - Test both positive cases (matching results) and negative cases (no matches)
+  - Verify string transformation behavior (e.g., trimming) is working correctly
+  - Use descriptive test data (e.g., "Catan", "Azul", "Game Store") to make tests more readable than generic values
+---
+
