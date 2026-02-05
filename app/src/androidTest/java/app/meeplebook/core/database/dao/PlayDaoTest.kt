@@ -692,6 +692,212 @@ class PlayDaoTest {
         assertEquals(2, result.size)
     }
 
+    // --- Test 12: Observe plays by game name or location ---
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationMatchesOnGameName() = runTest {
+        // Insert plays with different game names
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Gloomhaven"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Catan"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Gloomhaven: Jaws of the Lion"),
+            createTestPlay(4, parseDateString("2024-01-04"), 400, "Pandemic")
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..4L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search for "Gloom" should match both Gloomhaven games
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("Gloom").first()
+
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.play.gameName == "Gloomhaven" })
+        assertTrue(result.any { it.play.gameName == "Gloomhaven: Jaws of the Lion" })
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationMatchesOnLocation() = runTest {
+        // Insert plays with different locations
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B", location = "Coffee Shop"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game C", location = "Friend's Home"),
+            createTestPlay(4, parseDateString("2024-01-04"), 400, "Game D", location = null)
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..4L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search for "Home" should match plays 1 and 3
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("Home").first()
+
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.play.location == "Home" })
+        assertTrue(result.any { it.play.location == "Friend's Home" })
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationMatchesOnBothGameNameAndLocation() = runTest {
+        // Insert plays where query matches either game name or location
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Catan", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Gloomhaven", location = "Coffee Shop"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Pandemic", location = "Catan Cafe"),
+            createTestPlay(4, parseDateString("2024-01-04"), 400, "Ticket to Ride", location = "Library")
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..4L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search for "Catan" should match play 1 (game name) and play 3 (location)
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("Catan").first()
+
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.play.gameName == "Catan" })
+        assertTrue(result.any { it.play.location == "Catan Cafe" })
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationIsSortedByDateDescending() = runTest {
+        // Insert plays in random order
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-10"), 100, "Game Alpha"),
+            createTestPlay(2, parseDateString("2024-03-15"), 200, "Game Beta"),
+            createTestPlay(3, parseDateString("2024-01-01"), 300, "Game Gamma"),
+            createTestPlay(4, parseDateString("2024-04-01"), 400, "Game Delta"),
+            createTestPlay(5, parseDateString("2024-02-20"), 500, "Game Epsilon")
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..5L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search for "Game" (should match all)
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("Game").first()
+
+        // Verify descending order by date
+        assertEquals(5, result.size)
+        assertEquals(parseDateString("2024-04-01"), result[0].play.date)
+        assertEquals(parseDateString("2024-03-15"), result[1].play.date)
+        assertEquals(parseDateString("2024-02-20"), result[2].play.date)
+        assertEquals(parseDateString("2024-01-10"), result[3].play.date)
+        assertEquals(parseDateString("2024-01-01"), result[4].play.date)
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationIsCaseInsensitive() = runTest {
+        // Insert plays with mixed case game names and locations
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Gloomhaven", location = "HOME"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "CATAN", location = "coffee shop"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "PaNdEmIc", location = "Library")
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..3L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search with lowercase should match regardless of case
+        val gloomResult = playDao.observePlaysWithPlayersByGameNameOrLocation("gloom").first()
+        assertEquals(1, gloomResult.size)
+        assertEquals("Gloomhaven", gloomResult[0].play.gameName)
+
+        val catanResult = playDao.observePlaysWithPlayersByGameNameOrLocation("catan").first()
+        assertEquals(1, catanResult.size)
+        assertEquals("CATAN", catanResult[0].play.gameName)
+
+        val homeResult = playDao.observePlaysWithPlayersByGameNameOrLocation("home").first()
+        assertEquals(1, homeResult.size)
+        assertEquals("HOME", homeResult[0].play.location)
+
+        val coffeeResult = playDao.observePlaysWithPlayersByGameNameOrLocation("COFFEE").first()
+        assertEquals(1, coffeeResult.size)
+        assertEquals("coffee shop", coffeeResult[0].play.location)
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationIncludesPlayerData() = runTest {
+        // Insert plays
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Gloomhaven", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Catan", location = "Coffee Shop")
+        )
+        playDao.insertAll(plays)
+
+        // Insert players for each play
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", true),
+                createTestPlayer(0, 1, "Bob", false),
+                createTestPlayer(0, 2, "Charlie", true)
+            )
+        )
+
+        // Search for "Gloomhaven"
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("Gloomhaven").first()
+
+        assertEquals(1, result.size)
+        assertEquals("Gloomhaven", result[0].play.gameName)
+        assertEquals(2, result[0].players.size)
+        assertTrue(result[0].players.any { it.name == "Alice" })
+        assertTrue(result[0].players.any { it.name == "Bob" })
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationReturnsEmptyForNoMatches() = runTest {
+        // Insert plays
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Gloomhaven", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Catan", location = "Coffee Shop")
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..2L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search for non-existent query
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("NonExistent").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observePlaysWithPlayersByGameNameOrLocationHandlesNullLocation() = runTest {
+        // Insert plays with null locations
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Gloomhaven", location = null),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Catan", location = "Home")
+        )
+        playDao.insertAll(plays)
+
+        // Add players to each play
+        for (playId in 1L..2L) {
+            playerDao.insert(createTestPlayer(0, playId, "Player $playId", true))
+        }
+
+        // Search for location string - should only match play 2
+        val result = playDao.observePlaysWithPlayersByGameNameOrLocation("Home").first()
+
+        assertEquals(1, result.size)
+        assertEquals("Catan", result[0].play.gameName)
+        assertEquals("Home", result[0].play.location)
+    }
+
     // --- Helper functions ---
 
     private fun createTestPlay(
