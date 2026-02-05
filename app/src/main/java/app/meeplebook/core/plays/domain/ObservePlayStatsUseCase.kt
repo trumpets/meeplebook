@@ -84,7 +84,7 @@ class ObservePlayStatsUseCase @Inject constructor(
             val durationUntilNextYear = Duration.between(now, nextYearInstant)
             if (!durationUntilNextYear.isNegative) {
                 delay(durationUntilNextYear)
-                
+
                 // Emit the new year after delay
                 val newYear = Year.from(
                     Instant.now(clock).atZone(ZoneOffset.UTC)
