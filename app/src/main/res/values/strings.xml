@@ -76,8 +76,17 @@
     <string name="collection_play_time">%d-%dm</string>
 
     <!-- Plays Screen -->
+    <string name="plays_loading">Loading plays…</string>
     <string name="plays_empty">Your play history is empty. Log some plays to see them here.</string>
     <string name="plays_search_no_results">No plays match your search</string>
+    <string name="plays_search_placeholder">Search plays</string>
+    <string name="plays_stat_unique_games">Unique Games</string>
+    <string name="plays_stat_total_plays">Total Plays</string>
+    <string name="plays_stat_this_year">In %d</string>
+    <plurals name="plays_section_count">
+        <item quantity="one">%d play</item>
+        <item quantity="other">%d plays</item>
+    </plurals>
     <plurals name="play_players_formatted">
         <item quantity="one">%d player: %s</item>
         <item quantity="other">%d players: %s</item>
