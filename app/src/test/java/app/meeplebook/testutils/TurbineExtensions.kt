@@ -43,9 +43,7 @@ suspend inline fun <S, reified T: S> TestScope.awaitUiStateMatching(
     var content: T? = null
 
     uiState.test {
-        // Skip initial StateFlow value
-
-        // Drain initial states to avoid flakiness from assuming a fixed number of emissions
+        // Drain emissions until one satisfies the predicate
         var state: S
         do {
             state = if (debounceTime == null) {
