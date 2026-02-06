@@ -1,4 +1,4 @@
-package app.meeplebook.feature.overview.ui
+package app.meeplebook.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme

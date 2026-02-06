@@ -17,16 +17,16 @@ object ScreenPadding {
     val SectionSpacing: Dp = 16.dp
 
     /** Standard content padding for scrollable lists. */
-    val ContentPadding: Dp = 16.dp
+    val ContentPadding: Dp = 12.dp
 
     /** Standard spacing between items in a list. */
-    val ItemSpacing: Dp = 12.dp
+    val ItemSpacing: Dp = 8.dp
 
     /** Standard card internal padding. */
     val CardInternal: Dp = 16.dp
 
     /** Small padding for compact elements. */
-    val Small: Dp = 8.dp
+    val Small: Dp = 4.dp
 }
 
 /**

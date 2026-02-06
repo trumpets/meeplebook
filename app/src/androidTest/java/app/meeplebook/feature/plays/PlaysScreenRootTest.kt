@@ -1,6 +1,5 @@
 package app.meeplebook.feature.plays
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -15,7 +14,6 @@ import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,83 +36,79 @@ class PlaysScreenRootTest {
     // region State Rendering Tests
 
     @Test
-    fun whenLoadingState_thenShowsLoadingIndicator() {
+    fun playsScreenRoot_loadingState_displaysLoadingIndicator() {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Loading,
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    uiState = PlaysUiState.Loading,
+                    onEvent = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("playsLoadingIndicator").assertIsDisplayed()
+        composeRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
         composeRule.onNodeWithText(stringRes(R.string.plays_loading)).assertIsDisplayed()
         composeRule.onNodeWithTag("playsScreen").assertIsDisplayed()
     }
 
     @Test
-    fun whenEmptyStateNoPlays_thenShowsEmptyMessage() {
+    fun playsScreenRoot_emptyState_noPlays_displaysMessage() {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Empty(
+                    uiState = PlaysUiState.Empty(
                         reason = EmptyReason.NO_PLAYS,
                         common = PlaysCommonState(
                             playStats = createTestStats()
                         )
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("playsEmptyState").assertIsDisplayed()
+        composeRule.onNodeWithTag("emptyState").assertIsDisplayed()
         composeRule.onNodeWithText(stringRes(R.string.plays_empty)).assertIsDisplayed()
     }
 
     @Test
-    fun whenEmptyStateNoSearchResults_thenShowsSearchEmptyMessage() {
+    fun playsScreenRoot_emptyState_noSearchResults_displaysMessage() {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Empty(
+                    uiState = PlaysUiState.Empty(
                         reason = EmptyReason.NO_SEARCH_RESULTS,
                         common = PlaysCommonState(
                             searchQuery = "monopoly",
                             playStats = createTestStats()
                         )
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("playsEmptyState").assertIsDisplayed()
+        composeRule.onNodeWithTag("emptyState").assertIsDisplayed()
         composeRule.onNodeWithText(stringRes(R.string.plays_search_no_results)).assertIsDisplayed()
     }
 
     @Test
-    fun whenErrorState_thenShowsErrorMessage() {
+    fun playsScreenRoot_errorState_displaysErrorMessage() {
         val errorText = uiTextRes(R.string.sync_plays_failed_error)
 
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Error(
+                    uiState = PlaysUiState.Error(
                         errorMessageUiText = errorText,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("playsErrorState").assertIsDisplayed()
+        composeRule.onNodeWithTag("errorState").assertIsDisplayed()
         composeRule.onNodeWithText(stringRes(R.string.sync_plays_failed_error)).assertIsDisplayed()
     }
 
@@ -123,7 +117,7 @@ class PlaysScreenRootTest {
     // region Content State Tests
 
     @Test
-    fun whenContentState_thenShowsStatsCard() {
+    fun playsScreenRoot_contentState_displaysStatsCard() {
         val testStats = PlayStats(
             uniqueGamesCount = 25,
             totalPlays = 150,
@@ -134,12 +128,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = emptyList(),
                         common = PlaysCommonState(playStats = testStats)
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
@@ -153,25 +146,24 @@ class PlaysScreenRootTest {
     }
 
     @Test
-    fun whenContentState_thenShowsSearchInput() {
+    fun playsScreenRoot_contentState_displaysSearchField() {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = emptyList(),
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("playsSearchInput").assertIsDisplayed()
+        composeRule.onNodeWithTag("searchField").assertIsDisplayed()
     }
 
     @Test
-    fun whenContentStateWithPlays_thenShowsPlayCards() {
+    fun playsScreenRoot_contentState_withPlays_displaysPlayCards() {
         val testSections = listOf(
             PlaysSection(
                 monthYearDate = YearMonth.of(2026, 1),
@@ -185,12 +177,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = testSections,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
@@ -203,7 +194,7 @@ class PlaysScreenRootTest {
     }
 
     @Test
-    fun whenContentStateWithMultipleSections_thenShowsMonthHeaders() {
+    fun playsScreenRoot_contentState_withMultipleSections_displaysMonthHeaders() {
         val testSections = listOf(
             PlaysSection(
                 monthYearDate = YearMonth.of(2026, 1),
@@ -218,12 +209,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = testSections,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
@@ -237,18 +227,17 @@ class PlaysScreenRootTest {
     // region Interaction Tests
 
     @Test
-    fun whenSearchInputChanged_thenTriggersSearchEvent() {
+    fun playsScreenRoot_searchInputChanged_triggersSearchEvent() {
         var capturedSearchQuery = ""
 
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Empty(
+                    uiState = PlaysUiState.Empty(
                         reason = EmptyReason.NO_PLAYS,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = { event ->
+                    onEvent = { event ->
                         if (event is PlaysEvent.SearchChanged) {
                             capturedSearchQuery = event.query
                         }
@@ -257,13 +246,13 @@ class PlaysScreenRootTest {
             }
         }
 
-        composeRule.onNodeWithTag("playsSearchInput").performTextInput("catan")
+        composeRule.onNodeWithTag("searchField").performTextInput("catan")
 
         assertEquals("catan", capturedSearchQuery)
     }
 
     @Test
-    fun whenPlayCardTapped_thenTriggersPlayClickedEvent() {
+    fun playsScreenRoot_playCardTapped_triggersPlayClickedEvent() {
         var capturedPlayId: Long? = null
 
         val testSections = listOf(
@@ -276,12 +265,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = testSections,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = { event ->
+                    onEvent = { event ->
                         if (event is PlaysEvent.PlayClicked) {
                             capturedPlayId = event.playId
                         }
@@ -300,45 +288,43 @@ class PlaysScreenRootTest {
     // region UI Element Presence Tests
 
     @Test
-    fun whenEmptyState_thenStillShowsStatsAndSearch() {
+    fun playsScreenRoot_emptyState_displaysStatsAndSearch() {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Empty(
+                    uiState = PlaysUiState.Empty(
                         reason = EmptyReason.NO_PLAYS,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
 
         composeRule.onNodeWithTag("playsStatsCard").assertIsDisplayed()
-        composeRule.onNodeWithTag("playsSearchInput").assertIsDisplayed()
+        composeRule.onNodeWithTag("searchField").assertIsDisplayed()
     }
 
     @Test
-    fun whenErrorState_thenStillShowsStatsAndSearch() {
+    fun playsScreenRoot_errorState_displaysStatsAndSearch() {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Error(
+                    uiState = PlaysUiState.Error(
                         errorMessageUiText = uiText("Test error"),
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
 
         composeRule.onNodeWithTag("playsStatsCard").assertIsDisplayed()
-        composeRule.onNodeWithTag("playsSearchInput").assertIsDisplayed()
+        composeRule.onNodeWithTag("searchField").assertIsDisplayed()
     }
 
     @Test
-    fun whenPlayHasSyncedStatus_thenShowsGreenBadge() {
+    fun playsScreenRoot_play_syncedStatus_displaysGreenBadge() {
         val testSections = listOf(
             PlaysSection(
                 monthYearDate = YearMonth.of(2026, 1),
@@ -355,12 +341,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = testSections,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
@@ -370,7 +355,7 @@ class PlaysScreenRootTest {
     }
 
     @Test
-    fun whenPlayHasPendingStatus_thenShowsOrangeBadge() {
+    fun playsScreenRoot_play_pendingStatus_displaysOrangeBadge() {
         val testSections = listOf(
             PlaysSection(
                 monthYearDate = YearMonth.of(2026, 1),
@@ -387,12 +372,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = testSections,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }
@@ -402,7 +386,7 @@ class PlaysScreenRootTest {
     }
 
     @Test
-    fun whenPlayHasLocation_thenShowsLocation() {
+    fun playsScreenRoot_play_withLocation_displaysLocation() {
         val testSections = listOf(
             PlaysSection(
                 monthYearDate = YearMonth.of(2026, 1),
@@ -419,12 +403,11 @@ class PlaysScreenRootTest {
         composeRule.setContent {
             MeepleBookTheme {
                 PlaysScreenRoot(
-                    currentState = PlaysUiState.Content(
+                    uiState = PlaysUiState.Content(
                         sections = testSections,
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
-                    snackbarState = SnackbarHostState(),
-                    onUserAction = {}
+                    onEvent = {}
                 )
             }
         }

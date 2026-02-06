@@ -1,11 +1,13 @@
 package app.meeplebook.feature.plays
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,23 +20,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,14 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -59,258 +45,177 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.plays.model.PlaySyncStatus
-import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextJoin
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.ui.components.RowItemImage
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.components.SearchBar
+import app.meeplebook.ui.components.StatItem
+import app.meeplebook.ui.components.StatsCard
 import app.meeplebook.ui.components.UiTextText
-import app.meeplebook.ui.components.gameImageClip
+import app.meeplebook.ui.components.screenstates.EmptyState
+import app.meeplebook.ui.components.screenstates.ErrorState
+import app.meeplebook.ui.components.screenstates.LoadingState
+import app.meeplebook.ui.theme.Green500
 import app.meeplebook.ui.theme.MeepleBookTheme
-import coil3.compose.AsyncImage
+import app.meeplebook.ui.theme.Orange500
+import app.meeplebook.ui.theme.Red500
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/**
- * Plays screen entry point that wires the ViewModel to the UI.
- *
- * @param viewModel The PlaysViewModel (injected by Hilt)
- */
 @Composable
 fun PlaysScreen(
     viewModel: PlaysViewModel = hiltViewModel()
 ) {
-    val currentState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarState = remember { SnackbarHostState() }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+
+    // TODO Consistent padding between screen contents. Overview list is a bit narrower than collections list
+
+    val resources = LocalResources.current
 
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
+
                 is PlaysUiEffects.NavigateToPlay -> {
-                    // Navigation will be handled by parent
+//                    onNavigateToPlay(effect.playId)
                 }
+
                 is PlaysUiEffects.ShowSnackbar -> {
-                    snackbarState.showSnackbar(effect.messageUiText.asString())
+                    Toast.makeText(context, effect.messageUiText.asString(resources), Toast.LENGTH_SHORT).show()
+//                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
             }
         }
     }
 
     PlaysScreenRoot(
-        currentState = currentState,
-        snackbarState = snackbarState,
-        onUserAction = viewModel::onEvent
+        uiState = uiState,
+        onEvent = { viewModel.onEvent(it) }
     )
 }
 
 @Composable
 fun PlaysScreenRoot(
-    currentState: PlaysUiState,
-    snackbarState: SnackbarHostState,
-    onUserAction: (PlaysEvent) -> Unit,
-    modifier: Modifier = Modifier
+    uiState: PlaysUiState,
+    onEvent: (PlaysEvent) -> Unit
 ) {
-    Scaffold(
-        modifier = modifier.testTag("playsScreen"),
-        snackbarHost = { SnackbarHost(hostState = snackbarState) }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when (currentState) {
-                PlaysUiState.Loading -> PlaysLoadingIndicator()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag("playsScreen")
+    ) {
+        when (uiState) {
+            PlaysUiState.Loading ->
+                LoadingState(loadingMessageUiText = uiTextRes(R.string.plays_loading))
 
-                is PlaysUiState.Empty -> PlaysScaffoldLayout(
-                    commonState = currentState.common,
-                    onUserAction = onUserAction
+            is PlaysUiState.Empty ->
+                PlaysScaffold(
+                    commonState = uiState.common,
+                    onEvent = onEvent
                 ) {
-                    PlaysEmptyMessage(emptyReason = currentState.reason)
+                    EmptyState(reasonMessageUiText = uiTextRes(uiState.reason.descriptionResId))
                 }
 
-                is PlaysUiState.Error -> PlaysScaffoldLayout(
-                    commonState = currentState.common,
-                    onUserAction = onUserAction
+            is PlaysUiState.Error ->
+                PlaysScaffold(
+                    commonState = uiState.common,
+                    onEvent = onEvent
                 ) {
-                    PlaysErrorMessage(errorText = currentState.errorMessageUiText)
+                    ErrorState(uiState.errorMessageUiText)
                 }
 
-                is PlaysUiState.Content -> PlaysScaffoldLayout(
-                    commonState = currentState.common,
-                    onUserAction = onUserAction
+            is PlaysUiState.Content ->
+                PlaysScaffold(
+                    commonState = uiState.common,
+                    onEvent = onEvent
                 ) {
-                    PlaysListContent(
-                        sections = currentState.sections,
-                        isRefreshing = currentState.common.isRefreshing,
-                        onUserAction = onUserAction
+                    PlaysScreenContent(
+                        sections = uiState.sections,
+                        isRefreshing = uiState.common.isRefreshing,
+                        onEvent = onEvent
                     )
                 }
-            }
         }
     }
 }
 
 @Composable
-private fun PlaysLoadingIndicator() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("playsLoadingIndicator"),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(ScreenPadding.ContentPadding))
-            Text(
-                text = stringResource(R.string.plays_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun PlaysScaffoldLayout(
+private fun PlaysScaffold(
     commonState: PlaysCommonState,
-    onUserAction: (PlaysEvent) -> Unit,
-    mainContent: @Composable () -> Unit
+    onEvent: (PlaysEvent) -> Unit,
+    content: @Composable ColumnScope.() -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        PlaysStatsDisplay(statistics = commonState.playStats)
+        PlaysStatsCard(stats = commonState.playStats)
 
-        PlaysSearchInput(
-            currentQuery = commonState.searchQuery,
-            onQueryUpdate = { onUserAction(PlaysEvent.SearchChanged(it)) }
+        SearchBar(
+            query = commonState.searchQuery,
+            placeholderResId = R.string.plays_search_placeholder,
+            onQueryChanged = { onEvent(PlaysEvent.SearchChanged(it)) }
         )
 
-        mainContent()
+        content()
     }
 }
 
 @Composable
-private fun PlaysStatsDisplay(
-    statistics: PlayStats,
-    modifier: Modifier = Modifier
+fun PlaysStatsCard(
+    stats: PlayStats
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(ScreenPadding.ContentPadding)
-            .testTag("playsStatsCard"),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    StatsCard(
+        modifier = Modifier.padding(ScreenPadding.ContentPadding)
+            .testTag("playsStatsCard")
     ) {
+        Text(
+            text = stringResource(R.string.plays_stats_all_time),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(ScreenPadding.CardInternal),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            SingleStatDisplay(
-                numericValue = statistics.uniqueGamesCount.toString(),
-                labelText = stringResource(R.string.plays_stat_unique_games)
+            StatItem(
+                value = stats.totalPlays.toString(),
+                label = stringResource(R.string.plays_stat_total_plays)
             )
-            SingleStatDisplay(
-                numericValue = statistics.totalPlays.toString(),
-                labelText = stringResource(R.string.plays_stat_total_plays)
+            StatItem(
+                value = stats.playsThisYear.toString(),
+                label = stringResource(R.string.plays_stat_this_year, stats.currentYear)
             )
-            SingleStatDisplay(
-                numericValue = statistics.playsThisYear.toString(),
-                labelText = stringResource(R.string.plays_stat_this_year, statistics.currentYear)
+            StatItem(
+                value = stats.uniqueGamesCount.toString(),
+                label = stringResource(R.string.plays_stat_unique_games)
             )
         }
+        // TODO maybe show Up to Date here or Unsynced 5 lets say
+//        if (lastSyncedUiText.isNotEmpty()) {
+//            Spacer(modifier = Modifier.height(12.dp))
+//            UiTextText(
+//                text = lastSyncedUiText,
+//                style = MaterialTheme.typography.bodySmall,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant
+//            )
+//        }
     }
 }
 
 @Composable
-private fun SingleStatDisplay(
-    numericValue: String,
-    labelText: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = numericValue,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = labelText,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun PlaysSearchInput(
-    currentQuery: String,
-    onQueryUpdate: (String) -> Unit
-) {
-    TextField(
-        value = currentQuery,
-        onValueChange = onQueryUpdate,
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        placeholder = { Text(stringResource(R.string.plays_search_placeholder)) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = ScreenPadding.ContentPadding)
-            .testTag("playsSearchInput"),
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp)
-    )
-}
-
-@Composable
-private fun PlaysEmptyMessage(emptyReason: EmptyReason) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("playsEmptyState"),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(emptyReason.descriptionResId),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(ScreenPadding.ContentPadding * 2)
-        )
-    }
-}
-
-@Composable
-private fun PlaysErrorMessage(errorText: UiText) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("playsErrorState"),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = errorText.asString(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(ScreenPadding.ContentPadding * 2)
-        )
-    }
-}
-
-@Composable
-private fun PlaysListContent(
+private fun PlaysScreenContent(
     sections: List<PlaysSection>,
     isRefreshing: Boolean,
-    onUserAction: (PlaysEvent) -> Unit
+    onEvent: (PlaysEvent) -> Unit
 ) {
     PullToRefreshBox(
         isRefreshing = isRefreshing,
-        onRefresh = { onUserAction(PlaysEvent.Refresh) },
+        onRefresh = { onEvent(PlaysEvent.Refresh) },
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
@@ -321,7 +226,7 @@ private fun PlaysListContent(
             verticalArrangement = Arrangement.spacedBy(ScreenPadding.Small)
         ) {
             sections.forEach { section ->
-                item(key = "header_${section.monthYearDate}") {
+                stickyHeader(key = "header_${section.monthYearDate}") {
                     MonthSectionHeader(
                         monthYear = section.monthYearDate,
                         playCount = section.plays.size
@@ -330,11 +235,11 @@ private fun PlaysListContent(
 
                 items(
                     items = section.plays,
-                    key = { playItem -> playItem.id }
+                    key = { it.id }
                 ) { playItem ->
-                    PlayItemCard(
+                    PlayItemRow(
                         playItem = playItem,
-                        onCardTap = { onUserAction(PlaysEvent.PlayClicked(playItem.id)) }
+                        onClick = { onEvent(PlaysEvent.PlayClicked(playItem.id)) }
                     )
                 }
             }
@@ -378,84 +283,84 @@ private fun MonthSectionHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
         HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
     }
 }
 
 @Composable
-private fun PlayItemCard(
+private fun PlayItemRow(
     playItem: PlayItem,
-    onCardTap: () -> Unit
+    onClick: () -> Unit
 ) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onCardTap)
+            .clickable(onClick = onClick)
+            .padding(ScreenPadding.ItemSpacing)
             .testTag("playCard_${playItem.id}"),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        verticalAlignment = Alignment.Top
     ) {
-        Row(
-            modifier = Modifier
-                .padding(ScreenPadding.ItemSpacing)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .gameImageClip(),
-                contentAlignment = Alignment.Center
+        RowItemImage(
+            thumbnailUrl = playItem.thumbnailUrl,
+            contentDescription = playItem.gameName
+        )
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                AsyncImage(
-                    model = playItem.thumbnailUrl,
-                    contentDescription = playItem.gameName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                Text(
+                    text = playItem.gameName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
-            }
 
-            Spacer(modifier = Modifier.width(ScreenPadding.ItemSpacing))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = playItem.gameName,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
+                if (playItem.syncStatus != PlaySyncStatus.SYNCED) {
                     SyncStatusBadge(syncStatus = playItem.syncStatus)
                 }
+            }
 
-                UiTextText(
-                    text = playItem.dateUiText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            UiTextText(
+                text = uiTextJoin(
+                    separator = " • ",
+                    playItem.dateUiText,
+                    playItem.durationUiText
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
 
-                UiTextText(
-                    text = playItem.playerSummaryUiText,
+            UiTextText(
+                text = playItem.playerSummaryUiText,
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            playItem.location?.let { loc ->
+                Text(
+                    text = loc,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
 
-                playItem.location?.let { loc ->
-                    Text(
-                        text = loc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            playItem.comments?.let { comments ->
+                Text(
+                    text = comments,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -463,25 +368,17 @@ private fun PlayItemCard(
 
 @Composable
 private fun SyncStatusBadge(syncStatus: PlaySyncStatus) {
-    val (badgeIcon, badgeColor) = when (syncStatus) {
-        PlaySyncStatus.SYNCED -> Icons.Default.CheckCircle to Color(0xFF4CAF50)
-        PlaySyncStatus.PENDING -> Icons.Default.Schedule to Color(0xFFFF9800)
-        PlaySyncStatus.FAILED -> Icons.Default.Error to Color(0xFFF44336)
+    val badgeColor = when (syncStatus) {
+        PlaySyncStatus.SYNCED -> Green500
+        PlaySyncStatus.PENDING -> Orange500
+        PlaySyncStatus.FAILED -> Red500
     }
 
     Box(
         modifier = Modifier
-            .size(20.dp)
-            .background(badgeColor.copy(alpha = 0.15f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = badgeIcon,
-            contentDescription = syncStatus.name,
-            tint = badgeColor,
-            modifier = Modifier.size(14.dp)
-        )
-    }
+            .size(6.dp)
+            .background(badgeColor, CircleShape)
+    )
 }
 
 /**
@@ -578,9 +475,8 @@ private fun PlaysScreenPreview(
 ) {
     MeepleBookTheme {
         PlaysScreenRoot(
-            currentState = previewState,
-            snackbarState = remember { SnackbarHostState() },
-            onUserAction = {}
+            uiState = previewState,
+            onEvent = {}
         )
     }
 }

@@ -2,7 +2,6 @@ package app.meeplebook.feature.collection
 
 import android.content.res.Configuration
 import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -37,11 +35,9 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -51,7 +47,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,7 +59,6 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -78,8 +72,14 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.core.ui.uiTextJoin
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.ui.components.RowItemImage
+import app.meeplebook.ui.components.SearchBar
 import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.components.gameImageClip
+import app.meeplebook.ui.components.screenstates.EmptyState
+import app.meeplebook.ui.components.screenstates.ErrorState
+import app.meeplebook.ui.components.screenstates.LoadingState
 import app.meeplebook.ui.theme.MeepleBookTheme
 import coil3.compose.AsyncImage
 
@@ -162,14 +162,14 @@ fun CollectionScreenRoot(
     ) {
         when (uiState) {
             CollectionUiState.Loading ->
-                LoadingState()
+                LoadingState(loadingMessageUiText = uiTextRes(R.string.collection_loading))
 
             is CollectionUiState.Empty ->
                 CollectionScaffold(
                     uiState = uiState,
                     onEvent = onEvent
                 ) {
-                    EmptyState(reason = uiState.reason)
+                    EmptyState(reasonMessageUiText = uiTextRes(uiState.reason.descriptionResId))
                 }
 
             is CollectionUiState.Error ->
@@ -177,7 +177,7 @@ fun CollectionScreenRoot(
                     uiState = uiState,
                     onEvent = onEvent
                 ) {
-                    ErrorState(uiState.errorMessageResId)
+                    ErrorState(errorMessageUiText = uiTextRes(uiState.errorMessageResId))
                 }
 
             is CollectionUiState.Content ->
@@ -197,29 +197,6 @@ fun CollectionScreenRoot(
 }
 
 @Composable
-fun LoadingState() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("loadingIndicator"),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.collection_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
 private fun CollectionScaffold(
     uiState: CollectionUiState,
     onEvent: (CollectionEvent) -> Unit,
@@ -231,6 +208,7 @@ private fun CollectionScaffold(
             /* --- SEARCH (always visible) --- */
             SearchBar(
                 query = uiState.searchQuery,
+                placeholderResId = R.string.collection_search_games,
                 onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
 
             )
@@ -243,42 +221,6 @@ private fun CollectionScaffold(
 
             content()
         }
-    }
-}
-
-@Composable
-fun EmptyState(reason: EmptyReason) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("emptyState"),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(reason.descriptionResId),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(32.dp)
-        )
-    }
-}
-
-@Composable
-fun ErrorState(@StringRes errorMessageResId: Int) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("errorState"),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(errorMessageResId),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(32.dp)
-        )
     }
 }
 
@@ -329,27 +271,6 @@ fun CollectionScreenContent(
             }
         )
     }
-}
-
-/* ---------- SEARCH ---------- */
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChanged: (String) -> Unit
-) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChanged,
-        leadingIcon = { Icon(Icons.Default.Search, null) },
-        placeholder = { Text(stringResource(R.string.collection_search_games)) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp)
-            .testTag("collectionSearchField"),
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp)
-    )
 }
 
 /* ---------- QUICK FILTERS ---------- */
@@ -595,18 +516,10 @@ private fun GameListRow(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .gameImageClip(),
-        ) {
-            AsyncImage(
-                model = game.thumbnailUrl,
-                contentDescription = game.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        RowItemImage(
+            thumbnailUrl = game.thumbnailUrl,
+            contentDescription = game.name
+        )
 
         Spacer(Modifier.width(12.dp))
 
@@ -713,6 +626,7 @@ private fun SortBottomSheet(
 class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<CollectionUiState> {
     override val values: Sequence<CollectionUiState> = sequenceOf(
         sampleContentState(),
+        sampleContentState(viewMode = CollectionViewMode.LIST),
         sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
         CollectionUiState.Empty(
             reason = EmptyReason.NO_SEARCH_RESULTS,
