@@ -8,7 +8,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -18,8 +17,7 @@ fun StatsCard(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .testTag("statsCard"),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
