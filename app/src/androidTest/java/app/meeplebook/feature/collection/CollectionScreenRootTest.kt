@@ -208,7 +208,7 @@ class CollectionScreenRootTest {
         }
 
         // Verify search bar is displayed
-        composeTestRule.onNodeWithTag("collectionSearchField").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("searchField").assertIsDisplayed()
 
         // Verify quick filters are displayed
         composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_all, 1)).assertIsDisplayed()
@@ -292,7 +292,7 @@ class CollectionScreenRootTest {
         }
 
         // Type in the search field
-        composeTestRule.onNodeWithTag("collectionSearchField").performTextInput("azul")
+        composeTestRule.onNodeWithTag("searchField").performTextInput("azul")
 
         // Verify callback was triggered with the correct value
         assertEquals("azul", capturedQuery)
@@ -462,7 +462,7 @@ class CollectionScreenRootTest {
         }
 
         // Verify search bar is still visible in empty state
-        composeTestRule.onNodeWithTag("collectionSearchField").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("searchField").assertIsDisplayed()
 
         // Verify quick filters are still visible
         composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_all, 100)).assertIsDisplayed()
@@ -490,7 +490,7 @@ class CollectionScreenRootTest {
         }
 
         // Verify search bar is still visible in error state
-        composeTestRule.onNodeWithTag("collectionSearchField").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("searchField").assertIsDisplayed()
 
         // Verify quick filters are still visible
         composeTestRule.onNodeWithText(stringRes(R.string.collection_filter_all, 100)).assertIsDisplayed()

@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -40,12 +41,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.feature.overview.ui.EmptyStateMessage
 import app.meeplebook.feature.overview.ui.GameHighlightCard
 import app.meeplebook.feature.overview.ui.RecentPlayCard
-import app.meeplebook.feature.overview.ui.StatsCard
 import app.meeplebook.ui.components.SectionHeader
+import app.meeplebook.ui.components.StatItem
+import app.meeplebook.ui.components.StatsCard
+import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 
@@ -159,7 +164,7 @@ fun OverviewContent(
                 ) {
                     // Quick Stats Card
                     item {
-                        StatsCard(
+                        OverviewStatsCard(
                             stats = uiState.stats,
                             lastSyncedUiText = uiState.lastSyncedUiText
                         )
@@ -220,6 +225,50 @@ fun OverviewContent(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun OverviewStatsCard(
+    stats: OverviewStats,
+    lastSyncedUiText: UiText,
+) {
+    StatsCard {
+        Text(
+            text = stringResource(R.string.your_stats_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            StatItem(
+                value = stats.gamesCount.toString(),
+                label = stringResource(R.string.stat_games)
+            )
+            StatItem(
+                value = stats.totalPlays.toString(),
+                label = stringResource(R.string.stat_total_plays)
+            )
+            StatItem(
+                value = stats.playsThisMonth.toString(),
+                label = stringResource(R.string.stat_this_month)
+            )
+            StatItem(
+                value = stats.unplayedCount.toString(),
+                label = stringResource(R.string.stat_unplayed)
+            )
+        }
+        if (lastSyncedUiText.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            UiTextText(
+                text = lastSyncedUiText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
