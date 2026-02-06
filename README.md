@@ -1,3 +1,5 @@
+[![Main Build (Tests + APK)](https://github.com/trumpets/meeplebook/actions/workflows/master-build.yml/badge.svg)](https://github.com/trumpets/meeplebook/actions/workflows/master-build.yml)
+
 # MeepleBook
 *A modern, native Android app for browsing and managing your BoardGameGeek collection.*
 
