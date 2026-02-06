@@ -31,7 +31,7 @@ fun LoadingState(
             verticalArrangement = Arrangement.Center
         ) {
             CircularProgressIndicator()
-            Spacer(modifier = Modifier.Companion.height(ScreenPadding.ContentPadding))
+            Spacer(modifier = Modifier.height(ScreenPadding.ContentPadding))
             UiTextText(
                 text = loadingMessageUiText,
                 style = MaterialTheme.typography.bodyMedium,
