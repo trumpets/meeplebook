@@ -234,7 +234,9 @@ fun OverviewStatsCard(
     stats: OverviewStats,
     lastSyncedUiText: UiText,
 ) {
-    StatsCard {
+    StatsCard(
+        modifier = Modifier.testTag("overviewStatsCard")
+    ) {
         Text(
             text = stringResource(R.string.your_stats_title),
             style = MaterialTheme.typography.titleSmall,
