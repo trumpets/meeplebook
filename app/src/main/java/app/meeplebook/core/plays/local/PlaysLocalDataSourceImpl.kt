@@ -6,7 +6,9 @@ import app.meeplebook.core.database.dao.PlayDao
 import app.meeplebook.core.database.dao.PlayerDao
 import app.meeplebook.core.database.entity.toEntity
 import app.meeplebook.core.database.entity.toPlay
+import app.meeplebook.core.plays.model.ColorHistory
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlayerHistory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -94,5 +96,25 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
     override fun observeUniqueGamesCount(): Flow<Long> {
         return playDao.observeUniqueGamesCount()
+    }
+
+    override suspend fun getPlayerHistoryByLocation(location: String): List<PlayerHistory> {
+        return playDao.getPlayerHistoryByLocation(location).map { row ->
+            PlayerHistory(
+                name = row.name,
+                username = row.username,
+                userId = row.userId,
+                playCount = row.playCount
+            )
+        }
+    }
+
+    override suspend fun getColorHistoryForGame(gameId: Long): List<ColorHistory> {
+        return playDao.getColorHistoryForGame(gameId).map { row ->
+            ColorHistory(
+                color = row.color,
+                useCount = row.useCount
+            )
+        }
     }
 }

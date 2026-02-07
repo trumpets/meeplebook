@@ -1,6 +1,7 @@
 package app.meeplebook.core.collection.local
 
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.model.GameSummary
 import app.meeplebook.core.database.dao.CollectionItemDao
 import app.meeplebook.core.database.entity.toCollectionItem
 import app.meeplebook.core.database.entity.toEntity
@@ -63,6 +64,17 @@ class CollectionLocalDataSourceImpl @Inject constructor(
     override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
         return dao.observeFirstUnplayedGame().map { itemEntity ->
             itemEntity?.toCollectionItem()
+        }
+    }
+
+    override suspend fun searchGamesForAutocomplete(query: String, limit: Int): List<GameSummary> {
+        return dao.searchGamesForAutocomplete(query, limit).map { row ->
+            GameSummary(
+                id = row.gameId,
+                name = row.name,
+                thumbnailUrl = row.thumbnailUrl,
+                yearPublished = row.yearPublished
+            )
         }
     }
 }

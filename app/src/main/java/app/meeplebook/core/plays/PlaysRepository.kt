@@ -1,7 +1,9 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.plays.model.ColorHistory
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.model.PlayerHistory
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
@@ -74,4 +76,16 @@ interface PlaysRepository {
      * Observes the count of unique games that have been played.
      */
     fun observeUniqueGamesCount(): Flow<Long>
+
+    /**
+     * Gets player history for a specific location.
+     * Returns players who have played at this location, sorted by play count.
+     */
+    suspend fun getPlayerHistoryByLocation(location: String): List<PlayerHistory>
+
+    /**
+     * Gets color history for a specific game.
+     * Returns colors used for this game, sorted by usage count.
+     */
+    suspend fun getColorHistoryForGame(gameId: Long): List<ColorHistory>
 }
