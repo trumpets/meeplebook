@@ -3,6 +3,7 @@ package app.meeplebook.core.collection
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.model.GameSummary
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 
@@ -58,6 +59,14 @@ interface CollectionRepository {
 
     /**
      * Observe the first unplayed game from the collection.
+     */
+    fun observeFirstUnplayedGame(): Flow<CollectionItem?>
+
+    /**
+     * Search collection for game names matching query (for autocomplete).
+     */
+    suspend fun searchGamesForAutocomplete(query: String, limit: Int = 20): List<GameSummary>
+}
      */
     fun observeFirstUnplayedGame(): Flow<CollectionItem?>
 }

@@ -168,3 +168,36 @@ PR Link: https://github.com/trumpets/meeplebook/pull/86 (PlaysScreen implementat
   - UI tests should cover: all states (Loading, Empty variants, Error, Content), component visibility, user interactions (search, card taps), and content display
   - Use testTag for key UI elements: playsScreen, playsLoadingIndicator, playsStatsCard, playsSearchInput, playsEmptyState, playsErrorState, playsListContent, playCard_{id}, monthHeader_{yearMonth}
 ---
+## 2026-02-07T09:45:00Z
+PR Link: https://github.com/trumpets/meeplebook/pull/TBD (Add Play Screen Implementation)
+- **Task**: Implemented foundation for Add Play screen feature
+- **Completed**:
+  - Created domain models: NewPlay, NewPlayer, PlayerHistory, ColorHistory, GameSummary
+  - Added DAO methods: getPlayerHistoryByLocation, getColorHistoryForGame, searchGamesForAutocomplete
+  - Updated PlaysLocalDataSource, CollectionLocalDataSource with new methods
+  - Updated PlaysRepository, CollectionRepository with new methods
+  - Created use cases: SavePlayUseCase, ObservePlayerHistoryByLocationUseCase, ObserveColorHistoryForGameUseCase, SearchGamesForAutocompleteUseCase
+  - Created UI State (AddPlayUiState) with Loading, Form, Saving, and Error states
+  - Created Events (AddPlayEvent) for all user interactions
+  - Designed comprehensive form state with game selection, player management, color picker, validation
+- **Files changed**:
+  - Domain models: NewPlay.kt, NewPlayer.kt, PlayerHistory.kt, ColorHistory.kt, GameSummary.kt
+  - DAO updates: PlayDao.kt, CollectionItemDao.kt
+  - Data source updates: PlaysLocalDataSource.kt, PlaysLocalDataSourceImpl.kt, CollectionLocalDataSource.kt, CollectionLocalDataSourceImpl.kt
+  - Repository updates: PlaysRepository.kt, PlaysRepositoryImpl.kt, CollectionRepository.kt, CollectionRepositoryImpl.kt
+  - Use cases: SavePlayUseCase.kt, ObservePlayerHistoryByLocationUseCase.kt, ObserveColorHistoryForGameUseCase.kt, SearchGamesForAutocompleteUseCase.kt
+  - UI layer: AddPlayUiState.kt, AddPlayEvent.kt
+- **Remaining work**:
+  - ViewModel implementation with state management and business logic
+  - Navigation integration (add routes, FAB on PlaysScreen)
+  - Compose UI implementation (all form fields and components)
+  - Comprehensive testing (unit tests for use cases, ViewModel tests, UI tests)
+- **Learnings for future iterations:**
+  - Add Play feature requires complex state management with nested player items
+  - Player history and color history queries use GROUP BY and COUNT for aggregation
+  - Form state uses string representations for numeric inputs (duration, score) for easier user input
+  - Each player in form has temporary UUID for UI tracking before save
+  - Auto-win detection and color history lookups will be implemented in ViewModel
+  - SavePlayUseCase currently generates temporary negative IDs for local-only plays; future implementation needs BGG API POST
+  - Game autocomplete searches collection using LIKE query on gameName field
+---

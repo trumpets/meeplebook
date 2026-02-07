@@ -4,6 +4,7 @@ import app.meeplebook.core.collection.local.CollectionLocalDataSource
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.model.GameSummary
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.collection.remote.CollectionFetchException
 import app.meeplebook.core.collection.remote.CollectionRemoteDataSource
@@ -73,5 +74,9 @@ class CollectionRepositoryImpl @Inject constructor(
 
     override fun observeFirstUnplayedGame(): Flow<CollectionItem?> {
         return local.observeFirstUnplayedGame()
+    }
+
+    override suspend fun searchGamesForAutocomplete(query: String, limit: Int): List<GameSummary> {
+        return local.searchGamesForAutocomplete(query, limit)
     }
 }

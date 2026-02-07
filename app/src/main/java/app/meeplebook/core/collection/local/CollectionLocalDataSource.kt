@@ -1,6 +1,7 @@
 package app.meeplebook.core.collection.local
 
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.model.GameSummary
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -68,4 +69,9 @@ interface CollectionLocalDataSource {
      * Observe the first unplayed game.
      */
     fun observeFirstUnplayedGame(): Flow<CollectionItem?>
+
+    /**
+     * Search collection for game names matching query (for autocomplete).
+     */
+    suspend fun searchGamesForAutocomplete(query: String, limit: Int = 20): List<GameSummary>
 }

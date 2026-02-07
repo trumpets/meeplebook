@@ -2,8 +2,10 @@ package app.meeplebook.core.plays
 
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
+import app.meeplebook.core.plays.model.ColorHistory
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.model.PlayerHistory
 import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
@@ -106,5 +108,17 @@ class PlaysRepositoryImpl @Inject constructor(
 
     override fun observeUniqueGamesCount(): Flow<Long> {
         return local.observeUniqueGamesCount()
+    }
+
+    override suspend fun getPlayerHistoryByLocation(location: String): List<PlayerHistory> {
+        return local.getPlayerHistoryByLocation(location)
+    }
+
+    override suspend fun getColorHistoryForGame(gameId: Long): List<ColorHistory> {
+        return local.getColorHistoryForGame(gameId)
+    }
+
+    override suspend fun savePlay(play: Play) {
+        local.savePlay(play)
     }
 }

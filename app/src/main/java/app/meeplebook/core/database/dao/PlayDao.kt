@@ -141,4 +141,50 @@ interface PlayDao {
     @Transaction
     @Query("SELECT * FROM plays ORDER BY date DESC LIMIT :limit")
     fun observeRecentPlaysWithPlayers(limit: Int): Flow<List<PlayWithPlayers>>
+
+    /**
+     * Gets player names who have played at a specific location,
+     * ordered by number of plays (most frequent first).
+     */
+    @Query("""
+        SELECT name, username, userId, COUNT(*) as playCount
+        FROM players
+        INNER JOIN plays ON players.playId = plays.id
+        WHERE plays.location = :location
+        GROUP BY name, username, userId
+        ORDER BY playCount DESC
+    """)
+    suspend fun getPlayerHistoryByLocation(location: String): List<PlayerHistoryRow>
+
+    /**
+     * Gets colors used for a specific game,
+     * ordered by usage count (most frequent first).
+     */
+    @Query("""
+        SELECT color, COUNT(*) as useCount
+        FROM players
+        INNER JOIN plays ON players.playId = plays.id
+        WHERE plays.gameId = :gameId AND color IS NOT NULL
+        GROUP BY color
+        ORDER BY useCount DESC
+    """)
+    suspend fun getColorHistoryForGame(gameId: Long): List<ColorHistoryRow>
 }
+
+/**
+ * Result row for player history query.
+ */
+data class PlayerHistoryRow(
+    val name: String,
+    val username: String?,
+    val userId: Long?,
+    val playCount: Int
+)
+
+/**
+ * Result row for color history query.
+ */
+data class ColorHistoryRow(
+    val color: String,
+    val useCount: Int
+)

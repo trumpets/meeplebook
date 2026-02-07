@@ -100,4 +100,26 @@ interface CollectionItemDao {
         LIMIT 1
     """)
     fun observeFirstUnplayedGame(): Flow<CollectionItemEntity?>
+
+    /**
+     * Search collection for game names matching query (for autocomplete).
+     */
+    @Query("""
+        SELECT gameId, gameName as name, thumbnailUrl, yearPublished
+        FROM collection_items
+        WHERE gameName LIKE '%' || :query || '%'
+        ORDER BY gameName COLLATE NOCASE ASC
+        LIMIT :limit
+    """)
+    suspend fun searchGamesForAutocomplete(query: String, limit: Int = 20): List<GameSummaryRow>
 }
+
+/**
+ * Result row for game summary query.
+ */
+data class GameSummaryRow(
+    val gameId: Long,
+    val name: String,
+    val thumbnailUrl: String?,
+    val yearPublished: Int?
+)
