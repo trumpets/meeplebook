@@ -1,5 +1,8 @@
 # Meeple Book
 
+IMPORTANT: Always use Context7 MCP when you or I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+
+Context7 MCP is an external tooling integration that can look up documentation and generate or adapt code/configuration based on this repository’s context. If Context7 MCP is not available in your environment, fall back to using official library/API documentation, standard Android/Kotlin tooling, and the existing code in this repo to answer questions and provide setup/configuration steps.
 IMPORTANT: Don't change library version numbers. You don't have proper build tools access and you think the versions here are not even released. All the versions are proper.
 
 This will be an Android app that will allow for a user to log in to BGG, view his collection, view his plays and record plays.

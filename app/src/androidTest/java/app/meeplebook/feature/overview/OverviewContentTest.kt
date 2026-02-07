@@ -47,7 +47,7 @@ class OverviewContentTest {
         }
 
         // Verify stats card is displayed
-        composeTestRule.onNodeWithTag("statsCard").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("overviewStatsCard").assertIsDisplayed()
 
         // Verify stat values are displayed
         composeTestRule.onNodeWithText("127").assertIsDisplayed()
