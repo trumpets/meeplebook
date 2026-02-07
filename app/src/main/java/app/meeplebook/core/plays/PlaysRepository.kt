@@ -88,4 +88,10 @@ interface PlaysRepository {
      * Returns colors used for this game, sorted by usage count.
      */
     suspend fun getColorHistoryForGame(gameId: Long): List<ColorHistory>
+
+    /**
+     * Saves a play locally.
+     * Note: This currently only saves locally. Future implementation should POST to BGG API.
+     */
+    suspend fun savePlay(play: Play)
 }

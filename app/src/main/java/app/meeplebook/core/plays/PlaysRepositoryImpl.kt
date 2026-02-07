@@ -117,4 +117,8 @@ class PlaysRepositoryImpl @Inject constructor(
     override suspend fun getColorHistoryForGame(gameId: Long): List<ColorHistory> {
         return local.getColorHistoryForGame(gameId)
     }
+
+    override suspend fun savePlay(play: Play) {
+        local.savePlay(play)
+    }
 }
