@@ -20,7 +20,7 @@ fun DomainPlayItem.toPlayItem(): PlayItem {
     val durationUiText = if (durationMinutes != null) formatDuration(durationMinutes) else uiTextEmpty()
 
     return PlayItem(
-        id = id,
+        playId = playId,
         gameName = gameName,
         thumbnailUrl = thumbnailUrl,
         dateUiText = formatRelativeDate(date),

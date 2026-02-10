@@ -1,20 +1,20 @@
 package app.meeplebook.core.plays.remote
 
-import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 
 /**
  * Fake implementation of [PlaysRemoteDataSource] for testing.
  */
 class FakePlaysRemoteDataSource : PlaysRemoteDataSource {
 
-    var playsToReturn: List<Play> = emptyList()
-    var playsToReturnByPage: Map<Int, List<Play>> = emptyMap()
+    var playsToReturn: List<RemotePlayDto> = emptyList()
+    var playsToReturnByPage: Map<Int, List<RemotePlayDto>> = emptyMap()
     var shouldThrowException: Exception? = null
     var fetchPlaysCalled = false
     var lastFetchUsername: String? = null
     var lastFetchPage: Int? = null
 
-    override suspend fun fetchPlays(username: String, page: Int?): List<Play> {
+    override suspend fun fetchPlays(username: String, page: Int?): List<RemotePlayDto> {
         fetchPlaysCalled = true
         lastFetchUsername = username
         lastFetchPage = page

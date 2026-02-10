@@ -1,6 +1,13 @@
 package app.meeplebook.core.plays.local
 
+import app.meeplebook.core.database.entity.PlayEntity
+import app.meeplebook.core.database.entity.PlayerEntity
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.plays.model.PlaySyncStatus
+import app.meeplebook.core.plays.model.Player
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
+import app.meeplebook.core.plays.remote.dto.RemotePlayerDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -37,22 +44,57 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         return playsFlow.value.filter { it.gameId == gameId }
     }
 
-    override suspend fun savePlays(plays: List<Play>) {
+    override suspend fun saveRemotePlays(remotePlays: List<RemotePlayDto>) {
         // Merge plays - replace existing by ID, add new ones
         val existingPlays = playsFlow.value.toMutableList()
-        plays.forEach { newPlay ->
-            val index = existingPlays.indexOfFirst { it.id == newPlay.id }
+        var localIdCounter = existingPlays.size.toLong()
+
+        remotePlays.forEach { newPlay ->
+            val index = existingPlays.indexOfFirst { (it.playId as PlayId.Remote).remoteId == newPlay.remoteId }
             if (index >= 0) {
-                existingPlays[index] = newPlay
+                existingPlays[index] = newPlay.toPlay(existingPlays[index].playId.localId)
             } else {
-                existingPlays.add(newPlay)
+                existingPlays.add(newPlay.toPlay(localIdCounter++))
             }
         }
+
         playsFlow.value = existingPlays
     }
 
-    override suspend fun savePlay(play: Play) {
-        savePlays(listOf(play))
+    override suspend fun insertPlay(
+        playEntity: PlayEntity,
+        playerEntities: List<PlayerEntity>
+    ) {
+        val existingPlays = playsFlow.value.toMutableList()
+
+        val localPlayId = existingPlays.size + 1L
+        existingPlays += Play(
+            playId = PlayId.Local(localPlayId),
+            gameId = playEntity.gameId,
+            gameName = playEntity.gameName,
+            date = playEntity.date,
+            location = playEntity.location,
+            quantity = playEntity.quantity,
+            length = playEntity.length,
+            incomplete = playEntity.incomplete,
+            comments = playEntity.comments,
+            players = playerEntities.mapIndexed { index, player ->
+                Player(
+                    id = localPlayId * 100 + index,
+                    playId = localPlayId,
+                    name = player.name,
+                    win = player.win,
+                    score = player.score,
+                    color = player.color,
+                    startPosition = player.startPosition,
+                    username = player.username,
+                    userId = player.userId
+                )
+            },
+            syncStatus = PlaySyncStatus.PENDING
+        )
+
+        playsFlow.value = existingPlays
     }
 
     override suspend fun clearPlays() {
@@ -61,6 +103,15 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         playsCountForMonth.value = emptyMap()
         recentPlays.value = emptyMap()
         uniqueGamesCount.value = 0L
+    }
+
+    override suspend fun retainByRemoteIds(remoteIds: List<Long>) {
+        val existingPlays = playsFlow.value.toMutableList()
+        existingPlays.removeAll { play ->
+            val remoteId = (play.playId as? PlayId.Remote)?.remoteId
+            remoteId != null && remoteId !in remoteIds
+        }
+        playsFlow.value = existingPlays
     }
 
     override fun observeTotalPlaysCount(): Flow<Long> {
@@ -112,5 +163,35 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
      */
     fun setUniqueGamesCount(count: Long) {
         uniqueGamesCount.value = count
+    }
+
+    fun RemotePlayDto.toPlay(localId: Long): Play {
+        return Play(
+            playId = PlayId.Remote(localId, remoteId),
+            gameId = gameId,
+            gameName = gameName,
+            date = date,
+            location = location,
+            quantity = quantity,
+            length = length,
+            incomplete = incomplete,
+            comments = comments,
+            players = players.mapIndexed { index, playerDto -> playerDto.toPlayer(id = localId * 100 + index.toLong(), playId = localId) },
+            syncStatus = PlaySyncStatus.SYNCED
+        )
+    }
+
+    fun RemotePlayerDto.toPlayer(id: Long, playId: Long): Player {
+        return Player(
+            id = id,
+            playId = playId,
+            name = name,
+            win =  win,
+            score = score,
+            color = color,
+            startPosition = startPosition,
+            username = username,
+            userId = userId
+        )
     }
 }

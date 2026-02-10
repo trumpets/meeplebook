@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.uiText
@@ -238,11 +239,11 @@ private fun PlaysScreenContent(
 
                 items(
                     items = section.plays,
-                    key = { it.id }
+                    key = { it.playId.localId }
                 ) { playItem ->
                     PlayItemRow(
                         playItem = playItem,
-                        onClick = { onEvent(PlaysEvent.PlayClicked(playItem.id)) }
+                        onClick = { onEvent(PlaysEvent.PlayClicked(playItem.playId)) }
                     )
                 }
             }
@@ -301,7 +302,7 @@ private fun PlayItemRow(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(ScreenPadding.ItemSpacing)
-            .testTag("playCard_${playItem.id}"),
+            .testTag("playCard_${playItem.playId.localId}"),
         verticalAlignment = Alignment.Top
     ) {
         RowItemImage(
@@ -408,7 +409,7 @@ class PlaysUiStatePreviewProvider : PreviewParameterProvider<PlaysUiState> {
     private fun createSampleContentState(isRefreshing: Boolean = false): PlaysUiState.Content {
         val samplePlays = listOf(
             PlayItem(
-                id = 1L,
+                playId = PlayId.Local(1L),
                 gameName = "Catan",
                 thumbnailUrl = null,
                 dateUiText = uiText("27/01/2026"),
@@ -419,7 +420,7 @@ class PlaysUiStatePreviewProvider : PreviewParameterProvider<PlaysUiState> {
                 syncStatus = PlaySyncStatus.SYNCED
             ),
             PlayItem(
-                id = 2L,
+                playId = PlayId.Local(2L),
                 gameName = "Wingspan",
                 thumbnailUrl = null,
                 dateUiText = uiText("25/01/2026"),
@@ -430,7 +431,7 @@ class PlaysUiStatePreviewProvider : PreviewParameterProvider<PlaysUiState> {
                 syncStatus = PlaySyncStatus.PENDING
             ),
             PlayItem(
-                id = 3L,
+                playId = PlayId.Local(3L),
                 gameName = "Azul",
                 thumbnailUrl = null,
                 dateUiText = uiText("15/12/2025"),

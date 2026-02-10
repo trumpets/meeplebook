@@ -33,7 +33,7 @@ fun RecentPlayCard(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .testTag("recentPlayCard_${play.id}"),
+            .testTag("recentPlayCard_${play.playId.localId}"),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(

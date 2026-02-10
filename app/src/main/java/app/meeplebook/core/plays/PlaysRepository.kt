@@ -1,5 +1,6 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
@@ -46,9 +47,16 @@ interface PlaysRepository {
      * This method orchestrates multi-page fetching and merges results.
      *
      * @param username The BGG username.
-     * @return Success with all the plays, or Failure with an error.
+     * @return Success, or Failure with an error.
      */
-    suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError>
+    suspend fun syncPlays(username: String): AppResult<Unit, PlayError>
+
+    /**
+     * Creates a new play locally.
+     *
+     * @param command The command containing the details of the play to create.
+     */
+    suspend fun createPlay(command: CreatePlayCommand)
 
     /**
      * Clears all plays from local storage.

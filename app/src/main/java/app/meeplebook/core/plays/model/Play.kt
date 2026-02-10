@@ -5,7 +5,7 @@ import java.time.Instant
 /**
  * Represents a logged play of a game on BGG.
  *
- * @param id The unique play ID from BGG.
+ * @param playId The unique play ID, either local or from BGG.
  * @param date The date and time when the play occurred, as a [java.time.Instant] (UTC).
  * @param quantity The number of times the game was played.
  * @param length The length of the play in minutes.
@@ -17,7 +17,7 @@ import java.time.Instant
  * @param players List of players who participated in the play.
  */
 data class Play(
-    val id: Long,
+    val playId: PlayId,
     val date: Instant,
     val quantity: Int,
     val length: Int?,
@@ -26,5 +26,6 @@ data class Play(
     val gameId: Long,
     val gameName: String,
     val comments: String?,
-    val players: List<Player>
+    val players: List<Player>,
+    val syncStatus: PlaySyncStatus
 )

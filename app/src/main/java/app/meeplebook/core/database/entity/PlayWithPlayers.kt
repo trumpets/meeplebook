@@ -10,7 +10,7 @@ import app.meeplebook.core.plays.model.Play
 data class PlayWithPlayers(
     @Embedded val play: PlayEntity,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "localId",
         entityColumn = "playId"
     )
     val players: List<PlayerEntity>

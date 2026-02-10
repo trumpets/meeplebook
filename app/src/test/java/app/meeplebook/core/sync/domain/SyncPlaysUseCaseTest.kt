@@ -3,7 +3,6 @@ package app.meeplebook.core.sync.domain
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.plays.FakePlaysRepository
-import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
@@ -55,22 +54,7 @@ class SyncPlaysUseCaseTest {
             password = "password"
         )
         fakeAuthRepository.setCurrentUser(user)
-
-        val plays = listOf(
-            Play(
-                id = 1,
-                gameId = 100,
-                gameName = "Catan",
-                date = Instant.parse("2024-01-10T12:00:00Z"),
-                quantity = 1,
-                location = "Home",
-                incomplete = false,
-                length = 60,
-                comments = null,
-                players = emptyList()
-            )
-        )
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(plays)
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         // When
         val result = useCase()
@@ -159,7 +143,7 @@ class SyncPlaysUseCaseTest {
         )
         fakeAuthRepository.setCurrentUser(user)
 
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         // When
         useCase()

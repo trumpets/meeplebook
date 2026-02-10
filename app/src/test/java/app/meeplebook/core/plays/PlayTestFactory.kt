@@ -1,6 +1,8 @@
 package app.meeplebook.core.plays
 
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.plays.model.Player
 import java.time.Instant
 
@@ -13,7 +15,7 @@ object PlayTestFactory {
     /**
      * Creates a test Play object with default or custom values.
      *
-     * @param id The play ID
+     * @param localPlayId The local play ID
      * @param gameName The name of the game
      * @param date The play date (defaults to 2024-01-15T20:00:00Z)
      * @param quantity Number of plays (defaults to 1)
@@ -26,19 +28,20 @@ object PlayTestFactory {
      * @return A configured Play object
      */
     fun createPlay(
-        id: Long,
+        localPlayId: Long,
         gameName: String,
         date: Instant = Instant.parse("2024-01-15T20:00:00Z"),
         quantity: Int = 1,
         length: Int? = 60,
         incomplete: Boolean = false,
         location: String? = null,
-        gameId: Long = id * 100,
+        gameId: Long = localPlayId * 100,
         comments: String? = null,
-        players: List<Player> = listOf(createPlayer(playId = id))
+        players: List<Player> = listOf(createPlayer(playId = localPlayId)),
+        syncStatus: PlaySyncStatus = PlaySyncStatus.SYNCED
     ): Play {
         return Play(
-            id = id,
+            playId = PlayId.Local(localPlayId),
             date = date,
             quantity = quantity,
             length = length,
@@ -47,7 +50,8 @@ object PlayTestFactory {
             gameId = gameId,
             gameName = gameName,
             comments = comments,
-            players = players
+            players = players,
+            syncStatus = syncStatus
         )
     }
 

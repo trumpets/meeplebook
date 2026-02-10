@@ -8,6 +8,7 @@ import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObservePlayStatsUseCase
 import app.meeplebook.core.plays.domain.ObservePlaysUseCase
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
@@ -124,8 +125,8 @@ class PlaysViewModelTest {
     fun `plays with data shows Content state`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Azul", date = Instant.parse("2024-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Brass: Birmingham", date = Instant.parse("2024-01-10T18:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Azul", date = Instant.parse("2024-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Brass: Birmingham", date = Instant.parse("2024-01-10T18:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(2)
@@ -142,7 +143,7 @@ class PlaysViewModelTest {
     @Test
     fun `SearchChanged event updates search query immediately in UI state`() = runTest {
         // Given
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
 
         // When
@@ -157,8 +158,8 @@ class PlaysViewModelTest {
     fun `search query is debounced before filtering`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Azul"),
-            createPlay(id = 2, gameName = "Brass: Birmingham")
+            createPlay(localPlayId = 1, gameName = "Azul"),
+            createPlay(localPlayId = 2, gameName = "Brass: Birmingham")
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(2)
@@ -200,7 +201,7 @@ class PlaysViewModelTest {
     @Test
     fun `empty search result shows Empty state with NO_SEARCH_RESULTS reason`() = runTest {
         // Given - plays with games
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
@@ -225,13 +226,13 @@ class PlaysViewModelTest {
         }
 
         // When
-        viewModel.onEvent(PlaysEvent.PlayClicked(123))
+        viewModel.onEvent(PlaysEvent.PlayClicked(PlayId.Local(123L)))
         advanceUntilIdle()
 
         // Then
         assertEquals(1, effects.size)
         assertTrue(effects[0] is PlaysUiEffects.NavigateToPlay)
-        assertEquals(123L, (effects[0] as PlaysUiEffects.NavigateToPlay).playId)
+        assertEquals(123L, (effects[0] as PlaysUiEffects.NavigateToPlay).playId.localId)
 
         job.cancel()
     }
@@ -240,10 +241,10 @@ class PlaysViewModelTest {
     fun `content state builds sections correctly by month`() = runTest {
         // Given - plays from different months
         val plays = listOf(
-            createPlay(id = 1, gameName = "Azul", date = Instant.parse("2024-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Ark Nova", date = Instant.parse("2024-01-10T18:00:00Z")),
-            createPlay(id = 3, gameName = "Brass: Birmingham", date = Instant.parse("2023-12-20T15:00:00Z")),
-            createPlay(id = 4, gameName = "Catan", date = Instant.parse("2023-12-10T12:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Azul", date = Instant.parse("2024-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Ark Nova", date = Instant.parse("2024-01-10T18:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Brass: Birmingham", date = Instant.parse("2023-12-20T15:00:00Z")),
+            createPlay(localPlayId = 4, gameName = "Catan", date = Instant.parse("2023-12-10T12:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(4)
@@ -269,7 +270,7 @@ class PlaysViewModelTest {
     @Test
     fun `state updates reactively when repository data changes`() = runTest {
         // Given - initial state with one play
-        val initialPlays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val initialPlays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(initialPlays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
@@ -279,8 +280,8 @@ class PlaysViewModelTest {
 
         // When - repository data changes
         val updatedPlays = listOf(
-            createPlay(id = 1, gameName = "Azul"),
-            createPlay(id = 2, gameName = "Brass: Birmingham")
+            createPlay(localPlayId = 1, gameName = "Azul"),
+            createPlay(localPlayId = 2, gameName = "Brass: Birmingham")
         )
         fakePlaysRepository.setPlays(updatedPlays)
         fakePlaysRepository.setTotalPlaysCount(2)
@@ -297,9 +298,9 @@ class PlaysViewModelTest {
     fun `content state includes correct play stats`() = runTest {
         // Given - plays in current year and previous year
         val plays = listOf(
-            createPlay(id = 1, gameName = "Azul", date = Instant.parse("2024-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Wingspan", date = Instant.parse("2024-01-10T18:00:00Z")),
-            createPlay(id = 3, gameName = "Catan", date = Instant.parse("2023-12-20T15:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Azul", date = Instant.parse("2024-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Wingspan", date = Instant.parse("2024-01-10T18:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Catan", date = Instant.parse("2023-12-20T15:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(3)
@@ -318,7 +319,7 @@ class PlaysViewModelTest {
     @Test
     fun `isRefreshing is false in content state`() = runTest {
         // Given
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
@@ -333,11 +334,11 @@ class PlaysViewModelTest {
         // Given - logged in user and plays
         val user = AuthCredentials(username = "testuser", password = "password")
         fakeAuthRepository.setCurrentUser(user)
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(plays)
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         val initialState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
         assertFalse(initialState.common.isRefreshing)
@@ -360,7 +361,7 @@ class PlaysViewModelTest {
         // Given - logged in user and plays
         val user = AuthCredentials(username = "testuser", password = "password")
         fakeAuthRepository.setCurrentUser(user)
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
@@ -396,7 +397,7 @@ class PlaysViewModelTest {
     @Test
     fun `Refresh event when not logged in does not call sync`() = runTest {
         // Given - no logged in user but plays exist
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
@@ -414,7 +415,7 @@ class PlaysViewModelTest {
     @Test
     fun `LogPlayClicked event does not crash`() = runTest {
         // Given
-        val plays = listOf(createPlay(id = 1, gameName = "Azul"))
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
@@ -432,9 +433,9 @@ class PlaysViewModelTest {
     fun `plays are sorted in reverse chronological order within sections`() = runTest {
         // Given - plays from same month but different days
         val plays = listOf(
-            createPlay(id = 1, gameName = "Azul", date = Instant.parse("2024-01-05T20:00:00Z")),
-            createPlay(id = 2, gameName = "Wingspan", date = Instant.parse("2024-01-15T18:00:00Z")),
-            createPlay(id = 3, gameName = "Catan", date = Instant.parse("2024-01-10T12:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Azul", date = Instant.parse("2024-01-05T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Wingspan", date = Instant.parse("2024-01-15T18:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Catan", date = Instant.parse("2024-01-10T12:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(3)
@@ -472,9 +473,9 @@ class PlaysViewModelTest {
     fun `empty state with NO_SEARCH_RESULTS shows correct stats from before search`() = runTest {
         // Given - plays with games
         val plays = listOf(
-            createPlay(id = 1, gameName = "Azul"),
-            createPlay(id = 2, gameName = "Catan"),
-            createPlay(id = 3, gameName = "Wingspan")
+            createPlay(localPlayId = 1, gameName = "Azul"),
+            createPlay(localPlayId = 2, gameName = "Catan"),
+            createPlay(localPlayId = 3, gameName = "Wingspan")
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(3)

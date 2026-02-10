@@ -38,9 +38,9 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke groups plays by month and year`() {
         // Given
         val items = listOf(
-            createPlay(id = 1, gameName = "Catan", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Wingspan", date = Instant.parse("2024-01-20T18:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Azul", date = Instant.parse("2024-02-10T19:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Wingspan", date = Instant.parse("2024-01-20T18:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 3, gameName = "Azul", date = Instant.parse("2024-02-10T19:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -63,10 +63,10 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke sorts sections in reverse chronological order`() {
         // Given - plays from different months, intentionally out of order
         val items = listOf(
-            createPlay(id = 1, gameName = "Catan", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Wingspan", date = Instant.parse("2024-03-10T18:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Azul", date = Instant.parse("2024-02-20T19:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 4, gameName = "Splendor", date = Instant.parse("2023-12-25T17:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Wingspan", date = Instant.parse("2024-03-10T18:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 3, gameName = "Azul", date = Instant.parse("2024-02-20T19:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 4, gameName = "Splendor", date = Instant.parse("2023-12-25T17:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -84,9 +84,9 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke sorts plays in reverse chronological order within each section`() {
         // Given - multiple plays in the same month with specific order
         val items = listOf(
-            createPlay(id = 1, gameName = "First", date = Instant.parse("2024-01-15T10:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Second", date = Instant.parse("2024-01-15T12:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Third", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "First", date = Instant.parse("2024-01-15T10:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Second", date = Instant.parse("2024-01-15T12:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 3, gameName = "Third", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -98,11 +98,11 @@ class BuildPlaysSectionsUseCaseTest {
         assertEquals(3, section.items.size)
 
         // Plays should be in reverse chronological order within the section
-        assertEquals(3, section.items[0].id)
+        assertEquals(3, section.items[0].playId.localId)
         assertEquals("Third", section.items[0].gameName)  // Latest time first
-        assertEquals(2, section.items[1].id)
+        assertEquals(2, section.items[1].playId.localId)
         assertEquals("Second", section.items[1].gameName)
-        assertEquals(1, section.items[2].id)
+        assertEquals(1, section.items[2].playId.localId)
         assertEquals("First", section.items[2].gameName)   // Earliest time last
     }
 
@@ -110,9 +110,9 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke handles plays on same day at different times`() {
         // Given - multiple plays on the same day
         val items = listOf(
-            createPlay(id = 1, gameName = "Morning", date = Instant.parse("2024-01-15T09:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Afternoon", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Evening", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Morning", date = Instant.parse("2024-01-15T09:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Afternoon", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 3, gameName = "Evening", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -128,8 +128,8 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke handles plays across year boundary`() {
         // Given - plays spanning New Year
         val items = listOf(
-            createPlay(id = 1, gameName = "Old Year", date = Instant.parse("2023-12-31T23:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "New Year", date = Instant.parse("2024-01-01T01:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Old Year", date = Instant.parse("2023-12-31T23:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "New Year", date = Instant.parse("2024-01-01T01:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -147,7 +147,7 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke handles single play`() {
         // Given
         val items = listOf(
-            createPlay(id = 1, gameName = "Solo", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Solo", date = Instant.parse("2024-01-15T20:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -164,10 +164,10 @@ class BuildPlaysSectionsUseCaseTest {
     fun `invoke handles all plays in same month`() {
         // Given - all plays in January 2024
         val items = listOf(
-            createPlay(id = 1, gameName = "Game1", date = Instant.parse("2024-01-05T10:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Game2", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Game3", date = Instant.parse("2024-01-25T18:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 4, gameName = "Game4", date = Instant.parse("2024-01-31T22:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Game1", date = Instant.parse("2024-01-05T10:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Game2", date = Instant.parse("2024-01-15T14:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 3, gameName = "Game3", date = Instant.parse("2024-01-25T18:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 4, gameName = "Game4", date = Instant.parse("2024-01-31T22:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -184,8 +184,8 @@ class BuildPlaysSectionsUseCaseTest {
         // Given - two plays at the exact same instant
         val instant = Instant.parse("2024-01-15T20:00:00Z")
         val items = listOf(
-            createPlay(id = 1, gameName = "First", date = instant).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Second", date = instant).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "First", date = instant).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Second", date = instant).toDomainPlayItem()
         )
 
         // When
@@ -195,17 +195,17 @@ class BuildPlaysSectionsUseCaseTest {
         assertEquals(1, result.size)
         assertEquals(YearMonth.of(2024, 1), result[0].monthYearDate)
         assertEquals(2, result[0].items.size)
-        assertEquals(1L, result[0].items[0].id)
-        assertEquals(2L, result[0].items[1].id)
+        assertEquals(1L, result[0].items[0].playId.localId)
+        assertEquals(2L, result[0].items[1].playId.localId)
     }
 
     @Test
     fun `invoke handles plays from far past and future`() {
         // Given - plays spanning decades
         val items = listOf(
-            createPlay(id = 1, gameName = "Ancient", date = Instant.parse("2000-01-01T12:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 2, gameName = "Recent", date = Instant.parse("2024-06-15T14:00:00Z")).toDomainPlayItem(),
-            createPlay(id = 3, gameName = "Future", date = Instant.parse("2030-12-31T23:00:00Z")).toDomainPlayItem()
+            createPlay(localPlayId = 1, gameName = "Ancient", date = Instant.parse("2000-01-01T12:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 2, gameName = "Recent", date = Instant.parse("2024-06-15T14:00:00Z")).toDomainPlayItem(),
+            createPlay(localPlayId = 3, gameName = "Future", date = Instant.parse("2030-12-31T23:00:00Z")).toDomainPlayItem()
         )
 
         // When
@@ -226,7 +226,7 @@ class BuildPlaysSectionsUseCaseTest {
         // Given - one play per month for a full year
         val items = (1..12).map { month ->
             createPlay(
-                id = month.toLong(),
+                localPlayId = month.toLong(),
                 gameName = "Game$month",
                 date = Instant.parse("2024-%02d-15T12:00:00Z".format(month))
             ).toDomainPlayItem()

@@ -1,5 +1,7 @@
 package app.meeplebook.feature.plays
 
+import app.meeplebook.core.plays.model.PlayId
+
 /**
  * Represents user actions and system events for the Plays screen.
  *
@@ -12,7 +14,7 @@ sealed interface PlaysEvent {
     data class SearchChanged(val query: String) : PlaysEvent
 
     // Actions
-    data class PlayClicked(val playId: Long) : PlaysEvent
+    data class PlayClicked(val playId: PlayId) : PlaysEvent
     data object LogPlayClicked : PlaysEvent
 
 

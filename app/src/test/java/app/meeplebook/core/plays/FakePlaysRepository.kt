@@ -1,5 +1,6 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
@@ -18,7 +19,7 @@ class FakePlaysRepository : PlaysRepository {
     private val _recentPlays = MutableStateFlow<List<Play>>(emptyList())
     private val _uniqueGamesCount = MutableStateFlow(0L)
 
-    var syncPlaysResult: AppResult<List<Play>, PlayError> =
+    var syncPlaysResult: AppResult<Unit, PlayError> =
         AppResult.Failure(PlayError.Unknown(IllegalStateException("FakePlaysRepository not configured")))
 
     var syncCallCount = 0
@@ -45,19 +46,15 @@ class FakePlaysRepository : PlaysRepository {
         return _plays.value.filter { it.gameId == gameId }
     }
 
-    override suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError> {
+    override suspend fun syncPlays(username: String): AppResult<Unit, PlayError> {
         syncCallCount++
         lastSyncUsername = username
 
-        when (val result = syncPlaysResult) {
-            is AppResult.Success -> {
-                _plays.value = result.data
-                updateComputedValues(result.data)
-            }
-            is AppResult.Failure -> { /* no-op */ }
-        }
-
         return syncPlaysResult
+    }
+
+    override suspend fun createPlay(command: CreatePlayCommand) {
+        TODO("Not yet implemented")
     }
 
     override suspend fun clearPlays() {

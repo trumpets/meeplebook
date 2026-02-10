@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayWithPlayers
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ interface PlayDao {
            OR (location IS NOT NULL AND location LIKE '%' || :gameNameOrLocationQuery || '%')
         ORDER BY date DESC
     """)
+    // TODO: this query should perform case insensitive search
     fun observePlaysWithPlayersByGameNameOrLocation(
         gameNameOrLocationQuery: String
     ): Flow<List<PlayWithPlayers>>
@@ -45,15 +47,15 @@ interface PlayDao {
      * Observes a specific play with its players by ID.
      */
     @Transaction
-    @Query("SELECT * FROM plays WHERE id = :playId")
-    fun observePlayWithPlayersById(playId: Long): Flow<PlayWithPlayers>
+    @Query("SELECT * FROM plays WHERE localId = :localPlayId")
+    fun observePlayWithPlayersById(localPlayId: Long): Flow<PlayWithPlayers>
 
     /**
      * Gets a specific play with its players by ID.
      */
     @Transaction
-    @Query("SELECT * FROM plays WHERE id = :playId")
-    suspend fun getPlayWithPlayersById(playId: Long): PlayWithPlayers?
+    @Query("SELECT * FROM plays WHERE localId = :localPlayId")
+    suspend fun getPlayWithPlayersById(localPlayId: Long): PlayWithPlayers?
 
     /**
      * Observes plays with their players for a specific game.
@@ -82,10 +84,16 @@ interface PlayDao {
     suspend fun getPlays(): List<PlayEntity>
 
     /**
+     * Gets all plays that have a remote ID.
+     */
+    @Query("SELECT * FROM plays WHERE remoteId != null ORDER BY date DESC")
+    suspend fun getRemotePlays(): List<PlayEntity>
+
+    /**
      * Gets a specific play by ID.
      */
-    @Query("SELECT * FROM plays WHERE id = :playId")
-    suspend fun getPlayById(playId: Long): PlayEntity?
+    @Query("SELECT * FROM plays WHERE localId = :localPlayId")
+    suspend fun getPlayById(localPlayId: Long): PlayEntity?
 
     /**
      * Observes all plays for a specific game, ordered by date descending.
@@ -106,22 +114,40 @@ interface PlayDao {
     fun observeUniqueGamesCount(): Flow<Long>
 
     /**
+     * Gets plays by their remote IDs.
+     */
+    @Query("SELECT * FROM plays WHERE remoteId IN (:remoteIds)")
+    suspend fun getByRemoteIds(remoteIds: List<Long>): List<PlayEntity>
+
+    /**
      * Inserts a play, replacing on conflict.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(play: PlayEntity)
+    suspend fun insert(play: PlayEntity): Long
 
     /**
      * Inserts multiple plays, replacing on conflict.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(plays: List<PlayEntity>)
+    suspend fun insertAll(plays: List<PlayEntity>): List<Long>
+
+    /**
+     * Upserts multiple plays.
+     */
+    @Upsert
+    suspend fun upsertAll(plays: List<PlayEntity>)
 
     /**
      * Deletes all plays.
      */
     @Query("DELETE FROM plays")
     suspend fun deleteAll()
+
+    /**
+     * Deletes plays by their remote IDs.
+     */
+    @Query("DELETE FROM plays WHERE remoteId IN (:remoteIds)")
+    suspend fun deleteByRemoteIds(remoteIds: List<Long>)
 
     /**
      * Observes the total count of plays (sum of quantities).

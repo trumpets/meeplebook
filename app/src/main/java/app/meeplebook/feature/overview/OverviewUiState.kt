@@ -1,6 +1,7 @@
 package app.meeplebook.feature.overview
 
 import androidx.annotation.StringRes
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 
@@ -8,7 +9,7 @@ import app.meeplebook.core.ui.uiTextEmpty
  * Represents a recently played game entry.
  */
 data class RecentPlay(
-    val id: Long,
+    val playId: PlayId,
     val gameName: String,
     val thumbnailUrl: String?,
     val dateUiText: UiText,

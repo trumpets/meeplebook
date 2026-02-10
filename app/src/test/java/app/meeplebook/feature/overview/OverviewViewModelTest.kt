@@ -140,7 +140,7 @@ class OverviewViewModelTest {
         )
         fakeCollectionRepository.setMostRecentlyAdded(recentlyAdded)
 
-        val recentPlays = listOf(createPlay(id = 1, gameName = "Catan"))
+        val recentPlays = listOf(createPlay(localPlayId = 1, gameName = "Catan"))
         fakePlaysRepository.setRecentPlays(recentPlays)
 
         // When
@@ -165,7 +165,7 @@ class OverviewViewModelTest {
         )
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         // When
         viewModel.refresh()
@@ -187,7 +187,7 @@ class OverviewViewModelTest {
         )
         fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         fakeCollectionRepository.beforeSync = { gate.await() }
 
@@ -296,7 +296,7 @@ class OverviewViewModelTest {
         fakeAuthRepository.setCurrentUser(user)
 
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         viewModel.refresh()
 

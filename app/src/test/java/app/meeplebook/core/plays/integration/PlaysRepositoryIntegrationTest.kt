@@ -81,7 +81,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).data
+        val plays = repository.getPlays()
         assertEquals(2, plays.size)
         assertEquals("Gloomhaven", plays[0].gameName)
         assertEquals("Catan", plays[1].gameName)
@@ -102,7 +102,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).data
+        val plays = repository.getPlays()
         assertEquals(150, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
@@ -121,7 +121,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).data
+        val plays = repository.getPlays()
         assertEquals(130, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
@@ -144,7 +144,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).data
+        val plays = repository.getPlays()
         assertEquals(100, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
@@ -211,7 +211,8 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        assertEquals(10, (result as AppResult.Success).data.size)
+        val plays = repository.getPlays()
+        assertEquals(10, plays.size)
         assertEquals(2, mockWebServer.requestCount)
     }
 
@@ -246,7 +247,7 @@ class PlaysRepositoryIntegrationTest {
 
         // Then
         assertTrue(result is AppResult.Success)
-        val plays = (result as AppResult.Success).data
+        val plays = repository.getPlays()
         assertEquals(1, plays.size)
         assertEquals(null, plays[0].length) // 0 normalized to null
         assertEquals(null, plays[0].location) // blank normalized to null

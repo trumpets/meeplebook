@@ -80,11 +80,11 @@ class PlaysRemoteDataSourceImplTest {
 
         // Then
         assertEquals(2, result.size)
-        assertEquals(1, result[0].id)
+        assertEquals(1, result[0].remoteId)
         assertEquals("Gloomhaven", result[0].gameName)
         assertEquals(1, result[0].players.size)
         assertEquals("Alice", result[0].players[0].name)
-        assertEquals(2, result[1].id)
+        assertEquals(2, result[1].remoteId)
         assertEquals("Catan", result[1].gameName)
     }
 

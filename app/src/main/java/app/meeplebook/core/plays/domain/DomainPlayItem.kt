@@ -1,6 +1,7 @@
 package app.meeplebook.core.plays.domain
 
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import java.time.Instant
 
@@ -10,7 +11,7 @@ import java.time.Instant
  * This is an intermediate model between the data layer [Play] and the UI layer.
  * It contains enriched data such as player details and is optimized for display logic.
  *
- * @property id Unique identifier for the play record.
+ * @property playId Unique identifier for the play record.
  * @property gameName Name of the game that was played.
  * @property thumbnailUrl Optional URL to the game's thumbnail image.
  * @property date The instant when the play occurred.
@@ -21,7 +22,7 @@ import java.time.Instant
  * @property syncStatus Current synchronization status with BGG.
  */
 data class DomainPlayItem(
-    val id: Long,
+    val playId: PlayId,
     val gameName: String,
     val thumbnailUrl: String?,
     val date: Instant,
@@ -37,7 +38,7 @@ data class DomainPlayItem(
  */
 fun Play.toDomainPlayItem(): DomainPlayItem {
     return DomainPlayItem(
-        id = id,
+        playId = playId,
         gameName = gameName,
         thumbnailUrl = null, // TODO: Add thumbnail support from CollectionRepository by mapping Play.gameId to collection items
         date = date,

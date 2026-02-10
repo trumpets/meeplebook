@@ -32,7 +32,7 @@ fun DomainGameHighlight.toGameHighlight(): GameHighlight {
  */
 fun DomainRecentPlay.toRecentPlay(): RecentPlay {
     return RecentPlay(
-        id = id,
+        playId = playId,
         gameName = gameName,
         thumbnailUrl = thumbnailUrl,
         dateUiText = formatRelativeDate(date),
