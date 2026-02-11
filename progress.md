@@ -202,3 +202,19 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing r
   - Always keep KDoc in sync with actual parameter names and implementation behavior
   - When `setPlays()` is called with arbitrary/non-contiguous localIds, `size + 1` can create duplicate IDs
 ---
+## 2026-02-11T12:22:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing review comment #2792993063)
+- Added comprehensive test suite for `PlaysRepositoryImpl.createPlay()` method with 9 test cases
+- Tests verify: play inserted with `remoteId = null` (PlayId.Local), `syncStatus = PENDING`, correct player fields persistence/linking, observability via `getPlays()` and `observePlays()`, edge cases (null optional fields, multiple plays)
+- Added helper functions `createPlayCommand()` and `createPlayerCommand()` for concise test data creation following existing patterns
+- Fixed boolean assertions to use `assertFalse()` instead of `assertEquals(false, ...)` for consistency
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt` (+245 lines, 9 new tests + 2 helper functions)
+- **Learnings for future iterations:**
+  - Repository method tests should verify all key properties: ID structure (Local vs Remote), sync status, field persistence, relationship linking, and observability
+  - Test helper functions follow pattern: required params first, optional params with sensible defaults
+  - Use `assertTrue/assertFalse` for boolean assertions instead of `assertEquals(true/false, ...)` for better readability and consistency
+  - When testing `createPlay()`, verify both immediate retrieval (`getPlays()`) and reactive retrieval (`observePlays()`)
+  - Test all player fields when verifying player persistence: name, username, userId, score, win, startPosition, color
+  - Edge case testing should cover: null optional fields, empty collections, multiple insertions
+---
