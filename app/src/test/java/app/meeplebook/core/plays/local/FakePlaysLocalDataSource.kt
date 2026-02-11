@@ -165,6 +165,13 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         uniqueGamesCount.value = count
     }
 
+    /**
+     * Helper method for tests to save plays directly.
+     */
+    fun savePlays(plays: List<Play>) {
+        playsFlow.value = plays
+    }
+
     fun RemotePlayDto.toPlay(localId: Long): Play {
         return Play(
             playId = PlayId.Remote(localId, remoteId),

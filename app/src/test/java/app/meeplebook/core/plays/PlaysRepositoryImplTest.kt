@@ -2,6 +2,7 @@ package app.meeplebook.core.plays
 
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
+import app.meeplebook.core.plays.PlayTestFactory.createRemotePlayDto
 import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.local.FakePlaysLocalDataSource
@@ -24,6 +25,14 @@ class PlaysRepositoryImplTest {
     private lateinit var remote: FakePlaysRemoteDataSource
     private lateinit var repository: PlaysRepositoryImpl
 
+    private val testPlay = createPlay(
+        localPlayId = 1,
+        gameName = "Test Game",
+        date = parseDateString("2024-01-01"),
+        location = "Home",
+        gameId = 123
+    )
+
     private val testCreatePlayCommand = createPlayCommand(
         date = parseDateString("2024-01-01"),
         location = "Home",
@@ -42,9 +51,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `observePlays returns flow from local data source`() = runTest {
         val plays = listOf(testPlay)
-        local.insertPlay(plays)
-
-        repository.createPlay(testCreatePlayCommand)
+        local.savePlays(plays)
 
         val result = repository.observePlays().first()
 
@@ -163,27 +170,38 @@ class PlaysRepositoryImplTest {
 
     @Test
     fun `syncPlays success fetches from remote and saves to local`() = runTest {
-        val plays = listOf(testPlay)
-        remote.playsToReturn = plays
+        val remotePlays = listOf(
+            createRemotePlayDto(
+                remoteId = 1,
+                gameName = "Test Game",
+                date = parseDateString("2024-01-01"),
+                location = "Home",
+                gameId = 123
+            )
+        )
+        remote.playsToReturn = remotePlays
 
         val result = repository.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
-        assertEquals(plays, (result as AppResult.Success).data)
         assertTrue(remote.fetchPlaysCalled)
         assertEquals("user123", remote.lastFetchUsername)
         assertEquals(1, remote.lastFetchPage)
-        assertEquals(plays, local.getPlays())
+        
+        val savedPlays = local.getPlays()
+        assertEquals(1, savedPlays.size)
+        assertEquals("Test Game", savedPlays[0].gameName)
+        assertEquals(123L, savedPlays[0].gameId)
     }
 
     @Test
     fun `syncPlays fetches multiple pages`() = runTest {
         // Simulate multi-page response
         val page1Plays = List(100) { i ->
-            createPlay(localPlayId = i + 1L, gameName = "Game ${i + 1}")
+            createRemotePlayDto(remoteId = i + 1L, gameName = "Game ${i + 1}")
         }
         val page2Plays = List(50) { i ->
-            createPlay(localPlayId = i + 101L, gameName = "Game ${i + 101}")
+            createRemotePlayDto(remoteId = i + 101L, gameName = "Game ${i + 101}")
         }
 
         // Configure fake to return different results per page
