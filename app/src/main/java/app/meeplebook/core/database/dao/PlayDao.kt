@@ -86,7 +86,7 @@ interface PlayDao {
     /**
      * Gets all plays that have a remote ID.
      */
-    @Query("SELECT * FROM plays WHERE remoteId != null ORDER BY date DESC")
+    @Query("SELECT * FROM plays WHERE remoteId IS NOT NULL ORDER BY date DESC")
     suspend fun getRemotePlays(): List<PlayEntity>
 
     /**
