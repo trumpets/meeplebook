@@ -999,47 +999,53 @@ class PlayDaoTest {
 
     // --- Test 13: getRemotePlays ---
 
+    private fun createRemotePlay(
+        localId: Long,
+        remoteId: Long?,
+        dateString: String,
+        gameId: Long,
+        gameName: String,
+        syncStatus: PlaySyncStatus,
+    ): PlayEntity = PlayEntity(
+        localId = localId,
+        remoteId = remoteId,
+        date = parseDateString(dateString),
+        quantity = 1,
+        length = 60,
+        incomplete = false,
+        location = null,
+        gameId = gameId,
+        gameName = gameName,
+        comments = null,
+        syncStatus = syncStatus,
+    )
+
     @Test
     fun getRemotePlaysReturnsOnlyPlaysWithRemoteIds() = runTest {
         // Insert plays with and without remote IDs
-        val playWithRemoteId1 = PlayEntity(
+        val playWithRemoteId1 = createRemotePlay(
             localId = 1,
             remoteId = 1001,
-            date = parseDateString("2024-01-15"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
+            dateString = "2024-01-15",
             gameId = 100,
             gameName = "Game 1",
-            comments = null,
-            syncStatus = PlaySyncStatus.SYNCED
+            syncStatus = PlaySyncStatus.SYNCED,
         )
-        val playWithRemoteId2 = PlayEntity(
+        val playWithRemoteId2 = createRemotePlay(
             localId = 2,
             remoteId = 1002,
-            date = parseDateString("2024-01-16"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
+            dateString = "2024-01-16",
             gameId = 200,
             gameName = "Game 2",
-            comments = null,
-            syncStatus = PlaySyncStatus.SYNCED
+            syncStatus = PlaySyncStatus.SYNCED,
         )
-        val playWithoutRemoteId = PlayEntity(
+        val playWithoutRemoteId = createRemotePlay(
             localId = 3,
             remoteId = null,
-            date = parseDateString("2024-01-17"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
+            dateString = "2024-01-17",
             gameId = 300,
             gameName = "Game 3",
-            comments = null,
-            syncStatus = PlaySyncStatus.PENDING
+            syncStatus = PlaySyncStatus.PENDING,
         )
 
         playDao.insertAll(listOf(playWithRemoteId1, playWithRemoteId2, playWithoutRemoteId))
