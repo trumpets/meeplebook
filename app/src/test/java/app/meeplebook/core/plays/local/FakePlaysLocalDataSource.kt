@@ -2,6 +2,7 @@ package app.meeplebook.core.plays.local
 
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
@@ -159,6 +160,25 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
                 .distinct()
                 .take(10)
                 .toList()
+        }
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        // Return players who have played at the specified location,
+        // grouped by name+username, ordered by play count (descending).
+        return playsFlow.map { plays ->
+            plays
+                .filter { it.location == location }
+                .flatMap { play -> play.players }
+                .groupBy { player -> Pair(player.name, player.username) }
+                .map { (key, players) ->
+                    val (name, username) = key
+                    val playCount = players.size
+                    val userId = players.mapNotNull { it.userId }.maxOrNull()
+                    Triple(PlayerIdentity(name, username, userId), playCount, name)
+                }
+                .sortedByDescending { it.second }
+                .map { it.first }
         }
     }
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -812,6 +813,109 @@ class PlaysRepositoryImplTest {
         val result = repository.observeRecentLocations().first()
 
         assertTrue(result.isEmpty())
+    }
+
+    // --- observePlayersByLocation tests ---
+
+    @Test
+    fun `observePlayersByLocation returns players at location ordered by play count`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game A", location = "Home", date = parseDateString("2024-01-01"), players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", username = "alice", userId = 101),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", username = "bob", userId = 102)
+            )),
+            createPlay(localPlayId = 2, gameName = "Game B", location = "Home", date = parseDateString("2024-01-02"), players = listOf(
+                PlayTestFactory.createPlayer(id = 3, playId = 2, name = "Alice", username = "alice", userId = 101),
+                PlayTestFactory.createPlayer(id = 4, playId = 2, name = "Bob", username = "bob", userId = 102)
+            )),
+            createPlay(localPlayId = 3, gameName = "Game C", location = "Home", date = parseDateString("2024-01-03"), players = listOf(
+                PlayTestFactory.createPlayer(id = 5, playId = 3, name = "Alice", username = "alice", userId = 101),
+                PlayTestFactory.createPlayer(id = 6, playId = 3, name = "Charlie", username = null, userId = null)
+            )),
+            createPlay(localPlayId = 4, gameName = "Game D", location = "Cafe", date = parseDateString("2024-01-04"), players = listOf(
+                PlayTestFactory.createPlayer(id = 7, playId = 4, name = "Dave", username = "dave", userId = 103)
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observePlayersByLocation("Home").first()
+
+        // Expected order: Alice (3 plays), Bob (2 plays), Charlie (1 play)
+        assertEquals(3, result.size)
+        assertEquals("Alice", result[0].name)
+        assertEquals("alice", result[0].username)
+        assertEquals(101L, result[0].userId)
+        assertEquals("Bob", result[1].name)
+        assertEquals("bob", result[1].username)
+        assertEquals(102L, result[1].userId)
+        assertEquals("Charlie", result[2].name)
+        assertNull(result[2].username)
+        assertNull(result[2].userId)
+    }
+
+    @Test
+    fun `observePlayersByLocation returns empty list for nonexistent location`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game A", location = "Home", players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", username = "alice")
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observePlayersByLocation("Cafe").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `observePlayersByLocation returns empty list when no plays exist`() = runTest {
+        val result = repository.observePlayersByLocation("Home").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `observePlayersByLocation groups by name and username`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game A", location = "Home", players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", username = "alice1", userId = 101)
+            )),
+            createPlay(localPlayId = 2, gameName = "Game B", location = "Home", players = listOf(
+                PlayTestFactory.createPlayer(id = 2, playId = 2, name = "Alice", username = "alice2", userId = 102)
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observePlayersByLocation("Home").first()
+
+        // Should return 2 different Alices
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.name == "Alice" && it.username == "alice1" && it.userId == 101L })
+        assertTrue(result.any { it.name == "Alice" && it.username == "alice2" && it.userId == 102L })
+    }
+
+    @Test
+    fun `observePlayersByLocation filters out plays from other locations`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game A", location = "Home", players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", username = "alice", userId = 101)
+            )),
+            createPlay(localPlayId = 2, gameName = "Game B", location = "Cafe", players = listOf(
+                PlayTestFactory.createPlayer(id = 2, playId = 2, name = "Bob", username = "bob", userId = 102)
+            )),
+            createPlay(localPlayId = 3, gameName = "Game C", location = "Home", players = listOf(
+                PlayTestFactory.createPlayer(id = 3, playId = 3, name = "Charlie", username = "charlie", userId = 103)
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observePlayersByLocation("Home").first()
+
+        // Should only return Alice and Charlie (both played at Home)
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.name == "Alice" })
+        assertTrue(result.any { it.name == "Charlie" })
+        assertFalse(result.any { it.name == "Bob" })
     }
 
     // --- Helper functions for createPlay tests ---

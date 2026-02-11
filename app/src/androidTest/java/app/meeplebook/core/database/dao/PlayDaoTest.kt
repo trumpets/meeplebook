@@ -838,6 +838,88 @@ class PlayDaoTest {
         assertEquals(listOf("Home", "Library", "Cafe", "Bar"), result)
     }
 
+    // --- observePlayersByLocation tests ---
+
+    @Test
+    fun observePlayersByLocationReturnsPlayersAtLocationOrderedByPlayCount() = runTest {
+        // Insert plays with different locations and players
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B", location = "Home"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game C", location = "Home"),
+            createTestPlay(4, parseDateString("2024-01-04"), 400, "Game D", location = "Cafe")
+        )
+        playDao.insertAll(plays)
+
+        // Alice played 3 times at Home, Bob played 2 times at Home, Charlie played 1 time at Home
+        playerDao.insertAll(listOf(
+            createTestPlayer(0, 1, "Alice", username = "alice", win = true, userId = 101),
+            createTestPlayer(0, 1, "Bob", username = "bob", win = false, userId = 102),
+            createTestPlayer(0, 2, "Alice", username = "alice", win = false, userId = 101),
+            createTestPlayer(0, 2, "Bob", username = "bob", win = true, userId = 102),
+            createTestPlayer(0, 3, "Alice", username = "alice", win = true, userId = 101),
+            createTestPlayer(0, 3, "Charlie", username = null, win = false, userId = null),
+            createTestPlayer(0, 4, "Dave", username = "dave", win = true, userId = 103) // at Cafe
+        ))
+
+        val result = playDao.observePlayersByLocation("Home").first()
+
+        // Expected order: Alice (3 plays), Bob (2 plays), Charlie (1 play)
+        assertEquals(3, result.size)
+        assertEquals("Alice", result[0].name)
+        assertEquals("alice", result[0].username)
+        assertEquals(101L, result[0].userId)
+        assertEquals("Bob", result[1].name)
+        assertEquals("bob", result[1].username)
+        assertEquals(102L, result[1].userId)
+        assertEquals("Charlie", result[2].name)
+        assertNull(result[2].username)
+        assertEquals(0L, result[2].userId) // Default value from MAX when null
+    }
+
+    @Test
+    fun observePlayersByLocationReturnsEmptyListForNonexistentLocation() = runTest {
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A", location = "Home")
+        )
+        playDao.insertAll(plays)
+
+        playerDao.insert(createTestPlayer(0, 1, "Alice", username = "alice", win = true))
+
+        val result = playDao.observePlayersByLocation("Cafe").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observePlayersByLocationReturnsEmptyListWhenNoPlaysExist() = runTest {
+        val result = playDao.observePlayersByLocation("Home").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observePlayersByLocationGroupsByNameAndUsername() = runTest {
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B", location = "Home")
+        )
+        playDao.insertAll(plays)
+
+        // Same name but different username should be treated as different players
+        playerDao.insertAll(listOf(
+            createTestPlayer(0, 1, "Alice", username = "alice1", win = true, userId = 101),
+            createTestPlayer(0, 2, "Alice", username = "alice2", win = false, userId = 102)
+        ))
+
+        val result = playDao.observePlayersByLocation("Home").first()
+
+        // Should return 2 different Alices
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.name == "Alice" && it.username == "alice1" && it.userId == 101L })
+        assertTrue(result.any { it.name == "Alice" && it.username == "alice2" && it.userId == 102L })
+    }
+
     // --- Test 12: Observe plays by game name or location ---
 
     @Test
