@@ -54,7 +54,41 @@ class FakePlaysRepository : PlaysRepository {
     }
 
     override suspend fun createPlay(command: CreatePlayCommand) {
-        TODO("Not yet implemented")
+        val currentPlays = _plays.value.toMutableList()
+        
+        // Generate a new local ID
+        val newLocalId = (currentPlays.maxOfOrNull { it.playId.localId } ?: 0L) + 1L
+        
+        // Create the play from the command
+        val newPlay = Play(
+            playId = PlayId.Local(newLocalId),
+            date = command.date,
+            quantity = command.quantity,
+            length = command.length,
+            incomplete = command.incomplete,
+            location = command.location,
+            gameId = command.gameId,
+            gameName = command.gameName,
+            comments = command.comments,
+            players = command.players.mapIndexed { index, playerCommand ->
+                Player(
+                    id = newLocalId * 100 + index,
+                    playId = newLocalId,
+                    username = playerCommand.username,
+                    userId = playerCommand.userId,
+                    name = playerCommand.name,
+                    startPosition = playerCommand.startPosition,
+                    color = playerCommand.color,
+                    score = playerCommand.score,
+                    win = playerCommand.win
+                )
+            },
+            syncStatus = PlaySyncStatus.PENDING
+        )
+        
+        currentPlays.add(newPlay)
+        _plays.value = currentPlays
+        updateComputedValues(currentPlays)
     }
 
     override suspend fun clearPlays() {
