@@ -1063,18 +1063,13 @@ class PlayDaoTest {
     @Test
     fun getRemotePlaysReturnsEmptyListWhenNoRemotePlays() = runTest {
         // Insert only local plays
-        val localPlay = PlayEntity(
+        val localPlay = createRemotePlay(
             localId = 1,
             remoteId = null,
-            date = parseDateString("2024-01-15"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
+            dateString = "2024-01-15",
             gameId = 100,
             gameName = "Local Game",
-            comments = null,
-            syncStatus = PlaySyncStatus.PENDING
+            syncStatus = PlaySyncStatus.PENDING,
         )
         playDao.insert(localPlay)
 
@@ -1088,44 +1083,29 @@ class PlayDaoTest {
     fun getRemotePlaysReturnsSortedByDateDescending() = runTest {
         // Insert remote plays with different dates
         val plays = listOf(
-            PlayEntity(
+            createRemotePlay(
                 localId = 1,
                 remoteId = 1001,
-                date = parseDateString("2024-01-15"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-15",
                 gameId = 100,
                 gameName = "Game 1",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 2,
                 remoteId = 1002,
-                date = parseDateString("2024-01-20"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-20",
                 gameId = 200,
                 gameName = "Game 2",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 3,
                 remoteId = 1003,
-                date = parseDateString("2024-01-10"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-10",
                 gameId = 300,
                 gameName = "Game 3",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             )
         )
         playDao.insertAll(plays)
@@ -1146,44 +1126,29 @@ class PlayDaoTest {
     fun getByRemoteIdsReturnsMatchingPlays() = runTest {
         // Insert plays with remote IDs
         val plays = listOf(
-            PlayEntity(
+            createRemotePlay(
                 localId = 1,
                 remoteId = 1001,
-                date = parseDateString("2024-01-15"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-15",
                 gameId = 100,
                 gameName = "Game 1",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 2,
                 remoteId = 1002,
-                date = parseDateString("2024-01-16"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-16",
                 gameId = 200,
                 gameName = "Game 2",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 3,
                 remoteId = 1003,
-                date = parseDateString("2024-01-17"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-17",
                 gameId = 300,
                 gameName = "Game 3",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             )
         )
         playDao.insertAll(plays)
@@ -1200,18 +1165,13 @@ class PlayDaoTest {
     @Test
     fun getByRemoteIdsReturnsEmptyListForNoMatches() = runTest {
         // Insert plays
-        val play = PlayEntity(
+        val play = createRemotePlay(
             localId = 1,
             remoteId = 1001,
-            date = parseDateString("2024-01-15"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
+            dateString = "2024-01-15",
             gameId = 100,
             gameName = "Game 1",
-            comments = null,
-            syncStatus = PlaySyncStatus.SYNCED
+            syncStatus = PlaySyncStatus.SYNCED,
         )
         playDao.insert(play)
 
@@ -1224,18 +1184,13 @@ class PlayDaoTest {
     @Test
     fun getByRemoteIdsHandlesEmptyList() = runTest {
         // Insert plays
-        val play = PlayEntity(
+        val play = createRemotePlay(
             localId = 1,
             remoteId = 1001,
-            date = parseDateString("2024-01-15"),
-            quantity = 1,
-            length = 60,
-            incomplete = false,
-            location = null,
+            dateString = "2024-01-15",
             gameId = 100,
             gameName = "Game 1",
-            comments = null,
-            syncStatus = PlaySyncStatus.SYNCED
+            syncStatus = PlaySyncStatus.SYNCED,
         )
         playDao.insert(play)
 
@@ -1251,44 +1206,29 @@ class PlayDaoTest {
     fun deleteByRemoteIdsRemovesMatchingPlays() = runTest {
         // Insert plays with remote IDs
         val plays = listOf(
-            PlayEntity(
+            createRemotePlay(
                 localId = 1,
                 remoteId = 1001,
-                date = parseDateString("2024-01-15"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-15",
                 gameId = 100,
                 gameName = "Game 1",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 2,
                 remoteId = 1002,
-                date = parseDateString("2024-01-16"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-16",
                 gameId = 200,
                 gameName = "Game 2",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 3,
                 remoteId = 1003,
-                date = parseDateString("2024-01-17"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-17",
                 gameId = 300,
                 gameName = "Game 3",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             )
         )
         playDao.insertAll(plays)
@@ -1306,31 +1246,21 @@ class PlayDaoTest {
     fun deleteByRemoteIdsDoesNotAffectLocalOnlyPlays() = runTest {
         // Insert mix of remote and local plays
         val plays = listOf(
-            PlayEntity(
+            createRemotePlay(
                 localId = 1,
                 remoteId = 1001,
-                date = parseDateString("2024-01-15"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-15",
                 gameId = 100,
                 gameName = "Remote Game",
-                comments = null,
-                syncStatus = PlaySyncStatus.SYNCED
+                syncStatus = PlaySyncStatus.SYNCED,
             ),
-            PlayEntity(
+            createRemotePlay(
                 localId = 2,
                 remoteId = null,
-                date = parseDateString("2024-01-16"),
-                quantity = 1,
-                length = 60,
-                incomplete = false,
-                location = null,
+                dateString = "2024-01-16",
                 gameId = 200,
                 gameName = "Local Game",
-                comments = null,
-                syncStatus = PlaySyncStatus.PENDING
+                syncStatus = PlaySyncStatus.PENDING,
             )
         )
         playDao.insertAll(plays)
