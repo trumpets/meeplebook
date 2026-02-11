@@ -167,4 +167,30 @@ interface PlayDao {
     @Transaction
     @Query("SELECT * FROM plays ORDER BY date DESC LIMIT :limit")
     fun observeRecentPlaysWithPlayers(limit: Int): Flow<List<PlayWithPlayers>>
+
+    /**
+     * Searches for unique play locations that start with the given query, case-insensitively,
+     * ordered alphabetically, limited to 10 results.
+     */
+    @Query("""
+        SELECT DISTINCT location
+        FROM plays
+        WHERE location IS NOT NULL
+        AND location LIKE :query || '%'
+        ORDER BY location COLLATE NOCASE ASC
+        LIMIT 10
+    """)
+    fun observeLocations(query: String): Flow<List<String>>
+
+    /**
+     * Observes the 10 most recent unique play locations, ordered by the most recent play date.
+     */
+    @Query("""
+        SELECT DISTINCT location
+        FROM plays
+        WHERE location IS NOT NULL
+        ORDER BY date DESC
+        LIMIT 10
+    """)
+    fun observeRecentLocations(): Flow<List<String>>
 }

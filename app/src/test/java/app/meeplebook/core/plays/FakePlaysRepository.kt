@@ -9,6 +9,7 @@ import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 
 /**
@@ -109,6 +110,35 @@ class FakePlaysRepository : PlaysRepository {
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> = _recentPlays
 
     override fun observeUniqueGamesCount(): Flow<Long> = _uniqueGamesCount
+
+    override fun observeLocations(query: String): Flow<List<String>> {
+        // Return distinct, case-preserving locations that start with the provided query (case-insensitive),
+        // ordered alphabetically (case-insensitive), limited to 10 results.
+        return _plays.map { plays ->
+            plays
+                .asSequence()
+                .mapNotNull { it.location }
+                .filter { it.startsWith(query, ignoreCase = true) }
+                .distinctBy { it.lowercase() }
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+                .take(10)
+                .toList()
+        }
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        // Return unique, non-null locations ordered by most recent play date (desc), limited to 10.
+        return _plays.map { plays ->
+            plays
+                .asSequence()
+                .filter { it.location != null }
+                .sortedByDescending { it.date }
+                .mapNotNull { it.location }
+                .distinctBy { it.lowercase() }
+                .take(10)
+                .toList()
+        }
+    }
 
     /**
      * Sets the plays directly for testing purposes.

@@ -133,6 +133,35 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         return uniqueGamesCount
     }
 
+    override fun observeLocations(query: String): Flow<List<String>> {
+        // Return distinct, case-preserving locations that start with the provided query (case-insensitive),
+        // ordered alphabetically (case-insensitive), limited to 10 results.
+        return playsFlow.map { plays ->
+            plays
+                .asSequence()
+                .mapNotNull { it.location }
+                .filter { it.startsWith(query, ignoreCase = true) }
+                .distinctBy { it.lowercase() }
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+                .take(10)
+                .toList()
+        }
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        // Return unique, non-null locations ordered by most recent play date (desc), limited to 10.
+        return playsFlow.map { plays ->
+            plays
+                .asSequence()
+                .filter { it.location != null }
+                .sortedByDescending { it.date }
+                .mapNotNull { it.location }
+                .distinctBy { it.lowercase() }
+                .take(10)
+                .toList()
+        }
+    }
+
     /**
      * Sets the total plays count for testing.
      */

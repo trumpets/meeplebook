@@ -128,4 +128,12 @@ class PlaysLocalDataSourceImpl @Inject constructor(
     override fun observeUniqueGamesCount(): Flow<Long> {
         return playDao.observeUniqueGamesCount()
     }
+
+    override fun observeLocations(query: String): Flow<List<String>> {
+        return playDao.observeLocations(query)
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        return playDao.observeRecentLocations()
+    }
 }

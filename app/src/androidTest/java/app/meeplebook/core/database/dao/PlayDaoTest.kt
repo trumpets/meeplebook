@@ -791,6 +791,53 @@ class PlayDaoTest {
         assertEquals(2, result.size)
     }
 
+    @Test
+    fun observeLocationsReturnsDistinctSortedAndCaseInsensitive() = runTest {
+        // Insert plays with various locations (including nulls and duplicates)
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2", location = "homebrew"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3", location = "House"),
+            createTestPlay(4, parseDateString("2024-01-04"), 400, "Game 4", location = "Coffee Shop"),
+            createTestPlay(5, parseDateString("2024-01-05"), 500, "Game 5", location = "Hobby Shop"),
+            createTestPlay(6, parseDateString("2024-01-06"), 600, "Game 6", location = null),
+            createTestPlay(7, parseDateString("2024-01-07"), 700, "Game 7", location = "Home") // duplicate
+        )
+        playDao.insertAll(plays)
+
+        // Query for locations that start with "Ho"
+        val result = playDao.observeLocations("Ho").first()
+
+        // Should return distinct, case-preserving locations that start with "Ho",
+        // ordered alphabetically case-insensitively.
+        // Expected unique matches: "Hobby Shop", "Home", "homebrew", "House"
+        assertEquals(4, result.size)
+        assertEquals(listOf("Hobby Shop", "Home", "homebrew", "House"), result)
+    }
+
+    @Test
+    fun observeRecentLocationsReturnsMostRecentUniqueLocationsOrderedByDate() = runTest {
+        // Insert plays with repeated locations on different dates
+        val plays = listOf(
+            createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A", location = "Home"),
+            createTestPlay(2, parseDateString("2024-01-05"), 200, "Game B", location = "Cafe"),
+            createTestPlay(3, parseDateString("2024-01-03"), 300, "Game C", location = "Home"),
+            createTestPlay(4, parseDateString("2024-01-06"), 400, "Game D", location = "Library"),
+            createTestPlay(5, parseDateString("2024-01-02"), 500, "Game E", location = "Cafe"),
+            createTestPlay(6, parseDateString("2024-01-07"), 600, "Game F", location = null),
+            createTestPlay(7, parseDateString("2024-01-04"), 700, "Game G", location = "Bar"),
+            createTestPlay(8, parseDateString("2024-01-08"), 800, "Game H", location = "Home") // most recent Home
+        )
+        playDao.insertAll(plays)
+
+        // Observe recent locations (should return unique locations ordered by most recent play date)
+        val result = playDao.observeRecentLocations().first()
+
+        // Expected order by most recent date for each unique location:
+        // Home (2024-01-08), Library (2024-01-06), Cafe (2024-01-05), Bar (2024-01-04)
+        assertEquals(listOf("Home", "Library", "Cafe", "Bar"), result)
+    }
+
     // --- Test 12: Observe plays by game name or location ---
 
     @Test

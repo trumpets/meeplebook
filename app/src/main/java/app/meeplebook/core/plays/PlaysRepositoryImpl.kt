@@ -120,4 +120,12 @@ class PlaysRepositoryImpl @Inject constructor(
     override fun observeUniqueGamesCount(): Flow<Long> {
         return local.observeUniqueGamesCount()
     }
+
+    override fun observeLocations(query: String): Flow<List<String>> {
+        return local.observeLocations(query)
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        return local.observeRecentLocations()
+    }
 }

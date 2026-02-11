@@ -82,4 +82,14 @@ interface PlaysRepository {
      * Observes the count of unique games that have been played.
      */
     fun observeUniqueGamesCount(): Flow<Long>
+
+    /**
+     * Observes the locations where plays occurred matching the query.
+     */
+    fun observeLocations(query: String): Flow<List<String>>
+
+    /**
+     * Observes the most recent locations where plays occurred.
+     */
+    fun observeRecentLocations(): Flow<List<String>>
 }

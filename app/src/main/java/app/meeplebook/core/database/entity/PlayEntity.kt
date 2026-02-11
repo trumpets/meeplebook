@@ -23,7 +23,8 @@ import java.time.Instant
         Index(
             value = ["remoteId"],
             unique = true
-        )
+        ),
+        Index(value = ["location"])
     ]
 )
 data class PlayEntity(
