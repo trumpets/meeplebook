@@ -2,6 +2,7 @@ package app.meeplebook.core.plays.local
 
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 import kotlinx.coroutines.flow.Flow
@@ -104,4 +105,10 @@ interface PlaysLocalDataSource {
      * Observes the most recent locations where plays occurred.
      */
     fun observeRecentLocations(): Flow<List<String>>
+
+    /**
+     * Observes players who have played at a specific location,
+     * ordered by the number of plays at that location (desc).
+     */
+    fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>>
 }

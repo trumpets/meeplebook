@@ -8,6 +8,8 @@ import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
 import app.meeplebook.core.database.entity.toEntity
 import app.meeplebook.core.database.entity.toPlay
+import app.meeplebook.core.database.projection.toPlayerIdentity
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.plays.remote.dto.RemotePlayDto
@@ -135,5 +137,11 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
     override fun observeRecentLocations(): Flow<List<String>> {
         return playDao.observeRecentLocations()
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        return playDao.observePlayersByLocation(location).map { playerLocationProjects ->
+            playerLocationProjects.map { it.toPlayerIdentity() }
+        }
     }
 }

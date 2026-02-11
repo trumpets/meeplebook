@@ -3,6 +3,7 @@ package app.meeplebook.core.plays
 import app.meeplebook.core.database.entity.toEntity
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
@@ -127,5 +128,9 @@ class PlaysRepositoryImpl @Inject constructor(
 
     override fun observeRecentLocations(): Flow<List<String>> {
         return local.observeRecentLocations()
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        return local.observePlayersByLocation(location)
     }
 }

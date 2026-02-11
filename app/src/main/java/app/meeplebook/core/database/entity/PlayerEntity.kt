@@ -21,7 +21,10 @@ import app.meeplebook.core.plays.remote.dto.RemotePlayerDto
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("playId")]
+    indices = [
+        Index(value = ["playId"]),
+        Index(value = ["name", "username"])
+    ]
 )
 data class PlayerEntity(
     @PrimaryKey(autoGenerate = true)

@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayWithPlayers
+import app.meeplebook.core.database.projection.PlayerLocationProjection
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -193,4 +194,22 @@ interface PlayDao {
         LIMIT 10
     """)
     fun observeRecentLocations(): Flow<List<String>>
+
+    /**
+     * Observes players who have played at a specific location,
+     * ordered by the number of plays at that location (desc).
+     */
+    @Query("""
+        SELECT 
+            player.name AS name,
+            player.username AS username,
+            MAX(player.userId) AS userId
+        FROM players AS player
+        INNER JOIN plays AS play
+            ON player.playId = play.localId
+        WHERE play.location = :location
+        GROUP BY player.name, player.username
+        ORDER BY COUNT(*) DESC
+    """)
+    fun observePlayersByLocation(location: String): Flow<List<PlayerLocationProjection>>
 }

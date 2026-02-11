@@ -1,6 +1,7 @@
 package app.meeplebook.core.plays
 
 import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
@@ -92,4 +93,10 @@ interface PlaysRepository {
      * Observes the most recent locations where plays occurred.
      */
     fun observeRecentLocations(): Flow<List<String>>
+
+    /**
+     * Observes players who have played at a specific location,
+     * ordered by the number of plays at that location (desc).
+     */
+    fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>>
 }
