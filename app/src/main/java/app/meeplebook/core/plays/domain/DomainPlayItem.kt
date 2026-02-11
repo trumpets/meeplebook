@@ -30,7 +30,7 @@ data class DomainPlayItem(
     val players: List<DomainPlayerItem>,
     val location: String?,
     val comments: String?,
-    val syncStatus: PlaySyncStatus // TODO implement this and then plug
+    val syncStatus: PlaySyncStatus
 )
 
 /**
@@ -46,6 +46,6 @@ fun Play.toDomainPlayItem(): DomainPlayItem {
         players = players.map { it.toDomainPlayerItem() },
         location = location,
         comments = comments,
-        syncStatus = PlaySyncStatus.SYNCED // TODO: Placeholder, implement actual logic as needed
+        syncStatus = syncStatus
     )
 }
