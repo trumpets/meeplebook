@@ -3,8 +3,6 @@ package app.meeplebook.core.plays
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.PlayTestFactory.createRemotePlayDto
-import app.meeplebook.core.plays.domain.CreatePlayCommand
-import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.local.FakePlaysLocalDataSource
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
@@ -19,7 +17,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
-import java.time.Instant
 
 class PlaysRepositoryImplTest {
 
@@ -33,14 +30,6 @@ class PlaysRepositoryImplTest {
         date = parseDateString("2024-01-01"),
         location = "Home",
         gameId = 123
-    )
-
-    private val testCreatePlayCommand = createPlayCommand(
-        date = parseDateString("2024-01-01"),
-        location = "Home",
-        gameId = 123,
-        gameName = "Test Game",
-        players = emptyList()
     )
 
     @Before
@@ -419,26 +408,4 @@ class PlaysRepositoryImplTest {
         val result2 = repository.observeUniqueGamesCount().first()
         assertEquals(5L, result2)
     }
-
-    fun createPlayCommand(
-        date: Instant = Instant.parse("2024-01-15T20:00:00Z"),
-        location: String = "Home",
-        gameId: Long = 123,
-        gameName: String = "Test Game",
-        quantity: Int = 1,
-        length: Int = 60,
-        incomplete: Boolean = false,
-        comments: String? = null,
-        players: List<CreatePlayerCommand> = emptyList()
-    ) = CreatePlayCommand(
-        date = date,
-        location = location,
-        gameId = gameId,
-        gameName = gameName,
-        quantity = quantity,
-        length = length,
-        incomplete = incomplete,
-        comments = comments,
-        players = players
-    )
 }
