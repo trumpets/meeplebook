@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.core.ui.uiTextRes
@@ -271,7 +272,7 @@ class PlaysScreenRootTest {
                     ),
                     onEvent = { event ->
                         if (event is PlaysEvent.PlayClicked) {
-                            capturedPlayId = event.playId
+                            capturedPlayId = event.playId.localId
                         }
                     }
                 )
@@ -433,7 +434,7 @@ class PlaysScreenRootTest {
         syncStatus: PlaySyncStatus = PlaySyncStatus.SYNCED,
         location: String? = null
     ) = PlayItem(
-        id = id,
+        playId = PlayId.Local(id),
         gameName = gameName,
         thumbnailUrl = null,
         dateUiText = uiText("15/01/2026"),

@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -195,18 +196,18 @@ class PlayDaoTest {
         assertEquals(3, result.size)
         
         // Game A should remain unchanged
-        val gameA = result.find { it.id == 1L }
+        val gameA = result.find { it.localId == 1L }
         assertNotNull(gameA)
         assertEquals("Game A", gameA?.gameName)
 
         // Game B should be updated
-        val gameB = result.find { it.id == 2L }
+        val gameB = result.find { it.localId == 2L }
         assertNotNull(gameB)
         assertEquals("Game B Updated", gameB?.gameName)
         assertEquals(parseDateString("2024-01-10"), gameB?.date)
 
         // Game C should be new
-        val gameC = result.find { it.id == 3L }
+        val gameC = result.find { it.localId == 3L }
         assertNotNull(gameC)
         assertEquals("Game C", gameC?.gameName)
     }
@@ -227,7 +228,7 @@ class PlayDaoTest {
         val result = playDao.getPlayById(2)
 
         assertNotNull(result)
-        assertEquals(2L, result?.id)
+        assertEquals(2L, result?.localId)
         assertEquals("Game 2", result?.gameName)
     }
 
@@ -297,7 +298,7 @@ class PlayDaoTest {
         val result = playDao.getPlayWithPlayersById(1)
 
         assertNotNull(result)
-        assertEquals(1L, result?.play?.id)
+        assertEquals(1L, result?.play?.localId)
         assertEquals(3, result?.players?.size)
         assertEquals("Alice", result?.players?.get(0)?.name)
     }
@@ -329,11 +330,11 @@ class PlayDaoTest {
 
         assertEquals(2, result.size)
         // First play (most recent date)
-        assertEquals(2, result[0].play.id)
+        assertEquals(2, result[0].play.localId)
         assertEquals(1, result[0].players.size)
         assertEquals("Charlie", result[0].players[0].name)
         // Second play
-        assertEquals(1, result[1].play.id)
+        assertEquals(1, result[1].play.localId)
         assertEquals(2, result[1].players.size)
     }
 
@@ -438,7 +439,7 @@ class PlayDaoTest {
         // Observe play with players
         val result = playDao.observePlayWithPlayersById(1).first()
 
-        assertEquals(1, result.play.id)
+        assertEquals(1, result.play.localId)
         assertEquals(2, result.players.size)
     }
 
@@ -727,9 +728,9 @@ class PlayDaoTest {
         // Should return 3 most recent plays
         assertEquals(3, result.size)
         // Verify descending order (most recent first)
-        assertEquals(5L, result[0].play.id)
-        assertEquals(4L, result[1].play.id)
-        assertEquals(3L, result[2].play.id)
+        assertEquals(5L, result[0].play.localId)
+        assertEquals(4L, result[1].play.localId)
+        assertEquals(3L, result[2].play.localId)
     }
 
     @Test
@@ -756,12 +757,12 @@ class PlayDaoTest {
 
         assertEquals(2, result.size)
         // Most recent play (id=2) should have 1 player
-        assertEquals(2L, result[0].play.id)
+        assertEquals(2L, result[0].play.localId)
         assertEquals(1, result[0].players.size)
         assertEquals("Charlie", result[0].players[0].name)
         
         // Second play (id=1) should have 2 players
-        assertEquals(1L, result[1].play.id)
+        assertEquals(1L, result[1].play.localId)
         assertEquals(2, result[1].players.size)
     }
 
@@ -1010,7 +1011,8 @@ class PlayDaoTest {
         comments: String? = null
     ): PlayEntity {
         return PlayEntity(
-            id = id,
+            localId = id,
+            remoteId = id * 100,
             date = date,
             quantity = quantity,
             length = length,
@@ -1018,7 +1020,8 @@ class PlayDaoTest {
             location = location,
             gameId = gameId,
             gameName = gameName,
-            comments = comments
+            comments = comments,
+            syncStatus = PlaySyncStatus.SYNCED
         )
     }
 

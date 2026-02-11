@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -407,7 +408,8 @@ class PlayerDaoTest {
         gameName: String
     ): PlayEntity {
         return PlayEntity(
-            id = id,
+            localId = id,
+            remoteId = id * 100, // Just a convention for testing
             date = date,
             quantity = 1,
             length = 60,
@@ -415,7 +417,8 @@ class PlayerDaoTest {
             location = null,
             gameId = gameId,
             gameName = gameName,
-            comments = null
+            comments = null,
+            syncStatus = PlaySyncStatus.SYNCED
         )
     }
 
