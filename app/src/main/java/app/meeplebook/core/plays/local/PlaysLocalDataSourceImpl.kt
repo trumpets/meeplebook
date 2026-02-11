@@ -70,10 +70,11 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
             // Retrieve actual localIds
             val updatedPlays = playDao.getByRemoteIds(remoteIds)
+            val remoteIdToLocalId = updatedPlays.associate { it.remoteId!! to it.localId }
 
             // Prepare PlayerEntities
             val playerEntities = remotePlays.flatMap { remotePlay ->
-                val localId = updatedPlays.first { it.remoteId == remotePlay.remoteId }.localId
+                val localId = remoteIdToLocalId[remotePlay.remoteId]!!
                 remotePlay.players.map { it.toEntity(playId = localId) }
             }
 
