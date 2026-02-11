@@ -153,7 +153,7 @@ class FakePlaysRepository : PlaysRepository {
                     val (name, username) = key
                     val playCount = players.size
                     val userId = players.mapNotNull { it.userId }.maxOrNull()
-                    Triple(PlayerIdentity(name, username, userId), playCount, name)
+                    Pair(PlayerIdentity(name, username, userId), playCount)
                 }
                 .sortedByDescending { it.second }
                 .map { it.first }
