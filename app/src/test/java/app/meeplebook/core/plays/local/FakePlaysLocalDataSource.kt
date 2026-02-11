@@ -140,8 +140,8 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
             plays
                 .asSequence()
                 .mapNotNull { it.location }
+                .distinct()
                 .filter { it.startsWith(query, ignoreCase = true) }
-                .distinctBy { it.lowercase() }
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
                 .take(10)
                 .toList()
@@ -156,7 +156,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
                 .filter { it.location != null }
                 .sortedByDescending { it.date }
                 .mapNotNull { it.location }
-                .distinctBy { it.lowercase() }
+                .distinct()
                 .take(10)
                 .toList()
         }

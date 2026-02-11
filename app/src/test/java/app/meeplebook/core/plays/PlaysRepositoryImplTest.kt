@@ -654,9 +654,10 @@ class PlaysRepositoryImplTest {
 
         val result = repository.observeLocations("Ho").first()
 
-        // Should deduplicate by case-insensitive comparison but preserve first occurrence
-        assertEquals(1, result.size)
+        assertEquals(3, result.size)
         assertEquals("Home", result[0])
+        assertEquals("HOME", result[1])
+        assertEquals("home", result[2])
     }
 
     @Test
@@ -755,9 +756,10 @@ class PlaysRepositoryImplTest {
 
         val result = repository.observeRecentLocations().first()
 
-        // Should deduplicate by case-insensitive comparison and return the most recent occurrence
-        assertEquals(1, result.size)
+        assertEquals(3, result.size)
         assertEquals("home", result[0])
+        assertEquals("HOME", result[1])
+        assertEquals("Home", result[2])
     }
 
     @Test
