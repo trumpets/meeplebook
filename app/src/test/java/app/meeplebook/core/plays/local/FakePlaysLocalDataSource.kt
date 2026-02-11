@@ -47,7 +47,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
     override suspend fun saveRemotePlays(remotePlays: List<RemotePlayDto>) {
         // Merge plays - replace existing by ID, add new ones
         val existingPlays = playsFlow.value.toMutableList()
-        var localIdCounter = existingPlays.size.toLong()
+        var localIdCounter = existingPlays.size + 1L
 
         remotePlays.forEach { newPlay ->
             val index = existingPlays.indexOfFirst { (it.playId as? PlayId.Remote)?.remoteId == newPlay.remoteId }
