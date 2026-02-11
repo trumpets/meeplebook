@@ -166,9 +166,9 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
     }
 
     /**
-     * Helper method for tests to save plays directly.
+     * Sets plays directly for testing.
      */
-    fun savePlays(plays: List<Play>) {
+    fun setPlays(plays: List<Play>) {
         playsFlow.value = plays
     }
 
