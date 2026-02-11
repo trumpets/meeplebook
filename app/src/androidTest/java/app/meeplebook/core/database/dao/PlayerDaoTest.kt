@@ -438,8 +438,9 @@ class PlayerDaoTest {
         // Verify play 2 still has players
         val play2Players = playerDao.getPlayersForPlay(2)
         assertEquals(2, play2Players.size)
-        assertEquals("Charlie", play2Players[0].name)
-        assertEquals("Dave", play2Players[1].name)
+        val sortedPlayers = play2Players.sortedBy { it.name }
+        assertEquals("Charlie", sortedPlayers[0].name)
+        assertEquals("Dave", sortedPlayers[1].name)
     }
 
     @Test
