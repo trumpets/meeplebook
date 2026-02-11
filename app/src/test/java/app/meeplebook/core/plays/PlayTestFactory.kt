@@ -24,7 +24,7 @@ object PlayTestFactory {
      * @param length Play duration in minutes (defaults to 60)
      * @param incomplete Whether the play was incomplete (defaults to false)
      * @param location Play location (defaults to null)
-     * @param gameId The game ID (defaults to id * 100)
+     * @param gameId The game ID (defaults to localPlayId * 100)
      * @param comments Play comments (defaults to null)
      * @param players List of players (defaults to a single test player)
      * @return A configured Play object
