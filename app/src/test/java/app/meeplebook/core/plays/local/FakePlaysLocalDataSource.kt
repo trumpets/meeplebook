@@ -50,7 +50,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         var localIdCounter = existingPlays.size.toLong()
 
         remotePlays.forEach { newPlay ->
-            val index = existingPlays.indexOfFirst { (it.playId as PlayId.Remote).remoteId == newPlay.remoteId }
+            val index = existingPlays.indexOfFirst { (it.playId as? PlayId.Remote)?.remoteId == newPlay.remoteId }
             if (index >= 0) {
                 existingPlays[index] = newPlay.toPlay(existingPlays[index].playId.localId)
             } else {
