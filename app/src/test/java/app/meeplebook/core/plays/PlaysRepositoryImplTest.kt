@@ -15,6 +15,7 @@ import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -493,7 +494,7 @@ class PlaysRepositoryImplTest {
         assertEquals(null, players[1].username)
         assertEquals(null, players[1].userId)
         assertEquals(85, players[1].score)
-        assertEquals(false, players[1].win)
+        assertFalse(players[1].win)
         assertEquals("2", players[1].startPosition)
         assertEquals("Blue", players[1].color)
     }
