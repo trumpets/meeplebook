@@ -547,7 +547,7 @@ class PlaysRepositoryImplTest {
         assertEquals("Game Night", play.location)
         assertEquals(1, play.quantity)
         assertEquals(90, play.length)
-        assertEquals(false, play.incomplete)
+        assertFalse(play.incomplete)
         assertEquals("Great game!", play.comments)
     }
 
