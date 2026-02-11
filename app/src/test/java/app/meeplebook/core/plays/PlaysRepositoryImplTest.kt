@@ -3,6 +3,8 @@ package app.meeplebook.core.plays
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.PlayTestFactory.createRemotePlayDto
+import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.local.FakePlaysLocalDataSource
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
@@ -13,10 +15,12 @@ import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.time.Instant
 
 class PlaysRepositoryImplTest {
 
@@ -407,5 +411,245 @@ class PlaysRepositoryImplTest {
         local.setUniqueGamesCount(5L)
         val result2 = repository.observeUniqueGamesCount().first()
         assertEquals(5L, result2)
+    }
+
+    // --- createPlay tests ---
+
+    @Test
+    fun `createPlay inserts play with remoteId null`() = runTest {
+        val command = createPlayCommand(
+            gameName = "Catan",
+            gameId = 123L
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.getPlays()
+        assertEquals(1, plays.size)
+        val play = plays[0]
+        assertTrue(play.playId is PlayId.Local)
+        assertEquals("Catan", play.gameName)
+        assertEquals(123L, play.gameId)
+    }
+
+    @Test
+    fun `createPlay inserts play with syncStatus PENDING`() = runTest {
+        val command = createPlayCommand(
+            gameName = "Azul",
+            gameId = 456L
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.getPlays()
+        assertEquals(1, plays.size)
+        assertEquals(PlaySyncStatus.PENDING, plays[0].syncStatus)
+    }
+
+    @Test
+    fun `createPlay persists players with correct fields`() = runTest {
+        val command = createPlayCommand(
+            gameName = "Ticket to Ride",
+            gameId = 789L,
+            players = listOf(
+                createPlayerCommand(
+                    name = "Alice",
+                    username = "alice123",
+                    userId = 111L,
+                    score = 100,
+                    win = true,
+                    startPosition = "1",
+                    color = "Red"
+                ),
+                createPlayerCommand(
+                    name = "Bob",
+                    username = null,
+                    userId = null,
+                    score = 85,
+                    win = false,
+                    startPosition = "2",
+                    color = "Blue"
+                )
+            )
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.getPlays()
+        assertEquals(1, plays.size)
+        val players = plays[0].players
+        assertEquals(2, players.size)
+        
+        // Verify first player
+        assertEquals("Alice", players[0].name)
+        assertEquals("alice123", players[0].username)
+        assertEquals(111L, players[0].userId)
+        assertEquals(100, players[0].score)
+        assertTrue(players[0].win)
+        assertEquals("1", players[0].startPosition)
+        assertEquals("Red", players[0].color)
+        
+        // Verify second player
+        assertEquals("Bob", players[1].name)
+        assertEquals(null, players[1].username)
+        assertEquals(null, players[1].userId)
+        assertEquals(85, players[1].score)
+        assertFalse(players[1].win)
+        assertEquals("2", players[1].startPosition)
+        assertEquals("Blue", players[1].color)
+    }
+
+    @Test
+    fun `createPlay links players to correct play`() = runTest {
+        val command = createPlayCommand(
+            gameName = "7 Wonders",
+            gameId = 999L,
+            players = listOf(
+                createPlayerCommand(name = "Charlie"),
+                createPlayerCommand(name = "Dana")
+            )
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.getPlays()
+        assertEquals(1, plays.size)
+        val playId = plays[0].playId.localId
+        
+        // Verify both players are linked to the same play
+        plays[0].players.forEach { player ->
+            assertEquals(playId, player.playId)
+        }
+    }
+
+    @Test
+    fun `createPlay makes play observable via getPlays`() = runTest {
+        val command = createPlayCommand(
+            gameName = "Wingspan",
+            gameId = 555L,
+            date = parseDateString("2024-06-15"),
+            location = "Game Night",
+            quantity = 1,
+            length = 90,
+            incomplete = false,
+            comments = "Great game!"
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.getPlays()
+        assertEquals(1, plays.size)
+        
+        val play = plays[0]
+        assertEquals("Wingspan", play.gameName)
+        assertEquals(555L, play.gameId)
+        assertEquals(parseDateString("2024-06-15"), play.date)
+        assertEquals("Game Night", play.location)
+        assertEquals(1, play.quantity)
+        assertEquals(90, play.length)
+        assertFalse(play.incomplete)
+        assertEquals("Great game!", play.comments)
+    }
+
+    @Test
+    fun `createPlay makes play observable via observePlays`() = runTest {
+        val command = createPlayCommand(
+            gameName = "Pandemic",
+            gameId = 777L
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.observePlays().first()
+        assertEquals(1, plays.size)
+        assertEquals("Pandemic", plays[0].gameName)
+        assertEquals(777L, plays[0].gameId)
+    }
+
+    @Test
+    fun `createPlay with all optional fields null stores correctly`() = runTest {
+        val command = createPlayCommand(
+            gameName = "Splendor",
+            gameId = 321L,
+            location = null,
+            length = null,
+            comments = null,
+            players = emptyList()
+        )
+
+        repository.createPlay(command)
+
+        val plays = repository.getPlays()
+        assertEquals(1, plays.size)
+        
+        val play = plays[0]
+        assertEquals("Splendor", play.gameName)
+        assertEquals(null, play.location)
+        assertEquals(null, play.length)
+        assertEquals(null, play.comments)
+        assertTrue(play.players.isEmpty())
+    }
+
+    @Test
+    fun `createPlay multiple times creates multiple plays`() = runTest {
+        val command1 = createPlayCommand(gameName = "Game 1", gameId = 100L)
+        val command2 = createPlayCommand(gameName = "Game 2", gameId = 200L)
+        val command3 = createPlayCommand(gameName = "Game 3", gameId = 300L)
+
+        repository.createPlay(command1)
+        repository.createPlay(command2)
+        repository.createPlay(command3)
+
+        val plays = repository.getPlays()
+        assertEquals(3, plays.size)
+        assertEquals("Game 1", plays[0].gameName)
+        assertEquals("Game 2", plays[1].gameName)
+        assertEquals("Game 3", plays[2].gameName)
+    }
+
+    // --- Helper functions for createPlay tests ---
+
+    private fun createPlayCommand(
+        gameName: String,
+        gameId: Long,
+        date: Instant = parseDateString("2024-01-01"),
+        quantity: Int = 1,
+        length: Int? = null,
+        incomplete: Boolean = false,
+        location: String? = null,
+        comments: String? = null,
+        players: List<CreatePlayerCommand> = emptyList()
+    ): CreatePlayCommand {
+        return CreatePlayCommand(
+            date = date,
+            quantity = quantity,
+            length = length,
+            incomplete = incomplete,
+            location = location,
+            gameId = gameId,
+            gameName = gameName,
+            comments = comments,
+            players = players
+        )
+    }
+
+    private fun createPlayerCommand(
+        name: String,
+        username: String? = null,
+        userId: Long? = null,
+        startPosition: String? = null,
+        color: String? = null,
+        score: Int? = null,
+        win: Boolean = false
+    ): CreatePlayerCommand {
+        return CreatePlayerCommand(
+            username = username,
+            userId = userId,
+            name = name,
+            startPosition = startPosition,
+            color = color,
+            score = score,
+            win = win
+        )
     }
 }
