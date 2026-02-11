@@ -185,3 +185,20 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing r
   - New plays created via createPlay() should have syncStatus=PENDING (not SYNCED)
   - When implementing repository interface methods in fakes, match the behavior of the real implementation (PlaysRepositoryImpl.createPlay)
 ---
+## 2026-02-11T10:47:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing review comment #3883642136)
+- Fixed `FakePlaysLocalDataSource` local ID generation to use `maxOfOrNull` instead of `size + 1`
+- Updated `PlayTestFactory.kt` KDoc to reference `localPlayId` instead of incorrect `id` parameter
+- Changes:
+    - `FakePlaysLocalDataSource.saveRemotePlays()`: Changed from `existingPlays.size + 1L` to `(existingPlays.maxOfOrNull { it.playId.localId } ?: 0L) + 1L`
+    - `FakePlaysLocalDataSource.insertPlay()`: Changed from `existingPlays.size + 1L` to `(existingPlays.maxOfOrNull { it.playId.localId } ?: 0L) + 1L`
+    - `PlayTestFactory.createPlay()`: Updated KDoc from "defaults to id * 100" to "defaults to localPlayId * 100"
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/local/FakePlaysLocalDataSource.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/PlayTestFactory.kt`
+- **Learnings for future iterations:**
+  - Use `maxOfOrNull { it.playId.localId } ?: 0L` for local ID generation in test fakes to handle non-contiguous IDs from `setPlays()`
+  - This pattern is consistent with `FakePlaysRepository.createPlay()` and prevents duplicate IDs when tests seed arbitrary test data
+  - Always keep KDoc in sync with actual parameter names and implementation behavior
+  - When `setPlays()` is called with arbitrary/non-contiguous localIds, `size + 1` can create duplicate IDs
+---
