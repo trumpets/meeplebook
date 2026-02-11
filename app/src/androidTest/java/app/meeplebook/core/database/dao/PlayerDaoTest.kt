@@ -399,6 +399,115 @@ class PlayerDaoTest {
         assertTrue(result.isEmpty())
     }
 
+    // --- Test 8: deletePlayersForPlays ---
+
+    @Test
+    fun deletePlayersForPlaysRemovesPlayersForMultiplePlays() = runTest {
+        // Insert multiple plays
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+                createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3")
+            )
+        )
+
+        // Insert players for each play
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 1, "Bob", null, false),
+                createTestPlayer(0, 2, "Charlie", null, true),
+                createTestPlayer(0, 2, "Dave", null, false),
+                createTestPlayer(0, 3, "Eve", null, true)
+            )
+        )
+
+        // Verify initial state
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+        assertEquals(2, playerDao.getPlayersForPlay(2).size)
+        assertEquals(1, playerDao.getPlayersForPlay(3).size)
+
+        // Delete players for plays 1 and 3
+        playerDao.deletePlayersForPlays(listOf(1, 3))
+
+        // Verify plays 1 and 3 have no players
+        assertTrue(playerDao.getPlayersForPlay(1).isEmpty())
+        assertTrue(playerDao.getPlayersForPlay(3).isEmpty())
+
+        // Verify play 2 still has players
+        val play2Players = playerDao.getPlayersForPlay(2)
+        assertEquals(2, play2Players.size)
+        assertEquals("Charlie", play2Players[0].name)
+        assertEquals("Dave", play2Players[1].name)
+    }
+
+    @Test
+    fun deletePlayersForPlaysHandlesEmptyList() = runTest {
+        // Insert play and players
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 1, "Bob", null, false)
+            )
+        )
+
+        // Verify initial state
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+
+        // Delete with empty list - should not affect any players
+        playerDao.deletePlayersForPlays(emptyList())
+
+        // Verify players still exist
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+    }
+
+    @Test
+    fun deletePlayersForPlaysHandlesNonExistentPlayIds() = runTest {
+        // Insert play and players
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 1, "Bob", null, false)
+            )
+        )
+
+        // Verify initial state
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+
+        // Delete players for non-existent plays
+        playerDao.deletePlayersForPlays(listOf(999, 888))
+
+        // Verify existing players are unaffected
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+    }
+
+    @Test
+    fun deletePlayersForPlaysSinglePlayIdWorksCorrectly() = runTest {
+        // Insert multiple plays with players
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
+            )
+        )
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 2, "Bob", null, true)
+            )
+        )
+
+        // Delete players for single play
+        playerDao.deletePlayersForPlays(listOf(1))
+
+        // Verify only play 1's players are deleted
+        assertTrue(playerDao.getPlayersForPlay(1).isEmpty())
+        assertEquals(1, playerDao.getPlayersForPlay(2).size)
+    }
+
     // --- Helper functions ---
 
     private fun createTestPlay(
