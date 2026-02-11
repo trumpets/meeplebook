@@ -165,6 +165,13 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         uniqueGamesCount.value = count
     }
 
+    /**
+     * Sets plays directly for testing.
+     */
+    fun setPlays(plays: List<Play>) {
+        playsFlow.value = plays
+    }
+
     fun RemotePlayDto.toPlay(localId: Long): Play {
         return Play(
             playId = PlayId.Remote(localId, remoteId),

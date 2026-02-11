@@ -2,10 +2,13 @@ package app.meeplebook.core.plays
 
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
+import app.meeplebook.core.plays.PlayTestFactory.createRemotePlayDto
 import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.local.FakePlaysLocalDataSource
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.plays.remote.FakePlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.util.parseDateString
@@ -23,6 +26,14 @@ class PlaysRepositoryImplTest {
     private lateinit var local: FakePlaysLocalDataSource
     private lateinit var remote: FakePlaysRemoteDataSource
     private lateinit var repository: PlaysRepositoryImpl
+
+    private val testPlay = createPlay(
+        localPlayId = 1,
+        gameName = "Test Game",
+        date = parseDateString("2024-01-01"),
+        location = "Home",
+        gameId = 123
+    )
 
     private val testCreatePlayCommand = createPlayCommand(
         date = parseDateString("2024-01-01"),
@@ -42,9 +53,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `observePlays returns flow from local data source`() = runTest {
         val plays = listOf(testPlay)
-        local.insertPlay(plays)
-
-        repository.createPlay(testCreatePlayCommand)
+        local.setPlays(plays)
 
         val result = repository.observePlays().first()
 
@@ -54,7 +63,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `observePlays with null query returns all plays`() = runTest {
         val plays = listOf(testPlay)
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays(null).first()
 
@@ -64,7 +73,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `observePlays with empty query returns all plays`() = runTest {
         val plays = listOf(testPlay)
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("").first()
 
@@ -74,7 +83,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `observePlays with blank query returns all plays`() = runTest {
         val plays = listOf(testPlay)
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("   ").first()
 
@@ -88,7 +97,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 2, gameName = "Azul", location = "Home"),
             createPlay(localPlayId = 3, gameName = "Carcassonne", location = "Home")
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("Catan").first()
 
@@ -103,7 +112,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 2, gameName = "Azul", location = "Game Store"),
             createPlay(localPlayId = 3, gameName = "Carcassonne", location = "Friend's House")
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("Store").first()
 
@@ -117,7 +126,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 1, gameName = "Catan", location = "Home"),
             createPlay(localPlayId = 2, gameName = "Azul", location = "Home")
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("catan").first()
 
@@ -131,7 +140,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 1, gameName = "Catan", location = "Home"),
             createPlay(localPlayId = 2, gameName = "Azul", location = "Home")
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("  Catan  ").first()
 
@@ -144,7 +153,7 @@ class PlaysRepositoryImplTest {
         val plays = listOf(
             createPlay(localPlayId = 1, gameName = "Catan", location = "Home")
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlays("Monopoly").first()
 
@@ -154,7 +163,7 @@ class PlaysRepositoryImplTest {
     @Test
     fun `getPlays returns data from local data source`() = runTest {
         val plays = listOf(testPlay)
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.getPlays()
 
@@ -163,27 +172,44 @@ class PlaysRepositoryImplTest {
 
     @Test
     fun `syncPlays success fetches from remote and saves to local`() = runTest {
-        val plays = listOf(testPlay)
-        remote.playsToReturn = plays
+        val remotePlays = listOf(
+            createRemotePlayDto(
+                remoteId = 1,
+                gameName = "Test Game",
+                date = parseDateString("2024-01-01"),
+                location = "Home",
+                gameId = 123
+            )
+        )
+        remote.playsToReturn = remotePlays
 
         val result = repository.syncPlays("user123")
 
         assertTrue(result is AppResult.Success)
-        assertEquals(plays, (result as AppResult.Success).data)
         assertTrue(remote.fetchPlaysCalled)
         assertEquals("user123", remote.lastFetchUsername)
         assertEquals(1, remote.lastFetchPage)
-        assertEquals(plays, local.getPlays())
+        
+        val savedPlays = local.getPlays()
+        assertEquals(1, savedPlays.size)
+        assertEquals("Test Game", savedPlays[0].gameName)
+        assertEquals(123L, savedPlays[0].gameId)
+        
+        // Verify PlayId.Remote structure and sync status
+        val playId = savedPlays[0].playId
+        assertTrue(playId is PlayId.Remote)
+        assertEquals(1L, (playId as PlayId.Remote).remoteId)
+        assertEquals(PlaySyncStatus.SYNCED, savedPlays[0].syncStatus)
     }
 
     @Test
     fun `syncPlays fetches multiple pages`() = runTest {
         // Simulate multi-page response
         val page1Plays = List(100) { i ->
-            createPlay(localPlayId = i + 1L, gameName = "Game ${i + 1}")
+            createRemotePlayDto(remoteId = i + 1L, gameName = "Game ${i + 1}")
         }
         val page2Plays = List(50) { i ->
-            createPlay(localPlayId = i + 101L, gameName = "Game ${i + 101}")
+            createRemotePlayDto(remoteId = i + 101L, gameName = "Game ${i + 101}")
         }
 
         // Configure fake to return different results per page
@@ -249,7 +275,7 @@ class PlaysRepositoryImplTest {
 
     @Test
     fun `clearPlays calls local data source`() = runTest {
-        local.savePlays(listOf(testPlay))
+        local.setPlays(listOf(testPlay))
 
         repository.clearPlays()
 
@@ -264,7 +290,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 1, gameName = "Azul", gameId = 123),
             createPlay(localPlayId = 2, gameName = "Azul", gameId = 123)
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.observePlaysForGame(123).first()
 
@@ -286,7 +312,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 1, gameName = "Azul", gameId = 123),
             createPlay(localPlayId = 2, gameName = "Azul", gameId = 123)
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
 
         val result = repository.getPlaysForGame(123)
 
@@ -350,7 +376,7 @@ class PlaysRepositoryImplTest {
             createPlay(localPlayId = 2, gameName = "Azul"),
             createPlay(localPlayId = 3, gameName = "Carcassonne"),
         )
-        local.savePlays(plays)
+        local.setPlays(plays)
         local.setRecentPlays(3, plays)
 
         val result = repository.observeRecentPlays(3).first()
