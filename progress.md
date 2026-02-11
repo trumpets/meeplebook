@@ -180,7 +180,7 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing r
   - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt` (+38 lines, removed TODO)
 - **Learnings for future iterations:**
   - Fake repository methods that modify state must: update backing StateFlow, call updateComputedValues() to keep derived flows consistent
-  - Use `maxOfOrNull { it.playId.localId } ?: 0L + 1L` for test ID generation instead of size+1 to handle arbitrary setPlays() test data
+  - Use `(maxOfOrNull { it.playId.localId } ?: 0L) + 1L` for test ID generation instead of size+1 to handle arbitrary setPlays() test data
   - Player IDs follow pattern `playId * 100 + index` (matches FakePlaysLocalDataSource pattern, acceptable for tests)
   - New plays created via createPlay() should have syncStatus=PENDING (not SYNCED)
   - When implementing repository interface methods in fakes, match the behavior of the real implementation (PlaysRepositoryImpl.createPlay)
