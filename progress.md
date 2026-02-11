@@ -168,3 +168,20 @@ PR Link: https://github.com/trumpets/meeplebook/pull/86 (PlaysScreen implementat
   - UI tests should cover: all states (Loading, Empty variants, Error, Content), component visibility, user interactions (search, card taps), and content display
   - Use testTag for key UI elements: playsScreen, playsLoadingIndicator, playsStatsCard, playsSearchInput, playsEmptyState, playsErrorState, playsListContent, playCard_{id}, monthHeader_{yearMonth}
 ---
+## 2026-02-11T10:20:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing review comment #2792466918)
+- Implemented `FakePlaysRepository.createPlay()` method to replace TODO placeholder
+- Implementation follows same pattern as `FakePlaysLocalDataSource.insertPlay()`
+- Uses `maxOfOrNull` for ID generation (more robust than size+1, handles arbitrary test data from setPlays)
+- Maps CreatePlayCommand to Play with PlayId.Local, syncStatus=PENDING, and proper player mapping
+- Updates internal _plays state and calls updateComputedValues() to maintain derived flow consistency
+- Added missing imports: PlayId, PlaySyncStatus, Player
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt` (+38 lines, removed TODO)
+- **Learnings for future iterations:**
+  - Fake repository methods that modify state must: update backing StateFlow, call updateComputedValues() to keep derived flows consistent
+  - Use `maxOfOrNull { it.playId.localId } ?: 0L + 1L` for test ID generation instead of size+1 to handle arbitrary setPlays() test data
+  - Player IDs follow pattern `playId * 100 + index` (matches FakePlaysLocalDataSource pattern, acceptable for tests)
+  - New plays created via createPlay() should have syncStatus=PENDING (not SYNCED)
+  - When implementing repository interface methods in fakes, match the behavior of the real implementation (PlaysRepositoryImpl.createPlay)
+---
