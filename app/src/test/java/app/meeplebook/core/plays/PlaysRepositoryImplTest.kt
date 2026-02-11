@@ -607,6 +607,213 @@ class PlaysRepositoryImplTest {
         assertEquals("Game 3", plays[2].gameName)
     }
 
+    // --- observeLocations tests ---
+
+    @Test
+    fun `observeLocations returns locations matching query`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home"),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = "homebrew"),
+            createPlay(localPlayId = 3, gameName = "Game 3", location = "House"),
+            createPlay(localPlayId = 4, gameName = "Game 4", location = "Coffee Shop"),
+            createPlay(localPlayId = 5, gameName = "Game 5", location = "Hobby Shop")
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("Ho").first()
+
+        // Should return distinct locations that start with "Ho", sorted alphabetically (case-insensitive)
+        assertEquals(4, result.size)
+        assertEquals(listOf("Hobby Shop", "Home", "homebrew", "House"), result)
+    }
+
+    @Test
+    fun `observeLocations is case-insensitive`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home"),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = "homebrew")
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("ho").first()
+
+        assertEquals(2, result.size)
+        assertTrue(result.contains("Home"))
+        assertTrue(result.contains("homebrew"))
+    }
+
+    @Test
+    fun `observeLocations returns distinct case-preserving results`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home"),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = "Home"),
+            createPlay(localPlayId = 3, gameName = "Game 3", location = "HOME"),
+            createPlay(localPlayId = 4, gameName = "Game 4", location = "home")
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("Ho").first()
+
+        assertEquals(3, result.size)
+        assertEquals("Home", result[0])
+        assertEquals("HOME", result[1])
+        assertEquals("home", result[2])
+    }
+
+    @Test
+    fun `observeLocations sorts results alphabetically case-insensitively`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "zebra"),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = "Apple"),
+            createPlay(localPlayId = 3, gameName = "Game 3", location = "banana"),
+            createPlay(localPlayId = 4, gameName = "Game 4", location = "Zulu")
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("").first()
+
+        // Should be sorted: Apple, banana, zebra, Zulu
+        assertEquals(listOf("Apple", "banana", "zebra", "Zulu"), result)
+    }
+
+    @Test
+    fun `observeLocations limits results to 10`() = runTest {
+        val plays = List(15) { i ->
+            createPlay(localPlayId = i.toLong() + 1, gameName = "Game ${i + 1}", location = "Location ${i + 1}")
+        }
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("Lo").first()
+
+        assertEquals(10, result.size)
+    }
+
+    @Test
+    fun `observeLocations returns empty list for query with no matches`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home"),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = "Office")
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("Zoo").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `observeLocations filters out null locations`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home"),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = null),
+            createPlay(localPlayId = 3, gameName = "Game 3", location = "House")
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeLocations("H").first()
+
+        assertEquals(2, result.size)
+        assertEquals(listOf("Home", "House"), result)
+    }
+
+    @Test
+    fun `observeLocations returns empty list when no plays exist`() = runTest {
+        val result = repository.observeLocations("Any").first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    // --- observeRecentLocations tests ---
+
+    @Test
+    fun `observeRecentLocations returns locations ordered by most recent play date`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game A", location = "Home", date = parseDateString("2024-01-01")),
+            createPlay(localPlayId = 2, gameName = "Game B", location = "Cafe", date = parseDateString("2024-01-05")),
+            createPlay(localPlayId = 3, gameName = "Game C", location = "Home", date = parseDateString("2024-01-03")),
+            createPlay(localPlayId = 4, gameName = "Game D", location = "Library", date = parseDateString("2024-01-06")),
+            createPlay(localPlayId = 5, gameName = "Game E", location = "Cafe", date = parseDateString("2024-01-02")),
+            createPlay(localPlayId = 6, gameName = "Game F", location = "Bar", date = parseDateString("2024-01-04")),
+            createPlay(localPlayId = 7, gameName = "Game G", location = "Home", date = parseDateString("2024-01-08"))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeRecentLocations().first()
+
+        // Expected order by most recent date for each unique location:
+        // Home (2024-01-08), Library (2024-01-06), Cafe (2024-01-05), Bar (2024-01-04)
+        assertEquals(listOf("Home", "Library", "Cafe", "Bar"), result)
+    }
+
+    @Test
+    fun `observeRecentLocations returns distinct case-preserving results`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home", date = parseDateString("2024-01-01")),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = "HOME", date = parseDateString("2024-01-02")),
+            createPlay(localPlayId = 3, gameName = "Game 3", location = "home", date = parseDateString("2024-01-03"))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeRecentLocations().first()
+
+        assertEquals(3, result.size)
+        assertEquals("home", result[0])
+        assertEquals("HOME", result[1])
+        assertEquals("Home", result[2])
+    }
+
+    @Test
+    fun `observeRecentLocations limits results to 10`() = runTest {
+        val plays = List(15) { i ->
+            createPlay(
+                localPlayId = i.toLong() + 1,
+                gameName = "Game ${i + 1}",
+                location = "Location ${i + 1}",
+                date = parseDateString("2024-01-${String.format("%02d", i + 1)}")
+            )
+        }
+        local.setPlays(plays)
+
+        val result = repository.observeRecentLocations().first()
+
+        assertEquals(10, result.size)
+    }
+
+    @Test
+    fun `observeRecentLocations filters out null locations`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = "Home", date = parseDateString("2024-01-03")),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = null, date = parseDateString("2024-01-02")),
+            createPlay(localPlayId = 3, gameName = "Game 3", location = "Office", date = parseDateString("2024-01-01"))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeRecentLocations().first()
+
+        assertEquals(2, result.size)
+        assertEquals(listOf("Home", "Office"), result)
+    }
+
+    @Test
+    fun `observeRecentLocations returns empty list when no plays exist`() = runTest {
+        val result = repository.observeRecentLocations().first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `observeRecentLocations returns empty list when all plays have null locations`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Game 1", location = null),
+            createPlay(localPlayId = 2, gameName = "Game 2", location = null)
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeRecentLocations().first()
+
+        assertTrue(result.isEmpty())
+    }
+
     // --- Helper functions for createPlay tests ---
 
     private fun createPlayCommand(
