@@ -218,3 +218,19 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing r
   - Test all player fields when verifying player persistence: name, username, userId, score, win, startPosition, color
   - Edge case testing should cover: null optional fields, empty collections, multiple insertions
 ---
+## 2026-02-11T21:53:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing comment #3887424137)
+- Added comprehensive test suite for newly added location-related repository methods: `observeLocations(query)` and `observeRecentLocations()`
+- Created 14 new test cases covering all aspects of location queries:
+  - `observeLocations(query)`: 8 tests covering query matching, case-insensitive filtering, distinct results, alphabetical sorting, limit of 10, no matches, null filtering, empty state
+  - `observeRecentLocations()`: 6 tests covering ordering by most recent date, distinct results, limit of 10, null filtering, empty state, all-null locations
+- Tests follow established patterns from DAO tests and existing repository tests
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt` (+205 lines, 14 new tests)
+- **Learnings for future iterations:**
+  - Location query tests should verify: case-insensitive matching, distinct case-preserving results (deduplicated by lowercase), sorting behavior (alphabetical or date-based), result limits, null filtering
+  - `observeLocations()` returns locations that start with query string, sorted alphabetically (case-insensitive), limited to 10 results
+  - `observeRecentLocations()` returns locations ordered by most recent play date (DESC), deduplicated by lowercase, limited to 10 results
+  - When testing methods that filter/sort/limit collections, cover: normal operation with multiple items, edge cases (empty, nulls, duplicates), limits, and sorting order
+  - Tests should match the behavior of underlying DAO implementations to ensure consistency
+---
