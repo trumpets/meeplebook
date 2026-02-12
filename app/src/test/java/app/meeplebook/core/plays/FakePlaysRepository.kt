@@ -1,10 +1,16 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.plays.model.PlaySyncStatus
+import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 
 /**
@@ -18,7 +24,7 @@ class FakePlaysRepository : PlaysRepository {
     private val _recentPlays = MutableStateFlow<List<Play>>(emptyList())
     private val _uniqueGamesCount = MutableStateFlow(0L)
 
-    var syncPlaysResult: AppResult<List<Play>, PlayError> =
+    var syncPlaysResult: AppResult<Unit, PlayError> =
         AppResult.Failure(PlayError.Unknown(IllegalStateException("FakePlaysRepository not configured")))
 
     var syncCallCount = 0
@@ -45,19 +51,49 @@ class FakePlaysRepository : PlaysRepository {
         return _plays.value.filter { it.gameId == gameId }
     }
 
-    override suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError> {
+    override suspend fun syncPlays(username: String): AppResult<Unit, PlayError> {
         syncCallCount++
         lastSyncUsername = username
 
-        when (val result = syncPlaysResult) {
-            is AppResult.Success -> {
-                _plays.value = result.data
-                updateComputedValues(result.data)
-            }
-            is AppResult.Failure -> { /* no-op */ }
-        }
-
         return syncPlaysResult
+    }
+
+    override suspend fun createPlay(command: CreatePlayCommand) {
+        val currentPlays = _plays.value.toMutableList()
+        
+        // Generate a new local ID
+        val newLocalId = (currentPlays.maxOfOrNull { it.playId.localId } ?: 0L) + 1L
+        
+        // Create the play from the command
+        val newPlay = Play(
+            playId = PlayId.Local(newLocalId),
+            date = command.date,
+            quantity = command.quantity,
+            length = command.length,
+            incomplete = command.incomplete,
+            location = command.location,
+            gameId = command.gameId,
+            gameName = command.gameName,
+            comments = command.comments,
+            players = command.players.mapIndexed { index, playerCommand ->
+                Player(
+                    id = newLocalId * 100 + index,
+                    playId = newLocalId,
+                    username = playerCommand.username,
+                    userId = playerCommand.userId,
+                    name = playerCommand.name,
+                    startPosition = playerCommand.startPosition,
+                    color = playerCommand.color,
+                    score = playerCommand.score,
+                    win = playerCommand.win
+                )
+            },
+            syncStatus = PlaySyncStatus.PENDING
+        )
+        
+        currentPlays.add(newPlay)
+        _plays.value = currentPlays
+        updateComputedValues(currentPlays)
     }
 
     override suspend fun clearPlays() {
@@ -75,6 +111,54 @@ class FakePlaysRepository : PlaysRepository {
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> = _recentPlays
 
     override fun observeUniqueGamesCount(): Flow<Long> = _uniqueGamesCount
+
+    override fun observeLocations(query: String): Flow<List<String>> {
+        // Return distinct, case-preserving locations that start with the provided query (case-insensitive),
+        // ordered alphabetically (case-insensitive), limited to 10 results.
+        return _plays.map { plays ->
+            plays
+                .asSequence()
+                .mapNotNull { it.location }
+                .distinct()
+                .filter { it.startsWith(query, ignoreCase = true) }
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+                .take(10)
+                .toList()
+        }
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        // Return unique, non-null locations ordered by most recent play date (desc), limited to 10.
+        return _plays.map { plays ->
+            plays
+                .asSequence()
+                .filter { it.location != null }
+                .sortedByDescending { it.date }
+                .mapNotNull { it.location }
+                .distinct()
+                .take(10)
+                .toList()
+        }
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        // Return players who have played at the specified location,
+        // grouped by name+username, ordered by play count (descending).
+        return _plays.map { plays ->
+            plays
+                .filter { it.location == location }
+                .flatMap { play -> play.players }
+                .groupBy { player -> Pair(player.name, player.username) }
+                .map { (key, players) ->
+                    val (name, username) = key
+                    val playCount = players.size
+                    val userId = players.mapNotNull { it.userId }.maxOrNull() ?: 0L
+                    Pair(PlayerIdentity(name, username, userId), playCount)
+                }
+                .sortedByDescending { it.second }
+                .map { it.first }
+        }
+    }
 
     /**
      * Sets the plays directly for testing purposes.

@@ -4,6 +4,7 @@ import app.meeplebook.R
 import app.meeplebook.core.collection.domain.DomainGameHighlight
 import app.meeplebook.core.collection.domain.HighlightType
 import app.meeplebook.core.plays.domain.DomainRecentPlay
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.stats.domain.DomainOverviewStats
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.ui.asString
@@ -74,7 +75,7 @@ class OverviewMappersTest {
         // Given
 
         val domain = DomainRecentPlay(
-            id = 42,
+            playId = PlayId.Local(42),
             gameName = "Catan",
             thumbnailUrl = null,
             date = Instant.parse("2024-01-15T20:00:00Z"),
@@ -86,7 +87,7 @@ class OverviewMappersTest {
         val result = domain.toRecentPlay()
 
         // Then
-        assertEquals(42L, result.id)
+        assertEquals(42L, result.playId.localId)
         assertEquals("Catan", result.gameName)
         assertNull(result.thumbnailUrl)
         assertEquals(4, result.playerCount)
@@ -100,7 +101,7 @@ class OverviewMappersTest {
     fun `toRecentPlay maps play with single player correctly`() {
         // Given
         val domain = DomainRecentPlay(
-            id = 10,
+            playId = PlayId.Local(10),
             gameName = "Wingspan",
             thumbnailUrl = "https://example.com/wingspan.jpg",
             date = Instant.parse("2024-01-14T18:00:00Z"),
@@ -112,7 +113,7 @@ class OverviewMappersTest {
         val result = domain.toRecentPlay()
 
         // Then
-        assertEquals(10L, result.id)
+        assertEquals(10L, result.playId.localId)
         assertEquals("Wingspan", result.gameName)
         assertEquals("https://example.com/wingspan.jpg", result.thumbnailUrl)
         assertEquals(1, result.playerCount)

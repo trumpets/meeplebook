@@ -4,6 +4,7 @@ import app.meeplebook.R
 import app.meeplebook.core.plays.domain.DomainPlayItem
 import app.meeplebook.core.plays.domain.DomainPlayStatsSummary
 import app.meeplebook.core.plays.domain.DomainPlayerItem
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.ui.asString
@@ -45,7 +46,7 @@ class PlaysMappersTest {
     fun `toPlayItem maps complete play data correctly`() {
         // Given
         val domain = DomainPlayItem(
-            id = 100,
+            playId = PlayId.Local(100),
             gameName = "Azul",
             thumbnailUrl = "https://example.com/azul.jpg",
             date = Instant.parse("2024-01-15T20:00:00Z"),
@@ -63,7 +64,7 @@ class PlaysMappersTest {
         val result = domain.toPlayItem()
 
         // Then
-        assertEquals(100L, result.id)
+        assertEquals(100L, result.playId.localId)
         assertEquals("Azul", result.gameName)
         assertEquals("https://example.com/azul.jpg", result.thumbnailUrl)
         assertEquals("45min", result.durationUiText.asString(fakeStringProvider))
@@ -80,7 +81,7 @@ class PlaysMappersTest {
     fun `toPlayItem maps play without duration correctly`() {
         // Given
         val domain = DomainPlayItem(
-            id = 200,
+            playId = PlayId.Local(200),
             gameName = "Wingspan",
             thumbnailUrl = null,
             date = Instant.parse("2024-01-14T18:00:00Z"),
@@ -97,7 +98,7 @@ class PlaysMappersTest {
         val result = domain.toPlayItem()
 
         // Then
-        assertEquals(200L, result.id)
+        assertEquals(200L, result.playId.localId)
         assertEquals("Wingspan", result.gameName)
         assertEquals(null, result.thumbnailUrl)
         assertEquals("", result.durationUiText.asString(fakeStringProvider))
@@ -111,7 +112,7 @@ class PlaysMappersTest {
     fun `toPlayItem maps play with long duration correctly`() {
         // Given
         val domain = DomainPlayItem(
-            id = 300,
+            playId = PlayId.Local(300),
             gameName = "Twilight Imperium",
             thumbnailUrl = "https://example.com/ti.jpg",
             date = Instant.parse("2024-01-13T10:00:00Z"),
@@ -128,7 +129,7 @@ class PlaysMappersTest {
         val result = domain.toPlayItem()
 
         // Then
-        assertEquals(300L, result.id)
+        assertEquals(300L, result.playId.localId)
         assertEquals("Twilight Imperium", result.gameName)
         assertEquals("6h 0min", result.durationUiText.asString(fakeStringProvider))
         assertEquals("Game Store", result.location)
@@ -139,7 +140,7 @@ class PlaysMappersTest {
     fun `toPlayItem maps play with empty players list correctly`() {
         // Given
         val domain = DomainPlayItem(
-            id = 400,
+            playId = PlayId.Local(400),
             gameName = "Solo Game",
             thumbnailUrl = null,
             date = Instant.parse("2024-01-12T15:00:00Z"),
@@ -154,7 +155,7 @@ class PlaysMappersTest {
         val result = domain.toPlayItem()
 
         // Then
-        assertEquals(400L, result.id)
+        assertEquals(400L, result.playId.localId)
         assertEquals("Solo Game", result.gameName)
         assertEquals(PlaySyncStatus.FAILED, result.syncStatus)
         // Player summary should handle empty list
@@ -317,7 +318,7 @@ class PlaysMappersTest {
         // Given
         val items = listOf(
             DomainPlayItem(
-                id = 100,
+                playId = PlayId.Local(100),
                 gameName = "Azul",
                 thumbnailUrl = "https://example.com/azul.jpg",
                 date = Instant.parse("2024-01-15T20:00:00Z"),
@@ -330,7 +331,7 @@ class PlaysMappersTest {
                 syncStatus = PlaySyncStatus.SYNCED
             ),
             DomainPlayItem(
-                id = 200,
+                playId = PlayId.Local(200),
                 gameName = "Wingspan",
                 thumbnailUrl = null,
                 date = Instant.parse("2024-01-14T18:00:00Z"),
@@ -356,8 +357,8 @@ class PlaysMappersTest {
         assertEquals(2, result.plays.size)
         assertEquals("Azul", result.plays[0].gameName)
         assertEquals("Wingspan", result.plays[1].gameName)
-        assertEquals(100L, result.plays[0].id)
-        assertEquals(200L, result.plays[1].id)
+        assertEquals(100L, result.plays[0].playId.localId)
+        assertEquals(200L, result.plays[1].playId.localId)
     }
 
     @Test
@@ -365,7 +366,7 @@ class PlaysMappersTest {
         // Given
         val items = listOf(
             DomainPlayItem(
-                id = 300,
+                playId = PlayId.Local(300),
                 gameName = "Catan",
                 thumbnailUrl = "https://example.com/catan.jpg",
                 date = Instant.parse("2024-02-10T15:00:00Z"),
@@ -413,7 +414,7 @@ class PlaysMappersTest {
         // Given
         val items = listOf(
             DomainPlayItem(
-                id = 400,
+                playId = PlayId.Local(400),
                 gameName = "Test Game",
                 thumbnailUrl = null,
                 date = Instant.parse("2023-12-25T12:00:00Z"),

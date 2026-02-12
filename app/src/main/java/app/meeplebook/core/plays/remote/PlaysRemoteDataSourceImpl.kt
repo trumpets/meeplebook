@@ -3,7 +3,7 @@ package app.meeplebook.core.plays.remote
 import app.meeplebook.core.network.BggApi
 import app.meeplebook.core.network.RetrySignal
 import app.meeplebook.core.network.retryWithBackoff
-import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 import java.io.IOException
 import javax.inject.Inject
 
@@ -19,7 +19,7 @@ class PlaysRemoteDataSourceImpl @Inject constructor(
     private val api: BggApi
 ) : PlaysRemoteDataSource {
 
-    override suspend fun fetchPlays(username: String, page: Int?): List<Play> {
+    override suspend fun fetchPlays(username: String, page: Int?): List<RemotePlayDto> {
         if (username.isBlank()) {
             throw IllegalArgumentException("Username must not be empty")
         }
@@ -33,7 +33,7 @@ class PlaysRemoteDataSourceImpl @Inject constructor(
     private suspend fun fetchWithRetry(
         username: String,
         page: Int?
-    ): List<Play> {
+    ): List<RemotePlayDto> {
 
         return retryWithBackoff(
             username = username

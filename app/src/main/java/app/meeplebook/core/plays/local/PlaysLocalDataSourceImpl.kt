@@ -4,9 +4,15 @@ import androidx.room.withTransaction
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.dao.PlayDao
 import app.meeplebook.core.database.dao.PlayerDao
+import app.meeplebook.core.database.entity.PlayEntity
+import app.meeplebook.core.database.entity.PlayerEntity
 import app.meeplebook.core.database.entity.toEntity
 import app.meeplebook.core.database.entity.toPlay
+import app.meeplebook.core.database.projection.toPlayerIdentity
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlaySyncStatus
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -47,34 +53,63 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         return playDao.getPlaysWithPlayersForGame(gameId).map { it.toPlay() }
     }
 
-    override suspend fun savePlays(plays: List<Play>) {
+    override suspend fun saveRemotePlays(remotePlays: List<RemotePlayDto>) {
         database.withTransaction {
-            // Delete old players for plays being updated
-            plays.forEach { play ->
-                playerDao.deletePlayersForPlay(play.id)
+
+            val remoteIds = remotePlays.map { it.remoteId }
+            val existingPlays = playDao.getByRemoteIds(remoteIds)
+            val existingByRemoteId = existingPlays.associateBy { it.remoteId!! }
+
+            // Prepare PlayEntities
+            val playEntities = remotePlays.map { remotePlay ->
+                existingByRemoteId[remotePlay.remoteId]?.let { existing ->
+                    remotePlay.toEntity(localId = existing.localId, syncStatus = PlaySyncStatus.SYNCED)
+                } ?: remotePlay.toEntity(localId = 0L, syncStatus = PlaySyncStatus.SYNCED) // new
             }
-            
-            // Bulk insert all plays
-            playDao.insertAll(plays.map { it.toEntity() })
-            
-            // Bulk insert all players
-            val allPlayers = plays.flatMap { play ->
-                play.players.map { it.toEntity() }
+
+            // Upsert plays (Room generates IDs for new ones)
+            playDao.upsertAll(plays = playEntities)
+
+            // Retrieve actual localIds
+            val updatedPlays = playDao.getByRemoteIds(remoteIds)
+            val remoteIdToLocalId = updatedPlays.associate { it.remoteId!! to it.localId }
+
+            // Prepare PlayerEntities
+            val playerEntities = remotePlays.flatMap { remotePlay ->
+                val localId = remoteIdToLocalId[remotePlay.remoteId]!!
+                remotePlay.players.map { it.toEntity(playId = localId) }
             }
-            if (allPlayers.isNotEmpty()) {
-                playerDao.insertAll(allPlayers)
-            }
+
+            // Replace players for affected plays
+            val affectedLocalIds = updatedPlays.map { it.localId }
+            playerDao.deletePlayersForPlays(affectedLocalIds)
+            playerDao.insertAll(players = playerEntities)
         }
     }
 
-    override suspend fun savePlay(play: Play) {
-        savePlays(listOf(play))
+    override suspend fun insertPlay(playEntity: PlayEntity, playerEntities: List<PlayerEntity>) {
+        database.withTransaction {
+            val localPlayId = playDao.insert(playEntity)
+            val playersWithFk = playerEntities.map { it.copy(playId = localPlayId) }
+            playerDao.insertAll(players = playersWithFk)
+        }
     }
 
     override suspend fun clearPlays() {
         database.withTransaction {
             playerDao.deleteAll()
             playDao.deleteAll()
+        }
+    }
+
+    override suspend fun retainByRemoteIds(remoteIds: List<Long>) {
+        val localRemoteIds = playDao.getRemotePlays()
+            .mapNotNull { it.remoteId }
+
+        val toDelete = localRemoteIds.filter { it !in remoteIds }
+
+        if (toDelete.isNotEmpty()) {
+            playDao.deleteByRemoteIds(remoteIds = toDelete)
         }
     }
 
@@ -94,5 +129,19 @@ class PlaysLocalDataSourceImpl @Inject constructor(
 
     override fun observeUniqueGamesCount(): Flow<Long> {
         return playDao.observeUniqueGamesCount()
+    }
+
+    override fun observeLocations(query: String): Flow<List<String>> {
+        return playDao.observeLocations(query)
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        return playDao.observeRecentLocations()
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        return playDao.observePlayersByLocation(location).map { playerLocationProjects ->
+            playerLocationProjects.map { it.toPlayerIdentity() }
+        }
     }
 }

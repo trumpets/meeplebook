@@ -1,6 +1,10 @@
 package app.meeplebook.core.plays.local
 
+import app.meeplebook.core.database.entity.PlayEntity
+import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -19,6 +23,7 @@ interface PlaysLocalDataSource {
     /**
      * Observes all plays filtered by game name or location.
      *
+     * @param gameNameOrLocationQuery Query string to match against game name or location.
      * @return Flow emitting the user's plays filtered by game name or location.
      */
     fun observePlaysByGameNameOrLocation(gameNameOrLocationQuery: String): Flow<List<Play>>
@@ -45,23 +50,31 @@ interface PlaysLocalDataSource {
     suspend fun getPlaysForGame(gameId: Long): List<Play>
 
     /**
-     * Saves (adds or updates) plays.
+     * Saves (adds or updates) plays from remote.
      *
-     * @param plays The plays to save.
+     * @param remotePlays The plays to save.
      */
-    suspend fun savePlays(plays: List<Play>)
+    suspend fun saveRemotePlays(remotePlays: List<RemotePlayDto>)
 
     /**
-     * Saves (adds or updates) a single play.
+     * Inserts a single play.
      *
-     * @param play The play to save.
+     * @param playEntity The play entity to save.
+     * @param playerEntities The player entities associated with the play.
      */
-    suspend fun savePlay(play: Play)
+    suspend fun insertPlay(playEntity: PlayEntity, playerEntities: List<PlayerEntity>)
 
     /**
      * Clears all plays.
      */
     suspend fun clearPlays()
+
+    /**
+     * Retains only plays whose remote IDs are present in [remoteIds].
+     *
+     * @param remoteIds List of remote play IDs that should be retained locally.
+     */
+    suspend fun retainByRemoteIds(remoteIds: List<Long>)
 
     /**
      * Observes the total count of plays (sum of quantities).
@@ -82,4 +95,20 @@ interface PlaysLocalDataSource {
      * Observes the count of unique games that have been played.
      */
     fun observeUniqueGamesCount(): Flow<Long>
+
+    /**
+     * Observes the locations where plays occurred matching the query.
+     */
+    fun observeLocations(query: String): Flow<List<String>>
+
+    /**
+     * Observes the most recent locations where plays occurred.
+     */
+    fun observeRecentLocations(): Flow<List<String>>
+
+    /**
+     * Observes players who have played at a specific location,
+     * ordered by the number of plays at that location (desc).
+     */
+    fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>>
 }

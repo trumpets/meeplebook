@@ -44,6 +44,12 @@ interface PlayerDao {
     suspend fun deletePlayersForPlay(playId: Long)
 
     /**
+     * Deletes all players for the specified list of play IDs.
+     */
+    @Query("DELETE FROM players WHERE playId IN (:localPlayIds)")
+    suspend fun deletePlayersForPlays(localPlayIds: List<Long>)
+
+    /**
      * Deletes all players.
      */
     @Query("DELETE FROM players")

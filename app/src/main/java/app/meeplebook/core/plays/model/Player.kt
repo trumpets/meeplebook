@@ -3,15 +3,15 @@ package app.meeplebook.core.plays.model
 /**
  * Represents a player in a play.
  *
- * @param id The unique ID of this player record (auto-generated, 0 for new players).
- * @param playId The play ID this player is associated with.
- * @param username The BGG username of the player.
- * @param userId The BGG user ID.
- * @param name The display name of the player.
- * @param startPosition The starting position of the player.
- * @param color The color assigned to the player.
- * @param score The score achieved by the player.
- * @param win Whether the player won.
+ * @property id The unique ID of this player record (auto-generated, 0 for new players).
+ * @property playId The play ID this player is associated with.
+ * @property username The BGG username of the player.
+ * @property userId The BGG user ID.
+ * @property name The display name of the player.
+ * @property startPosition The starting position of the player.
+ * @property color The color assigned to the player.
+ * @property score The score achieved by the player.
+ * @property win Whether the player won.
  */
 data class Player(
     val id: Long = 0,

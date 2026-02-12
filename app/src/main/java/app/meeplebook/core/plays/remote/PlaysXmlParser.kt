@@ -1,7 +1,7 @@
 package app.meeplebook.core.plays.remote
 
-import app.meeplebook.core.plays.model.Play
-import app.meeplebook.core.plays.model.Player
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
+import app.meeplebook.core.plays.remote.dto.RemotePlayerDto
 import app.meeplebook.core.util.parseBggDate
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
@@ -9,7 +9,7 @@ import java.io.Reader
 import java.time.Instant
 
 /**
- * Parses BGG plays XML responses into domain models.
+ * Parses BGG plays XML responses into Dtos.
  */
 object PlaysXmlParser {
 
@@ -21,10 +21,10 @@ object PlaysXmlParser {
      * Parses the BGG plays XML response.
      *
      * @param reader The Reader containing XML from BGG.
-     * @return List of [Play]s parsed from the XML.
+     * @return List of [RemotePlayDto]s parsed from the XML.
      */
-    fun parse(reader: Reader): List<Play> {
-        val plays = mutableListOf<Play>()
+    fun parse(reader: Reader): List<RemotePlayDto> {
+        val plays = mutableListOf<RemotePlayDto>()
 
         val parser = parserFactory.newPullParser()
         parser.setInput(reader)
@@ -37,7 +37,7 @@ object PlaysXmlParser {
                 XmlPullParser.START_TAG -> {
                     when (parser.name) {
                         "play" -> {
-                            val id = parser.getAttributeValue(null, "id")?.toLongOrNull()
+                            val remotePlayId = parser.getAttributeValue(null, "id")?.toLongOrNull()
                             val date = parseBggDate(parser.getAttributeValue(null, "date"))
                             val quantity = parser.getAttributeValue(null, "quantity")?.toIntOrNull() ?: 1
                             val length = parser.getAttributeValue(null, "length")?.toIntOrNull()?.takeIf { it > 0 }
@@ -45,9 +45,9 @@ object PlaysXmlParser {
                             val location = parser.getAttributeValue(null, "location")?.takeIf { it.isNotBlank() }
 
                             // TODO: log that a date is invalid or missing
-                            if (id != null && date != null) {
+                            if (remotePlayId != null && date != null) {
                                 currentPlay = PlayBuilder(
-                                    id = id,
+                                    remotePlayId = remotePlayId,
                                     date = date,
                                     quantity = quantity,
                                     length = length,
@@ -76,8 +76,7 @@ object PlaysXmlParser {
                                 val win = parser.getAttributeValue(null, "win")?.toIntOrNull() == 1
 
                                 if (!name.isNullOrBlank()) {
-                                    val player = Player(
-                                        playId = play.id,
+                                    val player = RemotePlayerDto(
                                         username = username?.takeIf { it.isNotBlank() },
                                         userId = userId,
                                         name = name,
@@ -119,7 +118,7 @@ object PlaysXmlParser {
     }
 
     private class PlayBuilder(
-        val id: Long,
+        val remotePlayId: Long,
         val date: Instant,
         val quantity: Int,
         val length: Int?,
@@ -129,14 +128,14 @@ object PlaysXmlParser {
         var gameId: Long? = null
         var gameName: String? = null
         var comments: String? = null
-        val players: MutableList<Player> = mutableListOf()
+        val players: MutableList<RemotePlayerDto> = mutableListOf()
 
-        fun build(): Play? {
+        fun build(): RemotePlayDto? {
             val validGameId = gameId ?: return null
             val validGameName = gameName?.takeIf { it.isNotBlank() } ?: return null
 
-            return Play(
-                id = this.id,
+            return RemotePlayDto(
+                remoteId = remotePlayId,
                 date = date,
                 quantity = quantity,
                 length = length,

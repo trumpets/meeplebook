@@ -1,5 +1,7 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
@@ -46,9 +48,16 @@ interface PlaysRepository {
      * This method orchestrates multi-page fetching and merges results.
      *
      * @param username The BGG username.
-     * @return Success with all the plays, or Failure with an error.
+     * @return Success, or Failure with an error.
      */
-    suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError>
+    suspend fun syncPlays(username: String): AppResult<Unit, PlayError>
+
+    /**
+     * Creates a new play locally.
+     *
+     * @param command The command containing the details of the play to create.
+     */
+    suspend fun createPlay(command: CreatePlayCommand)
 
     /**
      * Clears all plays from local storage.
@@ -74,4 +83,20 @@ interface PlaysRepository {
      * Observes the count of unique games that have been played.
      */
     fun observeUniqueGamesCount(): Flow<Long>
+
+    /**
+     * Observes the locations where plays occurred matching the query.
+     */
+    fun observeLocations(query: String): Flow<List<String>>
+
+    /**
+     * Observes the most recent locations where plays occurred.
+     */
+    fun observeRecentLocations(): Flow<List<String>>
+
+    /**
+     * Observes players who have played at a specific location,
+     * ordered by the number of plays at that location (desc).
+     */
+    fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>>
 }

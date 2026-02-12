@@ -1,7 +1,11 @@
 package app.meeplebook.core.plays
 
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.plays.model.Player
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
+import app.meeplebook.core.plays.remote.dto.RemotePlayerDto
 import java.time.Instant
 
 /**
@@ -13,32 +17,33 @@ object PlayTestFactory {
     /**
      * Creates a test Play object with default or custom values.
      *
-     * @param id The play ID
+     * @param localPlayId The local play ID
      * @param gameName The name of the game
      * @param date The play date (defaults to 2024-01-15T20:00:00Z)
      * @param quantity Number of plays (defaults to 1)
      * @param length Play duration in minutes (defaults to 60)
      * @param incomplete Whether the play was incomplete (defaults to false)
      * @param location Play location (defaults to null)
-     * @param gameId The game ID (defaults to id * 100)
+     * @param gameId The game ID (defaults to localPlayId * 100)
      * @param comments Play comments (defaults to null)
      * @param players List of players (defaults to a single test player)
      * @return A configured Play object
      */
     fun createPlay(
-        id: Long,
+        localPlayId: Long,
         gameName: String,
         date: Instant = Instant.parse("2024-01-15T20:00:00Z"),
         quantity: Int = 1,
         length: Int? = 60,
         incomplete: Boolean = false,
         location: String? = null,
-        gameId: Long = id * 100,
+        gameId: Long = localPlayId * 100,
         comments: String? = null,
-        players: List<Player> = listOf(createPlayer(playId = id))
+        players: List<Player> = listOf(createPlayer(playId = localPlayId)),
+        syncStatus: PlaySyncStatus = PlaySyncStatus.SYNCED
     ): Play {
         return Play(
-            id = id,
+            playId = PlayId.Local(localPlayId),
             date = date,
             quantity = quantity,
             length = length,
@@ -47,7 +52,8 @@ object PlayTestFactory {
             gameId = gameId,
             gameName = gameName,
             comments = comments,
-            players = players
+            players = players,
+            syncStatus = syncStatus
         )
     }
 
@@ -86,6 +92,47 @@ object PlayTestFactory {
             color = color,
             score = score,
             win = win
+        )
+    }
+
+    /**
+     * Creates a test RemotePlayDto object with default or custom values.
+     *
+     * @param remoteId The remote play ID
+     * @param gameName The name of the game
+     * @param date The play date (defaults to 2024-01-15T20:00:00Z)
+     * @param quantity Number of plays (defaults to 1)
+     * @param length Play duration in minutes (defaults to 60)
+     * @param incomplete Whether the play was incomplete (defaults to false)
+     * @param location Play location (defaults to null)
+     * @param gameId The game ID (defaults to remoteId * 100)
+     * @param comments Play comments (defaults to null)
+     * @param players List of players (defaults to empty list)
+     * @return A configured RemotePlayDto object
+     */
+    fun createRemotePlayDto(
+        remoteId: Long,
+        gameName: String,
+        date: Instant = Instant.parse("2024-01-15T20:00:00Z"),
+        quantity: Int = 1,
+        length: Int? = 60,
+        incomplete: Boolean = false,
+        location: String? = null,
+        gameId: Long = remoteId * 100,
+        comments: String? = null,
+        players: List<RemotePlayerDto> = emptyList()
+    ): RemotePlayDto {
+        return RemotePlayDto(
+            remoteId = remoteId,
+            date = date,
+            quantity = quantity,
+            length = length,
+            incomplete = incomplete,
+            location = location,
+            gameId = gameId,
+            gameName = gameName,
+            comments = comments,
+            players = players
         )
     }
 }

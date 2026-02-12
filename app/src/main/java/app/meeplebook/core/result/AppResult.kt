@@ -11,14 +11,14 @@ sealed interface AppResult<out T, out E> {
     /**
      * Represents a successful result containing [data].
      *
-     * @param data The data returned on success.
+     * @property data The data returned on success.
      */
     data class Success<T>(val data: T) : AppResult<T, Nothing>
 
     /**
      * Represents a failed result containing an [error].
      *
-     * @param error The error returned on failure.
+     * @property error The error returned on failure.
      */
     data class Failure<E>(val error: E) : AppResult<Nothing, E>
 }

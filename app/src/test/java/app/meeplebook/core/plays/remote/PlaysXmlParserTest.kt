@@ -39,7 +39,9 @@ class PlaysXmlParserTest {
 
         assertEquals(1, result.size)
         val play = result[0]
-        assertEquals(12345, play.id)
+
+        assertEquals(12345, play.remoteId)
+
         assertEquals(parseDateString("2024-01-15"), play.date)
         assertEquals(1, play.quantity)
         assertEquals(120, play.length)
@@ -75,7 +77,6 @@ class PlaysXmlParserTest {
         assertEquals(3, play.players.size)
         
         val player1 = play.players[0]
-        assertEquals(12345L, player1.playId)
         assertEquals("player1", player1.username)
         assertEquals(111L, player1.userId)
         assertEquals("Alice", player1.name)
@@ -110,7 +111,9 @@ class PlaysXmlParserTest {
 
         assertEquals(1, result.size)
         val play = result[0]
-        assertEquals(54321L, play.id)
+
+        assertEquals(54321L, play.remoteId)
+
         assertEquals(parseDateString("2024-02-20"), play.date)
         assertNull(play.length)
         assertNull(play.location)
@@ -159,9 +162,11 @@ class PlaysXmlParserTest {
         val result = PlaysXmlParser.parse(xml.reader())
 
         assertEquals(3, result.size)
-        assertEquals(1, result[0].id)
-        assertEquals(2, result[1].id)
-        assertEquals(3, result[2].id)
+
+        assertEquals(1, result[0].remoteId)
+        assertEquals(2, result[1].remoteId)
+        assertEquals(3, result[2].remoteId)
+
         assertEquals(2, result[2].quantity)
     }
 
@@ -184,7 +189,7 @@ class PlaysXmlParserTest {
         val result = PlaysXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
-        assertEquals(2, result[0].id)
+        assertEquals(2, result[0].remoteId)
         assertEquals("Valid Game", result[0].gameName)
     }
 
@@ -207,7 +212,7 @@ class PlaysXmlParserTest {
         val result = PlaysXmlParser.parse(xml.reader())
 
         assertEquals(1, result.size)
-        assertEquals(2, result[0].id)
+        assertEquals(2, result[0].remoteId)
     }
 
     @Test
