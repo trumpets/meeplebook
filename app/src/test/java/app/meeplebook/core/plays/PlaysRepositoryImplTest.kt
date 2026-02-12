@@ -815,8 +815,6 @@ class PlaysRepositoryImplTest {
         assertTrue(result.isEmpty())
     }
 
-    // --- observePlayersByLocation tests ---
-
     @Test
     fun `observePlayersByLocation returns players at location ordered by play count`() = runTest {
         val plays = listOf(
@@ -850,7 +848,7 @@ class PlaysRepositoryImplTest {
         assertEquals(102L, result[1].userId)
         assertEquals("Charlie", result[2].name)
         assertNull(result[2].username)
-        assertNull(result[2].userId)
+        assertEquals(0L, result[2].userId)
     }
 
     @Test
