@@ -234,3 +234,19 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing c
   - When testing methods that filter/sort/limit collections, cover: normal operation with multiple items, edge cases (empty, nulls, duplicates), limits, and sorting order
   - Tests should match the behavior of underlying DAO implementations to ensure consistency
 ---
+
+## 2026-02-11T22:45:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing comment #3887628361)
+- Implemented `observePlayersByLocation` in `FakePlaysLocalDataSource` and `FakePlaysRepository`
+- Added 4 DAO-level tests for `observePlayersByLocation` in `PlayDaoTest` covering: ordered by play count, empty list for nonexistent location, empty list when no plays exist, grouping by name+username
+- Added 5 repository-level tests for `observePlayersByLocation` in `PlaysRepositoryImplTest` covering: ordered by play count, empty list for nonexistent location, empty list when no plays exist, grouping by name+username, filtering by location
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/local/FakePlaysLocalDataSource.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt`
+- **Learnings for future iterations:**
+  - DAO `observePlayersByLocation` uses SQL GROUP BY (name, username) and MAX(userId), ordering by COUNT(*) DESC
+  - Fake implementations should match SQL logic: filter by location, flatMap to players, group by (name, username), take max userId, sort by count DESC
+  - Test coverage should include: normal operation with ordering, empty results (no plays, nonexistent location), grouping behavior, filtering behavior
+  - SQL MAX() on nullable column returns 0 in Room/SQLite when all values are NULL; fake implementations must mirror this behavior so repository tests do not diverge from production

@@ -1,6 +1,7 @@
 package app.meeplebook.core.plays
 
 import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
@@ -137,6 +138,25 @@ class FakePlaysRepository : PlaysRepository {
                 .distinct()
                 .take(10)
                 .toList()
+        }
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        // Return players who have played at the specified location,
+        // grouped by name+username, ordered by play count (descending).
+        return _plays.map { plays ->
+            plays
+                .filter { it.location == location }
+                .flatMap { play -> play.players }
+                .groupBy { player -> Pair(player.name, player.username) }
+                .map { (key, players) ->
+                    val (name, username) = key
+                    val playCount = players.size
+                    val userId = players.mapNotNull { it.userId }.maxOrNull() ?: 0L
+                    Pair(PlayerIdentity(name, username, userId), playCount)
+                }
+                .sortedByDescending { it.second }
+                .map { it.first }
         }
     }
 
