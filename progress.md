@@ -249,4 +249,4 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing c
   - DAO `observePlayersByLocation` uses SQL GROUP BY (name, username) and MAX(userId), ordering by COUNT(*) DESC
   - Fake implementations should match SQL logic: filter by location, flatMap to players, group by (name, username), take max userId, sort by count DESC
   - Test coverage should include: normal operation with ordering, empty results (no plays, nonexistent location), grouping behavior, filtering behavior
-  - SQL MAX() on nullable column returns 0 in Room/SQLite when all values are NULL, but fake can return null (acceptable difference for test doubles)
+  - SQL MAX() on nullable column returns 0 in Room/SQLite when all values are NULL; fake implementations must mirror this behavior so repository tests do not diverge from production
