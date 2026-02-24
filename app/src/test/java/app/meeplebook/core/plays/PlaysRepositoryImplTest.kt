@@ -957,6 +957,28 @@ class PlaysRepositoryImplTest {
     }
 
     @Test
+    fun `observeColorsUsedForGame lowercases and de-duplicates colors case-insensitively`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = "Red"),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", color = "red")
+            )),
+            createPlay(localPlayId = 2, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 3, playId = 2, name = "Carol", color = "RED")
+            )),
+            createPlay(localPlayId = 3, gameName = "Catan", gameId = 200, players = listOf(
+                PlayTestFactory.createPlayer(id = 4, playId = 3, name = "Dave", color = "Red")
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("red", result[0])
+    }
+
+    @Test
     fun `observeColorsUsedForGame filters out null colors`() = runTest {
         val plays = listOf(
             createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
