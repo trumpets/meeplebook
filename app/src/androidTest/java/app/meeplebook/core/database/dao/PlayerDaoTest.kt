@@ -3,6 +3,7 @@ package app.meeplebook.core.database.dao
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.cash.turbine.test
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
@@ -607,16 +608,15 @@ class PlayerDaoTest {
         playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"))
         playerDao.insert(createTestPlayer(0, 1, "Alice", null, true, color = "red"))
 
-        var result = playerDao.observeColorsUsedForGame(100).first()
-        assertEquals(1, result.size)
-        assertEquals("red", result[0])
+        playerDao.observeColorsUsedForGame(100).test {
+            assertEquals(listOf("red"), awaitItem())
 
-        playerDao.insert(createTestPlayer(0, 1, "Bob", null, false, color = "blue"))
+            playerDao.insert(createTestPlayer(0, 1, "Bob", null, false, color = "blue"))
 
-        result = playerDao.observeColorsUsedForGame(100).first()
-        assertEquals(2, result.size)
-        assertTrue(result.contains("red"))
-        assertTrue(result.contains("blue"))
+            assertEquals(listOf("blue", "red"), awaitItem())
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     // --- Helper functions ---
