@@ -160,6 +160,19 @@ class FakePlaysRepository : PlaysRepository {
         }
     }
 
+    override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
+        return _plays.map { plays ->
+            plays
+                .asSequence()
+                .filter { it.gameId == gameId }
+                .flatMap { it.players.asSequence() }
+                .mapNotNull { it.color }
+                .distinct()
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+                .toList()
+        }
+    }
+
     /**
      * Sets the plays directly for testing purposes.
      */

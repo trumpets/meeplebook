@@ -54,4 +54,21 @@ interface PlayerDao {
      */
     @Query("DELETE FROM players")
     suspend fun deleteAll()
+
+    /**
+     * Observe distinct non-null player colors used for the given game.
+     *
+     * @param gameId local id of the game
+     * @return Flow emitting an ordered list of distinct color strings
+     */
+    @Query("""
+        SELECT DISTINCT LOWER(player.color) AS color
+        FROM players AS player
+        INNER JOIN plays AS play
+            ON player.playId = play.localId
+        WHERE play.gameId = :gameId
+          AND player.color IS NOT NULL
+        ORDER BY player.color ASC
+    """)
+    fun observeColorsUsedForGame(gameId: Long): Flow<List<String>>
 }

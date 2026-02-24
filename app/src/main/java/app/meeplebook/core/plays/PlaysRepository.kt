@@ -99,4 +99,12 @@ interface PlaysRepository {
      * ordered by the number of plays at that location (desc).
      */
     fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>>
+
+    /**
+     * Observe distinct non-null player colors used for the given game.
+     *
+     * @param gameId local id of the game
+     * @return Flow emitting an ordered list of distinct color strings
+     */
+    fun observeColorsUsedForGame(gameId: Long): Flow<List<String>>
 }

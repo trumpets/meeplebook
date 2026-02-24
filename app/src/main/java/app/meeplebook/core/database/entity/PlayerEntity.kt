@@ -23,6 +23,7 @@ import app.meeplebook.core.plays.remote.dto.RemotePlayerDto
     ],
     indices = [
         Index(value = ["playId"]),
+        Index(value = ["color"]),
         Index(value = ["name", "username"])
     ]
 )

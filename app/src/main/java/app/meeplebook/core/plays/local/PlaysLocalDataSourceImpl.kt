@@ -144,4 +144,8 @@ class PlaysLocalDataSourceImpl @Inject constructor(
             playerLocationProjects.map { it.toPlayerIdentity() }
         }
     }
+
+    override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
+        return playerDao.observeColorsUsedForGame(gameId)
+    }
 }

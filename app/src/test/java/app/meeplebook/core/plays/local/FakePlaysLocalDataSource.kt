@@ -182,6 +182,19 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         }
     }
 
+    override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
+        return playsFlow.map { plays ->
+            plays
+                .asSequence()
+                .filter { it.gameId == gameId }
+                .flatMap { it.players.asSequence() }
+                .mapNotNull { it.color }
+                .distinct()
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+                .toList()
+        }
+    }
+
     /**
      * Sets the total plays count for testing.
      */
