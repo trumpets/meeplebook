@@ -77,7 +77,7 @@ object PlayTestFactory {
         username: String? = "testuser",
         userId: Long? = 12345,
         name: String = "Test User",
-        startPosition: String? = null,
+        startPosition: Int? = null,
         color: String? = null,
         score: Int? = null,
         win: Boolean = false

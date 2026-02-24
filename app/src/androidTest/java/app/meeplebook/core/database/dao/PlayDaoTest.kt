@@ -1550,7 +1550,7 @@ class PlayDaoTest {
         win: Boolean,
         username: String? = null,
         userId: Long? = null,
-        startPosition: String? = null,
+        startPosition: Int? = null,
         color: String? = null,
         score: Int? = null
     ): PlayerEntity {
