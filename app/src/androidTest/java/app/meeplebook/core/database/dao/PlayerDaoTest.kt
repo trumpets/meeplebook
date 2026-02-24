@@ -523,9 +523,8 @@ class PlayerDaoTest {
 
         val result = playerDao.observeColorsUsedForGame(100).first()
 
-        assertEquals(2, result.size)
-        assertTrue(result.contains("red"))
-        assertTrue(result.contains("blue"))
+        // Expect lowercased colors in deterministic, ordered form
+        assertEquals(listOf("blue", "red"), result)
     }
 
     @Test
