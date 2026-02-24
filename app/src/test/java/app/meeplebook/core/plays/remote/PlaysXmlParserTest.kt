@@ -80,7 +80,7 @@ class PlaysXmlParserTest {
         assertEquals("player1", player1.username)
         assertEquals(111L, player1.userId)
         assertEquals("Alice", player1.name)
-        assertEquals("1", player1.startPosition)
+        assertEquals(1, player1.startPosition)
         assertEquals("Red", player1.color)
         assertEquals(10, player1.score)
         assertTrue(player1.win)

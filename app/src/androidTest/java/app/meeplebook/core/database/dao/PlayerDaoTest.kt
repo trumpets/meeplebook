@@ -539,7 +539,7 @@ class PlayerDaoTest {
         username: String?,
         win: Boolean,
         userId: Long? = null,
-        startPosition: String? = null,
+        startPosition: Int? = null,
         color: String? = null,
         score: Int? = null
     ): PlayerEntity {

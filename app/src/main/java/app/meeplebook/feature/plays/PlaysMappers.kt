@@ -43,7 +43,7 @@ fun formatPlayerSummary(players: List<DomainPlayerItem>): UiText {
         return uiTextEmpty()
     }
 
-    val sortedPlayers = players.sortedBy { it.startPosition?.toIntOrNull() ?: Int.MAX_VALUE }
+    val sortedPlayers = players.sortedBy { it.startPosition ?: Int.MAX_VALUE }
 
     val formattedPlayers = sortedPlayers.map { player ->
         val details = buildList {

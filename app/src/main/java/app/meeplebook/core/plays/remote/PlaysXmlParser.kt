@@ -80,7 +80,7 @@ object PlaysXmlParser {
                                         username = username?.takeIf { it.isNotBlank() },
                                         userId = userId,
                                         name = name,
-                                        startPosition = startPosition?.takeIf { it.isNotBlank() },
+                                        startPosition = startPosition?.toIntOrNull(),
                                         color = color?.takeIf { it.isNotBlank() },
                                         score = score,
                                         win = win

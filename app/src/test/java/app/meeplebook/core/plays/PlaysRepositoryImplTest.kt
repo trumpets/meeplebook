@@ -459,7 +459,7 @@ class PlaysRepositoryImplTest {
                     userId = 111L,
                     score = 100,
                     win = true,
-                    startPosition = "1",
+                    startPosition = 1,
                     color = "Red"
                 ),
                 createPlayerCommand(
@@ -468,7 +468,7 @@ class PlaysRepositoryImplTest {
                     userId = null,
                     score = 85,
                     win = false,
-                    startPosition = "2",
+                    startPosition = 2,
                     color = "Blue"
                 )
             )
@@ -487,7 +487,7 @@ class PlaysRepositoryImplTest {
         assertEquals(111L, players[0].userId)
         assertEquals(100, players[0].score)
         assertTrue(players[0].win)
-        assertEquals("1", players[0].startPosition)
+        assertEquals(1, players[0].startPosition)
         assertEquals("Red", players[0].color)
         
         // Verify second player
@@ -496,7 +496,7 @@ class PlaysRepositoryImplTest {
         assertEquals(null, players[1].userId)
         assertEquals(85, players[1].score)
         assertFalse(players[1].win)
-        assertEquals("2", players[1].startPosition)
+        assertEquals(2, players[1].startPosition)
         assertEquals("Blue", players[1].color)
     }
 
@@ -946,7 +946,7 @@ class PlaysRepositoryImplTest {
         name: String,
         username: String? = null,
         userId: Long? = null,
-        startPosition: String? = null,
+        startPosition: Int? = null,
         color: String? = null,
         score: Int? = null,
         win: Boolean = false
