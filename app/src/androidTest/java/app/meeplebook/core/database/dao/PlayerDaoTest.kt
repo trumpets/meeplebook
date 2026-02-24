@@ -509,6 +509,114 @@ class PlayerDaoTest {
         assertEquals(1, playerDao.getPlayersForPlay(2).size)
     }
 
+    // --- Test 9: observeColorsUsedForGame ---
+
+    @Test
+    fun observeColorsUsedForGameReturnsDistinctColorsSortedAlphabetically() = runTest {
+        // Insert two plays for the same game
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"),
+                createTestPlay(2, parseDateString("2024-01-02"), 100, "Game A")
+            )
+        )
+
+        // Insert players with colors across both plays
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "Red"),
+                createTestPlayer(0, 1, "Bob", null, false, color = "Blue"),
+                createTestPlayer(0, 2, "Charlie", null, true, color = "Red"), // duplicate color
+                createTestPlayer(0, 2, "Dave", null, false, color = "Green")
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        // Distinct colors, alphabetically sorted
+        assertEquals(listOf("Blue", "Green", "Red"), result)
+    }
+
+    @Test
+    fun observeColorsUsedForGameExcludesOtherGames() = runTest {
+        // Insert plays for two different games
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game B")
+            )
+        )
+
+        // Insert players: game A uses Red, game B uses Purple
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "Red"),
+                createTestPlayer(0, 2, "Bob", null, false, color = "Purple")
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertEquals(listOf("Red"), result)
+    }
+
+    @Test
+    fun observeColorsUsedForGameExcludesNullColors() = runTest {
+        // Insert a play
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"))
+
+        // Insert players: one with color, one without
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "Red"),
+                createTestPlayer(0, 1, "Bob", null, false, color = null)
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertEquals(listOf("Red"), result)
+    }
+
+    @Test
+    fun observeColorsUsedForGameReturnsEmptyForNoPlays() = runTest {
+        val result = playerDao.observeColorsUsedForGame(999).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observeColorsUsedForGameReturnsEmptyWhenAllColorsAreNull() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = null),
+                createTestPlayer(0, 1, "Bob", null, false, color = null)
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observeColorsUsedForGameEmitsUpdatesOnChange() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game A"))
+        playerDao.insert(createTestPlayer(0, 1, "Alice", null, true, color = "Red"))
+
+        // Verify initial state
+        var result = playerDao.observeColorsUsedForGame(100).first()
+        assertEquals(listOf("Red"), result)
+
+        // Add another player with a new color
+        playerDao.insert(createTestPlayer(0, 1, "Bob", null, false, color = "Blue"))
+
+        // Verify updated state
+        result = playerDao.observeColorsUsedForGame(100).first()
+        assertEquals(listOf("Blue", "Red"), result)
+    }
+
     // --- Helper functions ---
 
     private fun createTestPlay(

@@ -111,4 +111,12 @@ interface PlaysLocalDataSource {
      * ordered by the number of plays at that location (desc).
      */
     fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>>
+
+    /**
+     * Observes distinct colors used by players in plays of a specific game.
+     *
+     * @param gameId The game ID to filter plays by.
+     * @return Flow emitting a list of distinct, non-null colors ordered alphabetically.
+     */
+    fun observeColorsUsedForGame(gameId: Long): Flow<List<String>>
 }
