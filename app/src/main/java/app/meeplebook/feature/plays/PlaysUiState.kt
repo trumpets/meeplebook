@@ -2,6 +2,7 @@ package app.meeplebook.feature.plays
 
 import androidx.annotation.StringRes
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.UiText
 import java.time.YearMonth
@@ -95,7 +96,7 @@ data class PlaysSection(
 /**
  * Represents a single play record in the UI.
  *
- * @property id Unique identifier for the play record.
+ * @property playId Unique identifier for the play record.
  * @property gameName Name of the game that was played.
  * @property thumbnailUrl Optional URL to the game's thumbnail image.
  * @property dateUiText Formatted date text for display (e.g., "27/01/2026").
@@ -106,7 +107,7 @@ data class PlaysSection(
  * @property syncStatus Current synchronization status with BGG.
  */
 data class PlayItem(
-    val id: Long,
+    val playId: PlayId,
     val gameName: String,
     val thumbnailUrl: String?,
     val dateUiText: UiText,
@@ -146,7 +147,7 @@ sealed interface PlaysUiEffects {
      *
      * @property playId The ID of the play to view.
      */
-    data class NavigateToPlay(val playId: Long) : PlaysUiEffects
+    data class NavigateToPlay(val playId: PlayId) : PlaysUiEffects
 
     /**
      * Show a temporary snackbar message to the user.

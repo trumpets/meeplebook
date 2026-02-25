@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.core.ui.uiText
@@ -186,7 +187,7 @@ fun OverviewContent(
                     } else {
                         items(
                             items = uiState.recentPlays,
-                            key = { it.id }
+                            key = { it.playId.localId }
                         ) { play ->
                             RecentPlayCard(
                                 play = play,
@@ -294,7 +295,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             recentPlays = listOf(
                 RecentPlay(
-                    id = 1,
+                    playId = PlayId.Local(1L),
                     gameName = "Catan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Today, 8:30 PM"),
@@ -302,7 +303,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                 ),
                 RecentPlay(
-                    id = 2,
+                    playId = PlayId.Local(2L),
                     gameName = "Wingspan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Yesterday"),
@@ -310,7 +311,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     playerNamesUiText = uiText("You, Chris")
                 ),
                 RecentPlay(
-                    id = 3,
+                    playId = PlayId.Local(3L),
                     gameName = "7 Wonders Duel",
                     thumbnailUrl = null,
                     dateUiText = uiText("Dec 2"),
@@ -351,7 +352,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             recentPlays = listOf(
                 RecentPlay(
-                    id = 1,
+                    playId = PlayId.Local(1L),
                     gameName = "Catan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Today"),
@@ -371,7 +372,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             recentPlays = listOf(
                 RecentPlay(
-                    id = 1,
+                    playId = PlayId.Local(1L),
                     gameName = "Catan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Today"),

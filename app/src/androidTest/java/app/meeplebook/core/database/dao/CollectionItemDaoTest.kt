@@ -7,6 +7,7 @@ import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.CollectionItemEntity
 import app.meeplebook.core.database.entity.PlayEntity
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -489,7 +490,8 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insert(
             PlayEntity(
-                id = 1,
+                localId = 1,
+                remoteId = 100,
                 date = parseDateString("2024-01-01"),
                 quantity = 1,
                 length = 60,
@@ -497,7 +499,8 @@ class CollectionItemDaoTest {
                 location = null,
                 gameId = 1,
                 gameName = "Game 1",
-                comments = null
+                comments = null,
+                syncStatus = PlaySyncStatus.SYNCED
             )
         )
 
@@ -521,7 +524,8 @@ class CollectionItemDaoTest {
         playDao.insertAll(
             listOf(
                 PlayEntity(
-                    id = 1,
+                    localId = 1,
+                    remoteId = 100,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
                     length = 60,
@@ -529,10 +533,12 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 1,
                     gameName = "Game 1",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 ),
                 PlayEntity(
-                    id = 2,
+                    localId = 2,
+                    remoteId = 200,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
                     length = 60,
@@ -540,7 +546,8 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 2,
                     gameName = "Game 2",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 )
             )
         )
@@ -635,7 +642,8 @@ class CollectionItemDaoTest {
         playDao.insertAll(
             listOf(
                 PlayEntity(
-                    id = 1,
+                    localId = 1,
+                    remoteId = 100,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
                     length = 60,
@@ -643,10 +651,12 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 1,
                     gameName = "Agricola",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 ),
                 PlayEntity(
-                    id = 2,
+                    localId = 2,
+                    remoteId = 200,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
                     length = 60,
@@ -654,7 +664,8 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 2,
                     gameName = "Brass",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 )
             )
         )
@@ -680,7 +691,8 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insert(
             PlayEntity(
-                id = 1,
+                localId = 1,
+                remoteId = 100,
                 date = parseDateString("2024-01-01"),
                 quantity = 1,
                 length = 60,
@@ -688,7 +700,8 @@ class CollectionItemDaoTest {
                 location = null,
                 gameId = 1,
                 gameName = "Game 1",
-                comments = null
+                comments = null,
+                syncStatus = PlaySyncStatus.SYNCED
             )
         )
 
@@ -886,7 +899,8 @@ class CollectionItemDaoTest {
         val playDao = database.playDao()
         playDao.insert(
             PlayEntity(
-                id = 1,
+                localId = 1,
+                remoteId = 100,
                 date = parseDateString("2024-01-01"),
                 quantity = 1,
                 length = 60,
@@ -894,7 +908,8 @@ class CollectionItemDaoTest {
                 location = null,
                 gameId = 2,
                 gameName = "Pandemic",
-                comments = null
+                comments = null,
+                syncStatus = PlaySyncStatus.SYNCED
             )
         )
 
@@ -922,7 +937,8 @@ class CollectionItemDaoTest {
         playDao.insertAll(
             listOf(
                 PlayEntity(
-                    id = 1,
+                    localId = 1,
+                    remoteId = 100,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
                     length = 60,
@@ -930,10 +946,12 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 1,
                     gameName = "Catan",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 ),
                 PlayEntity(
-                    id = 2,
+                    localId = 2,
+                    remoteId = 200,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
                     length = 60,
@@ -941,7 +959,8 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 2,
                     gameName = "Pandemic",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 )
             )
         )
@@ -995,7 +1014,8 @@ class CollectionItemDaoTest {
         playDao.insertAll(
             listOf(
                 PlayEntity(
-                    id = 1,
+                    localId = 1,
+                    remoteId = 100,
                     date = parseDateString("2024-01-01"),
                     quantity = 1,
                     length = 60,
@@ -1003,10 +1023,12 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 1,
                     gameName = "Catan",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 ),
                 PlayEntity(
-                    id = 2,
+                    localId = 2,
+                    remoteId = 200,
                     date = parseDateString("2024-01-02"),
                     quantity = 1,
                     length = 60,
@@ -1014,7 +1036,8 @@ class CollectionItemDaoTest {
                     location = null,
                     gameId = 1,
                     gameName = "Catan",
-                    comments = null
+                    comments = null,
+                    syncStatus = PlaySyncStatus.SYNCED
                 )
             )
         )

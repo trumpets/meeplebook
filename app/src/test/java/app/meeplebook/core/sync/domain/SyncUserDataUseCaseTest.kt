@@ -7,7 +7,6 @@ import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.plays.FakePlaysRepository
-import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
@@ -80,11 +79,7 @@ class SyncUserDataUseCaseTest {
             )
         )
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
-
-        val plays = listOf(
-            createPlay(id = 1, gameName = "Catan")
-        )
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(plays)
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         // When
         val result = useCase()
@@ -204,7 +199,7 @@ class SyncUserDataUseCaseTest {
         fakeAuthRepository.setCurrentUser(user)
 
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(emptyList())
+        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
         // When
         useCase()

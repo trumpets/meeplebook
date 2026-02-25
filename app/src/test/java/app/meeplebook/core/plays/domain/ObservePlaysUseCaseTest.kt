@@ -32,8 +32,8 @@ class ObservePlaysUseCaseTest {
     fun `invoke with null query passes null to repository`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan"),
-            createPlay(id = 2, gameName = "Wingspan")
+            createPlay(localPlayId = 1, gameName = "Catan"),
+            createPlay(localPlayId = 2, gameName = "Wingspan")
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -48,8 +48,8 @@ class ObservePlaysUseCaseTest {
     fun `invoke with blank query returns all plays`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan"),
-            createPlay(id = 2, gameName = "Wingspan")
+            createPlay(localPlayId = 1, gameName = "Catan"),
+            createPlay(localPlayId = 2, gameName = "Wingspan")
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -66,8 +66,8 @@ class ObservePlaysUseCaseTest {
     fun `invoke with non-blank query forwards query to repository`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan", location = "Home"),
-            createPlay(id = 2, gameName = "Wingspan", location = "Store")
+            createPlay(localPlayId = 1, gameName = "Catan", location = "Home"),
+            createPlay(localPlayId = 2, gameName = "Wingspan", location = "Store")
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -84,7 +84,7 @@ class ObservePlaysUseCaseTest {
         val player1 = createPlayer(id = 1, playId = 1, name = "Alice", score = 10, win = true)
         val player2 = createPlayer(id = 2, playId = 1, name = "Bob", score = 8, win = false)
         val play = createPlay(
-            id = 1,
+            localPlayId = 1,
             gameName = "Catan",
             date = Instant.parse("2024-01-15T20:00:00Z"),
             length = 90,
@@ -100,7 +100,7 @@ class ObservePlaysUseCaseTest {
         // Then
         assertEquals(1, result.size)
         val domainPlay = result[0]
-        assertEquals(1, domainPlay.id)
+        assertEquals(1, domainPlay.playId.localId)
         assertEquals("Catan", domainPlay.gameName)
         assertNull(domainPlay.thumbnailUrl) // Thumbnail not yet mapped from CollectionRepository
         assertEquals(Instant.parse("2024-01-15T20:00:00Z"), domainPlay.date)
@@ -124,9 +124,9 @@ class ObservePlaysUseCaseTest {
     fun `invoke maps multiple plays correctly`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan", date = Instant.parse("2024-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Wingspan", date = Instant.parse("2024-01-14T19:00:00Z")),
-            createPlay(id = 3, gameName = "Azul", date = Instant.parse("2024-01-13T18:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2024-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Wingspan", date = Instant.parse("2024-01-14T19:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Azul", date = Instant.parse("2024-01-13T18:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -155,7 +155,7 @@ class ObservePlaysUseCaseTest {
     fun `invoke updates when repository data changes`() = runTest {
         // Given - initial state
         val initialPlays = listOf(
-            createPlay(id = 1, gameName = "Catan")
+            createPlay(localPlayId = 1, gameName = "Catan")
         )
         fakePlaysRepository.setPlays(initialPlays)
 
@@ -168,8 +168,8 @@ class ObservePlaysUseCaseTest {
 
             // When - data changes
             val updatedPlays = listOf(
-                createPlay(id = 2, gameName = "Wingspan"),
-                createPlay(id = 1, gameName = "Catan")
+                createPlay(localPlayId = 2, gameName = "Wingspan"),
+                createPlay(localPlayId = 1, gameName = "Catan")
             )
             fakePlaysRepository.setPlays(updatedPlays)
 
@@ -187,7 +187,7 @@ class ObservePlaysUseCaseTest {
     fun `invoke with default parameter uses null query`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan")
+            createPlay(localPlayId = 1, gameName = "Catan")
         )
         fakePlaysRepository.setPlays(plays)
 

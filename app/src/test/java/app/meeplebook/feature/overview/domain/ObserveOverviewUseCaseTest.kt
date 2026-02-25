@@ -98,8 +98,8 @@ class ObserveOverviewUseCaseTest {
         fakeCollectionRepository.setFirstUnplayed(suggested)
 
         val recentPlays = listOf(
-            createPlay(id = 1, gameName = "Catan"),
-            createPlay(id = 2, gameName = "Ticket to Ride")
+            createPlay(localPlayId = 1, gameName = "Catan"),
+            createPlay(localPlayId = 2, gameName = "Ticket to Ride")
         )
         fakePlaysRepository.setRecentPlays(recentPlays)
 
@@ -168,7 +168,7 @@ class ObserveOverviewUseCaseTest {
         fakeCollectionRepository.setCollectionCount(30)
         fakePlaysRepository.setTotalPlaysCount(75)
 
-        val recentPlays = listOf(createPlay(id = 1, gameName = "Catan"))
+        val recentPlays = listOf(createPlay(localPlayId = 1, gameName = "Catan"))
         fakePlaysRepository.setRecentPlays(recentPlays)
 
         // When
