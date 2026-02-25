@@ -67,8 +67,8 @@ interface PlayerDao {
         INNER JOIN plays AS play
             ON player.playId = play.localId
         WHERE play.gameId = :gameId
-          AND player.color IS NOT NULL
-        ORDER BY player.color ASC
+          AND color IS NOT NULL
+        ORDER BY color ASC
     """)
     fun observeColorsUsedForGame(gameId: Long): Flow<List<String>>
 }

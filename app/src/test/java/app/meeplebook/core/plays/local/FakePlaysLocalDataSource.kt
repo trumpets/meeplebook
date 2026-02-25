@@ -188,7 +188,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
                 .asSequence()
                 .filter { it.gameId == gameId }
                 .flatMap { it.players.asSequence() }
-                .mapNotNull { it.color }
+                .mapNotNull { it.color?.lowercase() }
                 .distinct()
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
                 .toList()
