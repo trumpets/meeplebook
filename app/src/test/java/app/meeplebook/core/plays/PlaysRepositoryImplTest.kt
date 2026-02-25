@@ -916,6 +916,122 @@ class PlaysRepositoryImplTest {
         assertFalse(result.any { it.name == "Bob" })
     }
 
+    // --- observeColorsUsedForGame tests ---
+
+    @Test
+    fun `observeColorsUsedForGame returns distinct colors for game`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = "red"),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", color = "blue")
+            )),
+            createPlay(localPlayId = 2, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 3, playId = 2, name = "Alice", color = "red")
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertEquals(2, result.size)
+        assertTrue(result.contains("red"))
+        assertTrue(result.contains("blue"))
+    }
+
+    @Test
+    fun `observeColorsUsedForGame filters colors from other games`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = "red")
+            )),
+            createPlay(localPlayId = 2, gameName = "Catan", gameId = 200, players = listOf(
+                PlayTestFactory.createPlayer(id = 2, playId = 2, name = "Bob", color = "blue")
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("red", result[0])
+    }
+
+    @Test
+    fun `observeColorsUsedForGame lowercases and de-duplicates colors case-insensitively`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = "Red"),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", color = "red")
+            )),
+            createPlay(localPlayId = 2, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 3, playId = 2, name = "Carol", color = "RED")
+            )),
+            createPlay(localPlayId = 3, gameName = "Catan", gameId = 200, players = listOf(
+                PlayTestFactory.createPlayer(id = 4, playId = 3, name = "Dave", color = "Red")
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("red", result[0])
+    }
+
+    @Test
+    fun `observeColorsUsedForGame filters out null colors`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = "red"),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", color = null)
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("red", result[0])
+    }
+
+    @Test
+    fun `observeColorsUsedForGame returns empty list when no plays exist`() = runTest {
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `observeColorsUsedForGame returns empty list when all colors are null`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = null),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", color = null)
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `observeColorsUsedForGame returns colors sorted alphabetically`() = runTest {
+        val plays = listOf(
+            createPlay(localPlayId = 1, gameName = "Chess", gameId = 100, players = listOf(
+                PlayTestFactory.createPlayer(id = 1, playId = 1, name = "Alice", color = "red"),
+                PlayTestFactory.createPlayer(id = 2, playId = 1, name = "Bob", color = "blue"),
+                PlayTestFactory.createPlayer(id = 3, playId = 1, name = "Charlie", color = "green")
+            ))
+        )
+        local.setPlays(plays)
+
+        val result = repository.observeColorsUsedForGame(100).first()
+
+        assertEquals(listOf("blue", "green", "red"), result)
+    }
+
     // --- Helper functions for createPlay tests ---
 
     private fun createPlayCommand(
