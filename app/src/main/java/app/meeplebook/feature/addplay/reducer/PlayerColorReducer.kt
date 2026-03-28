@@ -19,7 +19,7 @@ class PlayerColorReducer {
 
             is AddPlayEvent.PlayerColorEvent.ColorSelected ->
                 players.map {
-                    if (it.playerIdentity == event.playerEntryId)
+                    if (it.playerIdentity == event.playerIdentity)
                         it.copy(color = event.color.colorString)
                     else it
                 }

@@ -22,6 +22,6 @@ class AddPlayReducer(
         val afterMeta = metaReducer.reduce(state, event)
         val afterPlayers = playersReducer.reduce(afterMeta, event)
 
-        return afterPlayers;
+        return afterPlayers
     }
 }

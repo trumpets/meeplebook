@@ -33,18 +33,18 @@ sealed interface AddPlayEvent {
 
         /** User tapped a suggested player to add them at [startPosition]. */
         data class AddPlayerFromSuggestion(
-            val playerId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val startPosition: Int
         ) : PlayerListEvent
 
-        /** User removed the player identified by [playerEntryId] from the list. */
+        /** User removed the player identified by [playerIdentity] from the list. */
         data class RemovePlayer(
-            val playerEntryId: PlayerIdentity
+            val playerIdentity: PlayerIdentity
         ) : PlayerListEvent
 
         /** User tapped a player row to open its inline edit panel. */
         data class EditPlayer(
-            val playerEntryId: PlayerIdentity
+            val playerIdentity: PlayerIdentity
         ) : PlayerListEvent
 
         /** User dismissed the inline player-edit panel. */
@@ -54,21 +54,21 @@ sealed interface AddPlayEvent {
     /** Events that edit a specific player's identity fields. */
     sealed interface PlayerEditEvent : AddPlayEvent {
 
-        /** User changed the display name of [playerEntryId]. */
+        /** User changed the display name of [playerIdentity]. */
         data class NameChanged(
-            val playerEntryId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val name: String
         ) : PlayerEditEvent
 
-        /** User changed the BGG username of [playerEntryId]. */
+        /** User changed the BGG username of [playerIdentity]. */
         data class UsernameChanged(
-            val playerEntryId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val username: String
         ) : PlayerEditEvent
 
-        /** User changed the team label of [playerEntryId]. */
+        /** User changed the team label of [playerIdentity]. */
         data class TeamChanged(
-            val playerEntryId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val team: String
         ) : PlayerEditEvent
     }
@@ -76,15 +76,15 @@ sealed interface AddPlayEvent {
     /** Events that modify a player's score or win flag. */
     sealed interface PlayerScoreEvent : AddPlayEvent {
 
-        /** User updated the numeric score for [playerEntryId]. */
+        /** User updated the numeric score for [playerIdentity]. */
         data class ScoreChanged(
-            val playerEntryId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val score: Int
         ) : PlayerScoreEvent
 
-        /** User toggled the winner status for [playerEntryId]. */
+        /** User toggled the winner status for [playerIdentity]. */
         data class WinnerToggled(
-            val playerEntryId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val isWinner: Boolean
         ) : PlayerScoreEvent
     }
@@ -92,14 +92,14 @@ sealed interface AddPlayEvent {
     /** Events related to the colour picker for a player. */
     sealed interface PlayerColorEvent : AddPlayEvent {
 
-        /** User opened the colour picker for [playerEntryId]. */
+        /** User opened the colour picker for [playerIdentity]. */
         data class ColorClicked(
-            val playerEntryId: PlayerIdentity
+            val playerIdentity: PlayerIdentity
         ) : PlayerColorEvent
 
-        /** User picked [color] for [playerEntryId]. */
+        /** User picked [color] for [playerIdentity]. */
         data class ColorSelected(
-            val playerEntryId: PlayerIdentity,
+            val playerIdentity: PlayerIdentity,
             val color: PlayerColor
         ) : PlayerColorEvent
     }

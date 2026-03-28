@@ -52,7 +52,7 @@ class PlayerListReducerTest {
         val identity = makeIdentity("Bob", username = "bobgames", userId = 42L)
         val result = reducer.reduce(
             emptyList(),
-            AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion(playerId = identity, startPosition = 1)
+            AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion(playerIdentity = identity, startPosition = 1)
         )
         assertEquals(1, result.size)
         assertEquals(identity, result.first().playerIdentity)
@@ -63,7 +63,7 @@ class PlayerListReducerTest {
         val identity = makeIdentity("Bob")
         val result = reducer.reduce(
             emptyList(),
-            AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion(playerId = identity, startPosition = 1)
+            AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion(playerIdentity = identity, startPosition = 1)
         )
         assertEquals(0, result.first().score)
         assertFalse(result.first().isWinner)
@@ -74,7 +74,7 @@ class PlayerListReducerTest {
         val alice = makeIdentity("Alice")
         val bob = makeIdentity("Bob")
         val players = listOf(makePlayer(alice), makePlayer(bob))
-        val result = reducer.reduce(players, AddPlayEvent.PlayerListEvent.RemovePlayer(playerEntryId = alice))
+        val result = reducer.reduce(players, AddPlayEvent.PlayerListEvent.RemovePlayer(playerIdentity = alice))
         assertEquals(1, result.size)
         assertEquals(bob, result.first().playerIdentity)
     }
@@ -84,7 +84,7 @@ class PlayerListReducerTest {
         val alice = makeIdentity("Alice")
         val unknown = makeIdentity("Nobody")
         val players = listOf(makePlayer(alice))
-        val result = reducer.reduce(players, AddPlayEvent.PlayerListEvent.RemovePlayer(playerEntryId = unknown))
+        val result = reducer.reduce(players, AddPlayEvent.PlayerListEvent.RemovePlayer(playerIdentity = unknown))
         assertEquals(1, result.size)
     }
 
@@ -92,7 +92,7 @@ class PlayerListReducerTest {
     fun `EditPlayer and StopEditingPlayer pass through unchanged`() {
         val alice = makeIdentity("Alice")
         val players = listOf(makePlayer(alice))
-        val afterEdit = reducer.reduce(players, AddPlayEvent.PlayerListEvent.EditPlayer(playerEntryId = alice))
+        val afterEdit = reducer.reduce(players, AddPlayEvent.PlayerListEvent.EditPlayer(playerIdentity = alice))
         val afterStop = reducer.reduce(players, AddPlayEvent.PlayerListEvent.StopEditingPlayer)
         assertEquals(players, afterEdit)
         assertEquals(players, afterStop)

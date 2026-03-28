@@ -18,21 +18,21 @@ class PlayerEditReducer {
 
             is AddPlayEvent.PlayerEditEvent.NameChanged ->
                 players.map {
-                    if (it.playerIdentity == event.playerEntryId)
-                        it.copy(playerIdentity = it.playerIdentity.copy (name = event.name))
+                    if (it.playerIdentity == event.playerIdentity)
+                        it.copy(playerIdentity = it.playerIdentity.copy(name = event.name))
                     else it
                 }
 
             is AddPlayEvent.PlayerEditEvent.UsernameChanged ->
                 players.map {
-                    if (it.playerIdentity == event.playerEntryId)
-                        it.copy(playerIdentity = it.playerIdentity.copy (username = event.username))
+                    if (it.playerIdentity == event.playerIdentity)
+                        it.copy(playerIdentity = it.playerIdentity.copy(username = event.username))
                     else it
                 }
 
             is AddPlayEvent.PlayerEditEvent.TeamChanged ->
                 players.map {
-                    if (it.playerIdentity == event.playerEntryId)
+                    if (it.playerIdentity == event.playerIdentity)
                         it.copy(color = event.team)
                     else it
                 }

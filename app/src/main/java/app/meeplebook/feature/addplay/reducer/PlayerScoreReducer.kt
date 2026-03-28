@@ -21,7 +21,7 @@ class PlayerScoreReducer {
 
             is AddPlayEvent.PlayerScoreEvent.ScoreChanged -> {
                 val updatedPlayers = players.map {
-                    if (it.playerIdentity == event.playerEntryId)
+                    if (it.playerIdentity == event.playerIdentity)
                         it.copy(score = event.score)
                     else it
                 }
@@ -37,7 +37,7 @@ class PlayerScoreReducer {
 
             is AddPlayEvent.PlayerScoreEvent.WinnerToggled ->
                 players.map {
-                    if (it.playerIdentity == event.playerEntryId)
+                    if (it.playerIdentity == event.playerIdentity)
                         it.copy(isWinner = event.isWinner)
                     else it
                 }

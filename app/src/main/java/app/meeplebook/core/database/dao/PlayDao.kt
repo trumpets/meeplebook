@@ -187,10 +187,11 @@ interface PlayDao {
      * Observes the 10 most recent unique play locations, ordered by the most recent play date.
      */
     @Query("""
-        SELECT DISTINCT location
+        SELECT location
         FROM plays
         WHERE location IS NOT NULL
-        ORDER BY date DESC
+        GROUP BY location
+        ORDER BY MAX(date) DESC
         LIMIT 10
     """)
     fun observeRecentLocations(): Flow<List<String>>

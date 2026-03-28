@@ -10,7 +10,7 @@ package app.meeplebook.core.plays.remote.dto
  * @property username Optional BGG username associated with the player.
  * @property userId Optional numeric user id from the remote service.
  * @property name Display name of the player (non-null).
- * @property startPosition Optional starting position or seat for this player (string as provided by remote API).
+ * @property startPosition Optional starting position or seat for this player (Int or null as provided by remote API).
  * @property color Optional color/team chosen by the player, if reported.
  * @property score Optional integer score recorded for the player in the play.
  * @property win True if the player was recorded as the winner of the play.
