@@ -38,17 +38,36 @@ data class PlayersState(
 )
 
 data class PlayerEntryUi(
-    val userId: Long?,
+    val playerIdentity: PlayerIdentity,
+
     val startPosition: Int?,
-
-    val name: String,
-    val username: String?,
-
     val color: String?,
 
     val score: Int?,
     val isWinner: Boolean,
-)
+) {
+    companion object {
+        fun empty(startPosition: Int): PlayerEntryUi {
+            return PlayerEntryUi(
+                playerIdentity = PlayerIdentity(name = "", username = null, userId = null),
+                startPosition = startPosition,
+                color = null,
+                score = null,
+                isWinner = false
+            )
+        }
+
+        fun fromPlayerIdentity(playerIdentity: PlayerIdentity, startPosition: Int): PlayerEntryUi {
+            return PlayerEntryUi(
+                playerIdentity = playerIdentity,
+                startPosition = startPosition,
+                color = null,
+                score = 0,
+                isWinner = false
+            )
+        }
+    }
+}
 
 data class PlayerSuggestion(
     val playerIdentity: PlayerIdentity,
