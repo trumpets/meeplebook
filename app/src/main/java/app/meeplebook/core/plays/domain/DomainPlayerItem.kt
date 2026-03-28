@@ -15,7 +15,7 @@ import app.meeplebook.core.plays.model.Player
  */
 data class DomainPlayerItem(
     val name: String,
-    val startPosition: String?,
+    val startPosition: Int?,
     val score: Int?,
     val win: Boolean
 )

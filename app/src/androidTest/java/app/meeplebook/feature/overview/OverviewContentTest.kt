@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
@@ -67,7 +68,7 @@ class OverviewContentTest {
                     uiState = OverviewUiState(
                         recentPlays = listOf(
                             RecentPlay(
-                                id = 1,
+                                playId = PlayId.Local(1),
                                 gameName = "Catan",
                                 thumbnailUrl = null,
                                 dateUiText = uiText("Today, 8:30 PM"),
@@ -75,7 +76,7 @@ class OverviewContentTest {
                                 playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                             ),
                             RecentPlay(
-                                id = 2,
+                                playId = PlayId.Local(2),
                                 gameName = "Wingspan",
                                 thumbnailUrl = null,
                                 dateUiText = uiText("Yesterday"),
@@ -107,7 +108,7 @@ class OverviewContentTest {
                     uiState = OverviewUiState(
                         recentPlays = listOf(
                             RecentPlay(
-                                id = 42,
+                                playId = PlayId.Local(42),
                                 gameName = "Test Game",
                                 thumbnailUrl = null,
                                 dateUiText = uiText("Today"),
@@ -116,7 +117,7 @@ class OverviewContentTest {
                             )
                         )
                     ),
-                    onRecentPlayClick = { clickedPlayId = it.id }
+                    onRecentPlayClick = { clickedPlayId = it.playId.localId }
                 )
             }
         }
@@ -285,7 +286,7 @@ class OverviewContentTest {
                         isRefreshing = true,
                         recentPlays = listOf(
                             RecentPlay(
-                                id = 1,
+                                playId = PlayId.Local(1),
                                 gameName = "Catan",
                                 thumbnailUrl = null,
                                 dateUiText = uiText("Today"),

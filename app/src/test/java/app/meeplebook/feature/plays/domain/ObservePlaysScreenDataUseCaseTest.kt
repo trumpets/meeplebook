@@ -63,11 +63,11 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke organizes plays into sections by month and year`() = runTest {
         // Given - plays from different months
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Wingspan", date = Instant.parse("2026-01-10T19:00:00Z")),
-            createPlay(id = 3, gameName = "Azul", date = Instant.parse("2025-12-20T18:00:00Z")),
-            createPlay(id = 4, gameName = "Brass", date = Instant.parse("2025-12-15T17:00:00Z")),
-            createPlay(id = 5, gameName = "Codenames", date = Instant.parse("2025-11-10T16:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Wingspan", date = Instant.parse("2026-01-10T19:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Azul", date = Instant.parse("2025-12-20T18:00:00Z")),
+            createPlay(localPlayId = 4, gameName = "Brass", date = Instant.parse("2025-12-15T17:00:00Z")),
+            createPlay(localPlayId = 5, gameName = "Codenames", date = Instant.parse("2025-11-10T16:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -105,9 +105,9 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke combines plays with stats correctly`() = runTest {
         // Given - 3 plays of 2 different games, 2 in current year
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan", gameId = 100, date = Instant.parse("2026-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Wingspan", gameId = 200, date = Instant.parse("2026-01-10T19:00:00Z")),
-            createPlay(id = 3, gameName = "Catan", gameId = 100, date = Instant.parse("2025-12-20T18:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Catan", gameId = 100, date = Instant.parse("2026-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Wingspan", gameId = 200, date = Instant.parse("2026-01-10T19:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Catan", gameId = 100, date = Instant.parse("2025-12-20T18:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setPlaysCountForPeriod(2)
@@ -129,8 +129,8 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke forwards query parameter to observePlays`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan"),
-            createPlay(id = 2, gameName = "Wingspan")
+            createPlay(localPlayId = 1, gameName = "Catan"),
+            createPlay(localPlayId = 2, gameName = "Wingspan")
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -145,7 +145,7 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke with null query passes null to observePlays`() = runTest {
         // Given
         val plays = listOf(
-            createPlay(id = 1, gameName = "Catan")
+            createPlay(localPlayId = 1, gameName = "Catan")
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -160,7 +160,7 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke updates when plays change`() = runTest {
         // Given - initial state
         val initialPlays = listOf(
-            createPlay(id = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z"))
         )
         fakePlaysRepository.setPlays(initialPlays)
 
@@ -175,8 +175,8 @@ class ObservePlaysScreenDataUseCaseTest {
 
             // When - data changes (add a play)
             val updatedPlays = listOf(
-                createPlay(id = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z")),
-                createPlay(id = 2, gameName = "Wingspan", gameId = 200, date = Instant.parse("2025-12-10T19:00:00Z"))
+                createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z")),
+                createPlay(localPlayId = 2, gameName = "Wingspan", gameId = 200, date = Instant.parse("2025-12-10T19:00:00Z"))
             )
             fakePlaysRepository.setPlays(updatedPlays)
 
@@ -204,7 +204,7 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke updates when stats change independently`() = runTest {
         // Given - initial state
         fakePlaysRepository.setPlays(
-            listOf(createPlay(id = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z")))
+            listOf(createPlay(localPlayId = 1, gameName = "Catan", date = Instant.parse("2026-01-15T20:00:00Z")))
         )
         fakePlaysRepository.setTotalPlaysCount(1L)
         fakePlaysRepository.setUniqueGamesCount(1L)
@@ -259,9 +259,9 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke preserves play order within sections`() = runTest {
         // Given - multiple plays in same month in specific order
         val plays = listOf(
-            createPlay(id = 1, gameName = "First", date = Instant.parse("2026-01-20T20:00:00Z")),
-            createPlay(id = 2, gameName = "Second", date = Instant.parse("2026-01-15T19:00:00Z")),
-            createPlay(id = 3, gameName = "Third", date = Instant.parse("2026-01-10T18:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "First", date = Instant.parse("2026-01-20T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Second", date = Instant.parse("2026-01-15T19:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Third", date = Instant.parse("2026-01-10T18:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
 
@@ -280,9 +280,9 @@ class ObservePlaysScreenDataUseCaseTest {
     fun `invoke handles plays spanning multiple years`() = runTest {
         // Given - plays from 3 different years
         val plays = listOf(
-            createPlay(id = 1, gameName = "Game2026", date = Instant.parse("2026-01-15T20:00:00Z")),
-            createPlay(id = 2, gameName = "Game2025", date = Instant.parse("2025-06-15T19:00:00Z")),
-            createPlay(id = 3, gameName = "Game2024", date = Instant.parse("2024-12-15T18:00:00Z"))
+            createPlay(localPlayId = 1, gameName = "Game2026", date = Instant.parse("2026-01-15T20:00:00Z")),
+            createPlay(localPlayId = 2, gameName = "Game2025", date = Instant.parse("2025-06-15T19:00:00Z")),
+            createPlay(localPlayId = 3, gameName = "Game2024", date = Instant.parse("2024-12-15T18:00:00Z"))
         )
         fakePlaysRepository.setPlays(plays)
 

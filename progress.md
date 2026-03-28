@@ -168,3 +168,157 @@ PR Link: https://github.com/trumpets/meeplebook/pull/86 (PlaysScreen implementat
   - UI tests should cover: all states (Loading, Empty variants, Error, Content), component visibility, user interactions (search, card taps), and content display
   - Use testTag for key UI elements: playsScreen, playsLoadingIndicator, playsStatsCard, playsSearchInput, playsEmptyState, playsErrorState, playsListContent, playCard_{id}, monthHeader_{yearMonth}
 ---
+## 2026-02-11T10:20:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing review comment #2792466918)
+- Implemented `FakePlaysRepository.createPlay()` method to replace TODO placeholder
+- Implementation follows same pattern as `FakePlaysLocalDataSource.insertPlay()`
+- Uses `maxOfOrNull` for ID generation (more robust than size+1, handles arbitrary test data from setPlays)
+- Maps CreatePlayCommand to Play with PlayId.Local, syncStatus=PENDING, and proper player mapping
+- Updates internal _plays state and calls updateComputedValues() to maintain derived flow consistency
+- Added missing imports: PlayId, PlaySyncStatus, Player
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt` (+38 lines, removed TODO)
+- **Learnings for future iterations:**
+  - Fake repository methods that modify state must: update backing StateFlow, call updateComputedValues() to keep derived flows consistent
+  - Use `(maxOfOrNull { it.playId.localId } ?: 0L) + 1L` for test ID generation instead of size+1 to handle arbitrary setPlays() test data
+  - Player IDs follow pattern `playId * 100 + index` (matches FakePlaysLocalDataSource pattern, acceptable for tests)
+  - New plays created via createPlay() should have syncStatus=PENDING (not SYNCED)
+  - When implementing repository interface methods in fakes, match the behavior of the real implementation (PlaysRepositoryImpl.createPlay)
+---
+## 2026-02-11T10:47:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing review comment #3883642136)
+- Fixed `FakePlaysLocalDataSource` local ID generation to use `maxOfOrNull` instead of `size + 1`
+- Updated `PlayTestFactory.kt` KDoc to reference `localPlayId` instead of incorrect `id` parameter
+- Changes:
+    - `FakePlaysLocalDataSource.saveRemotePlays()`: Changed from `existingPlays.size + 1L` to `(existingPlays.maxOfOrNull { it.playId.localId } ?: 0L) + 1L`
+    - `FakePlaysLocalDataSource.insertPlay()`: Changed from `existingPlays.size + 1L` to `(existingPlays.maxOfOrNull { it.playId.localId } ?: 0L) + 1L`
+    - `PlayTestFactory.createPlay()`: Updated KDoc from "defaults to id * 100" to "defaults to localPlayId * 100"
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/local/FakePlaysLocalDataSource.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/PlayTestFactory.kt`
+- **Learnings for future iterations:**
+  - Use `maxOfOrNull { it.playId.localId } ?: 0L` for local ID generation in test fakes to handle non-contiguous IDs from `setPlays()`
+  - This pattern is consistent with `FakePlaysRepository.createPlay()` and prevents duplicate IDs when tests seed arbitrary test data
+  - Always keep KDoc in sync with actual parameter names and implementation behavior
+  - When `setPlays()` is called with arbitrary/non-contiguous localIds, `size + 1` can create duplicate IDs
+---
+## 2026-02-11T12:22:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing review comment #2792993063)
+- Added comprehensive test suite for `PlaysRepositoryImpl.createPlay()` method with 9 test cases
+- Tests verify: play inserted with `remoteId = null` (PlayId.Local), `syncStatus = PENDING`, correct player fields persistence/linking, observability via `getPlays()` and `observePlays()`, edge cases (null optional fields, multiple plays)
+- Added helper functions `createPlayCommand()` and `createPlayerCommand()` for concise test data creation following existing patterns
+- Fixed boolean assertions to use `assertFalse()` instead of `assertEquals(false, ...)` for consistency
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt` (+245 lines, 9 new tests + 2 helper functions)
+- **Learnings for future iterations:**
+  - Repository method tests should verify all key properties: ID structure (Local vs Remote), sync status, field persistence, relationship linking, and observability
+  - Test helper functions follow pattern: required params first, optional params with sensible defaults
+  - Use `assertTrue/assertFalse` for boolean assertions instead of `assertEquals(true/false, ...)` for better readability and consistency
+  - When testing `createPlay()`, verify both immediate retrieval (`getPlays()`) and reactive retrieval (`observePlays()`)
+  - Test all player fields when verifying player persistence: name, username, userId, score, win, startPosition, color
+  - Edge case testing should cover: null optional fields, empty collections, multiple insertions
+---
+## 2026-02-11T21:53:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing comment #3887424137)
+- Added comprehensive test suite for newly added location-related repository methods: `observeLocations(query)` and `observeRecentLocations()`
+- Created 14 new test cases covering all aspects of location queries:
+  - `observeLocations(query)`: 8 tests covering query matching, case-insensitive filtering, distinct results, alphabetical sorting, limit of 10, no matches, null filtering, empty state
+  - `observeRecentLocations()`: 6 tests covering ordering by most recent date, distinct results, limit of 10, null filtering, empty state, all-null locations
+- Tests follow established patterns from DAO tests and existing repository tests
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt` (+205 lines, 14 new tests)
+- **Learnings for future iterations:**
+  - Location query tests should verify: case-insensitive matching, distinct case-preserving results (deduplicated by lowercase), sorting behavior (alphabetical or date-based), result limits, null filtering
+  - `observeLocations()` returns locations that start with query string, sorted alphabetically (case-insensitive), limited to 10 results
+  - `observeRecentLocations()` returns locations ordered by most recent play date (DESC), deduplicated by lowercase, limited to 10 results
+  - When testing methods that filter/sort/limit collections, cover: normal operation with multiple items, edge cases (empty, nulls, duplicates), limits, and sorting order
+  - Tests should match the behavior of underlying DAO implementations to ensure consistency
+---
+
+## 2026-02-11T22:45:00Z
+PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing comment #3887628361)
+- Implemented `observePlayersByLocation` in `FakePlaysLocalDataSource` and `FakePlaysRepository`
+- Added 4 DAO-level tests for `observePlayersByLocation` in `PlayDaoTest` covering: ordered by play count, empty list for nonexistent location, empty list when no plays exist, grouping by name+username
+- Added 5 repository-level tests for `observePlayersByLocation` in `PlaysRepositoryImplTest` covering: ordered by play count, empty list for nonexistent location, empty list when no plays exist, grouping by name+username, filtering by location
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/local/FakePlaysLocalDataSource.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayDaoTest.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt`
+- **Learnings for future iterations:**
+  - DAO `observePlayersByLocation` uses SQL GROUP BY (name, username) and MAX(userId), ordering by COUNT(*) DESC
+  - Fake implementations should match SQL logic: filter by location, flatMap to players, group by (name, username), take max userId, sort by count DESC
+  - Test coverage should include: normal operation with ordering, empty results (no plays, nonexistent location), grouping behavior, filtering behavior
+  - SQL MAX() on nullable column returns 0 in Room/SQLite when all values are NULL; fake implementations must mirror this behavior so repository tests do not diverge from production
+---
+
+## 2026-03-28T20:02:21Z
+PR Link: N/A (local change)
+- Added/confirmed KDoc comments for Add Play UI state models to improve readability and maintainability
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayUiState.kt`
+- **Learnings for future iterations:**
+    - Keep UI model KDoc close to feature state classes so intent is clear without opening reducers/viewmodels
+    - Small documentation-only updates should still be logged in `progress.md` to preserve project history
+---
+
+## 2026-03-28T20:35:00Z
+PR Link: N/A (local change)
+- Created a new root `AGENTS.md` to guide AI coding agents with codebase-specific architecture, workflows, conventions, and CI/test expectations
+- Consolidated discoverable patterns across app entry/navigation, repository/data flow, BGG XML integration, custom lint rules, security/token handling, and testing workflow
+- Files changed:
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+    - Keep root `AGENTS.md` focused on observed implementation details with concrete file references, not aspirational architecture notes
+    - Include CI-aligned verification commands (`testDebugUnitTest`, `:lint-rules:test`, `lint`, `connectedDebugAndroidTest`) so local checks match GitHub workflows
+    - Call out project-specific safeguards (UiText lint rules, BGG token build config behavior, retry/rate-limit handling) because these drive common regressions
+---
+
+## 2026-03-28T20:49:00Z
+PR Link: N/A (local change)
+- Added 42 unit tests covering all 7 reducer classes in `app.meeplebook.feature.addplay.reducer`
+- Created a shared `AddPlayTestFactory` with `makeState()`, `makePlayer()`, and `makeIdentity()` helpers to avoid boilerplate across test files
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayTestFactory.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/MetaReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerListReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerScoreReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerEditReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerColorReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayersReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/AddPlayReducerTest.kt`
+- **Learnings for future iterations:**
+  - Reducers are pure functions — no mocking needed; test directly by constructing state and asserting on the returned state
+  - Unit tests in `app/src/test` use `org.junit.Assert.*` (`assertEquals`, `assertTrue`, `assertFalse`, `assertNull`) — Truth/`assertThat` is NOT on the test classpath here
+  - `PlayerEntryUi` uses `PlayerIdentity` as its logical key for matching; there is no separate ID field
+  - `AddPlayUiState` has many required constructor fields; always use a factory helper like `AddPlayTestFactory.makeState()` in tests to keep them readable
+  - Test one reducer in isolation per file; use `PlayersReducerTest` and `AddPlayReducerTest` for integration/composition coverage
+---
+
+## 2026-03-28T21:47:39Z
+- Fixed two bugs in `PlaysLocalDataSourceImpl.retainByRemoteIds`:
+  1. **O(n×m) filter** — replaced `List<Long>` membership check with `HashSet<Long>` via `toHashSet()` → O(n) total
+  2. **SQLite 999 bind-param limit** — `toDelete` list is now chunked into 500-item batches before each `playDao.deleteByRemoteIds(chunk)` call
+- Added `SYNC_CHUNK_SIZE = 500` private companion constant
+- Created `PlaysLocalDataSourceImplTest` (instrumented) with 5 tests: normal retain, empty retain (all remote deleted), local-only plays never deleted, all-retained no-op, large list >1000 items verifying chunking
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImpl.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImplTest.kt` (new)
+- **Learnings for future iterations:**
+  - Chunking `deleteByRemoteIds` (IN :list) calls at 500-item batches is the established pattern for any bulk DAO delete; never pass an unbounded list to a Room `IN` query
+  - Use `toHashSet()` when checking `!in` on a list that could be large; List membership is O(m) per check
+---
+
+## 2026-03-28T22:24:50Z
+- Addressed code review: restored observable-update behaviour in `FakePlaysRepository.syncPlays()`
+- Added `var syncPlaysData: List<Play>? = null` — when non-null and sync succeeds, `_plays` and all derived flows are updated (mirrors `PlaysRepositoryImpl` production behaviour)
+- Default is `null` for full backwards compatibility — all 8 existing tests that set `syncPlaysResult = AppResult.Success(Unit)` continue to pass unchanged
+- Created `FakePlaysRepositoryTest` with 6 tests covering: success+data updates flows, success+data updates derived flows, success+null-data leaves plays unchanged, failure+data leaves plays unchanged, result passthrough, call count/username tracking
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepositoryTest.kt` (new)
+- **Learnings for future iterations:**
+  - Fake repositories should mirror production observable side-effects, not just return values; use opt-in nullable fields to stay backwards-compatible with existing tests
+  - When a fake method has configurable results, always add a companion `*Data` property if the real impl also mutates observable state on success
+---

@@ -3,8 +3,12 @@ package app.meeplebook.core.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.plays.model.Player
+import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 import java.time.Instant
 
 /**
@@ -15,12 +19,18 @@ import java.time.Instant
     indices = [
         Index(value = ["date"]),
         Index(value = ["gameId"]),
-        Index(value = ["date", "gameId"])
+        Index(value = ["gameId", "date"]),
+        Index(
+            value = ["remoteId"],
+            unique = true
+        ),
+        Index(value = ["location"])
     ]
 )
 data class PlayEntity(
-    @PrimaryKey
-    val id: Long,
+    @PrimaryKey(autoGenerate = true)
+    val localId: Long = 0L,
+    val remoteId: Long?,
     val date: Instant,
     val quantity: Int,
     val length: Int?,
@@ -28,7 +38,8 @@ data class PlayEntity(
     val location: String?,
     val gameId: Long,
     val gameName: String,
-    val comments: String?
+    val comments: String?,
+    val syncStatus: PlaySyncStatus
 )
 
 /**
@@ -37,7 +48,10 @@ data class PlayEntity(
  */
 fun PlayEntity.toPlay(players: List<Player>): Play {
     return Play(
-        id = id,
+        playId = when (remoteId) {
+            null -> PlayId.Local(localId)
+            else -> PlayId.Remote(localId, remoteId)
+        },
         date = date,
         quantity = quantity,
         length = length,
@@ -46,16 +60,18 @@ fun PlayEntity.toPlay(players: List<Player>): Play {
         gameId = gameId,
         gameName = gameName,
         comments = comments,
-        players = players
+        players = players,
+        syncStatus = syncStatus
     )
 }
 
 /**
- * Maps a [Play] to a [PlayEntity] for storage.
+ * Maps a [RemotePlayDto] to a [PlayEntity] for storage.
  */
-fun Play.toEntity(): PlayEntity {
+fun RemotePlayDto.toEntity(localId: Long, syncStatus: PlaySyncStatus): PlayEntity {
     return PlayEntity(
-        id = id,
+        localId = localId,
+        remoteId = remoteId,
         date = date,
         quantity = quantity,
         length = length,
@@ -63,6 +79,26 @@ fun Play.toEntity(): PlayEntity {
         location = location,
         gameId = gameId,
         gameName = gameName,
-        comments = comments
+        comments = comments,
+        syncStatus = syncStatus
+    )
+}
+
+/**
+ * Maps a [CreatePlayCommand] to a [PlayEntity] for storage.
+ */
+fun CreatePlayCommand.toEntity(): PlayEntity {
+    return PlayEntity(
+        localId = 0, // Will be auto-generated
+        remoteId = null, // New play, no remote ID yet
+        date = date,
+        quantity = quantity,
+        length = length,
+        incomplete = incomplete,
+        location = location,
+        gameId = gameId,
+        gameName = gameName,
+        comments = comments,
+        syncStatus = PlaySyncStatus.PENDING
     )
 }
