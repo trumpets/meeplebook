@@ -34,6 +34,7 @@ data class AddPlayUiState(
 data class LocationState(
     val value: String,
     val suggestions: List<String>,
+    val recentLocations: List<String>,
     val isFocused: Boolean
 )
 
@@ -42,7 +43,7 @@ data class LocationState(
  */
 data class PlayersState(
     val players: List<PlayerEntryUi>,
-    val availableColors: List<String>,
+    val colorsHistory: List<String>,
 //    val editingPlayerId: PlayerEntryId?
 )
 

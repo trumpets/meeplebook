@@ -44,11 +44,12 @@ object AddPlayTestFactory {
         location = LocationState(
             value = locationValue,
             suggestions = emptyList(),
+            recentLocations = emptyList(),
             isFocused = false
         ),
         players = PlayersState(
             players = players,
-            availableColors = PlayerColor.entries.map { it.colorString }
+            colorsHistory = PlayerColor.entries.map { it.colorString }
         ),
         playersByLocation = emptyList(),
         isSaving = false
