@@ -27,6 +27,10 @@ class PlaysLocalDataSourceImpl @Inject constructor(
     private val playerDao: PlayerDao
 ) : PlaysLocalDataSource {
 
+    private companion object {
+        const val SYNC_CHUNK_SIZE = 500
+    }
+
     override fun observePlays(): Flow<List<Play>> {
         return playDao.observePlaysWithPlayers().map { playsWithPlayers ->
             playsWithPlayers.map { it.toPlay() }
@@ -103,13 +107,13 @@ class PlaysLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun retainByRemoteIds(remoteIds: List<Long>) {
-        val localRemoteIds = playDao.getRemotePlays()
+        val remoteIdSet = remoteIds.toHashSet()
+        val toDelete = playDao.getRemotePlays()
             .mapNotNull { it.remoteId }
+            .filter { it !in remoteIdSet }
 
-        val toDelete = localRemoteIds.filter { it !in remoteIds }
-
-        if (toDelete.isNotEmpty()) {
-            playDao.deleteByRemoteIds(remoteIds = toDelete)
+        toDelete.chunked(SYNC_CHUNK_SIZE).forEach { chunk ->
+            playDao.deleteByRemoteIds(remoteIds = chunk)
         }
     }
 

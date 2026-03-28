@@ -295,3 +295,17 @@ PR Link: N/A (local change)
   - `AddPlayUiState` has many required constructor fields; always use a factory helper like `AddPlayTestFactory.makeState()` in tests to keep them readable
   - Test one reducer in isolation per file; use `PlayersReducerTest` and `AddPlayReducerTest` for integration/composition coverage
 ---
+
+## 2026-03-28T21:47:39Z
+- Fixed two bugs in `PlaysLocalDataSourceImpl.retainByRemoteIds`:
+  1. **O(n×m) filter** — replaced `List<Long>` membership check with `HashSet<Long>` via `toHashSet()` → O(n) total
+  2. **SQLite 999 bind-param limit** — `toDelete` list is now chunked into 500-item batches before each `playDao.deleteByRemoteIds(chunk)` call
+- Added `SYNC_CHUNK_SIZE = 500` private companion constant
+- Created `PlaysLocalDataSourceImplTest` (instrumented) with 5 tests: normal retain, empty retain (all remote deleted), local-only plays never deleted, all-retained no-op, large list >1000 items verifying chunking
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImpl.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImplTest.kt` (new)
+- **Learnings for future iterations:**
+  - Chunking `deleteByRemoteIds` (IN :list) calls at 500-item batches is the established pattern for any bulk DAO delete; never pass an unbounded list to a Room `IN` query
+  - Use `toHashSet()` when checking `!in` on a list that could be large; List membership is O(m) per check
+---
