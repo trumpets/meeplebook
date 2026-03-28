@@ -309,3 +309,16 @@ PR Link: N/A (local change)
   - Chunking `deleteByRemoteIds` (IN :list) calls at 500-item batches is the established pattern for any bulk DAO delete; never pass an unbounded list to a Room `IN` query
   - Use `toHashSet()` when checking `!in` on a list that could be large; List membership is O(m) per check
 ---
+
+## 2026-03-28T22:24:50Z
+- Addressed code review: restored observable-update behaviour in `FakePlaysRepository.syncPlays()`
+- Added `var syncPlaysData: List<Play>? = null` — when non-null and sync succeeds, `_plays` and all derived flows are updated (mirrors `PlaysRepositoryImpl` production behaviour)
+- Default is `null` for full backwards compatibility — all 8 existing tests that set `syncPlaysResult = AppResult.Success(Unit)` continue to pass unchanged
+- Created `FakePlaysRepositoryTest` with 6 tests covering: success+data updates flows, success+data updates derived flows, success+null-data leaves plays unchanged, failure+data leaves plays unchanged, result passthrough, call count/username tracking
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepositoryTest.kt` (new)
+- **Learnings for future iterations:**
+  - Fake repositories should mirror production observable side-effects, not just return values; use opt-in nullable fields to stay backwards-compatible with existing tests
+  - When a fake method has configurable results, always add a companion `*Data` property if the real impl also mutates observable state on success
+---

@@ -27,6 +27,16 @@ class FakePlaysRepository : PlaysRepository {
     var syncPlaysResult: AppResult<Unit, PlayError> =
         AppResult.Failure(PlayError.Unknown(IllegalStateException("FakePlaysRepository not configured")))
 
+    /**
+     * When non-null, a successful [syncPlays] call will replace [_plays] with this list and
+     * update all derived flows — mirroring the production behaviour where a successful sync
+     * writes to the local data source and observers pick up the changes.
+     *
+     * Leave as `null` (the default) to keep existing tests unchanged: sync returns the
+     * configured result without touching the observable play data.
+     */
+    var syncPlaysData: List<Play>? = null
+
     var syncCallCount = 0
         private set
 
@@ -54,8 +64,14 @@ class FakePlaysRepository : PlaysRepository {
     override suspend fun syncPlays(username: String): AppResult<Unit, PlayError> {
         syncCallCount++
         lastSyncUsername = username
-
-        return syncPlaysResult
+        val result = syncPlaysResult
+        if (result is AppResult.Success) {
+            syncPlaysData?.let { data ->
+                _plays.value = data
+                updateComputedValues(data)
+            }
+        }
+        return result
     }
 
     override suspend fun createPlay(command: CreatePlayCommand) {
