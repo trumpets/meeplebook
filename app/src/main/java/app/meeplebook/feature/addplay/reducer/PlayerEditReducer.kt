@@ -3,6 +3,10 @@ package app.meeplebook.feature.addplay.reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
 
+/**
+ * Reduces [AddPlayEvent.PlayerEditEvent] events by updating identity fields
+ * (name, username, team) on the matching player entry.
+ */
 class PlayerEditReducer {
 
     fun reduce(

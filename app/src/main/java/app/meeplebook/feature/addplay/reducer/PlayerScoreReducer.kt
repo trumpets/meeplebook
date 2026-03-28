@@ -3,6 +3,13 @@ package app.meeplebook.feature.addplay.reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
 
+/**
+ * Reduces [AddPlayEvent.PlayerScoreEvent] events.
+ *
+ * On [AddPlayEvent.PlayerScoreEvent.ScoreChanged] the reducer also auto-marks the
+ * player(s) with the highest score as winners.
+ * On [AddPlayEvent.PlayerScoreEvent.WinnerToggled] the winner flag is set explicitly.
+ */
 class PlayerScoreReducer {
 
     fun reduce(

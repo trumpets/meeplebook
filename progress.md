@@ -250,3 +250,27 @@ PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/87 (addressing c
   - Fake implementations should match SQL logic: filter by location, flatMap to players, group by (name, username), take max userId, sort by count DESC
   - Test coverage should include: normal operation with ordering, empty results (no plays, nonexistent location), grouping behavior, filtering behavior
   - SQL MAX() on nullable column returns 0 in Room/SQLite when all values are NULL; fake implementations must mirror this behavior so repository tests do not diverge from production
+---
+
+## 2026-03-28T20:02:21Z
+PR Link: N/A (local change)
+- Added/confirmed KDoc comments for Add Play UI state models to improve readability and maintainability
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayUiState.kt`
+- **Learnings for future iterations:**
+    - Keep UI model KDoc close to feature state classes so intent is clear without opening reducers/viewmodels
+    - Small documentation-only updates should still be logged in `progress.md` to preserve project history
+---
+
+## 2026-03-28T20:35:00Z
+PR Link: N/A (local change)
+- Created a new root `AGENTS.md` to guide AI coding agents with codebase-specific architecture, workflows, conventions, and CI/test expectations
+- Consolidated discoverable patterns across app entry/navigation, repository/data flow, BGG XML integration, custom lint rules, security/token handling, and testing workflow
+- Files changed:
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+    - Keep root `AGENTS.md` focused on observed implementation details with concrete file references, not aspirational architecture notes
+    - Include CI-aligned verification commands (`testDebugUnitTest`, `:lint-rules:test`, `lint`, `connectedDebugAndroidTest`) so local checks match GitHub workflows
+    - Call out project-specific safeguards (UiText lint rules, BGG token build config behavior, retry/rate-limit handling) because these drive common regressions
+---

@@ -5,6 +5,9 @@ import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import java.time.Instant
 
+/**
+ * Immutable state consumed by the Add Play screen.
+ */
 data class AddPlayUiState(
     val gameId: Long,
     val gameName: String,
@@ -25,18 +28,27 @@ data class AddPlayUiState(
     val error: UiText = uiTextEmpty()
 )
 
+/**
+ * Location input state, including autocomplete suggestions and focus state.
+ */
 data class LocationState(
     val value: String,
     val suggestions: List<String>,
     val isFocused: Boolean
 )
 
+/**
+ * Player list state for the Add Play form.
+ */
 data class PlayersState(
     val players: List<PlayerEntryUi>,
     val availableColors: List<String>,
 //    val editingPlayerId: PlayerEntryId?
 )
 
+/**
+ * UI model for a player entry in the Add Play form.
+ */
 data class PlayerEntryUi(
     val playerIdentity: PlayerIdentity,
 
@@ -47,6 +59,9 @@ data class PlayerEntryUi(
     val isWinner: Boolean,
 ) {
     companion object {
+        /**
+         * Creates an empty player row ready for manual input.
+         */
         fun empty(startPosition: Int): PlayerEntryUi {
             return PlayerEntryUi(
                 playerIdentity = PlayerIdentity(name = "", username = null, userId = null),
@@ -57,6 +72,9 @@ data class PlayerEntryUi(
             )
         }
 
+        /**
+         * Creates a pre-filled player row from an existing identity suggestion.
+         */
         fun fromPlayerIdentity(playerIdentity: PlayerIdentity, startPosition: Int): PlayerEntryUi {
             return PlayerEntryUi(
                 playerIdentity = playerIdentity,
@@ -69,6 +87,9 @@ data class PlayerEntryUi(
     }
 }
 
+/**
+ * Suggested player for quick-add based on location history.
+ */
 data class PlayerSuggestion(
     val playerIdentity: PlayerIdentity,
     val playCount: Int

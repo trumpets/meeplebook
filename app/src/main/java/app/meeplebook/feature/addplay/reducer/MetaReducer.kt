@@ -3,6 +3,10 @@ package app.meeplebook.feature.addplay.reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 
+/**
+ * Reduces [AddPlayEvent.MetadataEvent] events into top-level play metadata:
+ * date, duration, and location.  All other events are passed through unchanged.
+ */
 class MetaReducer {
 
     fun reduce(

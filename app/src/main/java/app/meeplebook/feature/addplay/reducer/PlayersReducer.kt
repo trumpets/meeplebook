@@ -3,6 +3,13 @@ package app.meeplebook.feature.addplay.reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 
+/**
+ * Orchestrates all player-related sub-reducers.
+ *
+ * Dispatches each event to the appropriate sub-reducer ([PlayerEditReducer],
+ * [PlayerListReducer], [PlayerScoreReducer], or [PlayerColorReducer]) and
+ * writes the resulting player list back into [AddPlayUiState.players].
+ */
 class PlayersReducer(
     private val editReducer: PlayerEditReducer,
     private val listReducer: PlayerListReducer,
