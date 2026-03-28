@@ -9,7 +9,7 @@ package app.meeplebook.core.plays.domain
  * @property username Optional BGG username associated with the player.
  * @property userId Optional numeric user id from BGG or local mapping.
  * @property name Display name of the player (required).
- * @property startPosition Optional starting position or seat (e.g. "N", "1").
+ * @property startPosition Optional numeric starting seat/position (e.g. 1 for first seat); null when unknown or non-numeric.
  * @property color Optional color/team chosen by the player.
  * @property score Optional score achieved by the player in this play.
  * @property win True if the player won the play.
