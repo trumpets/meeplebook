@@ -274,3 +274,24 @@ PR Link: N/A (local change)
     - Include CI-aligned verification commands (`testDebugUnitTest`, `:lint-rules:test`, `lint`, `connectedDebugAndroidTest`) so local checks match GitHub workflows
     - Call out project-specific safeguards (UiText lint rules, BGG token build config behavior, retry/rate-limit handling) because these drive common regressions
 ---
+
+## 2026-03-28T20:49:00Z
+PR Link: N/A (local change)
+- Added 42 unit tests covering all 7 reducer classes in `app.meeplebook.feature.addplay.reducer`
+- Created a shared `AddPlayTestFactory` with `makeState()`, `makePlayer()`, and `makeIdentity()` helpers to avoid boilerplate across test files
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayTestFactory.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/MetaReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerListReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerScoreReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerEditReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayerColorReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayersReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/AddPlayReducerTest.kt`
+- **Learnings for future iterations:**
+  - Reducers are pure functions — no mocking needed; test directly by constructing state and asserting on the returned state
+  - Unit tests in `app/src/test` use `org.junit.Assert.*` (`assertEquals`, `assertTrue`, `assertFalse`, `assertNull`) — Truth/`assertThat` is NOT on the test classpath here
+  - `PlayerEntryUi` uses `PlayerIdentity` as its logical key for matching; there is no separate ID field
+  - `AddPlayUiState` has many required constructor fields; always use a factory helper like `AddPlayTestFactory.makeState()` in tests to keep them readable
+  - Test one reducer in isolation per file; use `PlayersReducerTest` and `AddPlayReducerTest` for integration/composition coverage
+---
