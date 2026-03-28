@@ -1,0 +1,160 @@
+package app.meeplebook.feature.addplay.effect
+
+import app.meeplebook.R
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.feature.addplay.AddPlayEffect
+import app.meeplebook.feature.addplay.AddPlayEvent
+import app.meeplebook.feature.addplay.AddPlayTestFactory.makeState
+import app.meeplebook.feature.addplay.AddPlayUiEffect
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class AddPlayEffectProducerTest {
+
+    private val producer = AddPlayEffectProducer()
+
+    // ── LocationChanged ──────────────────────────────────────────────────────
+
+    @Test
+    fun `LocationChanged emits LoadPlayerSuggestions with new location`() {
+        val state = makeState(locationValue = "Home")
+        val event = AddPlayEvent.MetadataEvent.LocationChanged("Game Cafe")
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertEquals(1, result.effects.size)
+        val effect = result.effects.first() as AddPlayEffect.LoadPlayerSuggestions
+        assertEquals("Game Cafe", effect.location)
+        assertEquals(state.gameId, effect.gameId)
+        assertTrue(result.uiEffects.isEmpty())
+    }
+
+    @Test
+    fun `LocationChanged with empty location emits LoadPlayerSuggestions with empty location`() {
+        val state = makeState(locationValue = "Home")
+        val event = AddPlayEvent.MetadataEvent.LocationChanged("")
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        val effect = result.effects.first() as AddPlayEffect.LoadPlayerSuggestions
+        assertEquals("", effect.location)
+    }
+
+    // ── RefreshPlayerSuggestions ─────────────────────────────────────────────
+
+    @Test
+    fun `RefreshPlayerSuggestions emits LoadPlayerSuggestions with current state location`() {
+        val state = makeState(locationValue = "Board Room", gameId = 42L)
+        val event = AddPlayEvent.SuggestionEvent.RefreshPlayerSuggestions
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertEquals(1, result.effects.size)
+        val effect = result.effects.first() as AddPlayEffect.LoadPlayerSuggestions
+        assertEquals("Board Room", effect.location)
+        assertEquals(42L, effect.gameId)
+        assertTrue(result.uiEffects.isEmpty())
+    }
+
+    // ── SaveClicked ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `SaveClicked with canSave emits SavePlay domain effect`() {
+        val state = makeState(gameName = "Wingspan")
+        val newState = state.copy(isSaving = false)
+        val event = AddPlayEvent.ActionEvent.SaveClicked
+
+        val result = producer.produce(oldState = state, newState = newState, event = event)
+
+        assertEquals(1, result.effects.size)
+        assertTrue(result.effects.first() is AddPlayEffect.SavePlay)
+        assertTrue(result.uiEffects.isEmpty())
+    }
+
+    @Test
+    fun `SaveClicked SavePlay effect contains play with correct gameId and gameName`() {
+        val state = makeState(gameId = 99L, gameName = "Terraforming Mars")
+        val event = AddPlayEvent.ActionEvent.SaveClicked
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        val effect = result.effects.first() as AddPlayEffect.SavePlay
+        assertEquals(99L, effect.play.gameId)
+        assertEquals("Terraforming Mars", effect.play.gameName)
+    }
+
+    @Test
+    fun `SaveClicked while isSaving emits ShowError ui effect`() {
+        val state = makeState(gameName = "Wingspan").copy(isSaving = true)
+        val event = AddPlayEvent.ActionEvent.SaveClicked
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertTrue(result.effects.isEmpty())
+        assertEquals(1, result.uiEffects.size)
+        val uiEffect = result.uiEffects.first() as AddPlayUiEffect.ShowError
+        assertEquals(UiText.Res(R.string.add_play_error_missing_required_fields), uiEffect.message)
+    }
+
+    @Test
+    fun `SaveClicked with blank game name emits ShowError ui effect`() {
+        val state = makeState(gameName = "").copy(isSaving = false)
+        val event = AddPlayEvent.ActionEvent.SaveClicked
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertTrue(result.effects.isEmpty())
+        assertEquals(1, result.uiEffects.size)
+        assertTrue(result.uiEffects.first() is AddPlayUiEffect.ShowError)
+    }
+
+    // ── CancelClicked ────────────────────────────────────────────────────────
+
+    @Test
+    fun `CancelClicked emits NavigateBack ui effect`() {
+        val state = makeState()
+        val event = AddPlayEvent.ActionEvent.CancelClicked
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertTrue(result.effects.isEmpty())
+        assertEquals(1, result.uiEffects.size)
+        assertEquals(AddPlayUiEffect.NavigateBack, result.uiEffects.first())
+    }
+
+    // ── Unhandled events ─────────────────────────────────────────────────────
+
+    @Test
+    fun `DateChanged produces no effects`() {
+        val state = makeState()
+        val event = AddPlayEvent.MetadataEvent.DateChanged(state.date)
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertTrue(result.effects.isEmpty())
+        assertTrue(result.uiEffects.isEmpty())
+    }
+
+    @Test
+    fun `AddEmptyPlayer produces no effects`() {
+        val state = makeState()
+        val event = AddPlayEvent.PlayerListEvent.AddEmptyPlayer(startPosition = 1)
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertTrue(result.effects.isEmpty())
+        assertTrue(result.uiEffects.isEmpty())
+    }
+
+    @Test
+    fun `LocationSuggestionSelected produces no effects`() {
+        val state = makeState()
+        val event = AddPlayEvent.MetadataEvent.LocationSuggestionSelected("Game Cafe")
+
+        val result = producer.produce(oldState = state, newState = state, event = event)
+
+        assertTrue(result.effects.isEmpty())
+        assertTrue(result.uiEffects.isEmpty())
+    }
+}
