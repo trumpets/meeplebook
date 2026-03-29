@@ -21,7 +21,8 @@ class AddPlayReducer(
 
         val afterMeta = metaReducer.reduce(state, event)
         val afterPlayers = playersReducer.reduce(afterMeta, event)
+        val afterValidation = ValidationReducer().reduce(afterPlayers)
 
-        return afterPlayers
+        return afterValidation
     }
 }

@@ -43,6 +43,20 @@ class AddPlayReducerTest {
     }
 
     @Test
+    fun `canSave is true after event when gameId and gameName are set`() {
+        val state = makeState(gameId = 42L, gameName = "Terraforming Mars")
+        val result = reducer.reduce(state, AddPlayEvent.MetadataEvent.DurationChanged(60))
+        assertEquals(true, result.canSave)
+    }
+
+    @Test
+    fun `canSave is false after event when gameId is null`() {
+        val state = makeState(gameId = null, gameName = "Terraforming Mars")
+        val result = reducer.reduce(state, AddPlayEvent.MetadataEvent.DurationChanged(60))
+        assertEquals(false, result.canSave)
+    }
+
+    @Test
     fun `both reducers run in sequence for independent event types`() {
         val alice = makeIdentity("Alice")
         val state = makeState(players = listOf(makePlayer(alice)))

@@ -322,3 +322,16 @@ PR Link: N/A (local change)
   - Fake repositories should mirror production observable side-effects, not just return values; use opt-in nullable fields to stay backwards-compatible with existing tests
   - When a fake method has configurable results, always add a companion `*Data` property if the real impl also mutates observable state on success
 ---
+
+## 2026-03-29
+PR Link: N/A (local session)
+- Added `ValidationReducerTest.kt` (5 tests) for the new `ValidationReducer`
+- Updated `AddPlayReducerTest.kt` — 2 new `canSave` pipeline tests  
+- Updated `AddPlayEffectProducerTest.kt` — removed `oldState` param, updated `RefreshPlayerSuggestions` (removed, event deleted from sealed interface), aligned `SaveClicked` tests to field-based `canSave`
+- Updated `AddPlayTestFactory` — `makeState(gameId: Long?)`, `makeState(gameName: String?)`, `makePlayer(startPosition: Int = 1)` to match current non-nullable `PlayerEntryUi.startPosition`
+- **Learnings for future iterations:**
+  - `canSave` is now a plain `Boolean` field on `AddPlayUiState` (defaults `false`); tests must set `.copy(canSave = true)` explicitly when testing `SaveClicked` success paths
+  - `AddPlayEvent.SuggestionEvent` was removed — no `RefreshPlayerSuggestions` event exists anymore
+  - `AddPlayUiState.toCreatePlayCommand()` is the mapping method (not `toDomain()`); lives inside the data class
+  - `AddPlayEffectProducer.produce()` no longer takes `oldState`; signature is `produce(newState, event)`
+---
