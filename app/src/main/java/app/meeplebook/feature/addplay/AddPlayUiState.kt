@@ -33,22 +33,24 @@ data class AddPlayUiState(
 ) {
     fun toCreatePlayCommand(): CreatePlayCommand {
         return CreatePlayCommand(
-            gameId = gameId!!,
-            gameName = gameName!!,
+            gameId = requireNotNull(gameId) { "Cannot create play command: gameId is null" },
+            gameName = requireNotNull(gameName) { "Cannot create play command: gameName is null" },
             date = date,
             length = durationMinutes,
             location = location.value,
-            players = players.players.map {
-                CreatePlayerCommand(
-                    name = it.playerIdentity.name,
-                    username = it.playerIdentity.username,
-                    userId = it.playerIdentity.userId,
-                    startPosition = it.startPosition,
-                    color = it.color,
-                    score = it.score,
-                    win = it.isWinner
-                )
-            },
+            players = players.players
+                .filter { it.playerIdentity.name.isNotBlank() }
+                .map {
+                    CreatePlayerCommand(
+                        name = it.playerIdentity.name,
+                        username = it.playerIdentity.username,
+                        userId = it.playerIdentity.userId,
+                        startPosition = it.startPosition,
+                        color = it.color,
+                        score = it.score,
+                        win = it.isWinner
+                    )
+                },
             quantity = quantity,
             incomplete = incomplete,
             comments = comments.ifBlank { null }

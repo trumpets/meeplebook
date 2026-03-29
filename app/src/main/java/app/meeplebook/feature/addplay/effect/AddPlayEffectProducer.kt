@@ -23,10 +23,6 @@ class AddPlayEffectProducer {
     /**
      * Derives side effects for the [newState] reached by processing [event].
      *
-     * Callers must ensure [AddPlayUiState.gameId] is non-null before a
-     * [AddPlayEvent.MetadataEvent.LocationChanged] event is dispatched; the
-     * implementation asserts this with `!!`.
-     *
      * @param newState State after the reducer ran.
      * @param event    The user-driven event that caused the transition.
      * @return An [AddPlayEffects] holder; [AddPlayEffects.None] when no effects apply.
@@ -42,8 +38,11 @@ class AddPlayEffectProducer {
         when (event) {
 
             is AddPlayEvent.MetadataEvent.LocationChanged -> {
+                // Only emit if a game has been selected; without a gameId the suggestion
+                // query cannot be scoped correctly, so we skip the effect entirely.
+                val gameId = newState.gameId ?: return AddPlayEffects.None
                 effects += AddPlayEffect.LoadPlayerSuggestions(
-                    gameId = newState.gameId!!,
+                    gameId = gameId,
                     location = event.value
                 )
             }

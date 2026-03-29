@@ -10,7 +10,7 @@ class ValidationReducerTest {
     private val reducer = ValidationReducer()
 
     @Test
-    fun `canSave is true when both gameId and gameName are non-null`() {
+    fun `canSave is true when gameId and non-blank gameName are set and not saving`() {
         val state = makeState(gameId = 1L, gameName = "Wingspan")
         val result = reducer.reduce(state)
         assertTrue(result.canSave)
@@ -31,8 +31,29 @@ class ValidationReducerTest {
     }
 
     @Test
+    fun `canSave is false when gameName is blank`() {
+        val state = makeState(gameId = 1L, gameName = "  ")
+        val result = reducer.reduce(state)
+        assertFalse(result.canSave)
+    }
+
+    @Test
+    fun `canSave is false when gameName is empty string`() {
+        val state = makeState(gameId = 1L, gameName = "")
+        val result = reducer.reduce(state)
+        assertFalse(result.canSave)
+    }
+
+    @Test
     fun `canSave is false when both gameId and gameName are null`() {
         val state = makeState(gameId = null, gameName = null)
+        val result = reducer.reduce(state)
+        assertFalse(result.canSave)
+    }
+
+    @Test
+    fun `canSave is false when isSaving is true`() {
+        val state = makeState(gameId = 1L, gameName = "Wingspan").copy(isSaving = true)
         val result = reducer.reduce(state)
         assertFalse(result.canSave)
     }

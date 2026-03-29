@@ -17,7 +17,8 @@ class AddPlayReducerTest {
             listReducer = PlayerListReducer(),
             scoreReducer = PlayerScoreReducer(),
             colorReducer = PlayerColorReducer()
-        )
+        ),
+        validationReducer = ValidationReducer()
     )
 
     @Test

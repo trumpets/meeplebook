@@ -10,7 +10,8 @@ import app.meeplebook.feature.addplay.AddPlayUiState
  *
  * A play can be saved when **all** of the following hold:
  * - [AddPlayUiState.gameId] is non-null (a game has been selected), and
- * - [AddPlayUiState.gameName] is non-null.
+ * - [AddPlayUiState.gameName] is non-null and non-blank, and
+ * - [AddPlayUiState.isSaving] is `false` (no save is already in progress).
  *
  * @see AddPlayReducer
  */
@@ -28,7 +29,8 @@ class ValidationReducer {
 
         val canSave =
             state.gameId != null &&
-                    state.gameName != null
+                    !state.gameName.isNullOrBlank() &&
+                    !state.isSaving
 
         return state.copy(canSave = canSave)
     }

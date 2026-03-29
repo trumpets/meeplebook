@@ -34,6 +34,16 @@ class AddPlayEffectProducerTest {
     }
 
     @Test
+    fun `LocationChanged with null gameId produces no effects`() {
+        val state = makeState(gameId = null, locationValue = "Home")
+        val event = AddPlayEvent.MetadataEvent.LocationChanged("Game Cafe")
+
+        val result = producer.produce(newState = state, event = event)
+
+        assertNoEffects(result)
+    }
+
+    @Test
     fun `LocationChanged with empty location emits LoadPlayerSuggestions with empty location`() {
         val state = makeState(locationValue = "Home")
         val event = AddPlayEvent.MetadataEvent.LocationChanged("")
@@ -205,6 +215,18 @@ class AddPlayEffectProducerTest {
         assertEquals(150, cmd.score)
         assertEquals("Red", cmd.color)
         assertEquals(true, cmd.win)
+    }
+
+    @Test
+    fun `SaveClicked SavePlay filters out players with blank names`() {
+        val namedPlayer = makePlayer(makeIdentity(name = "Alice"), startPosition = 1)
+        val blankPlayer = makePlayer(makeIdentity(name = ""), startPosition = 2)
+        val state = makeState(players = listOf(namedPlayer, blankPlayer)).copy(canSave = true)
+
+        val play = savePlay(state)
+
+        assertEquals(1, play.players.size)
+        assertEquals("Alice", play.players.first().name)
     }
 
     @Test
