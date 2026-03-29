@@ -24,11 +24,15 @@ import app.meeplebook.feature.addplay.AddPlayUiState
 class AddPlayEffectProducer {
 
     /**
-     * Derive effects for the [newState] triggered by [event].
+     * Derives side effects for the [newState] reached by processing [event].
+     *
+     * Callers must ensure [AddPlayUiState.gameId] is non-null before a
+     * [AddPlayEvent.MetadataEvent.LocationChanged] event is dispatched; the
+     * implementation asserts this with `!!`.
      *
      * @param newState State after the reducer ran.
      * @param event    The user-driven event that caused the transition.
-     * @return An [AddPlayEffects] holder that may contain zero or more effects of each kind.
+     * @return An [AddPlayEffects] holder; [AddPlayEffects.None] when no effects apply.
      */
     fun produce(
         newState: AddPlayUiState,

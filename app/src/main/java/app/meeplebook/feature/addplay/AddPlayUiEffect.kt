@@ -24,6 +24,8 @@ sealed interface AddPlayUiEffect {
      * Show a transient error message to the user (e.g., via a Snackbar).
      *
      * Produced when validation fails on a Save attempt.
+     *
+     * @property message The localised error text to display.
      */
     data class ShowError(val message: UiText) : AddPlayUiEffect
 }

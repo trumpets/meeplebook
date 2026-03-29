@@ -15,8 +15,11 @@ sealed interface AddPlayEffect {
     /**
      * Request a fresh load of player suggestions for the given [gameId] and [location].
      *
-     * This is produced whenever the location text changes or the user explicitly
-     * requests a refresh, so that the suggestions list stays in sync.
+     * Produced whenever the location text changes so that the suggestions list stays
+     * in sync with what the user has typed.
+     *
+     * @property gameId  The game for which to scope player suggestions.
+     * @property location The current location text entered by the user.
      */
     data class LoadPlayerSuggestions(
         val gameId: Long,
@@ -26,7 +29,9 @@ sealed interface AddPlayEffect {
     /**
      * Persist [play] to local storage and schedule a sync with BGG.
      *
-     * Produced when the user taps Save and the current state passes validation.
+     * Produced when the user taps Save and [AddPlayUiState.canSave] is `true`.
+     *
+     * @property play The fully-constructed command to be passed to the repository.
      */
     data class SavePlay(
         val play: CreatePlayCommand
