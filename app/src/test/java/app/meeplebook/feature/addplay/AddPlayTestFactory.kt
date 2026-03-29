@@ -33,7 +33,7 @@ object AddPlayTestFactory {
         players: List<PlayerEntryUi> = emptyList(),
         date: Instant = Instant.parse("2024-06-01T10:00:00Z"),
         durationMinutes: Int? = null,
-        locationValue: String = "",
+        locationValue: String? = "",
         gameId: Long? = 1L,
         gameName: String? = "Test Game"
     ): AddPlayUiState = AddPlayUiState(
