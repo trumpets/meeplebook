@@ -2,10 +2,8 @@ package app.meeplebook.feature.addplay.effect
 
 import app.meeplebook.R
 import app.meeplebook.core.ui.UiText
-import app.meeplebook.feature.addplay.AddPlayEffect
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayTestFactory.makeState
-import app.meeplebook.feature.addplay.AddPlayUiEffect
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

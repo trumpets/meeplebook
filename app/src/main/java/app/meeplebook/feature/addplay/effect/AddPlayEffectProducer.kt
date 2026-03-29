@@ -2,10 +2,7 @@ package app.meeplebook.feature.addplay.effect
 
 import app.meeplebook.R
 import app.meeplebook.core.ui.uiTextRes
-import app.meeplebook.feature.addplay.AddPlayEffect
-import app.meeplebook.feature.addplay.AddPlayEffects
 import app.meeplebook.feature.addplay.AddPlayEvent
-import app.meeplebook.feature.addplay.AddPlayUiEffect
 import app.meeplebook.feature.addplay.AddPlayUiState
 
 /**

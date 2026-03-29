@@ -1,4 +1,4 @@
-package app.meeplebook.feature.addplay
+package app.meeplebook.feature.addplay.effect
 
 import app.meeplebook.core.ui.UiText
 

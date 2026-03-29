@@ -1,4 +1,4 @@
-package app.meeplebook.feature.addplay
+package app.meeplebook.feature.addplay.effect
 
 /**
  * Container for all side effects produced by a single state transition on the Add Play screen.

@@ -1,4 +1,4 @@
-package app.meeplebook.feature.addplay
+package app.meeplebook.feature.addplay.effect
 
 import app.meeplebook.core.plays.domain.CreatePlayCommand
 
@@ -29,7 +29,7 @@ sealed interface AddPlayEffect {
     /**
      * Persist [play] to local storage and schedule a sync with BGG.
      *
-     * Produced when the user taps Save and [AddPlayUiState.canSave] is `true`.
+     * Produced when the user taps Save and [app.meeplebook.feature.addplay.AddPlayUiState.canSave] is `true`.
      *
      * @property play The fully-constructed command to be passed to the repository.
      */
