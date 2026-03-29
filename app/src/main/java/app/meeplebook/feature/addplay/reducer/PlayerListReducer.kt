@@ -17,11 +17,17 @@ class PlayerListReducer {
 
         return when (event) {
 
-            is AddPlayEvent.PlayerListEvent.AddEmptyPlayer ->
-                players + PlayerEntryUi.empty(event.startPosition)
+            is AddPlayEvent.PlayerListEvent.AddNewPlayer ->
+                players + PlayerEntryUi.empty(
+                    playerName = event.playerName,
+                    startPosition = event.startPosition
+                )
 
             is AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion ->
-                players + PlayerEntryUi.fromPlayerIdentity(event.playerIdentity, event.startPosition)
+                players + PlayerEntryUi.fromPlayerIdentity(
+                    playerIdentity = event.playerIdentity,
+                    startPosition = event.startPosition
+                )
 
             is AddPlayEvent.PlayerListEvent.RemovePlayer ->
                 players.filterNot { it.playerIdentity == event.playerIdentity }

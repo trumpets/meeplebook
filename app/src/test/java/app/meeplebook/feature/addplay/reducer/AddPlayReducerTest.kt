@@ -36,7 +36,7 @@ class AddPlayReducerTest {
     fun `PlayerListEvent adds player and leaves metadata unchanged`() {
         val state = makeState(players = emptyList())
 
-        val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddEmptyPlayer(startPosition = 1))
+        val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))
 
         assertEquals(1, result.players.players.size)
         assertEquals(state.date, result.date)
@@ -54,7 +54,7 @@ class AddPlayReducerTest {
         assertEquals(1, afterDate.players.players.size)
 
         // Apply player add — meta reducer passes through, players reducer handles it
-        val afterPlayer = reducer.reduce(afterDate, AddPlayEvent.PlayerListEvent.AddEmptyPlayer(startPosition = 2))
+        val afterPlayer = reducer.reduce(afterDate, AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 2))
         assertEquals(newDate, afterPlayer.date)
         assertEquals(2, afterPlayer.players.players.size)
     }

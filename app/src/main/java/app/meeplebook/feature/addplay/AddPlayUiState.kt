@@ -110,9 +110,9 @@ data class PlayerEntryUi(
         /**
          * Creates an empty player row ready for manual input.
          */
-        fun empty(startPosition: Int): PlayerEntryUi {
+        fun empty(playerName: String, startPosition: Int): PlayerEntryUi {
             return PlayerEntryUi(
-                playerIdentity = PlayerIdentity(name = "", username = null, userId = null),
+                playerIdentity = PlayerIdentity(name = playerName, username = null, userId = null),
                 startPosition = startPosition,
                 color = null,
                 score = null,

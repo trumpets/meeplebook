@@ -49,7 +49,7 @@ class MetaReducerTest {
     @Test
     fun `non-metadata event leaves state unchanged`() {
         val state = makeState(locationValue = "Somewhere")
-        val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddEmptyPlayer(startPosition = 1))
+        val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))
         assertEquals(state, result)
     }
 }

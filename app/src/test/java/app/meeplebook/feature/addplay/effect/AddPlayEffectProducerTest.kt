@@ -137,9 +137,9 @@ class AddPlayEffectProducerTest {
     }
 
     @Test
-    fun `AddEmptyPlayer produces no effects`() {
+    fun `AddNewPlayer produces no effects`() {
         val state = makeState()
-        val event = AddPlayEvent.PlayerListEvent.AddEmptyPlayer(startPosition = 1)
+        val event = AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1)
 
         val result = producer.produce(oldState = state, newState = state, event = event)
 

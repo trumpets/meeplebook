@@ -26,8 +26,9 @@ sealed interface AddPlayEvent {
     /** Events that add, remove, or change the active edit target in the player list. */
     sealed interface PlayerListEvent : AddPlayEvent {
 
-        /** User tapped "add player" with no suggestion; inserts a blank row. */
-        data class AddEmptyPlayer(
+        /** User tapped "add player" with no suggestion; inserts a new row. */
+        data class AddNewPlayer(
+            val playerName: String,
             val startPosition: Int
         ) : PlayerListEvent
 

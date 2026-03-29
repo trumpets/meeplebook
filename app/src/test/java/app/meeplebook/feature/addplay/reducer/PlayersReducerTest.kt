@@ -21,7 +21,7 @@ class PlayersReducerTest {
     @Test
     fun `PlayerListEvent is routed to PlayerListReducer`() {
         val state = makeState(players = emptyList())
-        val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddEmptyPlayer(startPosition = 1))
+        val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))
         assertEquals(1, result.players.players.size)
     }
 
