@@ -17,7 +17,7 @@ object AddPlayTestFactory {
 
     fun makePlayer(
         identity: PlayerIdentity = makeIdentity(),
-        startPosition: Int? = null,
+        startPosition: Int = 1,
         score: Int? = null,
         isWinner: Boolean = false,
         color: String? = null
@@ -34,8 +34,8 @@ object AddPlayTestFactory {
         date: Instant = Instant.parse("2024-06-01T10:00:00Z"),
         durationMinutes: Int? = null,
         locationValue: String = "",
-        gameId: Long = 1L,
-        gameName: String = "Test Game"
+        gameId: Long? = 1L,
+        gameName: String? = "Test Game"
     ): AddPlayUiState = AddPlayUiState(
         gameId = gameId,
         gameName = gameName,

@@ -105,13 +105,6 @@ sealed interface AddPlayEvent {
         ) : PlayerColorEvent
     }
 
-    /** Events that trigger suggestion refreshes. */
-    sealed interface SuggestionEvent : AddPlayEvent {
-
-        /** Request a fresh load of player suggestions for the current location. */
-        data object RefreshPlayerSuggestions : SuggestionEvent
-    }
-
     /** Primary action events emitted by the screen's action buttons. */
     sealed interface ActionEvent : AddPlayEvent {
 

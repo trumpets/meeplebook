@@ -1,10 +1,8 @@
 package app.meeplebook.feature.addplay
 
+import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.domain.PlayerIdentity
-import app.meeplebook.core.plays.model.Play
-import app.meeplebook.core.plays.model.PlayId
-import app.meeplebook.core.plays.model.PlaySyncStatus
-import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import java.time.Instant
@@ -13,8 +11,8 @@ import java.time.Instant
  * Immutable state consumed by the Add Play screen.
  */
 data class AddPlayUiState(
-    val gameId: Long,
-    val gameName: String,
+    val gameId: Long?,
+    val gameName: String?,
 
     val date: Instant = Instant.now(),
     val durationMinutes: Int?,
@@ -29,57 +27,40 @@ data class AddPlayUiState(
     val comments: String = "",
 
     val isSaving: Boolean,
-    val error: UiText = uiTextEmpty()
+    val error: UiText = uiTextEmpty(),
+
+    val canSave: Boolean = false
 ) {
-
-    /**
-     * True when the current state has enough data to create a valid play record.
-     *
-     * The game name must be non-blank (it is always provided when the screen is opened),
-     * and a save must not already be in progress.
-     */
-    val canSave: Boolean
-        get() = gameName.isNotBlank() && !isSaving
-
-    /**
-     * Maps the current UI state to a domain [Play] ready to be persisted.
-     *
-     * The resulting play uses [PlayId.Local] with id `0` because it has not yet been
-     * written to the database.  Its [PlaySyncStatus] is [PlaySyncStatus.PENDING] because
-     * it will need to be synced with BGG after the initial save.
-     */
-    fun toDomain(): Play = Play(
-        playId = PlayId.Local(localId = 0),
-        date = date,
-        quantity = quantity,
-        length = durationMinutes,
-        incomplete = incomplete,
-        location = location.value.takeIf { it.isNotBlank() },
-        gameId = gameId,
-        gameName = gameName,
-        comments = comments.takeIf { it.isNotBlank() },
-        players = players.players.map { entry ->
-            Player(
-                id = 0,
-                playId = 0,
-                username = entry.playerIdentity.username,
-                userId = entry.playerIdentity.userId,
-                name = entry.playerIdentity.name,
-                startPosition = entry.startPosition,
-                color = entry.color,
-                score = entry.score,
-                win = entry.isWinner
-            )
-        },
-        syncStatus = PlaySyncStatus.PENDING
-    )
+    fun toCreatePlayCommand(): CreatePlayCommand {
+        return CreatePlayCommand(
+            gameId = gameId!!,
+            gameName = gameName!!,
+            date = date,
+            length = durationMinutes,
+            location = location.value,
+            players = players.players.map {
+                CreatePlayerCommand(
+                    name = it.playerIdentity.name,
+                    username = it.playerIdentity.username,
+                    userId = it.playerIdentity.userId,
+                    startPosition = it.startPosition,
+                    color = it.color,
+                    score = it.score,
+                    win = it.isWinner
+                )
+            },
+            quantity = quantity,
+            incomplete = incomplete,
+            comments = comments.ifBlank { null }
+        )
+    }
 }
 
 /**
  * Location input state, including autocomplete suggestions and focus state.
  */
 data class LocationState(
-    val value: String,
+    val value: String?,
     val suggestions: List<String>,
     val recentLocations: List<String>,
     val isFocused: Boolean
@@ -100,7 +81,7 @@ data class PlayersState(
 data class PlayerEntryUi(
     val playerIdentity: PlayerIdentity,
 
-    val startPosition: Int?,
+    val startPosition: Int,
     val color: String?,
 
     val score: Int?,

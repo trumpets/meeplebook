@@ -1,6 +1,6 @@
 package app.meeplebook.feature.addplay
 
-import app.meeplebook.core.plays.model.Play
+import app.meeplebook.core.plays.domain.CreatePlayCommand
 
 /**
  * Domain-level side effects produced by the Add Play feature.
@@ -29,6 +29,6 @@ sealed interface AddPlayEffect {
      * Produced when the user taps Save and the current state passes validation.
      */
     data class SavePlay(
-        val play: Play
+        val play: CreatePlayCommand
     ) : AddPlayEffect
 }

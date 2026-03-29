@@ -1,7 +1,7 @@
 package app.meeplebook.feature.addplay.effect
 
 import app.meeplebook.R
-import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.addplay.AddPlayEffect
 import app.meeplebook.feature.addplay.AddPlayEffects
 import app.meeplebook.feature.addplay.AddPlayEvent
@@ -24,15 +24,13 @@ import app.meeplebook.feature.addplay.AddPlayUiState
 class AddPlayEffectProducer {
 
     /**
-     * Derive effects for the transition [oldState] → [newState] triggered by [event].
+     * Derive effects for the [newState] triggered by [event].
      *
-     * @param oldState State before the reducer ran.
      * @param newState State after the reducer ran.
      * @param event    The user-driven event that caused the transition.
      * @return An [AddPlayEffects] holder that may contain zero or more effects of each kind.
      */
     fun produce(
-        oldState: AddPlayUiState,
         newState: AddPlayUiState,
         event: AddPlayEvent
     ): AddPlayEffects {
@@ -44,24 +42,17 @@ class AddPlayEffectProducer {
 
             is AddPlayEvent.MetadataEvent.LocationChanged -> {
                 effects += AddPlayEffect.LoadPlayerSuggestions(
-                    gameId = newState.gameId,
+                    gameId = newState.gameId!!,
                     location = event.value
-                )
-            }
-
-            is AddPlayEvent.SuggestionEvent.RefreshPlayerSuggestions -> {
-                effects += AddPlayEffect.LoadPlayerSuggestions(
-                    gameId = newState.gameId,
-                    location = newState.location.value
                 )
             }
 
             is AddPlayEvent.ActionEvent.SaveClicked -> {
                 if (newState.canSave) {
-                    effects += AddPlayEffect.SavePlay(newState.toDomain())
+                    effects += AddPlayEffect.SavePlay(newState.toCreatePlayCommand())
                 } else {
                     uiEffects += AddPlayUiEffect.ShowError(
-                        UiText.Res(R.string.add_play_error_missing_required_fields)
+                        uiTextRes(R.string.add_play_cant_save)
                     )
                 }
             }
@@ -73,6 +64,13 @@ class AddPlayEffectProducer {
             else -> Unit
         }
 
-        return AddPlayEffects(effects = effects, uiEffects = uiEffects)
+        return if (effects.isEmpty() && uiEffects.isEmpty()) {
+            AddPlayEffects.None
+        } else {
+            AddPlayEffects(
+                effects = effects.toList(),
+                uiEffects = uiEffects.toList()
+            )
+        }
     }
 }
