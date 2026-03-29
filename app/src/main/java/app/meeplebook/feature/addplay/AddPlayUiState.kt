@@ -39,7 +39,6 @@ data class AddPlayUiState(
             length = durationMinutes,
             location = location.value,
             players = players.players
-                .filter { it.playerIdentity.name.isNotBlank() }
                 .map {
                     CreatePlayerCommand(
                         name = it.playerIdentity.name,
