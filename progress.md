@@ -335,3 +335,17 @@ PR Link: N/A (local session)
   - `AddPlayUiState.toCreatePlayCommand()` is the mapping method (not `toDomain()`); lives inside the data class
   - `AddPlayEffectProducer.produce()` no longer takes `oldState`; signature is `produce(newState, event)`
 ---
+
+## 2025-07-11 — AddPlayViewModel tests + use case tests
+PR Link: (local commit — no PR yet)
+- Wrote `AddPlayViewModelTest` with 7 test cases covering: initial state, GameSearchEvent handling, location suggestion debounce, CancelClicked, SaveClicked (can't save → ShowError, saveable → NavigateBack, failure → isSaving cycle)
+- Wrote 4 new use case tests: `ObserveRecentLocationsUseCaseTest`, `SearchLocationsUseCaseTest`, `ObservePlayerSuggestionsUseCaseTest`, `CreatePlayUseCaseTest`
+- Added `createPlayException: Throwable?` field to `FakePlaysRepository` for configurable save failures
+- All tests pass (BUILD SUCCESSFUL)
+- **Learnings for future iterations:**
+  - `FakePlaysRepository` uses `_plays` as the single data source for observeLocations, observeRecentLocations, observePlayersByLocation — seed with `setPlays(...)` to test all three
+  - `FakePlaysRepository` is not `open`; add `var createPlayException` style flags for configurable failure instead of subclassing
+  - `AddPlayViewModel` canSave=true simply requires a non-null `gameId` and non-blank `gameName` (ValidationReducer); fire `GameSelected` event to make the VM saveable in tests
+  - VM test entry pattern: `Dispatchers.setMain(StandardTestDispatcher)` + `advanceUntilIdle()` after events, `runTest` scope
+  - `CreatePlayCommand.date` is `Instant` (not `LocalDate`) — use `Instant.parse(...)` or `Instant.now()` in tests
+---

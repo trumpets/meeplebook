@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay
 
+import app.meeplebook.core.collection.domain.DomainCollectionItem
 import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.domain.PlayerIdentity
@@ -13,6 +14,10 @@ import java.time.Instant
 data class AddPlayUiState(
     val gameId: Long?,
     val gameName: String?,
+
+    // Path 1: game search (shown when gameId is null)
+    val gameSearchQuery: String = "",
+    val gameSearchResults: List<DomainCollectionItem> = emptyList(),
 
     val date: Instant = Instant.now(),
     val durationMinutes: Int?,
@@ -31,6 +36,24 @@ data class AddPlayUiState(
 
     val canSave: Boolean = false
 ) {
+    companion object {
+        /** Creates the default initial state; gameId/gameName arrive via [AddPlayEvent.GameSearchEvent.GameSelected]. */
+        fun initial() = AddPlayUiState(
+            gameId = null,
+            gameName = null,
+            durationMinutes = null,
+            location = LocationState(
+                value = null,
+                suggestions = emptyList(),
+                recentLocations = emptyList(),
+                isFocused = false
+            ),
+            players = PlayersState(players = emptyList(), colorsHistory = emptyList()),
+            playersByLocation = emptyList(),
+            isSaving = false
+        )
+    }
+
     fun toCreatePlayCommand(): CreatePlayCommand {
         return CreatePlayCommand(
             gameId = requireNotNull(gameId) { "Cannot create play command: gameId is null" },
@@ -39,6 +62,7 @@ data class AddPlayUiState(
             length = durationMinutes,
             location = location.value,
             players = players.players
+                .filter { it.playerIdentity.name.isNotBlank() }
                 .map {
                     CreatePlayerCommand(
                         name = it.playerIdentity.name,

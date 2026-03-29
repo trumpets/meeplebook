@@ -7,6 +7,22 @@ import java.time.Instant
 /** Top-level union of all user-driven events on the Add Play screen. */
 sealed interface AddPlayEvent {
 
+    /**
+     * Events for Path 1 (entering the screen without a pre-selected game).
+     *
+     * The screen starts in game-search mode when no gameId is provided; once the user
+     * selects a game the full form becomes visible.
+     */
+    sealed interface GameSearchEvent : AddPlayEvent {
+
+        /** User changed the text in the game-search field. */
+        data class GameSearchQueryChanged(val query: String) : GameSearchEvent
+
+        /** User selected a game from the search results. */
+        data class GameSelected(val gameId: Long, val gameName: String) : GameSearchEvent
+    }
+
+
     /** Events that modify the top-level play metadata (date, duration, location). */
     sealed interface MetadataEvent : AddPlayEvent {
 

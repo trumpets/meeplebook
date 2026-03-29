@@ -2,6 +2,7 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import javax.inject.Inject
 
 /**
  * Orchestrates all player-related sub-reducers.
@@ -10,7 +11,7 @@ import app.meeplebook.feature.addplay.AddPlayUiState
  * [PlayerListReducer], [PlayerScoreReducer], or [PlayerColorReducer]) and
  * writes the resulting player list back into [AddPlayUiState.players].
  */
-class PlayersReducer(
+class PlayersReducer @Inject constructor(
     private val editReducer: PlayerEditReducer,
     private val listReducer: PlayerListReducer,
     private val scoreReducer: PlayerScoreReducer,

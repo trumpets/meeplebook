@@ -2,13 +2,14 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
+import javax.inject.Inject
 
 /**
  * Reduces [AddPlayEvent.PlayerColorEvent] events by updating the colour assigned
  * to the matching player entry.  Colour-picker open events are UI-only and are
  * passed through unchanged.
  */
-class PlayerColorReducer {
+class PlayerColorReducer @Inject constructor() {
 
     fun reduce(
         players: List<PlayerEntryUi>,

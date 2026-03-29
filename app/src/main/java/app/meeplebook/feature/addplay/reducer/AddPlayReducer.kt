@@ -2,6 +2,7 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import javax.inject.Inject
 
 /**
  * Root reducer for the Add Play screen.
@@ -15,7 +16,7 @@ import app.meeplebook.feature.addplay.AddPlayUiState
  * Each sub-reducer receives the output of the previous one, so every event is
  * handled exactly once and validation always reflects the latest state.
  */
-class AddPlayReducer(
+class AddPlayReducer @Inject constructor(
     private val metaReducer: MetaReducer,
     private val playersReducer: PlayersReducer,
     private val validationReducer: ValidationReducer

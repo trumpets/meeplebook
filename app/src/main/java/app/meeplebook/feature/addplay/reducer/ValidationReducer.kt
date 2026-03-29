@@ -1,6 +1,7 @@
 package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayUiState
+import javax.inject.Inject
 
 /**
  * Derives the [AddPlayUiState.canSave] flag from the current state.
@@ -15,7 +16,7 @@ import app.meeplebook.feature.addplay.AddPlayUiState
  *
  * @see AddPlayReducer
  */
-class ValidationReducer {
+class ValidationReducer @Inject constructor() {
 
     /**
      * Computes [AddPlayUiState.canSave] and returns an updated copy of [state].

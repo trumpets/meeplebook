@@ -2,6 +2,7 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
+import javax.inject.Inject
 
 /**
  * Reduces [AddPlayEvent.PlayerScoreEvent] events.
@@ -10,7 +11,7 @@ import app.meeplebook.feature.addplay.PlayerEntryUi
  * player(s) with the highest score as winners.
  * On [AddPlayEvent.PlayerScoreEvent.WinnerToggled] the winner flag is set explicitly.
  */
-class PlayerScoreReducer {
+class PlayerScoreReducer @Inject constructor() {
 
     fun reduce(
         players: List<PlayerEntryUi>,

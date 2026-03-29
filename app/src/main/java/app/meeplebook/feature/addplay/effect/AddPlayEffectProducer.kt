@@ -4,6 +4,7 @@ import app.meeplebook.R
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import javax.inject.Inject
 
 /**
  * Produces [AddPlayEffects] (domain + UI side effects) from a state transition.
@@ -18,7 +19,7 @@ import app.meeplebook.feature.addplay.AddPlayUiState
  * | Data / domain effects  | [AddPlayEffect]    | ViewModel     |
  * | UI / navigation effects| [AddPlayUiEffect]  | Composable    |
  */
-class AddPlayEffectProducer {
+class AddPlayEffectProducer @Inject constructor() {
 
     /**
      * Derives side effects for the [newState] reached by processing [event].
