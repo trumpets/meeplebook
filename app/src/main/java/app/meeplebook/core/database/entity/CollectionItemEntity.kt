@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.meeplebook.core.collection.model.CollectionItem
+import app.meeplebook.core.collection.model.GameRank
 import app.meeplebook.core.collection.model.GameSubtype
 import java.time.Instant
 
@@ -23,12 +24,15 @@ data class CollectionItemEntity(
     val name: String,
     val yearPublished: Int?,
     val thumbnail: String?,
+    val image: String?,
     val lastModifiedDate: Instant?,
     val minPlayers: Int?,
     val maxPlayers: Int?,
     val minPlayTimeMinutes: Int?,
     val maxPlayTimeMinutes: Int?,
-    val numPlays: Int
+    val numPlays: Int,
+    val userRating: Float?,
+    val ranks: List<GameRank>
 )
 
 /**
@@ -41,12 +45,15 @@ fun CollectionItemEntity.toCollectionItem(): CollectionItem {
         name = name,
         yearPublished = yearPublished,
         thumbnail = thumbnail,
+        image = image,
         lastModifiedDate = lastModifiedDate,
         minPlayers = minPlayers,
         maxPlayers = maxPlayers,
         minPlayTimeMinutes = minPlayTimeMinutes,
         maxPlayTimeMinutes = maxPlayTimeMinutes,
-        numPlays = numPlays
+        numPlays = numPlays,
+        userRating = userRating,
+        ranks = ranks
     )
 }
 
@@ -60,11 +67,14 @@ fun CollectionItem.toEntity(): CollectionItemEntity {
         name = name,
         yearPublished = yearPublished,
         thumbnail = thumbnail,
+        image = image,
         lastModifiedDate = lastModifiedDate,
         minPlayers = minPlayers,
         maxPlayers = maxPlayers,
         minPlayTimeMinutes = minPlayTimeMinutes,
         maxPlayTimeMinutes = maxPlayTimeMinutes,
-        numPlays = numPlays
+        numPlays = numPlays,
+        userRating = userRating,
+        ranks = ranks
     )
 }

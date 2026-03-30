@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import app.meeplebook.feature.gamedetail.GameDetailScreen
 import app.meeplebook.feature.home.HomeScreen
 import app.meeplebook.feature.login.LoginScreen
 
@@ -28,6 +29,11 @@ fun AppNavHost(
             val args = backStackEntry.toRoute<Screen.Home>()
             HomeScreen(
                 args.refreshOnLogin
+            )
+        }
+        composable<Screen.GameDetail> {
+            GameDetailScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

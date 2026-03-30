@@ -14,7 +14,8 @@ import app.meeplebook.core.collection.model.CollectionItem
  * @property gameId The BGG game ID.
  * @property name The name of the game.
  * @property yearPublished The year the game was published.
- * @property thumbnailUrl URL to the game's thumbnail image.
+ * @property thumbnailUrl URL to the game's thumbnail image (low-resolution).
+ * @property imageUrl URL to the game's full-size cover image.
  * @property playCount The number of times the game has been played.
  * @property minPlayers Minimum number of players.
  * @property maxPlayers Maximum number of players.
@@ -26,6 +27,7 @@ data class DomainCollectionItem(
     val name: String,
     val yearPublished: Int?,
     val thumbnailUrl: String?,
+    val imageUrl: String? = null,
 
     // raw counts (NOT strings)
     val playCount: Int,
@@ -44,6 +46,7 @@ fun CollectionItem.toDomainCollectionItem(): DomainCollectionItem {
         name = name,
         yearPublished = yearPublished,
         thumbnailUrl = thumbnail,
+        imageUrl = image,
         playCount = numPlays,
         minPlayers = minPlayers,
         maxPlayers = maxPlayers,

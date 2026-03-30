@@ -376,4 +376,188 @@ class CollectionXmlParserTest {
         assertEquals(1, result.size)
         assertEquals(0, result[0].numPlays)
     }
+
+    @Test
+    fun `parse item with full-size image`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Gloomhaven</name>
+                    <yearpublished>2017</yearpublished>
+                    <image>https://cf.geekdo-images.com/image.jpg</image>
+                    <thumbnail>https://cf.geekdo-images.com/thumb.jpg</thumbnail>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertEquals("https://cf.geekdo-images.com/image.jpg", result[0].image)
+        assertEquals("https://cf.geekdo-images.com/thumb.jpg", result[0].thumbnail)
+    }
+
+    @Test
+    fun `parse item without image returns null`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Game Without Image</name>
+                    <yearpublished>2020</yearpublished>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertNull(result[0].image)
+    }
+
+    @Test
+    fun `parse item with user rating`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Gloomhaven</name>
+                    <yearpublished>2017</yearpublished>
+                    <stats minplayers="1" maxplayers="4" minplaytime="60" maxplaytime="120">
+                        <rating value="8">
+                        </rating>
+                    </stats>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertEquals(8f, result[0].userRating)
+    }
+
+    @Test
+    fun `parse item with unrated game returns null rating`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Unrated Game</name>
+                    <yearpublished>2020</yearpublished>
+                    <stats minplayers="2" maxplayers="4" minplaytime="30" maxplaytime="60">
+                        <rating value="N/A">
+                        </rating>
+                    </stats>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertNull(result[0].userRating)
+    }
+
+    @Test
+    fun `parse item without rating returns null`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Game Without Rating</name>
+                    <yearpublished>2020</yearpublished>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertNull(result[0].userRating)
+    }
+
+    @Test
+    fun `parse item with ranks`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Gloomhaven</name>
+                    <yearpublished>2017</yearpublished>
+                    <stats minplayers="1" maxplayers="4" minplaytime="60" maxplaytime="120">
+                        <rating value="9">
+                            <ranks>
+                                <rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="1" bayesaverage="8.45"/>
+                                <rank type="family" id="5497" name="strategygames" friendlyname="Strategy Game Rank" value="2" bayesaverage="8.45"/>
+                            </ranks>
+                        </rating>
+                    </stats>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        val item = result[0]
+        assertEquals(2, item.ranks.size)
+
+        val subtypeRank = item.ranks[0]
+        assertEquals(app.meeplebook.core.collection.model.RankType.SUBTYPE, subtypeRank.type)
+        assertEquals("boardgame", subtypeRank.name)
+        assertEquals("Board Game Rank", subtypeRank.friendlyName)
+        assertEquals(1, subtypeRank.value)
+
+        val familyRank = item.ranks[1]
+        assertEquals(app.meeplebook.core.collection.model.RankType.FAMILY, familyRank.type)
+        assertEquals("strategygames", familyRank.name)
+        assertEquals("Strategy Game Rank", familyRank.friendlyName)
+        assertEquals(2, familyRank.value)
+    }
+
+    @Test
+    fun `parse item with not ranked game has null rank value`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="999" subtype="boardgame" collid="999">
+                    <name sortindex="1">Obscure Game</name>
+                    <yearpublished>2023</yearpublished>
+                    <stats minplayers="2" maxplayers="4" minplaytime="30" maxplaytime="60">
+                        <rating value="6">
+                            <ranks>
+                                <rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="Not Ranked" bayesaverage="5.5"/>
+                            </ranks>
+                        </rating>
+                    </stats>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertEquals(1, result[0].ranks.size)
+        assertNull(result[0].ranks[0].value)
+    }
+
+    @Test
+    fun `parse item without ranks returns empty list`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+                <item objecttype="thing" objectid="174430" subtype="boardgame" collid="12345">
+                    <name sortindex="1">Game Without Ranks</name>
+                    <yearpublished>2020</yearpublished>
+                </item>
+            </items>
+        """.trimIndent()
+
+        val result = CollectionXmlParser.parse(xml.reader())
+
+        assertEquals(1, result.size)
+        assertTrue(result[0].ranks.isEmpty())
+    }
 }
