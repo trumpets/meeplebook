@@ -15,6 +15,7 @@ import java.time.Instant
 class AddPlayReducerTest {
 
     private val reducer = AddPlayReducer(
+        gameSearchReducer = GameSearchReducer(),
         metaReducer = MetaReducer(),
         playersReducer = PlayersReducer(
             editReducer = PlayerEditReducer(),

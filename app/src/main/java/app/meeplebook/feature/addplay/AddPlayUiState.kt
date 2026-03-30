@@ -162,6 +162,23 @@ fun AddPlayUiState.updateGameSelected(
 }
 
 /**
+ * Safely transforms the current state if it is GameSearch.
+ * The block can return any [AddPlayUiState], enabling both in-place
+ * updates and state transitions (e.g. GameSearch → GameSelected).
+ *
+ * Usage:
+ * _uiState.value = _uiState.value.updateGameSearch { copy(gameSearchQuery = "Cata") }
+ */
+fun AddPlayUiState.updateGameSearch(
+    block: AddPlayUiState.GameSearch.() -> AddPlayUiState
+): AddPlayUiState {
+    return when (this) {
+        is AddPlayUiState.GameSelected -> this // leave unchanged
+        is AddPlayUiState.GameSearch -> block()
+    }
+}
+
+/**
  * Safely run [block] if the state is [AddPlayUiState.GameSelected], otherwise return null.
  */
 inline fun <T> AddPlayUiState.asGameSelected(block: AddPlayUiState.GameSelected.() -> T): T? {

@@ -12,6 +12,7 @@ import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.addplay.effect.AddPlayEffectProducer
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
 import app.meeplebook.feature.addplay.reducer.AddPlayReducer
+import app.meeplebook.feature.addplay.reducer.GameSearchReducer
 import app.meeplebook.feature.addplay.reducer.MetaReducer
 import app.meeplebook.feature.addplay.reducer.PlayerColorReducer
 import app.meeplebook.feature.addplay.reducer.PlayerEditReducer
@@ -223,6 +224,7 @@ class AddPlayViewModelTest {
     )
 
     private fun buildReducer() = AddPlayReducer(
+        gameSearchReducer = GameSearchReducer(),
         metaReducer = MetaReducer(),
         playersReducer = PlayersReducer(
             editReducer = PlayerEditReducer(),
