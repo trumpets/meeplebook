@@ -34,9 +34,6 @@ sealed interface AddPlayEvent {
 
         /** User typed in the location field. */
         data class LocationChanged(val value: String) : MetadataEvent
-
-        /** User tapped an autocomplete suggestion for the location. */
-        data class LocationSuggestionSelected(val value: String) : MetadataEvent
     }
 
     /** Events that add, remove, or change the active edit target in the player list. */

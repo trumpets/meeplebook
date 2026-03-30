@@ -39,15 +39,6 @@ class MetaReducerTest {
     }
 
     @Test
-    fun `LocationSuggestionSelected updates location value`() {
-        val result = reducer.reduce(
-            makeGameSelectedState(),
-            AddPlayEvent.MetadataEvent.LocationSuggestionSelected("Game Cafe")
-        )
-        assertEquals("Game Cafe", result.requireGameSelected().location.value)
-    }
-
-    @Test
     fun `non-metadata event leaves state unchanged`() {
         val state = makeGameSelectedState(locationValue = "Somewhere")
         val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))

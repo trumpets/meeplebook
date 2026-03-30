@@ -13,7 +13,7 @@ import app.meeplebook.core.plays.domain.CreatePlayCommand
 sealed interface AddPlayEffect {
 
     /**
-     * Request a fresh load of player suggestions for the given [gameId] and [location].
+     * Request a fresh load of player suggestions for the given [location].
      *
      * Produced whenever the location text changes so that the suggestions list stays
      * in sync with what the user has typed.

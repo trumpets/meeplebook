@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
 import app.meeplebook.core.plays.FakePlaysRepository
+import app.meeplebook.core.plays.PlayTestFactory
 import app.meeplebook.core.plays.domain.CreatePlayUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
@@ -26,7 +27,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -109,28 +109,22 @@ class AddPlayViewModelTest {
 
     @Test
     fun `location suggestions update after debounce when location changes`() = runTest {
-        // Set up plays with a known location so the fake repo can filter
+        // Seed a play at "Home" so observeLocations("Home") returns ["Home"]
+        fakePlaysRepository.setPlays(
+            listOf(PlayTestFactory.createPlay(localPlayId = 1L, gameName = "Catan", location = "Home"))
+        )
+
         viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
+        viewModel.onEvent(AddPlayEvent.MetadataEvent.LocationChanged("Home"))
 
-        viewModel.combinedUiState.test {
-            awaitItem() // initial
-
-            viewModel.onEvent(AddPlayEvent.MetadataEvent.LocationChanged("Home"))
-
-            // Advance past debounce
-            advanceTimeBy(DebounceDurations.SearchQuery.inWholeMilliseconds + 1)
-            advanceUntilIdle()
-
-            // Drain until we get the suggestions update
-            var foundSuggestions = false
-            while (!foundSuggestions) {
-                val s = awaitItem()
-                // suggestions may be empty (no matching plays) but the field must have been updated
-                foundSuggestions = true // Flow emitted at least once after debounce
-            }
-            assertTrue(foundSuggestions)
-            cancelAndIgnoreRemainingEvents()
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(viewModel) { s ->
+            (s as? AddPlayUiState.GameSelected)?.location?.let {
+                it.value == "Home" && it.suggestions == listOf("Home")
+            } == true
         }
+
+        assertEquals("Home", state.location.value)
+        assertEquals(listOf("Home"), state.location.suggestions)
     }
 
     // endregion

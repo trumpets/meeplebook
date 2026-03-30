@@ -267,13 +267,6 @@ class AddPlayEffectProducerTest {
     }
 
     @Test
-    fun `LocationSuggestionSelected produces no effects`() {
-        val state = makeGameSelectedState()
-        val result = producer.produce(newState = state, event = AddPlayEvent.MetadataEvent.LocationSuggestionSelected("Game Cafe"))
-        assertNoEffects(result)
-    }
-
-    @Test
     fun `AddNewPlayer produces no effects`() {
         val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))

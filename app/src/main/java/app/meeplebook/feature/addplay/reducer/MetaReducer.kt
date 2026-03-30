@@ -21,7 +21,6 @@ class MetaReducer @Inject constructor() {
                 is AddPlayEvent.MetadataEvent.DateChanged -> copy(date = event.date)
                 is AddPlayEvent.MetadataEvent.DurationChanged -> copy(durationMinutes = event.minutes)
                 is AddPlayEvent.MetadataEvent.LocationChanged -> copy(location = location.copy(value = event.value))
-                is AddPlayEvent.MetadataEvent.LocationSuggestionSelected -> copy(location = location.copy(value = event.value))
                 else -> this
             }
         }
