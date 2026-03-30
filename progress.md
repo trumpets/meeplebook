@@ -349,3 +349,22 @@ PR Link: (local commit — no PR yet)
   - VM test entry pattern: `Dispatchers.setMain(StandardTestDispatcher)` + `advanceUntilIdle()` after events, `runTest` scope
   - `CreatePlayCommand.date` is `Instant` (not `LocalDate`) — use `Instant.parse(...)` or `Instant.now()` in tests
 ---
+## 2026-03-30T00:33:00Z
+PR Link: (local session — AddPlayUiState sealed interface test refactor)
+- Refactored all AddPlay unit tests to work with the new sealed `AddPlayUiState` interface (`GameSearch` / `GameSelected` subclasses)
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayTestFactory.kt` — replaced `makeState()` with `makeGameSelectedState()` / `makeGameSearchState()`; added `requireGameSelected()` / `requireGameSearch()` throwing cast helpers
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/MetaReducerTest.kt` — typed factories + subclass casts
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/ValidationReducerTest.kt` — removed structurally-impossible null tests; added `GameSearch passes through unchanged`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayersReducerTest.kt` — typed factories + result casts
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/AddPlayReducerTest.kt` — typed factories; replaced null-gameId canSave test with `GameSearch stays GameSearch`
+  - `app/src/test/java/app/meeplebook/feature/addplay/effect/AddPlayEffectProducerTest.kt` — typed factories; `SaveClicked with GameSearch state emits no effects`
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayViewModelTest.kt` — `uiState` → `combinedUiState`; fixed query/GameSelected tests with `awaitUiStateMatching`; fixed `SaveClicked no-game` semantics
+- Result: 621 tests pass, 1 skipped to user (`isSaving` VM test — StandardTestDispatcher conflation issue)
+- **Learnings for future iterations:**
+    - `combinedUiState` uses `stateIn(WhileSubscribed(5_000))`. Accessing `.value` without a subscriber returns stale initial value. ALWAYS use `test {}` to subscribe before sending events to the VM.
+    - `awaitUiStateMatching<S, T>(stateFlow, debounceTime, predicate)` in `TurbineExtensions.kt` is the correct pattern for asserting a specific typed state from a debounced `WhileSubscribed` stateFlow.
+    - `StateFlow` conflation with `StandardTestDispatcher`: if production code updates state twice in the same coroutine tick (no suspension between updates), the intermediate state may never be observed. Add `delay(1)` in the Fake or switch to `UnconfinedTestDispatcher` to test intermediate states.
+    - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
+    - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
+---

@@ -4,9 +4,10 @@ import app.meeplebook.R
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.feature.addplay.AddPlayEvent
+import app.meeplebook.feature.addplay.AddPlayTestFactory.makeGameSearchState
+import app.meeplebook.feature.addplay.AddPlayTestFactory.makeGameSelectedState
 import app.meeplebook.feature.addplay.AddPlayTestFactory.makeIdentity
 import app.meeplebook.feature.addplay.AddPlayTestFactory.makePlayer
-import app.meeplebook.feature.addplay.AddPlayTestFactory.makeState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -21,7 +22,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `LocationChanged emits LoadPlayerSuggestions with new location`() {
-        val state = makeState(locationValue = "Home")
+        val state = makeGameSelectedState(locationValue = "Home")
         val event = AddPlayEvent.MetadataEvent.LocationChanged("Game Cafe")
 
         val result = producer.produce(newState = state, event = event)
@@ -34,8 +35,8 @@ class AddPlayEffectProducerTest {
     }
 
     @Test
-    fun `LocationChanged with null gameId produces no effects`() {
-        val state = makeState(gameId = null, locationValue = "Home")
+    fun `LocationChanged with GameSearch state produces no effects`() {
+        val state = makeGameSearchState(gameId = null)
         val event = AddPlayEvent.MetadataEvent.LocationChanged("Game Cafe")
 
         val result = producer.produce(newState = state, event = event)
@@ -45,7 +46,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `LocationChanged with empty location emits LoadPlayerSuggestions with empty location`() {
-        val state = makeState(locationValue = "Home")
+        val state = makeGameSelectedState(locationValue = "Home")
         val event = AddPlayEvent.MetadataEvent.LocationChanged("")
 
         val result = producer.produce(newState = state, event = event)
@@ -56,7 +57,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `LocationChanged forwards gameId to LoadPlayerSuggestions`() {
-        val state = makeState(gameId = 77L)
+        val state = makeGameSelectedState(gameId = 77L)
         val event = AddPlayEvent.MetadataEvent.LocationChanged("Home")
 
         val result = producer.produce(newState = state, event = event)
@@ -69,7 +70,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked with canSave true emits SavePlay domain effect`() {
-        val state = makeState().copy(canSave = true)
+        val state = makeGameSelectedState()
         val event = AddPlayEvent.ActionEvent.SaveClicked
 
         val result = producer.produce(newState = state, event = event)
@@ -81,7 +82,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked with canSave false emits ShowError ui effect`() {
-        val state = makeState()
+        val state = makeGameSelectedState(isSaving = true)
         val event = AddPlayEvent.ActionEvent.SaveClicked
 
         val result = producer.produce(newState = state, event = event)
@@ -93,22 +94,20 @@ class AddPlayEffectProducerTest {
     }
 
     @Test
-    fun `SaveClicked with null gameId emits ShowError ui effect`() {
-        val state = makeState(gameId = null)
+    fun `SaveClicked with GameSearch state emits no effects`() {
+        val state = makeGameSearchState(gameId = null)
         val event = AddPlayEvent.ActionEvent.SaveClicked
 
         val result = producer.produce(newState = state, event = event)
 
-        assertTrue(result.effects.isEmpty())
-        assertEquals(1, result.uiEffects.size)
-        assertTrue(result.uiEffects.first() is AddPlayUiEffect.ShowError)
+        assertNoEffects(result)
     }
 
     // ── SaveClicked — SavePlay field mapping ─────────────────────────────────
 
     @Test
     fun `SaveClicked SavePlay maps gameId and gameName`() {
-        val state = makeState(gameId = 99L, gameName = "Terraforming Mars").copy(canSave = true)
+        val state = makeGameSelectedState(gameId = 99L, gameName = "Terraforming Mars")
 
         val play = savePlay(state)
 
@@ -119,7 +118,7 @@ class AddPlayEffectProducerTest {
     @Test
     fun `SaveClicked SavePlay maps date`() {
         val date = Instant.parse("2025-07-15T14:30:00Z")
-        val state = makeState(date = date).copy(canSave = true)
+        val state = makeGameSelectedState(date = date)
 
         val play = savePlay(state)
 
@@ -128,7 +127,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps durationMinutes as length`() {
-        val state = makeState(durationMinutes = 90).copy(canSave = true)
+        val state = makeGameSelectedState(durationMinutes = 90)
 
         val play = savePlay(state)
 
@@ -137,7 +136,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps null durationMinutes as null length`() {
-        val state = makeState(durationMinutes = null).copy(canSave = true)
+        val state = makeGameSelectedState(durationMinutes = null)
 
         val play = savePlay(state)
 
@@ -146,7 +145,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps location value`() {
-        val state = makeState(locationValue = "Game Cafe").copy(canSave = true)
+        val state = makeGameSelectedState(locationValue = "Game Cafe")
 
         val play = savePlay(state)
 
@@ -155,7 +154,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps null location as null`() {
-        val state = makeState(locationValue = null).copy(canSave = true)
+        val state = makeGameSelectedState(locationValue = null)
 
         val play = savePlay(state)
 
@@ -164,7 +163,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps non-blank comments`() {
-        val state = makeState().copy(comments = "Great game!", canSave = true)
+        val state = makeGameSelectedState().copy(comments = "Great game!")
 
         val play = savePlay(state)
 
@@ -173,7 +172,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps blank comments as null`() {
-        val state = makeState().copy(comments = "", canSave = true)
+        val state = makeGameSelectedState().copy(comments = "")
 
         val play = savePlay(state)
 
@@ -182,7 +181,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps quantity`() {
-        val state = makeState().copy(quantity = 3, canSave = true)
+        val state = makeGameSelectedState().copy(quantity = 3)
 
         val play = savePlay(state)
 
@@ -191,7 +190,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps incomplete flag`() {
-        val state = makeState().copy(incomplete = true, canSave = true)
+        val state = makeGameSelectedState().copy(incomplete = true)
 
         val play = savePlay(state)
 
@@ -202,7 +201,7 @@ class AddPlayEffectProducerTest {
     fun `SaveClicked SavePlay maps players with all fields`() {
         val identity = makeIdentity(name = "Alice", username = "alice99", userId = 42L)
         val player = makePlayer(identity = identity, startPosition = 2, score = 150, isWinner = true, color = "Red")
-        val state = makeState(players = listOf(player)).copy(canSave = true)
+        val state = makeGameSelectedState(players = listOf(player))
 
         val play = savePlay(state)
 
@@ -221,7 +220,7 @@ class AddPlayEffectProducerTest {
     fun `SaveClicked SavePlay filters out players with blank names`() {
         val namedPlayer = makePlayer(makeIdentity(name = "Alice"), startPosition = 1)
         val blankPlayer = makePlayer(makeIdentity(name = ""), startPosition = 2)
-        val state = makeState(players = listOf(namedPlayer, blankPlayer)).copy(canSave = true)
+        val state = makeGameSelectedState(players = listOf(namedPlayer, blankPlayer))
 
         val play = savePlay(state)
 
@@ -231,7 +230,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `SaveClicked SavePlay maps empty player list`() {
-        val state = makeState(players = emptyList()).copy(canSave = true)
+        val state = makeGameSelectedState(players = emptyList())
 
         val play = savePlay(state)
 
@@ -242,7 +241,7 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `CancelClicked emits NavigateBack ui effect`() {
-        val state = makeState()
+        val state = makeGameSelectedState()
         val event = AddPlayEvent.ActionEvent.CancelClicked
 
         val result = producer.produce(newState = state, event = event)
@@ -256,28 +255,28 @@ class AddPlayEffectProducerTest {
 
     @Test
     fun `DateChanged produces no effects`() {
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.MetadataEvent.DateChanged(state.date))
         assertNoEffects(result)
     }
 
     @Test
     fun `DurationChanged produces no effects`() {
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.MetadataEvent.DurationChanged(60))
         assertNoEffects(result)
     }
 
     @Test
     fun `LocationSuggestionSelected produces no effects`() {
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.MetadataEvent.LocationSuggestionSelected("Game Cafe"))
         assertNoEffects(result)
     }
 
     @Test
     fun `AddNewPlayer produces no effects`() {
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))
         assertNoEffects(result)
     }
@@ -285,7 +284,7 @@ class AddPlayEffectProducerTest {
     @Test
     fun `NameChanged produces no effects`() {
         val identity = makeIdentity("Alice")
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.PlayerEditEvent.NameChanged(identity, "Alicia"))
         assertNoEffects(result)
     }
@@ -293,7 +292,7 @@ class AddPlayEffectProducerTest {
     @Test
     fun `ScoreChanged produces no effects`() {
         val identity = makeIdentity("Alice")
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.PlayerScoreEvent.ScoreChanged(identity, 42))
         assertNoEffects(result)
     }
@@ -301,7 +300,7 @@ class AddPlayEffectProducerTest {
     @Test
     fun `ColorSelected produces no effects`() {
         val identity = makeIdentity("Alice")
-        val state = makeState()
+        val state = makeGameSelectedState()
         val result = producer.produce(newState = state, event = AddPlayEvent.PlayerColorEvent.ColorSelected(identity, PlayerColor.RED))
         assertNoEffects(result)
     }

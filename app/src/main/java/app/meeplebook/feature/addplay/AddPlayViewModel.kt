@@ -36,7 +36,7 @@ import javax.inject.Inject
  * the reactive data flows (location suggestions, recent locations, game search).
  *
  * ## Entry paths
- * - **Path 1 — no game pre-selected**: The screen starts with [AddPlayUiState.gameId] `null`.
+ * - **Path 1 — no game pre-selected**: The screen starts with [AddPlayUiState.GameSearch.gameId] `null`.
  *   The screen drives game search via [AddPlayEvent.GameSearchEvent] events and then fires
  *   [AddPlayEvent.GameSearchEvent.GameSelected] (typically from a `LaunchedEffect`) once a
  *   game is resolved.

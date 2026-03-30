@@ -39,9 +39,10 @@ sealed interface AddPlayUiState {
 
         val isSaving: Boolean,
         val error: UiText = uiTextEmpty(),
-
-        val canSave: Boolean = false
     ) : AddPlayUiState {
+
+        val canSave: Boolean
+            get() = gameName.isNotBlank() && !isSaving
 
         fun toCreatePlayCommand(): CreatePlayCommand {
             return CreatePlayCommand(

@@ -11,15 +11,13 @@ import javax.inject.Inject
  *
  * 1. [MetaReducer]       — handles play metadata events (date, duration, location)
  * 2. [PlayersReducer]    — handles all player-related events
- * 3. [ValidationReducer] — recomputes [app.meeplebook.feature.addplay.AddPlayUiState.canSave]
  *
  * Each sub-reducer receives the output of the previous one, so every event is
  * handled exactly once and validation always reflects the latest state.
  */
 class AddPlayReducer @Inject constructor(
     private val metaReducer: MetaReducer,
-    private val playersReducer: PlayersReducer,
-    private val validationReducer: ValidationReducer
+    private val playersReducer: PlayersReducer
 ) {
 
     /**
@@ -36,8 +34,7 @@ class AddPlayReducer @Inject constructor(
 
         val afterMeta = metaReducer.reduce(state, event)
         val afterPlayers = playersReducer.reduce(afterMeta, event)
-        val afterValidation = validationReducer.reduce(afterPlayers)
 
-        return afterValidation
+        return afterPlayers
     }
 }

@@ -48,8 +48,7 @@ class MetaReducer @Inject constructor() {
                             incomplete = false,
                             comments = "",
                             isSaving = false,
-                            error = uiTextEmpty(),
-                            canSave = false
+                            error = uiTextEmpty()
                         )
 
                     else -> state

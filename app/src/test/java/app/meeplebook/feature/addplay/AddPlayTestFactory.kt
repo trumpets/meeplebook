@@ -29,14 +29,20 @@ object AddPlayTestFactory {
         isWinner = isWinner
     )
 
-    fun makeState(
+    /**
+     * Creates a [AddPlayUiState.GameSelected] for tests that need a game already selected.
+     * This is the most common test state — covers all reducer/effect/viewmodel tests that
+     * work with the play form (date, duration, players, saving, etc.).
+     */
+    fun makeGameSelectedState(
         players: List<PlayerEntryUi> = emptyList(),
         date: Instant = Instant.parse("2024-06-01T10:00:00Z"),
         durationMinutes: Int? = null,
         locationValue: String? = "",
-        gameId: Long? = 1L,
-        gameName: String? = "Test Game"
-    ): AddPlayUiState = AddPlayUiState(
+        gameId: Long = 1L,
+        gameName: String = "Test Game",
+        isSaving: Boolean = false,
+    ): AddPlayUiState.GameSelected = AddPlayUiState.GameSelected(
         gameId = gameId,
         gameName = gameName,
         date = date,
@@ -52,6 +58,37 @@ object AddPlayTestFactory {
             colorsHistory = PlayerColor.entries.map { it.colorString }
         ),
         playersByLocation = emptyList(),
-        isSaving = false
+        isSaving = isSaving
+    )
+
+    /**
+     * Creates a [AddPlayUiState.GameSearch] for tests that start before a game is selected.
+     */
+    fun makeGameSearchState(
+        gameId: Long? = null,
+        gameName: String? = null,
+        gameSearchQuery: String = "",
+        gameSearchResults: List<SearchResultGameItem> = emptyList(),
+    ): AddPlayUiState.GameSearch = AddPlayUiState.GameSearch(
+        gameId = gameId,
+        gameName = gameName,
+        gameSearchQuery = gameSearchQuery,
+        gameSearchResults = gameSearchResults,
     )
 }
+
+/**
+ * Asserts that this state is [AddPlayUiState.GameSelected] and returns it.
+ * Throws with a descriptive message if the cast fails — intended for test assertions only.
+ */
+fun AddPlayUiState.requireGameSelected(): AddPlayUiState.GameSelected =
+    this as? AddPlayUiState.GameSelected
+        ?: error("Expected AddPlayUiState.GameSelected but was ${this::class.simpleName}")
+
+/**
+ * Asserts that this state is [AddPlayUiState.GameSearch] and returns it.
+ * Throws with a descriptive message if the cast fails — intended for test assertions only.
+ */
+fun AddPlayUiState.requireGameSearch(): AddPlayUiState.GameSearch =
+    this as? AddPlayUiState.GameSearch
+        ?: error("Expected AddPlayUiState.GameSearch but was ${this::class.simpleName}")

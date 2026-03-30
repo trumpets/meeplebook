@@ -18,10 +18,13 @@ import app.meeplebook.feature.addplay.reducer.PlayerEditReducer
 import app.meeplebook.feature.addplay.reducer.PlayerListReducer
 import app.meeplebook.feature.addplay.reducer.PlayerScoreReducer
 import app.meeplebook.feature.addplay.reducer.PlayersReducer
-import app.meeplebook.feature.addplay.reducer.ValidationReducer
+import app.meeplebook.testutils.awaitUiStateMatching
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -29,7 +32,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -69,12 +71,11 @@ class AddPlayViewModelTest {
 
     @Test
     fun `initial state has no game selected`() {
-        val state = viewModel.uiState.value
-        assertNull(state.gameId)
-        assertNull(state.gameName)
-        assertFalse(state.isSaving)
-        assertFalse(state.canSave)
-        assertTrue(state.players.players.isEmpty())
+        val state = viewModel.combinedUiState.value
+        assertTrue(state is AddPlayUiState.GameSearch)
+        val search = state as AddPlayUiState.GameSearch
+        assertNull(search.gameId)
+        assertNull(search.gameName)
     }
 
     // endregion
@@ -84,21 +85,21 @@ class AddPlayViewModelTest {
     @Test
     fun `GameSearchQueryChanged updates gameSearchQuery in state`() = runTest {
         viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSearchQueryChanged("Catan"))
-        advanceUntilIdle()
-        assertEquals("Catan", viewModel.uiState.value.gameSearchQuery)
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSearch>(
+            viewModel
+        ) { (it as? AddPlayUiState.GameSearch)?.gameSearchQuery == "Catan" }
+        assertEquals("Catan", state.gameSearchQuery)
     }
 
     @Test
-    fun `GameSelected sets gameId and gameName and clears search fields`() = runTest {
+    fun `GameSelected sets gameId and gameName and transitions to GameSelected state`() = runTest {
         viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSearchQueryChanged("Wing"))
         viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(gameId = 7L, gameName = "Wingspan"))
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(
+            viewModel
+        ) { it is AddPlayUiState.GameSelected }
         assertEquals(7L, state.gameId)
         assertEquals("Wingspan", state.gameName)
-        assertEquals("", state.gameSearchQuery)
-        assertTrue(state.gameSearchResults.isEmpty())
     }
 
     // endregion
@@ -110,7 +111,7 @@ class AddPlayViewModelTest {
         // Set up plays with a known location so the fake repo can filter
         viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
 
-        viewModel.uiState.test {
+        viewModel.combinedUiState.test {
             awaitItem() // initial
 
             viewModel.onEvent(AddPlayEvent.MetadataEvent.LocationChanged("Home"))
@@ -151,17 +152,16 @@ class AddPlayViewModelTest {
     // region ActionEvent — SaveClicked
 
     @Test
-    fun `SaveClicked with canSave false does not trigger save`() = runTest {
-        // canSave is false in initial state (no gameId/players)
-        viewModel.uiEffect.test {
-            viewModel.onEvent(AddPlayEvent.ActionEvent.SaveClicked)
-            advanceUntilIdle()
+    fun `SaveClicked with no game selected does not trigger any effect`() = runTest {
+        // In GameSearch state, SaveClicked produces no effects (neither save nor error)
+        val effects = mutableListOf<AddPlayUiEffect>()
+        val job = launch { viewModel.uiEffect.collect { effects.add(it) } }
 
-            // Should emit ShowError (can't save), not NavigateBack
-            val effect = awaitItem()
-            assertTrue(effect is AddPlayUiEffect.ShowError)
-            cancelAndIgnoreRemainingEvents()
-        }
+        viewModel.onEvent(AddPlayEvent.ActionEvent.SaveClicked)
+        advanceUntilIdle()
+
+        job.cancel()
+        assertTrue("Expected no effects but got: $effects", effects.isEmpty())
     }
 
     @Test
@@ -181,28 +181,29 @@ class AddPlayViewModelTest {
 
     @Test
     fun `SaveClicked sets isSaving true while saving then false on failure`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        fakePlaysRepository.beforeCreatePlay = { gate.await() }
         fakePlaysRepository.createPlayException = RuntimeException("Save failed")
 
         viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
-        advanceUntilIdle()
+        awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(viewModel) { it is AddPlayUiState.GameSelected }
 
-        viewModel.uiState.test {
-            awaitItem() // current state with canSave=true
-
-            viewModel.onEvent(AddPlayEvent.ActionEvent.SaveClicked)
-            advanceUntilIdle()
-
-            var sawSaving = false
-            var sawNotSaving = false
-            while (!sawNotSaving) {
-                val s = awaitItem()
-                if (s.isSaving) sawSaving = true
-                if (sawSaving && !s.isSaving) sawNotSaving = true
-            }
-            assertTrue(sawSaving)
-            assertTrue(sawNotSaving)
-            cancelAndIgnoreRemainingEvents()
+        viewModel.onEvent(AddPlayEvent.ActionEvent.SaveClicked)
+        val savingState = awaitUiStateMatching<AddPlayUiState, AddPlayUiState.GameSelected>(
+            viewModel.combinedUiState
+        ) { state ->
+            (state as? AddPlayUiState.GameSelected)?.isSaving == true
         }
+        assertTrue(savingState.isSaving)
+
+        gate.complete(Unit)
+
+        val failedState = awaitUiStateMatching<AddPlayUiState, AddPlayUiState.GameSelected>(
+            viewModel.combinedUiState
+        ) { state ->
+            (state as? AddPlayUiState.GameSelected)?.isSaving == false
+        }
+        assertTrue(!failedState.isSaving)
     }
 
     // endregion
@@ -228,9 +229,19 @@ class AddPlayViewModelTest {
             listReducer = PlayerListReducer(),
             scoreReducer = PlayerScoreReducer(),
             colorReducer = PlayerColorReducer()
-        ),
-        validationReducer = ValidationReducer()
+        )
     )
+
+    suspend inline fun <reified T : AddPlayUiState> TestScope.awaitUiStateAfterDebounce(
+        viewModel: AddPlayViewModel,
+        crossinline predicate: (AddPlayUiState) -> Boolean = { true }
+    ): T {
+        return awaitUiStateMatching(
+            viewModel.combinedUiState,
+            DebounceDurations.SearchQuery,
+            predicate = predicate
+        )
+    }
 
     // endregion
 }
