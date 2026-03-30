@@ -48,8 +48,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -58,6 +60,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -328,6 +333,8 @@ private fun GameSelectedContent(
 
         item { DurationSection(durationMinutes = state.durationMinutes, onEvent = onEvent) }
 
+        item { SuggestedPlayersSection(state = state, onEvent = onEvent) }
+
         item { PlayersSection(state = state, onEvent = onEvent) }
     }
 }
@@ -425,11 +432,16 @@ private fun DateSection(
 
 // ─── Location ────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LocationSection(
     locationState: LocationState,
     onEvent: (AddPlayEvent) -> Unit
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+    val showSuggestions = isFocused && locationState.suggestions.isNotEmpty()
+    val focusManager = LocalFocusManager.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -438,29 +450,35 @@ private fun LocationSection(
                 vertical = ScreenPadding.Small
             )
     ) {
-        OutlinedTextField(
-            value = locationState.value ?: "",
-            onValueChange = { onEvent(AddPlayEvent.MetadataEvent.LocationChanged(it)) },
-            label = { Text(stringResource(R.string.add_play_location_label)) },
-            placeholder = { Text(stringResource(R.string.add_play_location_placeholder)) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("locationField")
-        )
+        ExposedDropdownMenuBox(
+            expanded = showSuggestions,
+            onExpandedChange = {}
+        ) {
+            OutlinedTextField(
+                value = locationState.value ?: "",
+                onValueChange = { onEvent(AddPlayEvent.MetadataEvent.LocationChanged(it)) },
+                label = { Text(stringResource(R.string.add_play_location_label)) },
+                placeholder = { Text(stringResource(R.string.add_play_location_placeholder)) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryEditable)
+                    .onFocusChanged { isFocused = it.isFocused }
+                    .testTag("locationField")
+            )
 
-        // Autocomplete suggestions (while focused / typing)
-        if (locationState.suggestions.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(4.dp))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 4.dp),
+            ExposedDropdownMenu(
+                expanded = showSuggestions,
+                onDismissRequest = { isFocused = false },
                 modifier = Modifier.testTag("locationSuggestions")
             ) {
-                items(locationState.suggestions) { suggestion ->
-                    SuggestionChip(
-                        onClick = { onEvent(AddPlayEvent.MetadataEvent.LocationChanged(suggestion)) },
-                        label = { Text(suggestion) }
+                locationState.suggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            onEvent(AddPlayEvent.MetadataEvent.LocationChanged(suggestion))
+                            focusManager.clearFocus()
+                        }
                     )
                 }
             }
@@ -528,8 +546,6 @@ private fun PlayersSection(
     state: AddPlayUiState.GameSelected,
     onEvent: (AddPlayEvent) -> Unit
 ) {
-    var showMorePlayersDialog by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -555,15 +571,29 @@ private fun PlayersSection(
                 }
             )
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(8.dp))
+@Composable
+private fun SuggestedPlayersSection(
+    state: AddPlayUiState.GameSelected,
+    onEvent: (AddPlayEvent) -> Unit
+) {
+    var showMorePlayersDialog by remember { mutableStateOf(false) }
 
-        // Suggested players chip row (excluding already-added)
-        val addedIdentities = state.players.players.map { it.playerIdentity }.toSet()
-        val availableSuggestions = state.playersByLocation
-            .filter { it.playerIdentity !in addedIdentities }
+    val addedIdentities = state.players.players.map { it.playerIdentity }.toSet()
+    val availableSuggestions = state.playersByLocation
+        .filter { it.playerIdentity !in addedIdentities }
 
-        if (availableSuggestions.isNotEmpty()) {
+    if (availableSuggestions.isNotEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = ScreenPadding.Horizontal,
+                    vertical = ScreenPadding.Small
+                )
+        ) {
             Text(
                 text = stringResource(R.string.add_play_suggested_players_label),
                 style = MaterialTheme.typography.labelMedium,
@@ -610,7 +640,6 @@ private fun PlayersSection(
     }
 
     if (showMorePlayersDialog) {
-        val addedIdentities = state.players.players.map { it.playerIdentity }.toSet()
         val allAvailable = state.playersByLocation
             .filter { it.playerIdentity !in addedIdentities }
 
