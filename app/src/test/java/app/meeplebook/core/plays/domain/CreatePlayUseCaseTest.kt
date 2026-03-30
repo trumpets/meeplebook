@@ -1,6 +1,7 @@
 package app.meeplebook.core.plays.domain
 
 import app.meeplebook.core.plays.FakePlaysRepository
+import app.meeplebook.core.result.fold
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -59,11 +60,12 @@ class CreatePlayUseCaseTest {
         )
 
         var threw = false
-        try {
-            useCase(command)
-        } catch (_: RuntimeException) {
-            threw = true
-        }
+        useCase(command).fold(
+            onSuccess = { /* no-op */ },
+            onFailure = { error ->
+                threw = true
+            }
+        )
 
         assertTrue("Expected RuntimeException to be thrown", threw)
     }

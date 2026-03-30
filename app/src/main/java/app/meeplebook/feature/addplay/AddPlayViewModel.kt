@@ -8,6 +8,7 @@ import app.meeplebook.core.plays.domain.CreatePlayUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
+import app.meeplebook.core.result.fold
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.addplay.effect.AddPlayEffect
@@ -190,9 +191,15 @@ class AddPlayViewModel @Inject constructor(
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = true) }
-            runCatching { createPlay(effect.play) }
-                .onSuccess { _uiEffect.emit(AddPlayUiEffect.NavigateBack) }
-                .onFailure { _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) } }
+            createPlay(effect.play).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) }
+                    _uiEffect.emit(AddPlayUiEffect.NavigateBack)
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) }
+                }
+            )
         }
     }
 
