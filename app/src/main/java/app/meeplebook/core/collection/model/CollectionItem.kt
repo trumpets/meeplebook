@@ -9,13 +9,16 @@ import java.time.Instant
  * @property subtype The type of the game (boardgame or boardgameexpansion).
  * @property name The name of the game.
  * @property yearPublished The year the game was published.
- * @property thumbnail URL to the game's thumbnail image.
+ * @property thumbnail URL to the game's thumbnail image (low-resolution).
+ * @property image URL to the game's full-size cover image.
  * @property lastModifiedDate The last modified date of the collection item.
  * @property minPlayers Minimum number of players.
  * @property maxPlayers Maximum number of players.
  * @property minPlayTimeMinutes Minimum play time in minutes.
  * @property maxPlayTimeMinutes Maximum play time in minutes.
  * @property numPlays The number of times the game has been played.
+ * @property userRating The user's personal BGG rating for this game (1–10), or null if unrated.
+ * @property ranks BGG ranking entries for this game (subtype rank + family ranks).
  */
 data class CollectionItem(
     val gameId: Long,
@@ -23,12 +26,15 @@ data class CollectionItem(
     val name: String,
     val yearPublished: Int?,
     val thumbnail: String?,
+    val image: String? = null,
     val lastModifiedDate: Instant?,
     val minPlayers: Int?,
     val maxPlayers: Int?,
     val minPlayTimeMinutes: Int?,
     val maxPlayTimeMinutes: Int?,
-    val numPlays: Int
+    val numPlays: Int,
+    val userRating: Float? = null,
+    val ranks: List<GameRank> = emptyList()
 )
 
 /**

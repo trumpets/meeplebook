@@ -15,4 +15,9 @@ sealed interface Screen {
         val gameId: Long? = null,
         val gameName: String? = null
     ) : Screen
+
+    @Serializable
+    data class GameDetail(
+        val gameId: Long
+    ) : Screen
 }
