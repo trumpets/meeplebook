@@ -116,5 +116,9 @@
     <string name="add_play_cancel">Cancel</string>
     <string name="add_play_add_player">Add player</string>
     <string name="add_play_no_player_suggestions">No suggestions for this location</string>
+    <string name="add_play_discard_title">Discard play?</string>
+    <string name="add_play_discard_message">Your play will not be saved.</string>
+    <string name="add_play_discard_confirm">Discard</string>
+    <string name="add_play_discard_cancel">Keep editing</string>
 
 </resources>

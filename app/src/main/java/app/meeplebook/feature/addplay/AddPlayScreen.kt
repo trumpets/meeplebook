@@ -1,7 +1,7 @@
 package app.meeplebook.feature.addplay
 
 import android.content.res.Configuration
-import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,20 +17,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -49,7 +54,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalResources
@@ -57,12 +61,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -71,17 +69,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.plays.domain.PlayerIdentity
-import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.asString
-import app.meeplebook.core.ui.uiText
-import app.meeplebook.core.ui.uiTextEmpty
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
 import app.meeplebook.ui.components.RowItemImage
 import app.meeplebook.ui.components.ScreenPadding
 import app.meeplebook.ui.theme.MeepleBookTheme
-import coil3.compose.AsyncImage
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -141,6 +134,40 @@ fun AddPlayScreenRoot(
     onEvent: (AddPlayEvent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    val hasUnsavedChanges = uiState is AddPlayUiState.GameSelected
+
+    val onBackPressed: () -> Unit = {
+        if (hasUnsavedChanges) {
+            showDiscardDialog = true
+        } else {
+            onEvent(AddPlayEvent.ActionEvent.CancelClicked)
+        }
+    }
+
+    BackHandler(enabled = hasUnsavedChanges) {
+        onBackPressed()
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.add_play_discard_title)) },
+            text = { Text(stringResource(R.string.add_play_discard_message)) },
+            confirmButton = {
+                TextButton(onClick = { onEvent(AddPlayEvent.ActionEvent.CancelClicked) }) {
+                    Text(stringResource(R.string.add_play_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.add_play_discard_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -153,7 +180,7 @@ fun AddPlayScreenRoot(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onEvent(AddPlayEvent.ActionEvent.CancelClicked) }) {
+                    IconButton(onClick = onBackPressed) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.add_play_cancel)
