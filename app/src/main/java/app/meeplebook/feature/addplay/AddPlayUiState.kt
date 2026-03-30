@@ -49,7 +49,7 @@ sealed interface AddPlayUiState {
                 gameName = gameName,
                 date = date,
                 length = durationMinutes,
-                location = location.value,
+                location = location.value?.takeIf { it.isNotBlank() },
                 players = players.players
                     .filter { it.playerIdentity.name.isNotBlank() }
                     .map {
