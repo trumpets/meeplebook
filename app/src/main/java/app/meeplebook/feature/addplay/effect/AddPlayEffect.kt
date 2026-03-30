@@ -18,11 +18,9 @@ sealed interface AddPlayEffect {
      * Produced whenever the location text changes so that the suggestions list stays
      * in sync with what the user has typed.
      *
-     * @property gameId  The game for which to scope player suggestions.
      * @property location The current location text entered by the user.
      */
     data class LoadPlayerSuggestions(
-        val gameId: Long,
         val location: String
     ) : AddPlayEffect
 

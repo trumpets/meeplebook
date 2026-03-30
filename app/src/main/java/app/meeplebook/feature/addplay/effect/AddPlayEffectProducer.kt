@@ -42,7 +42,6 @@ class AddPlayEffectProducer @Inject constructor() {
             is AddPlayEvent.MetadataEvent.LocationChanged -> {
                 newState.asGameSelected {
                     effects += AddPlayEffect.LoadPlayerSuggestions(
-                        gameId = gameId,
                         location = event.value
                     )
                 }

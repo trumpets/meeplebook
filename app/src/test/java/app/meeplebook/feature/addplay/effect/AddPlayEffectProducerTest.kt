@@ -30,7 +30,6 @@ class AddPlayEffectProducerTest {
         assertEquals(1, result.effects.size)
         val effect = result.effects.first() as AddPlayEffect.LoadPlayerSuggestions
         assertEquals("Game Cafe", effect.location)
-        assertEquals(state.gameId, effect.gameId)
         assertTrue(result.uiEffects.isEmpty())
     }
 
@@ -56,14 +55,14 @@ class AddPlayEffectProducerTest {
     }
 
     @Test
-    fun `LocationChanged forwards gameId to LoadPlayerSuggestions`() {
+    fun `LocationChanged forwards location to LoadPlayerSuggestions`() {
         val state = makeGameSelectedState(gameId = 77L)
         val event = AddPlayEvent.MetadataEvent.LocationChanged("Home")
 
         val result = producer.produce(newState = state, event = event)
 
         val effect = result.effects.first() as AddPlayEffect.LoadPlayerSuggestions
-        assertEquals(77L, effect.gameId)
+        assertEquals("Home", effect.location)
     }
 
     // ── SaveClicked — routing ────────────────────────────────────────────────
