@@ -368,3 +368,20 @@ PR Link: (local session — AddPlayUiState sealed interface test refactor)
     - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
     - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
 ---
+
+## 2026-03-30T23:29:47Z
+PR Link: https://github.com/trumpets/meeplebook/pull/99
+- Added `image`, `userRating`, `ranks` fields to `CollectionItem`, `CollectionItemEntity`, `DomainCollectionItem`
+- Added `GameRank` + `RankType` serializable models; `GameRankConverter` Room TypeConverter (kotlinx.serialization JSON)
+- Bumped DB version 1 → 2 (fallbackToDestructiveMigration covers dev cycle)
+- Updated `CollectionXmlParser` to parse `<image>`, `<rating value>`, `<ranks><rank>` elements
+- Created `GameDetail` feature: `GameDetailUiState` (Loading/Content/Error), `GameDetailEvent`, `GameDetailViewModel` (skeleton), `GameDetailScreen` (placeholder)
+- Added `Screen.GameDetail(gameId: Long)` + composable in `AppNavHost`
+- Added 6 new parser tests + 14 new `GameDetailUiStateTest` tests
+- Files changed: `CollectionItem.kt`, `CollectionItemEntity.kt`, `DomainCollectionItem.kt`, `CollectionXmlParser.kt`, `MeepleBookDatabase.kt`, new `GameRank.kt`, `GameRankConverter.kt`, `GameDetailUiState.kt`, `GameDetailEvent.kt`, `GameDetailViewModel.kt`, `GameDetailScreen.kt`, `Screen.kt`, `AppNavHost.kt`; updated `CollectionXmlParserTest.kt`; new `GameDetailUiStateTest.kt`
+- **Learnings for future iterations:**
+    - New fields on `CollectionItem` / `DomainCollectionItem` should have Kotlin default values so the many existing named-parameter call sites in tests don't need updating
+    - `GameRank` is `@Serializable`; Room stores `List<GameRank>` via `GameRankConverter` using `Json.encodeToString` / `decodeFromString` — replicate this pattern for any future complex Room column type
+    - `UiText.Plain` is the literal string subtype (NOT `Literal`); always verify via `UiText.kt` before using in tests
+    - DB version bump with `fallbackToDestructiveMigration(true)` wipes user data on upgrade — document version changes in `MeepleBookDatabase` KDoc for traceability
+---
