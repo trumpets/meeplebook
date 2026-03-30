@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import app.meeplebook.feature.addplay.AddPlayScreen
 import app.meeplebook.feature.home.HomeScreen
+import app.meeplebook.feature.home.navigation.HomeNavigator
 import app.meeplebook.feature.login.LoginScreen
 
 @Composable
@@ -28,7 +29,15 @@ fun AppNavHost(
         composable<Screen.Home> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.Home>()
             HomeScreen(
-                args.refreshOnLogin
+                args.refreshOnLogin,
+                homeNavigator = HomeNavigator { gameId, gameName ->
+                    navController.navigate(
+                        Screen.AddPlay(
+                            gameId = gameId,
+                            gameName = gameName
+                        )
+                    )
+                }
             )
         }
         composable<Screen.AddPlay> { backStackEntry ->
