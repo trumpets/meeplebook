@@ -4,6 +4,8 @@ import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
 import java.time.Instant
 
+enum class OptionalField { QUANTITY, INCOMPLETE, COMMENTS }
+
 /** Top-level union of all user-driven events on the Add Play screen. */
 sealed interface AddPlayEvent {
 
@@ -34,6 +36,18 @@ sealed interface AddPlayEvent {
 
         /** User typed in the location field. */
         data class LocationChanged(val value: String) : MetadataEvent
+
+        /** User changed the play quantity. [value] is `null` when the field is cleared. */
+        data class QuantityChanged(val value: Int?) : MetadataEvent
+
+        /** User toggled the incomplete flag. */
+        data class IncompleteToggled(val value: Boolean) : MetadataEvent
+
+        /** User changed the play comments. */
+        data class CommentsChanged(val value: String) : MetadataEvent
+
+        /** User tapped an optional field in the FAB menu to make it visible. */
+        data class ShowOptionalField(val field: OptionalField) : MetadataEvent
     }
 
     /** Events that add, remove, or change the active edit target in the player list. */

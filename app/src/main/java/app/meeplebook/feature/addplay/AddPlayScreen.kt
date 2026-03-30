@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -28,11 +29,13 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +46,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -209,7 +213,19 @@ fun AddPlayScreenRoot(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            if (uiState is AddPlayUiState.GameSelected) {
+                val hiddenFields = buildList {
+                    if (!uiState.showQuantity) add(OptionalField.QUANTITY)
+                    if (!uiState.showIncomplete) add(OptionalField.INCOMPLETE)
+                    if (!uiState.showComments) add(OptionalField.COMMENTS)
+                }
+                if (hiddenFields.isNotEmpty()) {
+                    AddFieldFab(hiddenFields = hiddenFields, onEvent = onEvent)
+                }
+            }
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -360,6 +376,14 @@ private fun GameSelectedContent(
         }
 
         item { DateDurationRow(date = state.date, durationMinutes = state.durationMinutes, onEvent = onEvent) }
+
+        if (state.showQuantity || state.showIncomplete) {
+            item { QuantityIncompleteRow(state = state, onEvent = onEvent) }
+        }
+
+        if (state.showComments) {
+            item { CommentsSection(comments = state.comments, onEvent = onEvent) }
+        }
 
         item { SuggestedPlayersSection(state = state, onEvent = onEvent) }
 
@@ -547,6 +571,118 @@ private fun LocationSection(
                         label = { Text(loc) }
                     )
                 }
+            }
+        }
+    }
+}
+
+// ─── Optional fields ─────────────────────────────────────────────────────────
+
+@Composable
+private fun QuantityIncompleteRow(
+    state: AddPlayUiState.GameSelected,
+    onEvent: (AddPlayEvent) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = ScreenPadding.Horizontal, vertical = ScreenPadding.Small),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (state.showQuantity) {
+            OutlinedTextField(
+                value = if (state.quantity == 1) "" else state.quantity.toString(),
+                onValueChange = { raw ->
+                    val parsed = raw.toIntOrNull()
+                    if (raw.isEmpty()) {
+                        onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(null))
+                    } else if (parsed != null && parsed <= 999) {
+                        onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(parsed))
+                    }
+                },
+                label = { Text(stringResource(R.string.add_play_quantity_label)) },
+                placeholder = { Text("1") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .width(96.dp)
+                    .testTag("quantityField")
+            )
+        }
+
+        if (state.showIncomplete) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = stringResource(R.string.add_play_optional_incomplete),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = state.incomplete,
+                    onCheckedChange = { onEvent(AddPlayEvent.MetadataEvent.IncompleteToggled(it)) },
+                    modifier = Modifier.testTag("incompleteToggle")
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommentsSection(
+    comments: String,
+    onEvent: (AddPlayEvent) -> Unit
+) {
+    OutlinedTextField(
+        value = comments,
+        onValueChange = { onEvent(AddPlayEvent.MetadataEvent.CommentsChanged(it)) },
+        label = { Text(stringResource(R.string.add_play_comments_label)) },
+        placeholder = { Text(stringResource(R.string.add_play_comments_placeholder)) },
+        minLines = 1,
+        maxLines = 5,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = ScreenPadding.Horizontal, vertical = ScreenPadding.Small)
+            .testTag("commentsField")
+    )
+}
+
+@Composable
+private fun AddFieldFab(
+    hiddenFields: List<OptionalField>,
+    onEvent: (AddPlayEvent) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        FloatingActionButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.add_play_add_optional_field)
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            hiddenFields.forEach { field ->
+                val label = when (field) {
+                    OptionalField.QUANTITY -> stringResource(R.string.add_play_optional_quantity)
+                    OptionalField.INCOMPLETE -> stringResource(R.string.add_play_optional_incomplete)
+                    OptionalField.COMMENTS -> stringResource(R.string.add_play_optional_comments)
+                }
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = {
+                        onEvent(AddPlayEvent.MetadataEvent.ShowOptionalField(field))
+                        expanded = false
+                    }
+                )
             }
         }
     }

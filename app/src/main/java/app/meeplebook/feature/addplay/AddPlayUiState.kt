@@ -37,6 +37,10 @@ sealed interface AddPlayUiState {
         val incomplete: Boolean = false,
         val comments: String = "",
 
+        val showQuantity: Boolean = false,
+        val showIncomplete: Boolean = false,
+        val showComments: Boolean = false,
+
         val isSaving: Boolean,
         val error: UiText = uiTextEmpty(),
     ) : AddPlayUiState {
