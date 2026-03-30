@@ -97,4 +97,7 @@
     <string name="play_player_won">won</string>
     <string name="play_player_score">%1$d</string>
 
+    <!-- Add Play Screen -->
+    <string name="add_play_cant_save">Can\'t save play</string>
+
 </resources>

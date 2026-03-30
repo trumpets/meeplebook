@@ -43,6 +43,11 @@ class FakePlaysRepository : PlaysRepository {
     var lastSyncUsername: String? = null
         private set
 
+    /** When non-null, [createPlay] throws this exception instead of succeeding. */
+    var createPlayException: Throwable? = null
+
+    var beforeCreatePlay: (suspend () -> Unit)? = null
+
     var lastObservePlaysQuery: String? = null
         private set
 
@@ -75,6 +80,8 @@ class FakePlaysRepository : PlaysRepository {
     }
 
     override suspend fun createPlay(command: CreatePlayCommand) {
+        beforeCreatePlay?.invoke()
+        createPlayException?.let { throw it }
         val currentPlays = _plays.value.toMutableList()
         
         // Generate a new local ID

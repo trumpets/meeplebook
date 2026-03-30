@@ -1,5 +1,7 @@
 package app.meeplebook.feature.addplay
 
+import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
@@ -8,31 +10,73 @@ import java.time.Instant
 /**
  * Immutable state consumed by the Add Play screen.
  */
-data class AddPlayUiState(
-    val gameId: Long,
-    val gameName: String,
+sealed interface AddPlayUiState {
 
-    val date: Instant = Instant.now(),
-    val durationMinutes: Int?,
-    val location: LocationState,
+    data class GameSearch(
+        val gameId: Long? = null,
+        val gameName: String? = null,
 
-    val players: PlayersState,
+        // Path 1: game search (shown when gameId is null)
+        val gameSearchQuery: String = "",
+        val gameSearchResults: List<SearchResultGameItem> = emptyList(),
+    ) : AddPlayUiState
 
-    val playersByLocation: List<PlayerSuggestion>,
+    data class GameSelected(
+        val gameId: Long,
+        val gameName: String,
 
-    val quantity: Int = 1,
-    val incomplete: Boolean = false,
-    val comments: String = "",
+        val date: Instant = Instant.now(),
+        val durationMinutes: Int?,
+        val location: LocationState,
 
-    val isSaving: Boolean,
-    val error: UiText = uiTextEmpty()
-)
+        val players: PlayersState,
+
+        val playersByLocation: List<PlayerSuggestion>,
+
+        val quantity: Int = 1,
+        val incomplete: Boolean = false,
+        val comments: String = "",
+
+        val isSaving: Boolean,
+        val error: UiText = uiTextEmpty(),
+    ) : AddPlayUiState {
+
+        val canSave: Boolean
+            get() = gameName.isNotBlank() && !isSaving
+
+        fun toCreatePlayCommand(): CreatePlayCommand {
+            return CreatePlayCommand(
+                gameId = gameId,
+                gameName = gameName,
+                date = date,
+                length = durationMinutes,
+                location = location.value?.takeIf { it.isNotBlank() },
+                players = players.players
+                    .filter { it.playerIdentity.name.isNotBlank() }
+                    .map {
+                        CreatePlayerCommand(
+                            name = it.playerIdentity.name,
+                            username = it.playerIdentity.username,
+                            userId = it.playerIdentity.userId,
+                            startPosition = it.startPosition,
+                            color = it.color,
+                            score = it.score,
+                            win = it.isWinner
+                        )
+                    },
+                quantity = quantity,
+                incomplete = incomplete,
+                comments = comments.ifBlank { null }
+            )
+        }
+    }
+}
 
 /**
  * Location input state, including autocomplete suggestions and focus state.
  */
 data class LocationState(
-    val value: String,
+    val value: String?,
     val suggestions: List<String>,
     val recentLocations: List<String>,
     val isFocused: Boolean
@@ -53,7 +97,7 @@ data class PlayersState(
 data class PlayerEntryUi(
     val playerIdentity: PlayerIdentity,
 
-    val startPosition: Int?,
+    val startPosition: Int,
     val color: String?,
 
     val score: Int?,
@@ -63,9 +107,9 @@ data class PlayerEntryUi(
         /**
          * Creates an empty player row ready for manual input.
          */
-        fun empty(startPosition: Int): PlayerEntryUi {
+        fun empty(playerName: String, startPosition: Int): PlayerEntryUi {
             return PlayerEntryUi(
-                playerIdentity = PlayerIdentity(name = "", username = null, userId = null),
+                playerIdentity = PlayerIdentity(name = playerName, username = null, userId = null),
                 startPosition = startPosition,
                 color = null,
                 score = null,
@@ -92,6 +136,51 @@ data class PlayerEntryUi(
  * Suggested player for quick-add based on location history.
  */
 data class PlayerSuggestion(
-    val playerIdentity: PlayerIdentity,
-    val playCount: Int
+    val playerIdentity: PlayerIdentity
 )
+
+data class SearchResultGameItem(
+    val gameId: Long,
+    val name: String,
+    val yearPublished: Int?,
+    val thumbnailUrl: String?,
+)
+
+/**
+ * Safely updates the current state if it is GameSelected.
+ *
+ * Usage:
+ * _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = true) }
+ */
+fun AddPlayUiState.updateGameSelected(
+    block: AddPlayUiState.GameSelected.() -> AddPlayUiState.GameSelected
+): AddPlayUiState {
+    return when (this) {
+        is AddPlayUiState.GameSelected -> block()
+        is AddPlayUiState.GameSearch -> this // leave unchanged
+    }
+}
+
+/**
+ * Safely transforms the current state if it is GameSearch.
+ * The block can return any [AddPlayUiState], enabling both in-place
+ * updates and state transitions (e.g. GameSearch → GameSelected).
+ *
+ * Usage:
+ * _uiState.value = _uiState.value.updateGameSearch { copy(gameSearchQuery = "Cata") }
+ */
+fun AddPlayUiState.updateGameSearch(
+    block: AddPlayUiState.GameSearch.() -> AddPlayUiState
+): AddPlayUiState {
+    return when (this) {
+        is AddPlayUiState.GameSelected -> this // leave unchanged
+        is AddPlayUiState.GameSearch -> block()
+    }
+}
+
+/**
+ * Safely run [block] if the state is [AddPlayUiState.GameSelected], otherwise return null.
+ */
+inline fun <T> AddPlayUiState.asGameSelected(block: AddPlayUiState.GameSelected.() -> T): T? {
+    return (this as? AddPlayUiState.GameSelected)?.block()
+}

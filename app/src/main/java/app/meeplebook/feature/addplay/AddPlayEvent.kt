@@ -7,6 +7,22 @@ import java.time.Instant
 /** Top-level union of all user-driven events on the Add Play screen. */
 sealed interface AddPlayEvent {
 
+    /**
+     * Events for Path 1 (entering the screen without a pre-selected game).
+     *
+     * The screen starts in game-search mode when no gameId is provided; once the user
+     * selects a game the full form becomes visible.
+     */
+    sealed interface GameSearchEvent : AddPlayEvent {
+
+        /** User changed the text in the game-search field. */
+        data class GameSearchQueryChanged(val query: String) : GameSearchEvent
+
+        /** User selected a game from the search results. */
+        data class GameSelected(val gameId: Long, val gameName: String) : GameSearchEvent
+    }
+
+
     /** Events that modify the top-level play metadata (date, duration, location). */
     sealed interface MetadataEvent : AddPlayEvent {
 
@@ -18,16 +34,14 @@ sealed interface AddPlayEvent {
 
         /** User typed in the location field. */
         data class LocationChanged(val value: String) : MetadataEvent
-
-        /** User tapped an autocomplete suggestion for the location. */
-        data class LocationSuggestionSelected(val value: String) : MetadataEvent
     }
 
     /** Events that add, remove, or change the active edit target in the player list. */
     sealed interface PlayerListEvent : AddPlayEvent {
 
-        /** User tapped "add player" with no suggestion; inserts a blank row. */
-        data class AddEmptyPlayer(
+        /** User tapped "add player" with no suggestion; inserts a new row. */
+        data class AddNewPlayer(
+            val playerName: String,
             val startPosition: Int
         ) : PlayerListEvent
 
@@ -102,13 +116,6 @@ sealed interface AddPlayEvent {
             val playerIdentity: PlayerIdentity,
             val color: PlayerColor
         ) : PlayerColorEvent
-    }
-
-    /** Events that trigger suggestion refreshes. */
-    sealed interface SuggestionEvent : AddPlayEvent {
-
-        /** Request a fresh load of player suggestions for the current location. */
-        data object RefreshPlayerSuggestions : SuggestionEvent
     }
 
     /** Primary action events emitted by the screen's action buttons. */

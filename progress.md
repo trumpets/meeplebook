@@ -322,3 +322,49 @@ PR Link: N/A (local change)
   - Fake repositories should mirror production observable side-effects, not just return values; use opt-in nullable fields to stay backwards-compatible with existing tests
   - When a fake method has configurable results, always add a companion `*Data` property if the real impl also mutates observable state on success
 ---
+
+## 2026-03-29T20:24:50Z
+PR Link: N/A (local session)
+- Added `ValidationReducerTest.kt` (5 tests) for the new `ValidationReducer`
+- Updated `AddPlayReducerTest.kt` — 2 new `canSave` pipeline tests  
+- Updated `AddPlayEffectProducerTest.kt` — removed `oldState` param, updated `RefreshPlayerSuggestions` (removed, event deleted from sealed interface), aligned `SaveClicked` tests to field-based `canSave`
+- Updated `AddPlayTestFactory` — `makeState(gameId: Long?)`, `makeState(gameName: String?)`, `makePlayer(startPosition: Int = 1)` to match current non-nullable `PlayerEntryUi.startPosition`
+- **Learnings for future iterations:**
+  - `canSave` is now a plain `Boolean` field on `AddPlayUiState` (defaults `false`); tests must set `.copy(canSave = true)` explicitly when testing `SaveClicked` success paths
+  - `AddPlayEvent.SuggestionEvent` was removed — no `RefreshPlayerSuggestions` event exists anymore
+  - `AddPlayUiState.toCreatePlayCommand()` is the mapping method (not `toDomain()`); lives inside the data class
+  - `AddPlayEffectProducer.produce()` no longer takes `oldState`; signature is `produce(newState, event)`
+---
+
+## 2026-03-30T00:21:50Z
+PR Link: (local commit — no PR yet)
+- Wrote `AddPlayViewModelTest` with 7 test cases covering: initial state, GameSearchEvent handling, location suggestion debounce, CancelClicked, SaveClicked (can't save → ShowError, saveable → NavigateBack, failure → isSaving cycle)
+- Wrote 4 new use case tests: `ObserveRecentLocationsUseCaseTest`, `SearchLocationsUseCaseTest`, `ObservePlayerSuggestionsUseCaseTest`, `CreatePlayUseCaseTest`
+- Added `createPlayException: Throwable?` field to `FakePlaysRepository` for configurable save failures
+- All tests pass (BUILD SUCCESSFUL)
+- **Learnings for future iterations:**
+  - `FakePlaysRepository` uses `_plays` as the single data source for observeLocations, observeRecentLocations, observePlayersByLocation — seed with `setPlays(...)` to test all three
+  - `FakePlaysRepository` is not `open`; add `var createPlayException` style flags for configurable failure instead of subclassing
+  - `AddPlayViewModel` canSave=true simply requires a non-null `gameId` and non-blank `gameName` (ValidationReducer); fire `GameSelected` event to make the VM saveable in tests
+  - VM test entry pattern: `Dispatchers.setMain(StandardTestDispatcher)` + `advanceUntilIdle()` after events, `runTest` scope
+  - `CreatePlayCommand.date` is `Instant` (not `LocalDate`) — use `Instant.parse(...)` or `Instant.now()` in tests
+---
+## 2026-03-30T00:33:00Z
+PR Link: (local session — AddPlayUiState sealed interface test refactor)
+- Refactored all AddPlay unit tests to work with the new sealed `AddPlayUiState` interface (`GameSearch` / `GameSelected` subclasses)
+- Files changed:
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayTestFactory.kt` — replaced `makeState()` with `makeGameSelectedState()` / `makeGameSearchState()`; added `requireGameSelected()` / `requireGameSearch()` throwing cast helpers
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/MetaReducerTest.kt` — typed factories + subclass casts
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/ValidationReducerTest.kt` — removed structurally-impossible null tests; added `GameSearch passes through unchanged`
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/PlayersReducerTest.kt` — typed factories + result casts
+  - `app/src/test/java/app/meeplebook/feature/addplay/reducer/AddPlayReducerTest.kt` — typed factories; replaced null-gameId canSave test with `GameSearch stays GameSearch`
+  - `app/src/test/java/app/meeplebook/feature/addplay/effect/AddPlayEffectProducerTest.kt` — typed factories; `SaveClicked with GameSearch state emits no effects`
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayViewModelTest.kt` — `uiState` → `combinedUiState`; fixed query/GameSelected tests with `awaitUiStateMatching`; fixed `SaveClicked no-game` semantics
+- Result: 621 tests pass, 1 skipped to user (`isSaving` VM test — StandardTestDispatcher conflation issue)
+- **Learnings for future iterations:**
+    - `combinedUiState` uses `stateIn(WhileSubscribed(5_000))`. Accessing `.value` without a subscriber returns stale initial value. ALWAYS use `test {}` to subscribe before sending events to the VM.
+    - `awaitUiStateMatching<S, T>(stateFlow, debounceTime, predicate)` in `TurbineExtensions.kt` is the correct pattern for asserting a specific typed state from a debounced `WhileSubscribed` stateFlow.
+    - `StateFlow` conflation with `StandardTestDispatcher`: if production code updates state twice in the same coroutine tick (no suspension between updates), the intermediate state may never be observed. Add `delay(1)` in the Fake or switch to `UnconfinedTestDispatcher` to test intermediate states.
+    - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
+    - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
+---

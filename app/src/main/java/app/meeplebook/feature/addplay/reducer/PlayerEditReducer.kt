@@ -2,12 +2,13 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
+import javax.inject.Inject
 
 /**
  * Reduces [AddPlayEvent.PlayerEditEvent] events by updating identity fields
  * (name, username, team) on the matching player entry.
  */
-class PlayerEditReducer {
+class PlayerEditReducer @Inject constructor() {
 
     fun reduce(
         players: List<PlayerEntryUi>,

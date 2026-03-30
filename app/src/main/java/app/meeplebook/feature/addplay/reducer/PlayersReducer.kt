@@ -2,6 +2,8 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import app.meeplebook.feature.addplay.updateGameSelected
+import javax.inject.Inject
 
 /**
  * Orchestrates all player-related sub-reducers.
@@ -10,7 +12,7 @@ import app.meeplebook.feature.addplay.AddPlayUiState
  * [PlayerListReducer], [PlayerScoreReducer], or [PlayerColorReducer]) and
  * writes the resulting player list back into [AddPlayUiState.players].
  */
-class PlayersReducer(
+class PlayersReducer @Inject constructor(
     private val editReducer: PlayerEditReducer,
     private val listReducer: PlayerListReducer,
     private val scoreReducer: PlayerScoreReducer,
@@ -22,24 +24,24 @@ class PlayersReducer(
         event: AddPlayEvent
     ): AddPlayUiState {
 
-        val playersState = state.players
+        return state.updateGameSelected {
+            val updatedPlayers = when (event) {
+                is AddPlayEvent.PlayerEditEvent ->
+                    editReducer.reduce(players.players, event)
 
-        val updatedPlayers = when(event) {
-            is AddPlayEvent.PlayerEditEvent ->
-                editReducer.reduce(playersState.players, event)
+                is AddPlayEvent.PlayerListEvent ->
+                    listReducer.reduce(players.players, event)
 
-            is AddPlayEvent.PlayerListEvent ->
-                listReducer.reduce(playersState.players, event)
+                is AddPlayEvent.PlayerScoreEvent ->
+                    scoreReducer.reduce(players.players, event)
 
-            is AddPlayEvent.PlayerScoreEvent ->
-                scoreReducer.reduce(playersState.players, event)
+                is AddPlayEvent.PlayerColorEvent ->
+                    colorReducer.reduce(players.players, event)
 
-            is AddPlayEvent.PlayerColorEvent ->
-                colorReducer.reduce(playersState.players, event)
+                else -> players.players
+            }
 
-            else -> playersState.players
+            copy(players = players.copy(players = updatedPlayers))
         }
-
-        return state.copy(players = playersState.copy(players = updatedPlayers))
     }
 }

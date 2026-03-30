@@ -123,7 +123,7 @@ class PlaysRepositoryImpl @Inject constructor(
     }
 
     override fun observeLocations(query: String): Flow<List<String>> {
-        return local.observeLocations(query)
+        return local.observeLocations(query.trim())
     }
 
     override fun observeRecentLocations(): Flow<List<String>> {
@@ -131,7 +131,7 @@ class PlaysRepositoryImpl @Inject constructor(
     }
 
     override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
-        return local.observePlayersByLocation(location)
+        return local.observePlayersByLocation(location.trim())
     }
 
     override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
