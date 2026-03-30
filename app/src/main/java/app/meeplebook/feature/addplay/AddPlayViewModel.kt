@@ -144,6 +144,9 @@ class AddPlayViewModel @Inject constructor(
             is AddPlayEvent.MetadataEvent.LocationChanged ->
                 rawLocationQuery.value = event.value
 
+            is AddPlayEvent.MetadataEvent.LocationSuggestionSelected ->
+                rawLocationQuery.value = event.value
+
             else -> Unit
         }
 

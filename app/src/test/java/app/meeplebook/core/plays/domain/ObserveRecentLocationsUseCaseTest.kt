@@ -2,7 +2,6 @@ package app.meeplebook.core.plays.domain
 
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
-import app.meeplebook.core.plays.PlayTestFactory.createPlayer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

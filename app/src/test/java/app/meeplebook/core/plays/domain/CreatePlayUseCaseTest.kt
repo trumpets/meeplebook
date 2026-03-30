@@ -3,6 +3,7 @@ package app.meeplebook.core.plays.domain
 import app.meeplebook.core.plays.FakePlaysRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
@@ -60,10 +61,10 @@ class CreatePlayUseCaseTest {
         var threw = false
         try {
             useCase(command)
-        } catch (e: RuntimeException) {
+        } catch (_: RuntimeException) {
             threw = true
         }
 
-        assert(threw) { "Expected RuntimeException to be thrown" }
+        assertTrue("Expected RuntimeException to be thrown", threw)
     }
 }
