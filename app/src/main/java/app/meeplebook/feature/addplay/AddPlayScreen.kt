@@ -38,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -351,8 +352,6 @@ private fun GameSelectedContent(
             .testTag("addPlayForm"),
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
-        item { DateSection(date = state.date, onEvent = onEvent) }
-
         item {
             LocationSection(
                 locationState = state.location,
@@ -360,7 +359,7 @@ private fun GameSelectedContent(
             )
         }
 
-        item { DurationSection(durationMinutes = state.durationMinutes, onEvent = onEvent) }
+        item { DateDurationRow(date = state.date, durationMinutes = state.durationMinutes, onEvent = onEvent) }
 
         item { SuggestedPlayersSection(state = state, onEvent = onEvent) }
 
@@ -368,57 +367,69 @@ private fun GameSelectedContent(
     }
 }
 
-// ─── Date ────────────────────────────────────────────────────────────────────
+// ─── Date + Duration ─────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DateSection(
+private fun DateDurationRow(
     date: Instant,
+    durationMinutes: Int?,
     onEvent: (AddPlayEvent) -> Unit
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val localDate = remember(date) {
-        date.atZone(ZoneId.systemDefault()).toLocalDate()
-    }
-    val formatted = remember(localDate) {
-        localDate.format(EU_DATE_FORMATTER)
+    val formatted = remember(date) {
+        date.atZone(ZoneId.systemDefault()).toLocalDate().format(EU_DATE_FORMATTER)
     }
 
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = ScreenPadding.Horizontal,
-                vertical = ScreenPadding.Small
-            )
+            .padding(horizontal = ScreenPadding.Horizontal, vertical = ScreenPadding.Small),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
     ) {
-        Text(
-            text = stringResource(R.string.add_play_date_label),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(
+        OutlinedTextField(
+            value = formatted,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.add_play_date_label)) },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .clickable { showDatePicker = true }
-                .padding(vertical = ScreenPadding.Small)
                 .testTag("dateField"),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarToday,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.primary,
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = formatted,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-        HorizontalDivider()
+        )
+
+        OutlinedTextField(
+            value = durationMinutes?.toString() ?: "",
+            onValueChange = { raw ->
+                val parsed = if (raw.isEmpty()) null else raw.toIntOrNull()
+                if (raw.isEmpty() || parsed != null) {
+                    onEvent(AddPlayEvent.MetadataEvent.DurationChanged(parsed))
+                }
+            },
+            label = { Text(stringResource(R.string.add_play_duration_label)) },
+            placeholder = { Text(stringResource(R.string.add_play_duration_placeholder)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier
+                .width(112.dp)
+                .testTag("durationField")
+        )
     }
 
     if (showDatePicker) {
@@ -458,8 +469,6 @@ private fun DateSection(
         }
     }
 }
-
-// ─── Location ────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -540,40 +549,6 @@ private fun LocationSection(
                 }
             }
         }
-    }
-}
-
-// ─── Duration ────────────────────────────────────────────────────────────────
-
-@Composable
-private fun DurationSection(
-    durationMinutes: Int?,
-    onEvent: (AddPlayEvent) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = ScreenPadding.Horizontal,
-                vertical = ScreenPadding.Small
-            )
-    ) {
-        OutlinedTextField(
-            value = durationMinutes?.toString() ?: "",
-            onValueChange = { raw ->
-                val parsed = if (raw.isEmpty()) null else raw.toIntOrNull()
-                if (raw.isEmpty() || parsed != null) {
-                    onEvent(AddPlayEvent.MetadataEvent.DurationChanged(parsed))
-                }
-            },
-            label = { Text(stringResource(R.string.add_play_duration_label)) },
-            placeholder = { Text(stringResource(R.string.add_play_duration_placeholder)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("durationField")
-        )
     }
 }
 
