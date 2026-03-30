@@ -1,6 +1,7 @@
 package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayUiState
+import app.meeplebook.feature.addplay.updateGameSelected
 import javax.inject.Inject
 
 /**
@@ -10,8 +11,7 @@ import javax.inject.Inject
  * automatically recomputes whether the form is ready to be saved.
  *
  * A play can be saved when **all** of the following hold:
- * - [AddPlayUiState.gameId] is non-null (a game has been selected), and
- * - [AddPlayUiState.gameName] is non-null and non-blank, and
+ * - [AddPlayUiState.gameName] is non-blank, and
  * - [AddPlayUiState.isSaving] is `false` (no save is already in progress).
  *
  * @see AddPlayReducer
@@ -27,12 +27,11 @@ class ValidationReducer @Inject constructor() {
      * @return A copy of [state] with [AddPlayUiState.canSave] set to reflect current validity.
      */
     fun reduce(state: AddPlayUiState): AddPlayUiState {
+        return state.updateGameSelected {
+            val canSave =
+                gameName.isNotBlank() && !isSaving
 
-        val canSave =
-            state.gameId != null &&
-                    !state.gameName.isNullOrBlank() &&
-                    !state.isSaving
-
-        return state.copy(canSave = canSave)
+            copy(canSave = canSave)
+        }
     }
 }

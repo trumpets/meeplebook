@@ -2,12 +2,13 @@ package app.meeplebook.feature.addplay
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
+import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.plays.domain.CreatePlayUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
+import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.addplay.effect.AddPlayEffect
 import app.meeplebook.feature.addplay.effect.AddPlayEffectProducer
@@ -19,18 +20,12 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -69,24 +64,75 @@ class AddPlayViewModel @Inject constructor(
     private val createPlay: CreatePlayUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddPlayUiState.initial())
-    val uiState: StateFlow<AddPlayUiState> = _uiState.asStateFlow()
-
-    private val _uiEffect = MutableSharedFlow<AddPlayUiEffect>()
-    val uiEffect: SharedFlow<AddPlayUiEffect> = _uiEffect.asSharedFlow()
-
     // Raw query inputs — updated in onEvent() to drive debounced reactive flows
     private val rawGameSearchQuery = MutableStateFlow("")
     private val rawLocationQuery = MutableStateFlow("")
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private val searchResultsLocations =
+        searchableFlow(
+            queryFlow = rawLocationQuery,
+            debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
+        ) { query ->
+            searchLocations(query)
+        }
+
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private val searchResultsGames =
+        searchableFlow(
+            queryFlow = rawGameSearchQuery,
+            debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
+        ) { query ->
+            observeCollection(CollectionDataQuery(searchQuery = query))
+        }
+
+    private val _uiState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
+
+    val combinedUiState: StateFlow<AddPlayUiState> =
+        combine(
+            _uiState,
+            rawGameSearchQuery,
+            rawLocationQuery,
+            searchResultsLocations,
+            searchResultsGames
+        ) { state, rawGameQuery, rawLocationQuery, locationSuggestions, gameSuggestions ->
+
+            when (state) {
+                is AddPlayUiState.GameSearch -> state.copy(
+                    gameSearchQuery = rawGameQuery,
+                    gameSearchResults = gameSuggestions.map { it.toSearchResultGameItem() },
+                )
+
+                is AddPlayUiState.GameSelected -> state.copy(
+                    location = state.location.copy(
+                        value = rawLocationQuery,
+                        suggestions = locationSuggestions
+                    )
+                )
+            }
+        }.combine(
+            observeRecentLocations()
+        ) { state, recentLocations ->
+
+            when (state) {
+                is AddPlayUiState.GameSearch -> state
+                is AddPlayUiState.GameSelected -> state.copy(
+                    location = state.location.copy(
+                        recentLocations = recentLocations
+                    )
+                )
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            AddPlayUiState.GameSearch()
+        )
+
+    private val _uiEffect = MutableSharedFlow<AddPlayUiEffect>()
+    val uiEffect = _uiEffect.asSharedFlow()
+
     private var suggestionsJob: Job? = null
     private var saveJob: Job? = null
-
-    init {
-        observeRecentLocationsFlow()
-        observeLocationSuggestionsFlow()
-        observeGameSearchResultsFlow()
-    }
 
     // region Public API
 
@@ -113,49 +159,6 @@ class AddPlayViewModel @Inject constructor(
 
     // endregion
 
-    // region Reactive flows
-
-    private fun observeRecentLocationsFlow() {
-        observeRecentLocations()
-            .onEach { recent ->
-                _uiState.value = _uiState.value.copy(
-                    location = _uiState.value.location.copy(recentLocations = recent)
-                )
-            }
-            .launchIn(viewModelScope)
-    }
-
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun observeLocationSuggestionsFlow() {
-        rawLocationQuery
-            .debounce(DebounceDurations.SearchQuery.inWholeMilliseconds)
-            .distinctUntilChanged()
-            .flatMapLatest { query -> searchLocations(query) }
-            .onEach { suggestions ->
-                _uiState.value = _uiState.value.copy(
-                    location = _uiState.value.location.copy(suggestions = suggestions)
-                )
-            }
-            .launchIn(viewModelScope)
-    }
-
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun observeGameSearchResultsFlow() {
-        rawGameSearchQuery
-            .debounce(DebounceDurations.SearchQuery.inWholeMilliseconds)
-            .distinctUntilChanged()
-            .flatMapLatest { query ->
-                if (query.isBlank()) flowOf(emptyList())
-                else observeCollection(CollectionDataQuery(searchQuery = query))
-            }
-            .onEach { results ->
-                _uiState.value = _uiState.value.copy(gameSearchResults = results)
-            }
-            .launchIn(viewModelScope)
-    }
-
-    // endregion
-
     // region Effect handling
 
     private fun handleDomainEffects(effects: List<AddPlayEffect>) {
@@ -178,18 +181,19 @@ class AddPlayViewModel @Inject constructor(
         suggestionsJob = viewModelScope.launch {
             val suggestions = observePlayerSuggestions(effect.location)
                 .first()
-                .map { identity -> PlayerSuggestion(playerIdentity = identity, playCount = 0) }
-            _uiState.value = _uiState.value.copy(playersByLocation = suggestions)
+                .map { identity -> PlayerSuggestion(playerIdentity = identity) }
+
+            _uiState.value = _uiState.value.updateGameSelected { copy(playersByLocation = suggestions) }
         }
     }
 
     private fun savePlay(effect: AddPlayEffect.SavePlay) {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSaving = true)
+            _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = true) }
             runCatching { createPlay(effect.play) }
                 .onSuccess { _uiEffect.emit(AddPlayUiEffect.NavigateBack) }
-                .onFailure { _uiState.value = _uiState.value.copy(isSaving = false) }
+                .onFailure { _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) } }
         }
     }
 

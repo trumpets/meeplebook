@@ -4,6 +4,7 @@ import app.meeplebook.R
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import app.meeplebook.feature.addplay.asGameSelected
 import javax.inject.Inject
 
 /**
@@ -39,22 +40,23 @@ class AddPlayEffectProducer @Inject constructor() {
         when (event) {
 
             is AddPlayEvent.MetadataEvent.LocationChanged -> {
-                // Only emit if a game has been selected; without a gameId the suggestion
-                // query cannot be scoped correctly, so we skip the effect entirely.
-                val gameId = newState.gameId ?: return AddPlayEffects.None
-                effects += AddPlayEffect.LoadPlayerSuggestions(
-                    gameId = gameId,
-                    location = event.value
-                )
+                newState.asGameSelected {
+                    effects += AddPlayEffect.LoadPlayerSuggestions(
+                        gameId = gameId,
+                        location = event.value
+                    )
+                }
             }
 
             is AddPlayEvent.ActionEvent.SaveClicked -> {
-                if (newState.canSave) {
-                    effects += AddPlayEffect.SavePlay(newState.toCreatePlayCommand())
-                } else {
-                    uiEffects += AddPlayUiEffect.ShowError(
-                        uiTextRes(R.string.add_play_cant_save)
-                    )
+                newState.asGameSelected {
+                    if (canSave) {
+                        effects += AddPlayEffect.SavePlay(toCreatePlayCommand())
+                    } else {
+                        uiEffects += AddPlayUiEffect.ShowError(
+                            uiTextRes(R.string.add_play_cant_save)
+                        )
+                    }
                 }
             }
 
