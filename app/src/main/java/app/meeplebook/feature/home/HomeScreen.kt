@@ -159,7 +159,7 @@ fun HomeScreenPreview() {
         val previewNavController = rememberNavController()
         HomeScreenContent(
             refreshOnLogin = false,
-            homeNavigator = HomeNavigator { _, _ -> },
+            homeNavigator = { _ -> },
             tabNavController = previewNavController
         )
     }
