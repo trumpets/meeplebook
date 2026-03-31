@@ -122,7 +122,7 @@ sealed interface AddPlayEvent {
         /** User updated the numeric score for [playerIdentity]. */
         data class ScoreChanged(
             val playerIdentity: PlayerIdentity,
-            val score: Int
+            val score: Double
         ) : PlayerScoreEvent
 
         /** User toggled the winner status for [playerIdentity]. */

@@ -199,7 +199,7 @@ class AddPlayEffectProducerTest {
     @Test
     fun `SaveClicked SavePlay maps players with all fields`() {
         val identity = makeIdentity(name = "Alice", username = "alice99", userId = 42L)
-        val player = makePlayer(identity = identity, startPosition = 2, score = 150, isWinner = true, color = "Red")
+        val player = makePlayer(identity = identity, startPosition = 2, score = 150.0, isWinner = true, color = "Red")
         val state = makeGameSelectedState(players = listOf(player))
 
         val play = savePlay(state)

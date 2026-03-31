@@ -18,7 +18,7 @@ object AddPlayTestFactory {
     fun makePlayer(
         identity: PlayerIdentity = makeIdentity(),
         startPosition: Int = 1,
-        score: Int? = null,
+        score: Double? = null,
         isWinner: Boolean = false,
         color: String? = null
     ): PlayerEntryUi = PlayerEntryUi(

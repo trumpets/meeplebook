@@ -29,9 +29,9 @@ class PlayersReducerTest {
     @Test
     fun `PlayerScoreEvent is routed to PlayerScoreReducer`() {
         val alice = makeIdentity("Alice")
-        val state = makeGameSelectedState(players = listOf(makePlayer(alice, score = 0)))
-        val result = reducer.reduce(state, AddPlayEvent.PlayerScoreEvent.ScoreChanged(alice, 20))
-        assertEquals(20, result.requireGameSelected().players.players.first().score)
+        val state = makeGameSelectedState(players = listOf(makePlayer(alice, score = 0.0)))
+        val result = reducer.reduce(state, AddPlayEvent.PlayerScoreEvent.ScoreChanged(alice, 20.0))
+        assertEquals(20.0, result.requireGameSelected().players.players.first().score)
     }
 
     @Test

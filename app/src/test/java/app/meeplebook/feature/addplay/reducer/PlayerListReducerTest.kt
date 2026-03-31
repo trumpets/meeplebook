@@ -65,7 +65,7 @@ class PlayerListReducerTest {
             emptyList(),
             AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion(playerIdentity = identity, startPosition = 1)
         )
-        assertEquals(0, result.first().score)
+        assertEquals(0.0, result.first().score)
         assertFalse(result.first().isWinner)
     }
 

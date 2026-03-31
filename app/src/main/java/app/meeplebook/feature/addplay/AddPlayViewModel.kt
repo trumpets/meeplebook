@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.plays.domain.CreatePlayUseCase
+import app.meeplebook.core.plays.domain.ObserveColorsUsedForGameUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
@@ -25,7 +26,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -61,6 +66,7 @@ class AddPlayViewModel @Inject constructor(
     private val observeRecentLocations: ObserveRecentLocationsUseCase,
     private val searchLocations: SearchLocationsUseCase,
     private val observePlayerSuggestions: ObservePlayerSuggestionsUseCase,
+    private val observeColorsUsedForGame: ObserveColorsUsedForGameUseCase,
     private val observeCollection: ObserveCollectionUseCase,
     private val createPlay: CreatePlayUseCase
 ) : ViewModel() {
@@ -87,6 +93,16 @@ class AddPlayViewModel @Inject constructor(
         }
 
     private val _uiState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
+
+    // Observe distinct player colors for the currently selected game.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val usedColorsForGameFlow = _uiState
+        .map { (it as? AddPlayUiState.GameSelected)?.gameId }
+        .distinctUntilChanged()
+        .flatMapLatest { gameId ->
+            if (gameId != null) observeColorsUsedForGame(gameId)
+            else flowOf(emptyList())
+        }
 
     val combinedUiState: StateFlow<AddPlayUiState> =
         combine(
@@ -121,6 +137,13 @@ class AddPlayViewModel @Inject constructor(
                         recentLocations = recentLocations
                     )
                 )
+            }
+        }.combine(
+            usedColorsForGameFlow
+        ) { state, usedColors ->
+            when (state) {
+                is AddPlayUiState.GameSearch -> state
+                is AddPlayUiState.GameSelected -> state.copy(usedColorsForGame = usedColors)
             }
         }.stateIn(
             viewModelScope,

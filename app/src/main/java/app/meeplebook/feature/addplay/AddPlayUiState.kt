@@ -3,9 +3,11 @@ package app.meeplebook.feature.addplay
 import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.domain.PlayerIdentity
+import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import java.time.Instant
+import kotlin.math.roundToInt
 
 /**
  * Immutable state consumed by the Add Play screen.
@@ -32,6 +34,8 @@ sealed interface AddPlayUiState {
         val players: PlayersState,
 
         val playersByLocation: List<PlayerSuggestion>,
+
+        val usedColorsForGame: List<PlayerColor> = emptyList(),
 
         val quantity: Int = 1,
         val incomplete: Boolean = false,
@@ -64,7 +68,7 @@ sealed interface AddPlayUiState {
                             userId = it.playerIdentity.userId,
                             startPosition = it.startPosition,
                             color = it.color,
-                            score = it.score,
+                            score = it.score?.roundToInt(),
                             win = it.isWinner
                         )
                     },
@@ -104,7 +108,7 @@ data class PlayerEntryUi(
     val startPosition: Int,
     val color: String?,
 
-    val score: Int?,
+    val score: Double?,
     val isWinner: Boolean,
 ) {
     companion object {
@@ -129,7 +133,7 @@ data class PlayerEntryUi(
                 playerIdentity = playerIdentity,
                 startPosition = startPosition,
                 color = null,
-                score = 0,
+                score = 0.0,
                 isWinner = false
             )
         }
