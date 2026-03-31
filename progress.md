@@ -368,3 +368,32 @@ PR Link: (local session — AddPlayUiState sealed interface test refactor)
     - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
     - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
 ---
+
+## 2026-03-31T06:30:00Z
+PR Link: copilot/update-profile-screen-settings
+- Implemented Profile / Settings screen (feature/profile/) replacing "Coming Soon" placeholder
+- New files:
+  - `core/preferences/StartingScreen.kt` — enum for app starting tab
+  - `core/preferences/UserPreferences.kt` — data class (StartingScreen, CollectionViewMode, AlphabetJumpVisible)
+  - `core/preferences/UserPreferencesRepository.kt` (interface) + `UserPreferencesRepositoryImpl.kt` (DataStore-backed)
+  - `core/preferences/PreferencesModule.kt` — Hilt @Binds
+  - `core/collection/model/CollectionViewMode.kt` — moved from `feature/collection/CollectionUiState.kt` so it can be shared with UserPreferences
+  - `feature/profile/ProfileEvent.kt`, `ProfileUiEffect.kt`
+  - `test/core/preferences/FakeUserPreferencesRepository.kt`
+  - `test/feature/profile/ProfileViewModelTest.kt` (10 tests)
+- Updated files:
+  - `feature/profile/ProfileUiState.kt`, `ProfileViewModel.kt`, `ProfileScreen.kt` — full implementation
+  - `feature/collection/CollectionViewModel.kt` — injects UserPreferencesRepository, view mode and alphabet jump now persisted
+  - `feature/home/HomeScreen.kt` + `HomeNavHost.kt` — pass startingTab + onLogout
+  - `ui/navigation/AppNavHost.kt` — logout navigates to Login clearing full back stack; decodes startingScreen param
+  - `ui/navigation/Screen.kt` — Screen.Home has startingScreen: String param
+  - `MainActivity.kt` — reads UserPreferences.startingScreen at startup
+  - `strings.xml` — added all profile/settings strings
+- **Learnings for future iterations:**
+  - UserPreferences are stored in the plain (non-encrypted) DataStore; auth credentials are in the encrypted DataStore
+  - CollectionViewMode lives in core/collection/model/ (shared), NOT in feature/collection/
+  - ProfileScreen uses Material 3 `SingleChoiceSegmentedButtonRow` + `SegmentedButton` for binary setting choices
+  - Logout clears full back stack: `popUpTo(0) { inclusive = true }`, then navigates to Screen.Login
+  - When reading enum names from DataStore, use `runCatching { Enum.valueOf(raw) }.onFailure { Log.w(...) }.getOrNull() ?: default`
+  - FakeUserPreferencesRepository exposes `preferences: StateFlow<UserPreferences>` for assertion in tests, plus a `setPreferences()` helper
+---
