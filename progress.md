@@ -417,3 +417,18 @@ PR Link: N/A (local implementation)
     - `FlowRow` (ExperimentalLayoutApi) is cleaner than nested Rows for a variable-count color grid
     - When `colorsHistory` is non-empty, smart-expand opens compact view + MORE button; when empty, opens expanded immediately — logic gated on `startExpanded = colorsHistory.isEmpty()`
 ---
+
+## 2026-03-31
+PR Link: N/A (local session)
+- Added 22 instrumented Compose UI tests for `AddPlayScreenRoot` in `AddPlayScreenRootTest.kt`
+- Fixed pre-existing `score: Int? → Double?` type mismatch in `PlayDaoTest` and `PlayerDaoTest` helpers
+- Added `@Preview` blocks (light + dark, `PreviewParameterProvider`) to all split AddPlay UI composable files: `AddPlaySearchContent`, `PlayerEntryRow`, `LocationSection`, `DateDurationSection`, `QuantityIncompleteSection`, `SuggestedPlayersSection`, `PlayersSection`
+- Added `@Preview` to `MorePlayersDialog`; added KDoc to `MorePlayersDialog`
+- Created `AddPlayPreviewData.kt` with shared `internal` preview state builders
+- Files changed: `AddPlayScreenRootTest.kt` (new), `PlayDaoTest.kt`, `PlayerDaoTest.kt`, all ui/ composable files, `MorePlayersDialog.kt`, `AddPlayPreviewData.kt`
+- **Learnings for future iterations:**
+    - `assertDoesNotExist()` in Compose UI tests does NOT need an explicit import — calling it as a method on `SemanticsNodeInteraction` works without `import androidx.compose.ui.test.assertDoesNotExist`
+    - `BackHandler` in Compose works with `Espresso.pressBack()` in instrumented tests using `createComposeRule()`
+    - DAO test helper functions with `score: Int?` must be updated to `score: Double?` when `PlayerEntity.score` changes type
+    - `AddPlayScreenRoot` accepts state directly — tests pass pre-constructed `AddPlayUiState` (no Hilt needed)
+---

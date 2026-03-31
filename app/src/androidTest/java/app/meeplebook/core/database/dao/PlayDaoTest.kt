@@ -1552,7 +1552,7 @@ class PlayDaoTest {
         userId: Long? = null,
         startPosition: Int? = null,
         color: String? = null,
-        score: Int? = null
+        score: Double? = null
     ): PlayerEntity {
         return PlayerEntity(
             id = id,

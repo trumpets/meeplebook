@@ -50,8 +50,7 @@ object AddPlayTestFactory {
         location = LocationState(
             value = locationValue,
             suggestions = emptyList(),
-            recentLocations = emptyList(),
-            isFocused = false
+            recentLocations = emptyList()
         ),
         players = PlayersState(
             players = players,

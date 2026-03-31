@@ -247,8 +247,7 @@ private fun previewGameSelectedState(
         location = LocationState(
             value = "Home",
             suggestions = emptyList(),
-            recentLocations = listOf("Home", "Game Café", "Bob's place"),
-            isFocused = false
+            recentLocations = listOf("Home", "Game Café", "Bob's place")
         ),
         players = PlayersState(
             players = players,

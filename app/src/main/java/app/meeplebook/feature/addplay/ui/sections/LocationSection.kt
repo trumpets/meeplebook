@@ -133,7 +133,6 @@ private class LocationSectionPreviewProvider : PreviewParameterProvider<Location
         ),
         previewLocationState(
             value = "Gam",
-            isFocused = true,
             suggestions = listOf("Game Café", "Game Vault"),
         ),
     )

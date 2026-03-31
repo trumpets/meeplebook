@@ -5,8 +5,8 @@ import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.LocationState
 import app.meeplebook.feature.addplay.PlayerEntryUi
-import app.meeplebook.feature.addplay.PlayersState
 import app.meeplebook.feature.addplay.PlayerSuggestion
+import app.meeplebook.feature.addplay.PlayersState
 import app.meeplebook.feature.addplay.SearchResultGameItem
 import java.time.Instant
 
@@ -31,13 +31,11 @@ internal fun previewGameSearchState(
 internal fun previewLocationState(
     value: String? = null,
     recentLocations: List<String> = emptyList(),
-    suggestions: List<String> = emptyList(),
-    isFocused: Boolean = false,
+    suggestions: List<String> = emptyList()
 ) = LocationState(
     value = value,
     suggestions = suggestions,
     recentLocations = recentLocations,
-    isFocused = isFocused,
 )
 
 internal fun previewGameSelectedState(

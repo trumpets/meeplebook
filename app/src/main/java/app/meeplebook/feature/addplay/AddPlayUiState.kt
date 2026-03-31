@@ -83,8 +83,7 @@ sealed interface AddPlayUiState {
 data class LocationState(
     val value: String?,
     val suggestions: List<String>,
-    val recentLocations: List<String>,
-    val isFocused: Boolean
+    val recentLocations: List<String>
 )
 
 /**
