@@ -166,6 +166,10 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.okhttp3)
 
+    // Glance (home screen app widget)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     // Testing
     // Unit tests (src/test)
     testImplementation(libs.junit)

@@ -23,6 +23,20 @@
 - Avoid infinite wall-clock reactive flows with `while(true)+delay`; compute time-dependent values on demand (see `.github/copilot-instructions.md`).
 - `UiText` is the app-level text abstraction (`core/ui/UiText.kt`); render via `UiTextText` or `asString()` helpers.
 
+## Home Screen Widget (Glance)
+- Widget code lives in `app/src/main/java/app/meeplebook/widget/`.
+- Uses Glance 1.1.0 (`glance-appwidget` + `glance-material3` — declared with explicit version since they are NOT in the Compose BOM).
+- Widget state is stored in `PreferencesGlanceStateDefinition` with keys in `QuickLogWidgetKeys`.
+- Call `QuickLogWidget.updateActivePlay(context, ...)` / `clearActivePlay(context)` from app code to push state and request a redraw.
+- **Glance 1.1.0 correct import paths:**
+  - `ActionCallback` → `androidx.glance.appwidget.action`
+  - `actionRunCallback<T>()` → `androidx.glance.appwidget.action`
+  - `updateAppWidgetState` → `androidx.glance.appwidget.state`
+  - `clickable(Action)` modifier → `androidx.glance.action` (extension on `GlanceModifier`, in `ActionKt`)
+  - `GlanceTheme` singleton (with `.colors`) → `androidx.glance` (NOT `glance-material3`)
+  - `actionParametersOf` / `ActionParameters` → `androidx.glance.action`
+  - `defaultWeight()` is a `RowScope`/`ColumnScope` method — no import needed, callable inside `Row {}`/`Column {}` lambdas
+
 ## Custom Lint Rules You Must Respect
 - `:lint-rules` enforces two compile-time rules:
   - No passing `UiText` directly to Compose `Text` (`UiTextInTextComposableDetector`).

@@ -368,3 +368,37 @@ PR Link: (local session — AddPlayUiState sealed interface test refactor)
     - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
     - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
 ---
+## 2026-03-30T23:34:00Z
+PR Link: https://github.com/trumpets/meeplebook/pull/TBD
+- Implemented Glance-based home screen widget (`QuickLogWidget`) for quick play logging
+- Files changed:
+  - `gradle/libs.versions.toml` — added `glance = "1.1.0"`, `androidx-glance-appwidget`, `androidx-glance-material3`
+  - `app/build.gradle.kts` — added Glance implementation dependencies
+  - `app/src/main/java/app/meeplebook/widget/QuickLogWidgetKeys.kt` (new) — DataStore pref keys + Glance ActionParameters key
+  - `app/src/main/java/app/meeplebook/widget/QuickLogWidget.kt` (new) — GlanceAppWidget; idle + stubbed active-play content; `updateActivePlay`/`clearActivePlay` suspend helpers
+  - `app/src/main/java/app/meeplebook/widget/QuickLogWidgetReceiver.kt` (new) — GlanceAppWidgetReceiver
+  - `app/src/main/java/app/meeplebook/widget/LogPlayAction.kt` (new) — ActionCallback → launch MainActivity with ACTION_ADD_PLAY
+  - `app/src/main/java/app/meeplebook/widget/OpenPlayAction.kt` (new) — ActionCallback → launch MainActivity with ACTION_VIEW_PLAY + play ID
+  - `app/src/main/java/app/meeplebook/widget/PauseTimerAction.kt` (new) — stub ActionCallback for future timer toggle
+  - `app/src/main/res/xml/quick_log_widget_info.xml` (new) — AppWidget provider XML (2×2 min, resizable)
+  - `app/src/main/res/layout/quick_log_widget_initial.xml` (new) — placeholder loading layout
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayScreen.kt` (new) — stub Composable (ViewModel/reducers already in place)
+  - `app/src/main/java/app/meeplebook/ui/navigation/AppNavHost.kt` — wired `Screen.AddPlay` composable route
+  - `app/src/main/java/app/meeplebook/MainActivity.kt` — added `singleTop`-aware widget intent handling via `MutableSharedFlow` and `onNewIntent`; companion constants `ACTION_ADD_PLAY`, `ACTION_VIEW_PLAY`, `EXTRA_PLAY_ID`
+  - `app/src/main/AndroidManifest.xml` — registered `QuickLogWidgetReceiver`; added `android:launchMode="singleTop"` to MainActivity
+  - `app/src/main/res/values/strings.xml` — added `widget_description`, `widget_log_play`, `widget_timer_pause`, `widget_timer_resume`, `add_play_title`
+- **Learnings for future iterations:**
+    - **Glance 1.1.0 is NOT in the Compose BOM** — must be declared with an explicit version in `libs.versions.toml`.
+    - **Correct Glance 1.1.0 package paths** (differing from some online docs):
+      - `ActionCallback` → `androidx.glance.appwidget.action.ActionCallback`
+      - `actionRunCallback<T>()` → `androidx.glance.appwidget.action.actionRunCallback`
+      - `updateAppWidgetState` → `androidx.glance.appwidget.state.updateAppWidgetState`
+      - `clickable(Action)` modifier → `androidx.glance.action.clickable` (extension on GlanceModifier, defined in `ActionKt.class`)
+      - `GlanceTheme` (the singleton object with `.colors`) → `androidx.glance.GlanceTheme` (NOT `glance-material3`)
+      - `actionParametersOf` / `ActionParameters` → `androidx.glance.action` (base `glance` artifact)
+      - `defaultWeight()` is a method on `RowScope`/`ColumnScope`, not an importable extension; callable as `modifier = GlanceModifier.defaultWeight()` inside `Row { }` / `Column { }` lambdas
+    - **`glance-material3`** only provides `ColorProviders(lightScheme, darkScheme)` factory — `GlanceTheme` itself lives in the base `glance` artifact.
+    - Widget state (active-play timer, game name etc.) is stored in `PreferencesGlanceStateDefinition`; update from app code via `QuickLogWidget.updateActivePlay(context, ...)`.
+    - Future timer updates should be driven by a periodic WorkManager task (every ~30 s) calling `updateActivePlay`.
+    - **Widget navigation from cold start**: check `intent.action` in the `LaunchedEffect` that resolves the initial route (before NavHost is created). **Warm start** (app in back-stack, `singleTop`): `onNewIntent` fires → emit to `MutableSharedFlow` → `LaunchedEffect(navController)` picks it up and navigates.
+---

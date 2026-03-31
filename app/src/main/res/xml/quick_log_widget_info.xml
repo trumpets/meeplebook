@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Widget provider metadata for QuickLogWidget.
+
+  Sizing:
+    targetCellWidth/Height (API 31+) and minWidth/minHeight (API < 31) specify a
+    2×2 minimum footprint.  The widget may be resized freely from that base up to
+    4×3 cells so users can make the active-play card more readable.
+
+  updatePeriodMillis is 0 because Glance owns the update cycle; the app triggers
+  refreshes explicitly via QuickLogWidget.updateActivePlay / clearActivePlay.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/quick_log_widget_initial"
+    android:minHeight="110dp"
+    android:minWidth="110dp"
+    android:previewImage="@mipmap/ic_launcher"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />
