@@ -5,7 +5,7 @@ package app.meeplebook.core.plays.model
  *
  * @property colorString The display/API string for the colour (e.g. `"Red"`), used when
  * persisting to the database and when communicating with the BGG API.
- * @property hexColor    ARGB hex code (`#RRGGBB`) for displaying a colour swatch in the UI.
+ * @property hexColor    RGB hex code (`#RRGGBB`) for displaying a colour swatch in the UI.
  */
 enum class PlayerColor(
     val colorString: String,
