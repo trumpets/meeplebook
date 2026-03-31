@@ -82,7 +82,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalResources
@@ -118,23 +117,21 @@ private val EU_DATE_FORMATTER: DateTimeFormatter =
 
 @Composable
 fun AddPlayScreen(
-    gameId: Long? = null,
-    gameName: String? = null,
+    preselectedGame: PreselectedGame? = null,
     onNavigateBack: () -> Unit,
     viewModel: AddPlayViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val resources = LocalResources.current
 
     // Path 2 entry: if we already have a game, select it immediately.
-    LaunchedEffect(gameId, gameName) {
-        if (gameId != null && gameName != null) {
+    LaunchedEffect(preselectedGame) {
+        if (preselectedGame != null) {
             viewModel.onEvent(
                 AddPlayEvent.GameSearchEvent.GameSelected(
-                    gameId = gameId,
-                    gameName = gameName
+                    gameId = preselectedGame.gameId,
+                    gameName = preselectedGame.gameName
                 )
             )
         }
@@ -154,8 +151,7 @@ fun AddPlayScreen(
     AddPlayScreenRoot(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
-        onEvent = { viewModel.onEvent(it) },
-        onNavigateBack = onNavigateBack
+        onEvent = { viewModel.onEvent(it) }
     )
 }
 
@@ -164,8 +160,7 @@ fun AddPlayScreen(
 fun AddPlayScreenRoot(
     uiState: AddPlayUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    onEvent: (AddPlayEvent) -> Unit,
-    onNavigateBack: () -> Unit
+    onEvent: (AddPlayEvent) -> Unit
 ) {
     var showDiscardDialog by remember { mutableStateOf(false) }
 
@@ -1182,8 +1177,7 @@ private fun AddPlayScreenPreview(
     MeepleBookTheme {
         AddPlayScreenRoot(
             uiState = previewState,
-            onEvent = {},
-            onNavigateBack = {}
+            onEvent = {}
         )
     }
 }

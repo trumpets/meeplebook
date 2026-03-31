@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import app.meeplebook.feature.addplay.PreselectedGame
 import app.meeplebook.feature.collection.CollectionScreen
 import app.meeplebook.feature.overview.OverviewScreen
 import app.meeplebook.feature.plays.PlaysScreen
@@ -49,5 +50,5 @@ fun HomeNavHost(
 }
 
 fun interface HomeNavigator {
-    fun openAddPlay(gameId: Long?, gameName: String?)
+    fun openAddPlay(preselectedGame: PreselectedGame?)
 }

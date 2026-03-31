@@ -1,5 +1,6 @@
 package app.meeplebook.ui.navigation
 
+import app.meeplebook.feature.addplay.PreselectedGame
 import kotlinx.serialization.Serializable
 
 sealed interface Screen {
@@ -12,7 +13,6 @@ sealed interface Screen {
 
     @Serializable
     data class AddPlay(
-        val gameId: Long? = null,
-        val gameName: String? = null
+        val preselectedGame: PreselectedGame? = null
     ) : Screen
 }

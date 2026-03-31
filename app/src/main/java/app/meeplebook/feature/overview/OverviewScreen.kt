@@ -82,7 +82,7 @@ fun OverviewScreen(
         onRecentPlayClick = { /* TODO: Navigate to play details */ },
         onRecentlyAddedClick = { /* TODO: Navigate to game details */ },
         onSuggestedGameClick = { /* TODO: Navigate to game details */ },
-        onLogPlayClick = { homeNavigator.openAddPlay(gameId = null, gameName = null) }
+        onLogPlayClick = { homeNavigator.openAddPlay(preselectedGame = null) }
     )
 }
 
