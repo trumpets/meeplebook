@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
+import app.meeplebook.core.util.datePickerMillisToInstant
+import app.meeplebook.core.util.toDatePickerMillis
 import app.meeplebook.core.util.toEuFormattedString
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.ui.components.ScreenPadding
@@ -104,13 +106,7 @@ internal fun AddPlaySections.DateDuration(
     }
 
     if (showDatePicker) {
-        val initialMillis = remember(date) {
-            date.atZone(ZoneId.systemDefault())
-                .toLocalDate()
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli()
-        }
+        val initialMillis = remember(date) { date.toDatePickerMillis() }
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
         DatePickerDialog(
@@ -118,12 +114,7 @@ internal fun AddPlaySections.DateDuration(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedInstant = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
-                            .atStartOfDay(ZoneId.systemDefault())
-                            .toInstant()
-                        onEvent(AddPlayEvent.MetadataEvent.DateChanged(selectedInstant))
+                        onEvent(AddPlayEvent.MetadataEvent.DateChanged(datePickerMillisToInstant(millis)))
                     }
                     showDatePicker = false
                 }) {
