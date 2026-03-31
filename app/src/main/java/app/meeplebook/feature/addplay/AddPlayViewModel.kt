@@ -114,13 +114,15 @@ class AddPlayViewModel @Inject constructor(
             SearchResults(games, locations)
         }
 
-    private val _uiState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
+    private val baseState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
 
     // Observe distinct player colors for the currently selected game.
+    private val selectedGameIdFlow =
+        baseState
+            .map { (it as? AddPlayUiState.GameSelected)?.gameId }
+            .distinctUntilChanged()
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val usedColorsForGameFlow = _uiState
-        .map { (it as? AddPlayUiState.GameSelected)?.gameId }
-        .distinctUntilChanged()
+    private val usedColorsForGameFlow = selectedGameIdFlow
         .flatMapLatest { gameId ->
             if (gameId != null) observeColorsUsedForGame(gameId)
             else flowOf(emptyList())
@@ -149,11 +151,20 @@ class AddPlayViewModel @Inject constructor(
                 recentLocations = recentLocations,
                 usedColors = usedColors
             )
-        }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            ExternalData(
+                queries = Queries(gameQuery = "", locationQuery = ""),
+                search = SearchResults(games = emptyList(), locations = emptyList()),
+                recentLocations = emptyList(),
+                usedColors = emptyList()
+            )
+        )
 
-    val combinedUiState: StateFlow<AddPlayUiState> =
+    val uiState: StateFlow<AddPlayUiState> =
         combine(
-            _uiState,
+            baseState,
             externalData
         ) { state, data ->
 
@@ -200,9 +211,9 @@ class AddPlayViewModel @Inject constructor(
             else -> Unit
         }
 
-        val oldState = _uiState.value
+        val oldState = baseState.value
         val newState = reducer.reduce(oldState, event)
-        _uiState.value = newState
+        baseState.value = newState
 
         val effects = effectProducer.produce(newState, event)
         handleDomainEffects(effects.effects)
@@ -235,21 +246,21 @@ class AddPlayViewModel @Inject constructor(
                 .first()
                 .map { identity -> PlayerSuggestion(playerIdentity = identity) }
 
-            _uiState.value = _uiState.value.updateGameSelected { copy(playersByLocation = suggestions) }
+            baseState.value = baseState.value.updateGameSelected { copy(playersByLocation = suggestions) }
         }
     }
 
     private fun savePlay(effect: AddPlayEffect.SavePlay) {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = true) }
+            baseState.value = baseState.value.updateGameSelected { copy(isSaving = true) }
             createPlay(effect.play).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) }
+                    baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
                     _uiEffect.emit(AddPlayUiEffect.NavigateBack)
                 },
                 onFailure = {
-                    _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) }
+                    baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
                 }
             )
         }

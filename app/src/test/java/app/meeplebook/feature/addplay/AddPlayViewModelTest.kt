@@ -73,7 +73,7 @@ class AddPlayViewModelTest {
 
     @Test
     fun `initial state has no game selected`() {
-        val state = viewModel.combinedUiState.value
+        val state = viewModel.uiState.value
         assertTrue(state is AddPlayUiState.GameSearch)
         val search = state as AddPlayUiState.GameSearch
         assertNull(search.gameId)
@@ -186,7 +186,7 @@ class AddPlayViewModelTest {
 
         viewModel.onEvent(AddPlayEvent.ActionEvent.SaveClicked)
         val savingState = awaitUiStateMatching<AddPlayUiState, AddPlayUiState.GameSelected>(
-            viewModel.combinedUiState
+            viewModel.uiState
         ) { state ->
             (state as? AddPlayUiState.GameSelected)?.isSaving == true
         }
@@ -195,7 +195,7 @@ class AddPlayViewModelTest {
         gate.complete(Unit)
 
         val failedState = awaitUiStateMatching<AddPlayUiState, AddPlayUiState.GameSelected>(
-            viewModel.combinedUiState
+            viewModel.uiState
         ) { state ->
             (state as? AddPlayUiState.GameSelected)?.isSaving == false
         }
@@ -235,7 +235,7 @@ class AddPlayViewModelTest {
         crossinline predicate: (AddPlayUiState) -> Boolean = { true }
     ): T {
         return awaitUiStateMatching(
-            viewModel.combinedUiState,
+            viewModel.uiState,
             DebounceDurations.SearchQuery,
             predicate = predicate
         )

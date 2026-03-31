@@ -123,7 +123,7 @@ fun AddPlayScreen(
     onNavigateBack: () -> Unit,
     viewModel: AddPlayViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.combinedUiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val resources = LocalResources.current
