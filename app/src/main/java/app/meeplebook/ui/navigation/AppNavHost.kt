@@ -5,8 +5,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import android.util.Log
+import app.meeplebook.core.preferences.StartingScreen
 import app.meeplebook.feature.home.HomeScreen
 import app.meeplebook.feature.login.LoginScreen
+
+private const val TAG = "AppNavHost"
 
 @Composable
 fun AppNavHost(
@@ -26,8 +30,20 @@ fun AppNavHost(
         }
         composable<Screen.Home> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.Home>()
+            val startingTab = try {
+                StartingScreen.valueOf(args.startingScreen)
+            } catch (e: IllegalArgumentException) {
+                Log.w(TAG, "Unknown startingScreen value '${args.startingScreen}', defaulting to OVERVIEW")
+                StartingScreen.OVERVIEW
+            }
             HomeScreen(
-                args.refreshOnLogin
+                refreshOnLogin = args.refreshOnLogin,
+                startingTab = startingTab,
+                onLogout = {
+                    navController.navigate(Screen.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

@@ -1,6 +1,7 @@
 package app.meeplebook.feature.collection
 
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.CollectionViewMode
 import app.meeplebook.core.collection.model.QuickFilter
 
 /**

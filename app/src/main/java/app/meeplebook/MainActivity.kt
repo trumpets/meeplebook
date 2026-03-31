@@ -18,10 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.preferences.UserPreferencesRepository
 import app.meeplebook.ui.navigation.AppNavHost
 import app.meeplebook.ui.navigation.Screen
 import app.meeplebook.ui.theme.MeepleBookTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,6 +31,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authRepository: AuthRepository
+
+    @Inject
+    lateinit var userPreferencesRepository: UserPreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,10 +46,18 @@ class MainActivity : ComponentActivity() {
 
                     // Show splash screen while determining route
                     if (initialRoute == null) {
-                        // Check for existing credentials at startup
+                        // Check for existing credentials and starting screen preference at startup
                         LaunchedEffect(Unit) {
                             val user = authRepository.getCurrentUser()
-                            initialRoute = if (user != null) Screen.Home(refreshOnLogin = false) else Screen.Login
+                            initialRoute = if (user != null) {
+                                val prefs = userPreferencesRepository.getPreferences().first()
+                                Screen.Home(
+                                    refreshOnLogin = false,
+                                    startingScreen = prefs.startingScreen.name
+                                )
+                            } else {
+                                Screen.Login
+                            }
                         }
 
                         SplashScreen()

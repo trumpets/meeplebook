@@ -3,6 +3,7 @@ package app.meeplebook.feature.collection
 import androidx.annotation.StringRes
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.CollectionViewMode
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.UiText
 
@@ -68,10 +69,6 @@ sealed interface CollectionUiState {
         override val unplayedGameCount: Long,
         override val isRefreshing: Boolean
     ) : CollectionUiState
-}
-
-enum class CollectionViewMode {
-    GRID, LIST
 }
 
 enum class EmptyReason(

@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.CollectionViewMode
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.testutils.stringRes

@@ -24,6 +24,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.meeplebook.R
+import app.meeplebook.core.preferences.StartingScreen
 import app.meeplebook.feature.home.navigation.HomeNavHost
 import app.meeplebook.feature.home.navigation.HomeTabScreen
 import app.meeplebook.ui.theme.MeepleBookTheme
@@ -52,12 +53,16 @@ enum class HomeNavigationDestination(
  */
 @Composable
 fun HomeScreen(
-    refreshOnLogin: Boolean
+    refreshOnLogin: Boolean,
+    startingTab: StartingScreen = StartingScreen.OVERVIEW,
+    onLogout: () -> Unit = {}
 ) {
     val tabNavController = rememberNavController()
 
     HomeScreenContent(
         refreshOnLogin,
+        startingTab = startingTab,
+        onLogout = onLogout,
         onNavItemClick = { destination ->
             tabNavController.navigate(destination.route) {
                 // Pop up to start destination to avoid building up back stack
@@ -107,6 +112,8 @@ fun HomeNavigationBar(
 @Composable
 fun HomeScreenContent(
     refreshOnLogin: Boolean = false,
+    startingTab: StartingScreen = StartingScreen.OVERVIEW,
+    onLogout: () -> Unit = {},
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
 ) {
@@ -129,6 +136,8 @@ fun HomeScreenContent(
         // Delegate to HomeNavHost for tab routing
         HomeNavHost(
             refreshOnLogin = refreshOnLogin,
+            startingTab = startingTab,
+            onLogout = onLogout,
             navController = tabNavController,
             modifier = Modifier.padding(innerPadding)
         )
