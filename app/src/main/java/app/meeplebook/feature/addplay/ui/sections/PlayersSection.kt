@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui.sections
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,17 +38,24 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.PLAYER_ROW_HEIGHT
 import app.meeplebook.feature.addplay.PlayerEntryUi
+import app.meeplebook.feature.addplay.ui.components.PlayerEntryRow
 import app.meeplebook.feature.addplay.ui.dialogs.ColorPickerDialog
 import app.meeplebook.feature.addplay.ui.dialogs.ScoreInputDialog
-import app.meeplebook.feature.addplay.ui.components.PlayerEntryRow
+import app.meeplebook.feature.addplay.ui.previewGameSelectedState
+import app.meeplebook.feature.addplay.ui.previewPlayers
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.theme.MeepleBookTheme
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,7 +137,7 @@ fun PlayersSection(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         players.forEachIndexed { index, player ->
-            key(player.playerIdentity.name + (player.playerIdentity.username ?: "")) {
+            key("${player.playerIdentity.name}:${player.playerIdentity.username.orEmpty()}:$index") {
                 val swipeState = rememberSwipeToDismissBoxState()
 
                 LaunchedEffect(swipeState.currentValue) {
@@ -220,5 +228,28 @@ fun PlayersSection(
                 }
             }
         }
+    }
+}
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private class PlayersSectionPreviewProvider :
+    PreviewParameterProvider<AddPlayUiState.GameSelected> {
+    override val values = sequenceOf(
+        previewGameSelectedState(),
+        previewGameSelectedState(
+            players = previewPlayers(),
+            colorsHistory = listOf(PlayerColor.BLUE, PlayerColor.RED),
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PlayersSectionPreview(
+    @PreviewParameter(PlayersSectionPreviewProvider::class) state: AddPlayUiState.GameSelected,
+) {
+    MeepleBookTheme {
+        PlayersSection(state = state, onEvent = {}, snackbarHostState = SnackbarHostState())
     }
 }

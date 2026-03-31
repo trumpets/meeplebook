@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui.sections
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,12 +22,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.ui.dialogs.MorePlayersDialog
+import app.meeplebook.feature.addplay.ui.previewGameSelectedState
+import app.meeplebook.feature.addplay.ui.previewSuggestions
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
 fun SuggestedPlayersSection(
@@ -110,5 +117,26 @@ fun SuggestedPlayersSection(
             },
             onDismiss = { showMorePlayersDialog = false }
         )
+    }
+}
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private class SuggestedPlayersSectionPreviewProvider :
+    PreviewParameterProvider<AddPlayUiState.GameSelected> {
+    override val values = sequenceOf(
+        previewGameSelectedState(suggestions = previewSuggestions(3)),
+        previewGameSelectedState(suggestions = previewSuggestions(12)),
+    )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SuggestedPlayersSectionPreview(
+    @PreviewParameter(SuggestedPlayersSectionPreviewProvider::class)
+    state: AddPlayUiState.GameSelected,
+) {
+    MeepleBookTheme {
+        SuggestedPlayersSection(state = state, onEvent = {})
     }
 }

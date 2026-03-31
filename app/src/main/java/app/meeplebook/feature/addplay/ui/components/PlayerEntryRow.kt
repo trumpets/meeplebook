@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,14 +33,19 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import app.meeplebook.R
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.util.LuminanceUtils
 import app.meeplebook.core.util.ScoreFormatter
 import app.meeplebook.feature.addplay.PLAYER_ROW_HEIGHT
 import app.meeplebook.feature.addplay.PlayerEntryUi
+import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
 fun PlayerEntryRow(
@@ -161,6 +167,59 @@ fun PlayerEntryRow(
                         onDragCancel = { latestOnDragEnd() },
                     )
                 },
+        )
+    }
+}
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private class PlayerEntryRowPreviewProvider : PreviewParameterProvider<PlayerEntryUi> {
+    override val values = sequenceOf(
+        PlayerEntryUi(
+            playerIdentity = PlayerIdentity("Alice", username = "alicebgg", userId = null),
+            startPosition = 1,
+            color = PlayerColor.BLUE.colorString,
+            score = 42.0,
+            isWinner = true,
+        ),
+        PlayerEntryUi(
+            playerIdentity = PlayerIdentity("Bob", username = null, userId = null),
+            startPosition = 2,
+            color = PlayerColor.RED.colorString,
+            score = 38.0,
+            isWinner = false,
+        ),
+        PlayerEntryUi(
+            playerIdentity = PlayerIdentity("Charlie", username = null, userId = null),
+            startPosition = 3,
+            color = null,
+            score = null,
+            isWinner = false,
+        ),
+        PlayerEntryUi(
+            playerIdentity = PlayerIdentity("Diana", username = "dianabgg", userId = null),
+            startPosition = 4,
+            color = PlayerColor.WHITE.colorString,
+            score = -5.5,
+            isWinner = false,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PlayerEntryRowPreview(
+    @PreviewParameter(PlayerEntryRowPreviewProvider::class) player: PlayerEntryUi,
+) {
+    MeepleBookTheme {
+        PlayerEntryRow(
+            player = player,
+            onWinnerToggle = {},
+            onScoreClick = {},
+            onColorClick = {},
+            onDragStart = {},
+            onDrag = {},
+            onDragEnd = {},
         )
     }
 }

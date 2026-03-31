@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui.sections
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,11 +23,16 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import app.meeplebook.feature.addplay.ui.previewGameSelectedState
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
 fun QuantityIncompleteRow(
@@ -91,5 +97,28 @@ fun QuantityIncompleteRow(
                 )
             }
         }
+    }
+}
+
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private class QuantityIncompleteSectionPreviewProvider :
+    PreviewParameterProvider<AddPlayUiState.GameSelected> {
+    override val values = sequenceOf(
+        previewGameSelectedState(showQuantity = true, showIncomplete = false),
+        previewGameSelectedState(showQuantity = false, showIncomplete = true),
+        previewGameSelectedState(showQuantity = true, showIncomplete = true),
+    )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun QuantityIncompleteRowPreview(
+    @PreviewParameter(QuantityIncompleteSectionPreviewProvider::class)
+    state: AddPlayUiState.GameSelected,
+) {
+    MeepleBookTheme {
+        QuantityIncompleteRow(state = state, onEvent = {})
     }
 }

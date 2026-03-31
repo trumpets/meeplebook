@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui.sections
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -29,11 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.core.util.toEuFormattedString
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.theme.MeepleBookTheme
 import java.time.Instant
 import java.time.ZoneId
 
@@ -135,5 +138,32 @@ fun DateDurationSection(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+}
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DateDurationSectionNoDurationPreview() {
+    MeepleBookTheme {
+        DateDurationSection(
+            date = Instant.parse("2026-03-30T18:00:00Z"),
+            durationMinutes = null,
+            onEvent = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DateDurationSectionWithDurationPreview() {
+    MeepleBookTheme {
+        DateDurationSection(
+            date = Instant.parse("2026-03-30T18:00:00Z"),
+            durationMinutes = 90,
+            onEvent = {},
+        )
     }
 }

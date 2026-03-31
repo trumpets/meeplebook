@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.addplay.AddPlayEvent
@@ -32,6 +36,7 @@ import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.SearchResultGameItem
 import app.meeplebook.ui.components.RowItemImage
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
 fun GameSearchContent(
@@ -131,5 +136,26 @@ private fun GameSearchResultItem(
                 )
             }
         }
+    }
+}
+
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private class GameSearchContentPreviewProvider :
+    PreviewParameterProvider<AddPlayUiState.GameSearch> {
+    override val values = sequenceOf(
+        previewGameSearchState(),
+        previewGameSearchState(query = "Cat", hasResults = true),
+    )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun GameSearchContentPreview(
+    @PreviewParameter(GameSearchContentPreviewProvider::class) state: AddPlayUiState.GameSearch,
+) {
+    MeepleBookTheme {
+        GameSearchContent(state = state, onEvent = {})
     }
 }

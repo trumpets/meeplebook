@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.ui.sections
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,11 +30,16 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import app.meeplebook.R
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.LocationState
+import app.meeplebook.feature.addplay.ui.previewLocationState
 import app.meeplebook.ui.components.ScreenPadding
+import app.meeplebook.ui.theme.MeepleBookTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,5 +120,32 @@ fun LocationSection(
                 }
             }
         }
+    }
+}
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private class LocationSectionPreviewProvider : PreviewParameterProvider<LocationState> {
+    override val values = sequenceOf(
+        previewLocationState(),
+        previewLocationState(
+            value = "Home",
+            recentLocations = listOf("Home", "Game Café", "Bob's place"),
+        ),
+        previewLocationState(
+            value = "Gam",
+            isFocused = true,
+            suggestions = listOf("Game Café", "Game Vault"),
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LocationSectionPreview(
+    @PreviewParameter(LocationSectionPreviewProvider::class) state: LocationState,
+) {
+    MeepleBookTheme {
+        LocationSection(locationState = state, onEvent = {})
     }
 }
