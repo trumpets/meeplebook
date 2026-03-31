@@ -368,3 +368,67 @@ PR Link: (local session — AddPlayUiState sealed interface test refactor)
     - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
     - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
 ---
+## 2026-03-31
+PR Link: (inline refinements, no PR)
+- Replaced old `PlayersSection` + `PlayerEntryRow` with full player row overhaul
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayScreen.kt`
+- **What was implemented:**
+    - Rich player rows: position badge (circular), color dot from PlayerColor enum (or text fallback for custom colors), name + @username in column, score (tappable placeholder), winner star toggle (amber when winner), drag handle
+    - `SwipeToDismissBox`: swipe right → delete with red background + trash icon; swipe left → edit no-op with secondary background + edit icon
+    - Undo snackbar: deleted player queued in `pendingUndo`, `LaunchedEffect` shows snackbar, ActionPerformed fires `RestorePlayer`
+    - Drag reorder: `detectDragGestures` on drag handle, `graphicsLayer` for visual feedback, `PlayerReordered` event on release
+    - Winner rows get light `primaryContainer` tint background; winner name is bold
+    - Added `graphicsLayer` import (`androidx.compose.ui.graphics.graphicsLayer`)
+- **Learnings for future iterations:**
+    - `graphicsLayer` Modifier needs `import androidx.compose.ui.graphics.graphicsLayer` (not `.ui.draw.*`)
+    - `SwipeToDismissBox.backgroundContent` uses `swipeState.targetValue` (not `currentValue`) for directional icon display
+    - Undo must be handled in `PlayersSection` not the row itself — row leaves composition after delete
+    - `LaunchedEffect(pendingUndo)` with snackbar is the right pattern; reset `pendingUndo = null` after snackbar call
+    - `android.graphics.Color.parseColor(hexColor)` works inside Compose; wrap result in `androidx.compose.ui.graphics.Color(…)`
+---
+## 2026-03-31
+PR Link: N/A (local implementation)
+- Implemented `ScoreInputDialog.kt` — calculator-style numpad dialog for entering player scores
+- Implemented `ColorPickerDialog.kt` — colored circle grid dialog for picking player colors
+- Both dialogs dismiss on outside tap and Android back button without side effects
+- Color indicator in `PlayerEntryRow` is now always visible (dashed empty circle when no color assigned), tapping opens `ColorPickerDialog`
+- Score text in `PlayerEntryRow` tapping now opens `ScoreInputDialog`
+- `ScoreChanged.score` changed from `Double` to `Double?` (null = clear score)
+- `PlayerScoreReducer` updated: null score clears it; auto-winner logic skips players with null scores
+- Added 6 string resources for both dialogs
+- Added tests: `ScoreInputDialogTest` (numpad logic helpers), `ColorPickerDialogTest` (sorting/split logic), expanded `PlayerScoreReducerTest` (null score cases)
+- Files changed/created:
+  - `feature/addplay/ScoreInputDialog.kt` (new)
+  - `feature/addplay/ColorPickerDialog.kt` (new)
+  - `feature/addplay/AddPlayEvent.kt` (ScoreChanged nullable)
+  - `feature/addplay/AddPlayScreen.kt` (tappable color circle + score, dialog state in PlayersSection)
+  - `feature/addplay/reducer/PlayerScoreReducer.kt` (nullable score handling)
+  - `res/values/strings.xml` (6 new strings)
+  - `test/.../ScoreInputDialogTest.kt` (new)
+  - `test/.../ColorPickerDialogTest.kt` (new)
+  - `test/.../reducer/PlayerScoreReducerTest.kt` (null score tests appended)
+- **Learnings for future iterations:**
+    - Dialog state (which player is being edited) lives in the composable that owns the player list (`PlayersSection`), not in the ViewModel — keeps dialog lifecycle purely local
+    - `Dialog { Surface { ... } }` with `DialogProperties(dismissOnClickOutside=true, dismissOnBackPress=true)` is the correct pattern for custom dismiss-on-outside/back dialogs
+    - Testable logic extracted to `internal` top-level functions (e.g. `handleNumpadKey`, `sortedHistoryColors`, `remainingColors`) so Compose-free unit tests can cover it
+    - `+/-` toggle on "-0" input: result is `-{digit}` (keeps minus sign, replaces zero) — not stripping the sign
+    - `isLightColor()` helper with WCAG luminance formula correctly decides checkmark tint (black on light colors, white on dark)
+    - `FlowRow` (ExperimentalLayoutApi) is cleaner than nested Rows for a variable-count color grid
+    - When `colorsHistory` is non-empty, smart-expand opens compact view + MORE button; when empty, opens expanded immediately — logic gated on `startExpanded = colorsHistory.isEmpty()`
+---
+
+## 2026-03-31
+PR Link: N/A (local session)
+- Added 22 instrumented Compose UI tests for `AddPlayScreenRoot` in `AddPlayScreenRootTest.kt`
+- Fixed pre-existing `score: Int? → Double?` type mismatch in `PlayDaoTest` and `PlayerDaoTest` helpers
+- Added `@Preview` blocks (light + dark, `PreviewParameterProvider`) to all split AddPlay UI composable files: `AddPlaySearchContent`, `PlayerEntryRow`, `LocationSection`, `DateDurationSection`, `QuantityIncompleteSection`, `SuggestedPlayersSection`, `PlayersSection`
+- Added `@Preview` to `MorePlayersDialog`; added KDoc to `MorePlayersDialog`
+- Created `AddPlayPreviewData.kt` with shared `internal` preview state builders
+- Files changed: `AddPlayScreenRootTest.kt` (new), `PlayDaoTest.kt`, `PlayerDaoTest.kt`, all ui/ composable files, `MorePlayersDialog.kt`, `AddPlayPreviewData.kt`
+- **Learnings for future iterations:**
+    - `assertDoesNotExist()` in Compose UI tests does NOT need an explicit import — calling it as a method on `SemanticsNodeInteraction` works without `import androidx.compose.ui.test.assertDoesNotExist`
+    - `BackHandler` in Compose works with `Espresso.pressBack()` in instrumented tests using `createComposeRule()`
+    - DAO test helper functions with `score: Int?` must be updated to `score: Double?` when `PlayerEntity.score` changes type
+    - `AddPlayScreenRoot` accepts state directly — tests pass pre-constructed `AddPlayUiState` (no Hilt needed)
+---

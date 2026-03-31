@@ -81,8 +81,8 @@ class ObservePlaysUseCaseTest {
     @Test
     fun `invoke correctly maps Play to DomainPlayItem`() = runTest {
         // Given
-        val player1 = createPlayer(id = 1, playId = 1, name = "Alice", score = 10, win = true)
-        val player2 = createPlayer(id = 2, playId = 1, name = "Bob", score = 8, win = false)
+        val player1 = createPlayer(id = 1, playId = 1, name = "Alice", score = 10.0, win = true)
+        val player2 = createPlayer(id = 2, playId = 1, name = "Bob", score = 8.0, win = false)
         val play = createPlay(
             localPlayId = 1,
             gameName = "Catan",
@@ -110,12 +110,12 @@ class ObservePlaysUseCaseTest {
         assertEquals(2, domainPlay.players.size)
         // Verify first player mapping
         assertEquals("Alice", domainPlay.players[0].name)
-        assertEquals(10, domainPlay.players[0].score)
+        assertEquals(10.0, domainPlay.players[0].score)
         assertTrue(domainPlay.players[0].win)
         assertNull(domainPlay.players[0].startPosition)
         // Verify second player mapping
         assertEquals("Bob", domainPlay.players[1].name)
-        assertEquals(8, domainPlay.players[1].score)
+        assertEquals(8.0, domainPlay.players[1].score)
         assertFalse(domainPlay.players[1].win)
         assertNull(domainPlay.players[1].startPosition)
     }

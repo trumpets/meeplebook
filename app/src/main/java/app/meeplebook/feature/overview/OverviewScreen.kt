@@ -45,6 +45,7 @@ import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.core.ui.uiText
+import app.meeplebook.feature.home.navigation.HomeNavigator
 import app.meeplebook.feature.overview.ui.EmptyStateMessage
 import app.meeplebook.feature.overview.ui.GameHighlightCard
 import app.meeplebook.feature.overview.ui.RecentPlayCard
@@ -63,7 +64,8 @@ import app.meeplebook.ui.theme.MeepleBookTheme
 @Composable
 fun OverviewScreen(
     refreshOnLogin: Boolean,
-    viewModel: OverviewViewModel = hiltViewModel()
+    viewModel: OverviewViewModel = hiltViewModel(),
+    homeNavigator: HomeNavigator
 ) {
     LaunchedEffect(refreshOnLogin) {
         if (refreshOnLogin) {
@@ -80,7 +82,7 @@ fun OverviewScreen(
         onRecentPlayClick = { /* TODO: Navigate to play details */ },
         onRecentlyAddedClick = { /* TODO: Navigate to game details */ },
         onSuggestedGameClick = { /* TODO: Navigate to game details */ },
-        onLogPlayClick = { /* TODO: Navigate to record play screen */ }
+        onLogPlayClick = { homeNavigator.openAddPlay(preselectedGame = null) }
     )
 }
 

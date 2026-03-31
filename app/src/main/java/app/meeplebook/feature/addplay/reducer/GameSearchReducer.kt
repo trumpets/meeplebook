@@ -34,8 +34,7 @@ class GameSearchReducer @Inject constructor() {
                         location = LocationState(
                             null,
                             emptyList(),
-                            emptyList(),
-                            isFocused = false
+                            emptyList()
                         ),
                         players = PlayersState(
                             players = emptyList(),

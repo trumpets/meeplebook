@@ -18,7 +18,7 @@ object AddPlayTestFactory {
     fun makePlayer(
         identity: PlayerIdentity = makeIdentity(),
         startPosition: Int = 1,
-        score: Int? = null,
+        score: Double? = null,
         isWinner: Boolean = false,
         color: String? = null
     ): PlayerEntryUi = PlayerEntryUi(
@@ -50,12 +50,11 @@ object AddPlayTestFactory {
         location = LocationState(
             value = locationValue,
             suggestions = emptyList(),
-            recentLocations = emptyList(),
-            isFocused = false
+            recentLocations = emptyList()
         ),
         players = PlayersState(
             players = players,
-            colorsHistory = PlayerColor.entries.map { it.colorString }
+            colorsHistory = PlayerColor.entries
         ),
         playersByLocation = emptyList(),
         isSaving = isSaving

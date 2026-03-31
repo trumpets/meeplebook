@@ -27,12 +27,13 @@ class PlayerScoreReducer @Inject constructor() {
                     else it
                 }
 
+                // If no player has a score, leave winner flags unchanged.
                 val maxPoints = updatedPlayers
                     .mapNotNull { it.score }
                     .maxOrNull() ?: return updatedPlayers
 
                 updatedPlayers.map {
-                    it.copy(isWinner = it.score == maxPoints)
+                    it.copy(isWinner = it.score != null && it.score == maxPoints)
                 }
             }
 

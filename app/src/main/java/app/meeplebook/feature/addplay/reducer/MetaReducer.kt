@@ -2,6 +2,7 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
+import app.meeplebook.feature.addplay.OptionalField
 import app.meeplebook.feature.addplay.updateGameSelected
 import javax.inject.Inject
 
@@ -21,6 +22,14 @@ class MetaReducer @Inject constructor() {
                 is AddPlayEvent.MetadataEvent.DateChanged -> copy(date = event.date)
                 is AddPlayEvent.MetadataEvent.DurationChanged -> copy(durationMinutes = event.minutes)
                 is AddPlayEvent.MetadataEvent.LocationChanged -> copy(location = location.copy(value = event.value))
+                is AddPlayEvent.MetadataEvent.QuantityChanged -> copy(quantity = event.value ?: 1)
+                is AddPlayEvent.MetadataEvent.IncompleteToggled -> copy(incomplete = event.value)
+                is AddPlayEvent.MetadataEvent.CommentsChanged -> copy(comments = event.value)
+                is AddPlayEvent.MetadataEvent.ShowOptionalField -> when (event.field) {
+                    OptionalField.QUANTITY -> copy(showQuantity = true)
+                    OptionalField.INCOMPLETE -> copy(showIncomplete = true, incomplete = true)
+                    OptionalField.COMMENTS -> copy(showComments = true)
+                }
                 else -> this
             }
         }

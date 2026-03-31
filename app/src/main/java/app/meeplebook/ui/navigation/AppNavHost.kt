@@ -5,6 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import app.meeplebook.feature.addplay.AddPlayScreen
+import app.meeplebook.feature.addplay.PreselectedGame
 import app.meeplebook.feature.home.HomeScreen
 import app.meeplebook.feature.login.LoginScreen
 
@@ -27,7 +29,33 @@ fun AppNavHost(
         composable<Screen.Home> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.Home>()
             HomeScreen(
-                args.refreshOnLogin
+                args.refreshOnLogin,
+                homeNavigator = { preselectedGame ->
+                    if (preselectedGame == null) {
+                        navController.navigate(Screen.AddPlay)
+                    } else {
+                        navController.navigate(
+                            Screen.AddPlayForGame(
+                                gameId = preselectedGame.gameId,
+                                gameName = preselectedGame.gameName
+                            )
+                        )
+                    }
+                }
+            )
+        }
+        composable<Screen.AddPlay> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.AddPlay>()
+            AddPlayScreen(
+                preselectedGame = null,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable<Screen.AddPlayForGame> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.AddPlayForGame>()
+            AddPlayScreen(
+                preselectedGame = PreselectedGame(args.gameId, args.gameName),
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

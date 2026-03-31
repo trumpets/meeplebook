@@ -79,7 +79,7 @@ object PlayTestFactory {
         name: String = "Test User",
         startPosition: Int? = null,
         color: String? = null,
-        score: Int? = null,
+        score: Double? = null,
         win: Boolean = false
     ): Player {
         return Player(

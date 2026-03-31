@@ -18,6 +18,9 @@ private const val MINUTES_IN_HOUR = 60L
 private const val MINUTES_IN_TWO_HOURS = MINUTES_IN_HOUR * 2
 private const val MINUTES_IN_DAY = MINUTES_IN_HOUR * 24
 
+private val DATE_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
 data class Range(
     val start: Instant,
     val end: Instant
@@ -72,7 +75,7 @@ fun formatRelativeDate(dateInstant: Instant): UiText {
         daysDiff == 1L -> uiTextRes(R.string.date_yesterday)
         daysDiff < 7L -> uiTextRes(R.string.date_days_ago, daysDiff)
         daysDiff < 365L -> uiText(playDate.format(DateTimeFormatter.ofPattern("d MMM")))
-        else -> uiText(playDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        else -> uiText(playDate.format(DATE_FORMATTER))
     }
 }
 
@@ -137,3 +140,20 @@ fun formatLastSynced(time: Instant?): UiText {
 fun parseDateString(dateString: String): Instant {
     return Instant.parse("${dateString}T00:00:00Z")
 }
+
+fun Instant.toDatePickerMillis(): Long =
+    atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
+
+fun LocalDate.toEuFormattedString(): String =
+    DATE_FORMATTER.format(this)
+
+fun datePickerMillisToInstant(millis: Long): Instant =
+    Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()

@@ -457,7 +457,7 @@ class PlaysRepositoryImplTest {
                     name = "Alice",
                     username = "alice123",
                     userId = 111L,
-                    score = 100,
+                    score = 100.0,
                     win = true,
                     startPosition = 1,
                     color = "Red"
@@ -466,7 +466,7 @@ class PlaysRepositoryImplTest {
                     name = "Bob",
                     username = null,
                     userId = null,
-                    score = 85,
+                    score = 85.0,
                     win = false,
                     startPosition = 2,
                     color = "Blue"
@@ -485,7 +485,7 @@ class PlaysRepositoryImplTest {
         assertEquals("Alice", players[0].name)
         assertEquals("alice123", players[0].username)
         assertEquals(111L, players[0].userId)
-        assertEquals(100, players[0].score)
+        assertEquals(100.0, players[0].score)
         assertTrue(players[0].win)
         assertEquals(1, players[0].startPosition)
         assertEquals("Red", players[0].color)
@@ -494,7 +494,7 @@ class PlaysRepositoryImplTest {
         assertEquals("Bob", players[1].name)
         assertEquals(null, players[1].username)
         assertEquals(null, players[1].userId)
-        assertEquals(85, players[1].score)
+        assertEquals(85.0, players[1].score)
         assertFalse(players[1].win)
         assertEquals(2, players[1].startPosition)
         assertEquals("Blue", players[1].color)
@@ -1064,7 +1064,7 @@ class PlaysRepositoryImplTest {
         userId: Long? = null,
         startPosition: Int? = null,
         color: String? = null,
-        score: Int? = null,
+        score: Double? = null,
         win: Boolean = false
     ): CreatePlayerCommand {
         return CreatePlayerCommand(

@@ -2,12 +2,15 @@ package app.meeplebook.feature.addplay
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.meeplebook.core.collection.domain.DomainCollectionItem
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.plays.domain.CreatePlayUseCase
+import app.meeplebook.core.plays.domain.ObserveColorsUsedForGameUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
+import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
@@ -25,7 +28,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -61,12 +68,23 @@ class AddPlayViewModel @Inject constructor(
     private val observeRecentLocations: ObserveRecentLocationsUseCase,
     private val searchLocations: SearchLocationsUseCase,
     private val observePlayerSuggestions: ObservePlayerSuggestionsUseCase,
+    private val observeColorsUsedForGame: ObserveColorsUsedForGameUseCase,
     private val observeCollection: ObserveCollectionUseCase,
     private val createPlay: CreatePlayUseCase
 ) : ViewModel() {
 
     private val rawGameSearchQuery = MutableStateFlow("")
     private val rawLocationQuery = MutableStateFlow("")
+
+    private data class Queries(
+        val gameQuery: String,
+        val locationQuery: String
+    )
+
+    private val queriesFlow =
+        combine(rawGameSearchQuery, rawLocationQuery) { game, location ->
+            Queries(game, location)
+        }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private val searchResultsLocations =
@@ -86,39 +104,84 @@ class AddPlayViewModel @Inject constructor(
             observeCollection(CollectionDataQuery(searchQuery = query))
         }
 
-    private val _uiState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
+    private data class SearchResults(
+        val games: List<DomainCollectionItem>,
+        val locations: List<String>
+    )
 
-    val combinedUiState: StateFlow<AddPlayUiState> =
+    private val searchResultsFlow =
+        combine(searchResultsGames, searchResultsLocations) { games, locations ->
+            SearchResults(games, locations)
+        }
+
+    private val baseState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
+
+    // Observe distinct player colors for the currently selected game.
+    private val selectedGameIdFlow =
+        baseState
+            .map { (it as? AddPlayUiState.GameSelected)?.gameId }
+            .distinctUntilChanged()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val usedColorsForGameFlow = selectedGameIdFlow
+        .flatMapLatest { gameId ->
+            if (gameId != null) observeColorsUsedForGame(gameId)
+            else flowOf(emptyList())
+        }
+
+    val recentLocationsFlow = observeRecentLocations()
+
+    private data class ExternalData(
+        val queries: Queries,
+        val search: SearchResults,
+        val recentLocations: List<String>,
+        val usedColors: List<PlayerColor>
+    )
+
+    private val externalData =
         combine(
-            _uiState,
-            rawGameSearchQuery,
-            rawLocationQuery,
-            searchResultsLocations,
-            searchResultsGames
-        ) { state, rawGameQuery, rawLocationQuery, locationSuggestions, gameSuggestions ->
+            queriesFlow,
+            searchResultsFlow,
+            recentLocationsFlow,
+            usedColorsForGameFlow
+        ) { queries, search, recentLocations, usedColors ->
+
+            ExternalData(
+                queries = queries,
+                search = search,
+                recentLocations = recentLocations,
+                usedColors = usedColors
+            )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            ExternalData(
+                queries = Queries(gameQuery = "", locationQuery = ""),
+                search = SearchResults(games = emptyList(), locations = emptyList()),
+                recentLocations = emptyList(),
+                usedColors = emptyList()
+            )
+        )
+
+    val uiState: StateFlow<AddPlayUiState> =
+        combine(
+            baseState,
+            externalData
+        ) { state, data ->
 
             when (state) {
                 is AddPlayUiState.GameSearch -> state.copy(
-                    gameSearchQuery = rawGameQuery,
-                    gameSearchResults = gameSuggestions.map { it.toSearchResultGameItem() },
+                    gameSearchQuery = data.queries.gameQuery,
+                    gameSearchResults = data.search.games.map { it.toSearchResultGameItem() },
                 )
 
                 is AddPlayUiState.GameSelected -> state.copy(
                     location = state.location.copy(
-                        value = rawLocationQuery,
-                        suggestions = locationSuggestions
-                    )
-                )
-            }
-        }.combine(
-            observeRecentLocations()
-        ) { state, recentLocations ->
-
-            when (state) {
-                is AddPlayUiState.GameSearch -> state
-                is AddPlayUiState.GameSelected -> state.copy(
-                    location = state.location.copy(
-                        recentLocations = recentLocations
+                        value = data.queries.locationQuery,
+                        suggestions = data.search.locations,
+                        recentLocations = data.recentLocations
+                    ),
+                    players = state.players.copy(
+                        colorsHistory = data.usedColors
                     )
                 )
             }
@@ -148,9 +211,9 @@ class AddPlayViewModel @Inject constructor(
             else -> Unit
         }
 
-        val oldState = _uiState.value
+        val oldState = baseState.value
         val newState = reducer.reduce(oldState, event)
-        _uiState.value = newState
+        baseState.value = newState
 
         val effects = effectProducer.produce(newState, event)
         handleDomainEffects(effects.effects)
@@ -183,21 +246,21 @@ class AddPlayViewModel @Inject constructor(
                 .first()
                 .map { identity -> PlayerSuggestion(playerIdentity = identity) }
 
-            _uiState.value = _uiState.value.updateGameSelected { copy(playersByLocation = suggestions) }
+            baseState.value = baseState.value.updateGameSelected { copy(playersByLocation = suggestions) }
         }
     }
 
     private fun savePlay(effect: AddPlayEffect.SavePlay) {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = true) }
+            baseState.value = baseState.value.updateGameSelected { copy(isSaving = true) }
             createPlay(effect.play).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) }
+                    baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
                     _uiEffect.emit(AddPlayUiEffect.NavigateBack)
                 },
                 onFailure = {
-                    _uiState.value = _uiState.value.updateGameSelected { copy(isSaving = false) }
+                    baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
                 }
             )
         }

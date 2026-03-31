@@ -11,8 +11,11 @@ sealed interface Screen {
     data class Home(val refreshOnLogin: Boolean = false) : Screen
 
     @Serializable
-    data class AddPlay(
-        val gameId: Long? = null,
-        val gameName: String? = null
+    object AddPlay : Screen
+
+    @Serializable
+    data class AddPlayForGame(
+        val gameId: Long,
+        val gameName: String
     ) : Screen
 }

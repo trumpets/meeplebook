@@ -199,7 +199,7 @@ class AddPlayEffectProducerTest {
     @Test
     fun `SaveClicked SavePlay maps players with all fields`() {
         val identity = makeIdentity(name = "Alice", username = "alice99", userId = 42L)
-        val player = makePlayer(identity = identity, startPosition = 2, score = 150, isWinner = true, color = "Red")
+        val player = makePlayer(identity = identity, startPosition = 2, score = 150.0, isWinner = true, color = "Red")
         val state = makeGameSelectedState(players = listOf(player))
 
         val play = savePlay(state)
@@ -210,7 +210,7 @@ class AddPlayEffectProducerTest {
         assertEquals("alice99", cmd.username)
         assertEquals(42L, cmd.userId)
         assertEquals(2, cmd.startPosition)
-        assertEquals(150, cmd.score)
+        assertEquals(150.0, cmd.score)
         assertEquals("Red", cmd.color)
         assertEquals(true, cmd.win)
     }
@@ -285,7 +285,7 @@ class AddPlayEffectProducerTest {
     fun `ScoreChanged produces no effects`() {
         val identity = makeIdentity("Alice")
         val state = makeGameSelectedState()
-        val result = producer.produce(newState = state, event = AddPlayEvent.PlayerScoreEvent.ScoreChanged(identity, 42))
+        val result = producer.produce(newState = state, event = AddPlayEvent.PlayerScoreEvent.ScoreChanged(identity, 42.0))
         assertNoEffects(result)
     }
 

@@ -3,6 +3,7 @@ package app.meeplebook.feature.addplay
 import app.meeplebook.core.plays.domain.CreatePlayCommand
 import app.meeplebook.core.plays.domain.CreatePlayerCommand
 import app.meeplebook.core.plays.domain.PlayerIdentity
+import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import java.time.Instant
@@ -36,6 +37,10 @@ sealed interface AddPlayUiState {
         val quantity: Int = 1,
         val incomplete: Boolean = false,
         val comments: String = "",
+
+        val showQuantity: Boolean = false,
+        val showIncomplete: Boolean = false,
+        val showComments: Boolean = false,
 
         val isSaving: Boolean,
         val error: UiText = uiTextEmpty(),
@@ -78,8 +83,7 @@ sealed interface AddPlayUiState {
 data class LocationState(
     val value: String?,
     val suggestions: List<String>,
-    val recentLocations: List<String>,
-    val isFocused: Boolean
+    val recentLocations: List<String>
 )
 
 /**
@@ -87,8 +91,7 @@ data class LocationState(
  */
 data class PlayersState(
     val players: List<PlayerEntryUi>,
-    val colorsHistory: List<String>,
-//    val editingPlayerId: PlayerEntryId?
+    val colorsHistory: List<PlayerColor>
 )
 
 /**
@@ -100,7 +103,7 @@ data class PlayerEntryUi(
     val startPosition: Int,
     val color: String?,
 
-    val score: Int?,
+    val score: Double?,
     val isWinner: Boolean,
 ) {
     companion object {
@@ -125,7 +128,7 @@ data class PlayerEntryUi(
                 playerIdentity = playerIdentity,
                 startPosition = startPosition,
                 color = null,
-                score = 0,
+                score = 0.0,
                 isWinner = false
             )
         }

@@ -18,13 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.meeplebook.R
 import app.meeplebook.feature.home.navigation.HomeNavHost
+import app.meeplebook.feature.home.navigation.HomeNavigator
 import app.meeplebook.feature.home.navigation.HomeTabScreen
 import app.meeplebook.ui.theme.MeepleBookTheme
 
@@ -52,12 +53,14 @@ enum class HomeNavigationDestination(
  */
 @Composable
 fun HomeScreen(
-    refreshOnLogin: Boolean
+    refreshOnLogin: Boolean,
+    homeNavigator: HomeNavigator
 ) {
     val tabNavController = rememberNavController()
 
     HomeScreenContent(
         refreshOnLogin,
+        homeNavigator,
         onNavItemClick = { destination ->
             tabNavController.navigate(destination.route) {
                 // Pop up to start destination to avoid building up back stack
@@ -107,6 +110,7 @@ fun HomeNavigationBar(
 @Composable
 fun HomeScreenContent(
     refreshOnLogin: Boolean = false,
+    homeNavigator: HomeNavigator,
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
 ) {
@@ -129,6 +133,7 @@ fun HomeScreenContent(
         // Delegate to HomeNavHost for tab routing
         HomeNavHost(
             refreshOnLogin = refreshOnLogin,
+            homeNavigator = homeNavigator,
             navController = tabNavController,
             modifier = Modifier.padding(innerPadding)
         )
@@ -152,6 +157,10 @@ fun HomeNavigationBarPreview() {
 fun HomeScreenPreview() {
     MeepleBookTheme {
         val previewNavController = rememberNavController()
-        HomeScreenContent(refreshOnLogin = false, tabNavController = previewNavController)
+        HomeScreenContent(
+            refreshOnLogin = false,
+            homeNavigator = { _ -> },
+            tabNavController = previewNavController
+        )
     }
 }

@@ -21,6 +21,6 @@ data class Player(
     val name: String,
     val startPosition: Int?,
     val color: String?,
-    val score: Int?,
+    val score: Double?,
     val win: Boolean
 )

@@ -2,6 +2,7 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayTestFactory.makeGameSelectedState
+import app.meeplebook.feature.addplay.OptionalField
 import app.meeplebook.feature.addplay.requireGameSelected
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -43,5 +44,49 @@ class MetaReducerTest {
         val state = makeGameSelectedState(locationValue = "Somewhere")
         val result = reducer.reduce(state, AddPlayEvent.PlayerListEvent.AddNewPlayer(playerName = "Ivo", startPosition = 1))
         assertEquals(state, result)
+    }
+
+    @Test
+    fun `QuantityChanged updates quantity`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.QuantityChanged(3))
+        assertEquals(3, result.requireGameSelected().quantity)
+    }
+
+    @Test
+    fun `QuantityChanged with null resets quantity to 1`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.QuantityChanged(null))
+        assertEquals(1, result.requireGameSelected().quantity)
+    }
+
+    @Test
+    fun `IncompleteToggled updates incomplete flag`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.IncompleteToggled(true))
+        assertEquals(true, result.requireGameSelected().incomplete)
+    }
+
+    @Test
+    fun `CommentsChanged updates comments`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.CommentsChanged("Great game!"))
+        assertEquals("Great game!", result.requireGameSelected().comments)
+    }
+
+    @Test
+    fun `ShowOptionalField QUANTITY sets showQuantity true`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.ShowOptionalField(OptionalField.QUANTITY))
+        assertEquals(true, result.requireGameSelected().showQuantity)
+    }
+
+    @Test
+    fun `ShowOptionalField INCOMPLETE sets showIncomplete and defaults incomplete to true`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.ShowOptionalField(OptionalField.INCOMPLETE))
+        val gs = result.requireGameSelected()
+        assertEquals(true, gs.showIncomplete)
+        assertEquals(true, gs.incomplete)
+    }
+
+    @Test
+    fun `ShowOptionalField COMMENTS sets showComments true`() {
+        val result = reducer.reduce(makeGameSelectedState(), AddPlayEvent.MetadataEvent.ShowOptionalField(OptionalField.COMMENTS))
+        assertEquals(true, result.requireGameSelected().showComments)
     }
 }

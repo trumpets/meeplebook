@@ -4,6 +4,8 @@ import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
 import java.time.Instant
 
+enum class OptionalField { QUANTITY, INCOMPLETE, COMMENTS }
+
 /** Top-level union of all user-driven events on the Add Play screen. */
 sealed interface AddPlayEvent {
 
@@ -34,6 +36,18 @@ sealed interface AddPlayEvent {
 
         /** User typed in the location field. */
         data class LocationChanged(val value: String) : MetadataEvent
+
+        /** User changed the play quantity. [value] is `null` when the field is cleared. */
+        data class QuantityChanged(val value: Int?) : MetadataEvent
+
+        /** User toggled the incomplete flag. */
+        data class IncompleteToggled(val value: Boolean) : MetadataEvent
+
+        /** User changed the play comments. */
+        data class CommentsChanged(val value: String) : MetadataEvent
+
+        /** User tapped an optional field in the FAB menu to make it visible. */
+        data class ShowOptionalField(val field: OptionalField) : MetadataEvent
     }
 
     /** Events that add, remove, or change the active edit target in the player list. */
@@ -54,6 +68,21 @@ sealed interface AddPlayEvent {
         /** User removed the player identified by [playerIdentity] from the list. */
         data class RemovePlayer(
             val playerIdentity: PlayerIdentity
+        ) : PlayerListEvent
+
+        /** User reordered the player from [fromIndex] to [toIndex] via drag-to-reorder. */
+        data class PlayerReordered(
+            val fromIndex: Int,
+            val toIndex: Int,
+        ) : PlayerListEvent
+
+        /**
+         * User tapped "Undo" after a swipe-to-delete.
+         * Restores [player] at [atIndex] in the list.
+         */
+        data class RestorePlayer(
+            val player: PlayerEntryUi,
+            val atIndex: Int,
         ) : PlayerListEvent
 
         /** User tapped a player row to open its inline edit panel. */
@@ -90,10 +119,10 @@ sealed interface AddPlayEvent {
     /** Events that modify a player's score or win flag. */
     sealed interface PlayerScoreEvent : AddPlayEvent {
 
-        /** User updated the numeric score for [playerIdentity]. */
+        /** User updated the numeric score for [playerIdentity]. Null clears the score. */
         data class ScoreChanged(
             val playerIdentity: PlayerIdentity,
-            val score: Int
+            val score: Double?
         ) : PlayerScoreEvent
 
         /** User toggled the winner status for [playerIdentity]. */

@@ -95,9 +95,50 @@
     <string name="play_player_name_only">%1$s</string>
     <string name="play_player_with_details">%1$s (%2$s)</string>
     <string name="play_player_won">won</string>
-    <string name="play_player_score">%1$d</string>
+    <string name="play_player_score">%1$s</string>
 
     <!-- Add Play Screen -->
     <string name="add_play_cant_save">Can\'t save play</string>
+    <string name="add_play_title">Log Play</string>
+    <string name="add_play_search_game_placeholder">Search for a game…</string>
+    <string name="add_play_search_game_label">Game</string>
+    <string name="add_play_no_results">No games found</string>
+    <string name="add_play_date_label">Date</string>
+    <string name="add_play_location_label">Location</string>
+    <string name="add_play_location_placeholder">Where did you play?</string>
+    <string name="add_play_duration_label">Duration</string>
+    <string name="add_play_duration_placeholder">e.g. 90min</string>
+    <string name="add_play_players_label">Players</string>
+    <string name="add_play_suggested_players_label">Suggested players</string>
+    <string name="add_play_more_players">More</string>
+    <string name="add_play_more_players_title">All Suggested Players</string>
+    <string name="add_play_save">Save</string>
+    <string name="add_play_cancel">Cancel</string>
+    <string name="add_play_add_player">Add player</string>
+    <string name="add_play_no_player_suggestions">No suggestions for this location</string>
+    <string name="player_removed">Player removed</string>
+    <string name="undo">Undo</string>
+    <string name="add_play_discard_title">Discard play?</string>
+    <string name="add_play_discard_message">Your play will not be saved.</string>
+    <string name="add_play_discard_confirm">Discard</string>
+    <string name="add_play_discard_cancel">Keep editing</string>
+    <string name="add_play_add_optional_field">Add field</string>
+    <string name="add_play_optional_quantity">Quantity</string>
+    <string name="add_play_optional_incomplete">Incomplete</string>
+    <string name="add_play_optional_comments">Comments</string>
+    <string name="add_play_quantity_label">Qty</string>
+    <string name="add_play_comments_label">Comments</string>
+    <string name="add_play_comments_placeholder">Notes about this play…</string>
+    <string name="player_name_with_username">%1$s (@%2$s)</string>
+
+    <!-- Score input dialog -->
+    <string name="score_input_confirm_content_description">Confirm score</string>
+    <string name="score_input_delete_content_description">Delete last digit</string>
+    <string name="score_input_toggle_sign_content_description">Toggle sign</string>
+    <string name="score_input_placeholder">—</string>
+
+    <!-- Color picker dialog -->
+    <string name="color_picker_title">Pick a color</string>
+    <string name="color_picker_more">More</string>
 
 </resources>

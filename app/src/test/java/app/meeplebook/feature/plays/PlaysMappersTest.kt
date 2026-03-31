@@ -32,7 +32,7 @@ class PlaysMappersTest {
         fakeStringProvider.setString(R.string.play_player_name_only, "%1\$s")
         fakeStringProvider.setString(R.string.play_player_with_details, "%1\$s (%2\$s)")
         fakeStringProvider.setString(R.string.play_player_won, "won")
-        fakeStringProvider.setString(R.string.play_player_score, "%1\$d")
+        fakeStringProvider.setString(R.string.play_player_score, "%1\$s")
         fakeStringProvider.setString(R.string.date_today, "Today")
         fakeStringProvider.setString(R.string.date_yesterday, "Yesterday")
         fakeStringProvider.setString(R.string.date_days_ago, "%d days ago")
@@ -52,8 +52,8 @@ class PlaysMappersTest {
             date = Instant.parse("2024-01-15T20:00:00Z"),
             durationMinutes = 45,
             players = listOf(
-                DomainPlayerItem(name = "Alice", startPosition = 1, score = 80, win = true),
-                DomainPlayerItem(name = "Bob", startPosition = 2, score = 65, win = false)
+                DomainPlayerItem(name = "Alice", startPosition = 1, score = 80.0, win = true),
+                DomainPlayerItem(name = "Bob", startPosition = 2, score = 65.0, win = false)
             ),
             location = "Home",
             comments = "Great game!",
@@ -118,7 +118,7 @@ class PlaysMappersTest {
             date = Instant.parse("2024-01-13T10:00:00Z"),
             durationMinutes = 360,
             players = listOf(
-                DomainPlayerItem(name = "Dave", startPosition = 1, score = 10, win = true)
+                DomainPlayerItem(name = "Dave", startPosition = 1, score = 10.0, win = true)
             ),
             location = "Game Store",
             comments = "Epic game session!",
@@ -200,7 +200,7 @@ class PlaysMappersTest {
     fun `formatPlayerSummary formats single player with score`() {
         // Given
         val players = listOf(
-            DomainPlayerItem(name = "Charlie", startPosition = null, score = 75, win = false)
+            DomainPlayerItem(name = "Charlie", startPosition = null, score = 75.0, win = false)
         )
 
         // When
@@ -215,7 +215,7 @@ class PlaysMappersTest {
     fun `formatPlayerSummary formats single player with win and score`() {
         // Given
         val players = listOf(
-            DomainPlayerItem(name = "Diana", startPosition = 1, score = 100, win = true)
+            DomainPlayerItem(name = "Diana", startPosition = 1, score = 100.0, win = true)
         )
 
         // When
@@ -230,9 +230,9 @@ class PlaysMappersTest {
     fun `formatPlayerSummary formats multiple players sorted by start position`() {
         // Given
         val players = listOf(
-            DomainPlayerItem(name = "Charlie", startPosition = 3, score = 65, win = false),
-            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80, win = true),
-            DomainPlayerItem(name = "Bob", startPosition = 2, score = 70, win = false)
+            DomainPlayerItem(name = "Charlie", startPosition = 3, score = 65.0, win = false),
+            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80.0, win = true),
+            DomainPlayerItem(name = "Bob", startPosition = 2, score = 70.0, win = false)
         )
 
         // When
@@ -248,8 +248,8 @@ class PlaysMappersTest {
     fun `formatPlayerSummary handles players without start position`() {
         // Given
         val players = listOf(
-            DomainPlayerItem(name = "Zoe", startPosition = null, score = 50, win = false),
-            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80, win = true)
+            DomainPlayerItem(name = "Zoe", startPosition = null, score = 50.0, win = false),
+            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80.0, win = true)
         )
 
         // When
@@ -265,9 +265,9 @@ class PlaysMappersTest {
     fun `formatPlayerSummary handles players with non-numeric start position`() {
         // Given
         val players = listOf(
-            DomainPlayerItem(name = "Charlie", startPosition = 3, score = 65, win = false),
-            DomainPlayerItem(name = "Bob", startPosition = null, score = 70, win = false),
-            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80, win = true)
+            DomainPlayerItem(name = "Charlie", startPosition = 3, score = 65.0, win = false),
+            DomainPlayerItem(name = "Bob", startPosition = null, score = 70.0, win = false),
+            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80.0, win = true)
         )
 
         // When
@@ -297,9 +297,9 @@ class PlaysMappersTest {
     fun `formatPlayerSummary formats multiple players with mixed details`() {
         // Given
         val players = listOf(
-            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80, win = true),
+            DomainPlayerItem(name = "Alice", startPosition = 1, score = 80.0, win = true),
             DomainPlayerItem(name = "Bob", startPosition = 2, score = null, win = false),
-            DomainPlayerItem(name = "Charlie", startPosition = 3, score = 65, win = false),
+            DomainPlayerItem(name = "Charlie", startPosition = 3, score = 65.0, win = false),
             DomainPlayerItem(name = "Diana", startPosition = 4, score = null, win = false)
         )
 
@@ -324,7 +324,7 @@ class PlaysMappersTest {
                 date = Instant.parse("2024-01-15T20:00:00Z"),
                 durationMinutes = 45,
                 players = listOf(
-                    DomainPlayerItem(name = "Alice", startPosition = 1, score = 80, win = true)
+                    DomainPlayerItem(name = "Alice", startPosition = 1, score = 80.0, win = true)
                 ),
                 location = "Home",
                 comments = null,
@@ -337,7 +337,7 @@ class PlaysMappersTest {
                 date = Instant.parse("2024-01-14T18:00:00Z"),
                 durationMinutes = 60,
                 players = listOf(
-                    DomainPlayerItem(name = "Bob", startPosition = 1, score = 90, win = false)
+                    DomainPlayerItem(name = "Bob", startPosition = 1, score = 90.0, win = false)
                 ),
                 location = null,
                 comments = "Fun game",
@@ -372,7 +372,7 @@ class PlaysMappersTest {
                 date = Instant.parse("2024-02-10T15:00:00Z"),
                 durationMinutes = 90,
                 players = listOf(
-                    DomainPlayerItem(name = "Charlie", startPosition = 1, score = 10, win = true)
+                    DomainPlayerItem(name = "Charlie", startPosition = 1, score = 10.0, win = true)
                 ),
                 location = "Friend's house",
                 comments = "Close game",

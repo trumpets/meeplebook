@@ -9,6 +9,7 @@ import app.meeplebook.core.ui.uiTextEmpty
 import app.meeplebook.core.ui.uiTextJoin
 import app.meeplebook.core.ui.uiTextPlural
 import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.core.util.ScoreFormatter
 import app.meeplebook.core.util.formatDuration
 import app.meeplebook.core.util.formatRelativeDate
 import app.meeplebook.feature.plays.domain.DomainPlaysSection
@@ -48,7 +49,7 @@ fun formatPlayerSummary(players: List<DomainPlayerItem>): UiText {
     val formattedPlayers = sortedPlayers.map { player ->
         val details = buildList {
             if (player.win) add(uiTextRes(R.string.play_player_won))
-            player.score?.let { add(uiTextRes(R.string.play_player_score, it)) }
+            player.score?.let { add(uiTextRes(R.string.play_player_score, ScoreFormatter.format(it))) }
         }
 
         if (details.isEmpty()) {
