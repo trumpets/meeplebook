@@ -615,12 +615,12 @@ private fun QuantityIncompleteRow(
     ) {
         if (state.showQuantity) {
             OutlinedTextField(
-                value = if (state.quantity == 1) "" else state.quantity.toString(),
+                value = state.quantity.toString(),
                 onValueChange = { raw ->
                     val parsed = raw.toIntOrNull()
                     if (raw.isEmpty()) {
                         onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(null))
-                    } else if (parsed != null && parsed <= 999) {
+                    } else if (parsed != null && parsed > 0) {
                         onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(parsed))
                     }
                 },
@@ -1077,9 +1077,13 @@ private fun MorePlayersDialog(
                         key = { it.playerIdentity.name + (it.playerIdentity.username ?: "") }
                     ) { suggestion ->
                         Text(
-                            text = suggestion.playerIdentity.name +
-                                    (suggestion.playerIdentity.username
-                                        ?.let { " (@$it)" } ?: ""),
+                            text = suggestion.playerIdentity.username?.let { username ->
+                                stringResource(
+                                    R.string.player_name_with_username,
+                                    suggestion.playerIdentity.name,
+                                    username
+                                )
+                            } ?: suggestion.playerIdentity.name,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier
                                 .fillMaxWidth()

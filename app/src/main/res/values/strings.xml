@@ -129,5 +129,6 @@
     <string name="add_play_quantity_label">Qty</string>
     <string name="add_play_comments_label">Comments</string>
     <string name="add_play_comments_placeholder">Notes about this play…</string>
+    <string name="player_name_with_username">%1$s (@%2$s)</string>
 
 </resources>
