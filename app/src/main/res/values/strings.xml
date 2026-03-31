@@ -99,5 +99,12 @@
 
     <!-- Add Play Screen -->
     <string name="add_play_cant_save">Can\'t save play</string>
+    <string name="add_play_title">Log Play</string>
+
+    <!-- Home Screen Widget -->
+    <string name="widget_description">Quick Play Logger — tap to log a new play or view your active session</string>
+    <string name="widget_log_play">Log Play</string>
+    <string name="widget_timer_pause">Pause</string>
+    <string name="widget_timer_resume">Resume</string>
 
 </resources>
