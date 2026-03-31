@@ -119,10 +119,10 @@ sealed interface AddPlayEvent {
     /** Events that modify a player's score or win flag. */
     sealed interface PlayerScoreEvent : AddPlayEvent {
 
-        /** User updated the numeric score for [playerIdentity]. */
+        /** User updated the numeric score for [playerIdentity]. Null clears the score. */
         data class ScoreChanged(
             val playerIdentity: PlayerIdentity,
-            val score: Double
+            val score: Double?
         ) : PlayerScoreEvent
 
         /** User toggled the winner status for [playerIdentity]. */

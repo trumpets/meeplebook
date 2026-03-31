@@ -95,13 +95,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.asString
+import app.meeplebook.core.util.LuminanceUtils
+import app.meeplebook.core.util.ScoreFormatter
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
+import app.meeplebook.feature.addplay.ui.ColorPickerDialog
+import app.meeplebook.feature.addplay.ui.ScoreInputDialog
 import app.meeplebook.ui.components.RowItemImage
 import app.meeplebook.ui.components.ScreenPadding
 import app.meeplebook.ui.theme.MeepleBookTheme
@@ -731,6 +736,42 @@ private fun PlayersSection(
     var dragOffsetY by remember { mutableFloatStateOf(0f) }
     val rowHeightPx = with(LocalDensity.current) { PLAYER_ROW_HEIGHT.toPx() }
 
+    var scoreDialogPlayer by remember { mutableStateOf<PlayerEntryUi?>(null) }
+    var colorDialogPlayer by remember { mutableStateOf<PlayerEntryUi?>(null) }
+
+    scoreDialogPlayer?.let { target ->
+        ScoreInputDialog(
+            player = target,
+            onConfirm = { score ->
+                onEvent(
+                    AddPlayEvent.PlayerScoreEvent.ScoreChanged(
+                        playerIdentity = target.playerIdentity,
+                        score = score,
+                    )
+                )
+                scoreDialogPlayer = null
+            },
+            onDismiss = { scoreDialogPlayer = null },
+        )
+    }
+
+    colorDialogPlayer?.let { target ->
+        ColorPickerDialog(
+            player = target,
+            colorsHistory = state.players.colorsHistory,
+            onColorSelected = { color ->
+                onEvent(
+                    AddPlayEvent.PlayerColorEvent.ColorSelected(
+                        playerIdentity = target.playerIdentity,
+                        color = color,
+                    )
+                )
+                colorDialogPlayer = null
+            },
+            onDismiss = { colorDialogPlayer = null },
+        )
+    }
+
     LaunchedEffect(pendingUndo) {
         pendingUndo?.let { (player, atIndex) ->
             val result = snackbarHostState.showSnackbar(
@@ -823,6 +864,8 @@ private fun PlayersSection(
                                 )
                             )
                         },
+                        onScoreClick = { scoreDialogPlayer = player },
+                        onColorClick = { colorDialogPlayer = player },
                         onDragStart = {
                             draggingIndex = currentIndex
                             dragOffsetY = 0f
@@ -939,6 +982,8 @@ private fun SuggestedPlayersSection(
 private fun PlayerEntryRow(
     player: PlayerEntryUi,
     onWinnerToggle: () -> Unit,
+    onScoreClick: () -> Unit,
+    onColorClick: () -> Unit,
     onDragStart: () -> Unit,
     onDrag: (deltaY: Float) -> Unit,
     onDragEnd: () -> Unit,
@@ -958,41 +1003,41 @@ private fun PlayerEntryRow(
             .testTag("playerEntry_${player.playerIdentity.name}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Position badge
+        // Position badge — filled with the player's color when assigned, tappable to open
+        // the color picker. Falls back to the theme's primaryContainer when no color is set.
+        val badgeColor = colorEnum
+            ?.let { Color(it.hexColor.toColorInt()) }
+            ?: MaterialTheme.colorScheme.primaryContainer
+
+        val badgeTextColor = if (colorEnum != null) {
+            LuminanceUtils.constrastColorFor(badgeColor)
+        } else {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        }
+
         Box(
             modifier = Modifier
-                .size(28.dp)
-                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(badgeColor)
+                .border(
+                    width = if (colorEnum != null) 0.dp else 1.dp,
+                    color = if (colorEnum != null) Color.Transparent
+                            else MaterialTheme.colorScheme.outlineVariant,
+                    shape = CircleShape,
+                )
+                .clickable(onClick = onColorClick),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = player.startPosition.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = MaterialTheme.typography.labelMedium,
+                color = badgeTextColor,
                 fontWeight = FontWeight.Bold,
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Color indicator
-        if (colorEnum != null) {
-            Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .background(Color(android.graphics.Color.parseColor(colorEnum.hexColor)))
-                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-        } else if (!player.color.isNullOrBlank()) {
-            Text(
-                text = player.color,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-        }
+        Spacer(modifier = Modifier.width(10.dp))
 
         // Name + username
         Column(modifier = Modifier.weight(1f)) {
@@ -1010,12 +1055,14 @@ private fun PlayerEntryRow(
             }
         }
 
-        // Score (tappable — future dialog)
+        // Score (tappable — opens ScoreInputDialog)
         Text(
-            text = player.score?.toString() ?: "—",
+            text = player.score?.let { score ->
+                ScoreFormatter.format(score)
+            } ?: stringResource(R.string.score_input_placeholder),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
-                .clickable { /* TODO: score dialog */ }
+                .clickable(onClick = onScoreClick)
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         )
 

@@ -131,4 +131,14 @@
     <string name="add_play_comments_placeholder">Notes about this play…</string>
     <string name="player_name_with_username">%1$s (@%2$s)</string>
 
+    <!-- Score input dialog -->
+    <string name="score_input_confirm_content_description">Confirm score</string>
+    <string name="score_input_delete_content_description">Delete last digit</string>
+    <string name="score_input_toggle_sign_content_description">Toggle sign</string>
+    <string name="score_input_placeholder">—</string>
+
+    <!-- Color picker dialog -->
+    <string name="color_picker_title">Pick a colour</string>
+    <string name="color_picker_more">More</string>
+
 </resources>

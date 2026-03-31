@@ -91,4 +91,53 @@ class PlayerScoreReducerTest {
         val result = reducer.reduce(players, AddPlayEvent.PlayerScoreEvent.WinnerToggled(alice, false))
         assertFalse(result.first { it.playerIdentity == bob }.isWinner)
     }
+
+    @Test
+    fun `ScoreChanged with null clears score for the target player`() {
+        val alice = makeIdentity("Alice")
+        val players = listOf(makePlayer(alice, score = 10.0))
+        val result = reducer.reduce(players, AddPlayEvent.PlayerScoreEvent.ScoreChanged(alice, null))
+        assertEquals(null, result.first().score)
+    }
+
+    @Test
+    fun `ScoreChanged with null leaves winner flags unchanged when no remaining scores`() {
+        val alice = makeIdentity("Alice")
+        val bob = makeIdentity("Bob")
+        val players = listOf(
+            makePlayer(alice, score = 10.0, isWinner = true),
+            makePlayer(bob, score = null, isWinner = false),
+        )
+        val result = reducer.reduce(players, AddPlayEvent.PlayerScoreEvent.ScoreChanged(alice, null))
+        // No non-null scores remain; winner flags should be left as-is.
+        assertTrue(result.first { it.playerIdentity == alice }.isWinner)
+        assertFalse(result.first { it.playerIdentity == bob }.isWinner)
+    }
+
+    @Test
+    fun `ScoreChanged with null recalculates winner from remaining non-null scores`() {
+        val alice = makeIdentity("Alice")
+        val bob = makeIdentity("Bob")
+        val players = listOf(
+            makePlayer(alice, score = 10.0, isWinner = true),
+            makePlayer(bob, score = 5.0, isWinner = false),
+        )
+        // Clearing Alice's score; Bob still has 5.0 and should be auto-marked winner.
+        val result = reducer.reduce(players, AddPlayEvent.PlayerScoreEvent.ScoreChanged(alice, null))
+        assertFalse(result.first { it.playerIdentity == alice }.isWinner)
+        assertTrue(result.first { it.playerIdentity == bob }.isWinner)
+    }
+
+    @Test
+    fun `ScoreChanged with null does not mark null-score player as winner`() {
+        val alice = makeIdentity("Alice")
+        val bob = makeIdentity("Bob")
+        val players = listOf(
+            makePlayer(alice, score = null, isWinner = false),
+            makePlayer(bob, score = 5.0, isWinner = true),
+        )
+        val result = reducer.reduce(players, AddPlayEvent.PlayerScoreEvent.ScoreChanged(alice, null))
+        assertFalse(result.first { it.playerIdentity == alice }.isWinner)
+        assertTrue(result.first { it.playerIdentity == bob }.isWinner)
+    }
 }

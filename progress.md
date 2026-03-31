@@ -387,3 +387,33 @@ PR Link: (inline refinements, no PR)
     - `LaunchedEffect(pendingUndo)` with snackbar is the right pattern; reset `pendingUndo = null` after snackbar call
     - `android.graphics.Color.parseColor(hexColor)` works inside Compose; wrap result in `androidx.compose.ui.graphics.Color(…)`
 ---
+## 2026-03-31
+PR Link: N/A (local implementation)
+- Implemented `ScoreInputDialog.kt` — calculator-style numpad dialog for entering player scores
+- Implemented `ColorPickerDialog.kt` — colored circle grid dialog for picking player colors
+- Both dialogs dismiss on outside tap and Android back button without side effects
+- Color indicator in `PlayerEntryRow` is now always visible (dashed empty circle when no color assigned), tapping opens `ColorPickerDialog`
+- Score text in `PlayerEntryRow` tapping now opens `ScoreInputDialog`
+- `ScoreChanged.score` changed from `Double` to `Double?` (null = clear score)
+- `PlayerScoreReducer` updated: null score clears it; auto-winner logic skips players with null scores
+- Added 6 string resources for both dialogs
+- Added tests: `ScoreInputDialogTest` (numpad logic helpers), `ColorPickerDialogTest` (sorting/split logic), expanded `PlayerScoreReducerTest` (null score cases)
+- Files changed/created:
+  - `feature/addplay/ScoreInputDialog.kt` (new)
+  - `feature/addplay/ColorPickerDialog.kt` (new)
+  - `feature/addplay/AddPlayEvent.kt` (ScoreChanged nullable)
+  - `feature/addplay/AddPlayScreen.kt` (tappable color circle + score, dialog state in PlayersSection)
+  - `feature/addplay/reducer/PlayerScoreReducer.kt` (nullable score handling)
+  - `res/values/strings.xml` (6 new strings)
+  - `test/.../ScoreInputDialogTest.kt` (new)
+  - `test/.../ColorPickerDialogTest.kt` (new)
+  - `test/.../reducer/PlayerScoreReducerTest.kt` (null score tests appended)
+- **Learnings for future iterations:**
+    - Dialog state (which player is being edited) lives in the composable that owns the player list (`PlayersSection`), not in the ViewModel — keeps dialog lifecycle purely local
+    - `Dialog { Surface { ... } }` with `DialogProperties(dismissOnClickOutside=true, dismissOnBackPress=true)` is the correct pattern for custom dismiss-on-outside/back dialogs
+    - Testable logic extracted to `internal` top-level functions (e.g. `handleNumpadKey`, `sortedHistoryColors`, `remainingColors`) so Compose-free unit tests can cover it
+    - `+/-` toggle on "-0" input: result is `-{digit}` (keeps minus sign, replaces zero) — not stripping the sign
+    - `isLightColor()` helper with WCAG luminance formula correctly decides checkmark tint (black on light colors, white on dark)
+    - `FlowRow` (ExperimentalLayoutApi) is cleaner than nested Rows for a variable-count color grid
+    - When `colorsHistory` is non-empty, smart-expand opens compact view + MORE button; when empty, opens expanded immediately — logic gated on `startExpanded = colorsHistory.isEmpty()`
+---
