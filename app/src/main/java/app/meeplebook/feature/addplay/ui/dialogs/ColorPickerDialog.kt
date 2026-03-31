@@ -1,4 +1,4 @@
-package app.meeplebook.feature.addplay.ui
+package app.meeplebook.feature.addplay.ui.dialogs
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility

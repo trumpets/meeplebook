@@ -1,5 +1,8 @@
 package app.meeplebook.feature.addplay.ui
 
+import app.meeplebook.feature.addplay.ui.dialogs.handleNumpadKey
+import app.meeplebook.feature.addplay.ui.dialogs.toScoreInputString
+import app.meeplebook.feature.addplay.ui.dialogs.toScoreOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

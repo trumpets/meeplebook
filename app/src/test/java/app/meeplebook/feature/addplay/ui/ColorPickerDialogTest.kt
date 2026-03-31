@@ -1,6 +1,8 @@
 package app.meeplebook.feature.addplay.ui
 
 import app.meeplebook.core.plays.model.PlayerColor
+import app.meeplebook.feature.addplay.ui.dialogs.remainingColors
+import app.meeplebook.feature.addplay.ui.dialogs.sortedHistoryColors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
