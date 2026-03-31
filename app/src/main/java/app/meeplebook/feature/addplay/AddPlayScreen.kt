@@ -104,6 +104,7 @@ import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.LuminanceUtils
 import app.meeplebook.core.util.ScoreFormatter
+import app.meeplebook.core.util.toEuFormattedString
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
 import app.meeplebook.feature.addplay.ui.ColorPickerDialog
 import app.meeplebook.feature.addplay.ui.ScoreInputDialog
@@ -112,13 +113,7 @@ import app.meeplebook.ui.components.ScreenPadding
 import app.meeplebook.ui.theme.MeepleBookTheme
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.roundToInt
-
-// EU date format: dd/MM/yyyy
-private val EU_DATE_FORMATTER: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.getDefault())
 
 @Composable
 fun AddPlayScreen(
@@ -431,7 +426,7 @@ private fun DateDurationRow(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val formatted = remember(date) {
-        date.atZone(ZoneId.systemDefault()).toLocalDate().format(EU_DATE_FORMATTER)
+        date.atZone(ZoneId.systemDefault()).toLocalDate().toEuFormattedString()
     }
 
     Row(
@@ -488,7 +483,7 @@ private fun DateDurationRow(
         val initialMillis = remember(date) {
             date.atZone(ZoneId.systemDefault())
                 .toLocalDate()
-                .atStartOfDay(ZoneId.of("UTC"))
+                .atStartOfDay(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli()
         }
@@ -500,7 +495,7 @@ private fun DateDurationRow(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val selectedInstant = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.of("UTC"))
+                            .atZone(ZoneId.systemDefault())
                             .toLocalDate()
                             .atStartOfDay(ZoneId.systemDefault())
                             .toInstant()
@@ -611,6 +606,10 @@ private fun QuantityIncompleteRow(
     state: AddPlayUiState.GameSelected,
     onEvent: (AddPlayEvent) -> Unit
 ) {
+    // Local raw string so the field can be empty mid-edit without the reducer snapping
+    // it back to "1". We only emit an event when the value is a valid positive integer.
+    var rawInput by remember(state.showQuantity) { mutableStateOf(state.quantity.toString()) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -620,21 +619,29 @@ private fun QuantityIncompleteRow(
     ) {
         if (state.showQuantity) {
             OutlinedTextField(
-                value = state.quantity.toString(),
+                value = rawInput,
                 onValueChange = { raw ->
-                    val parsed = raw.toIntOrNull()
-                    if (raw.isEmpty()) {
-                        onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(null))
-                    } else if (parsed != null && parsed > 0) {
-                        onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(parsed))
+                    // Accept only digits (no sign, no decimal).
+                    if (raw.all { it.isDigit() }) {
+                        rawInput = raw
+                        val parsed = raw.toIntOrNull()
+                        if (parsed != null && parsed > 0) {
+                            onEvent(AddPlayEvent.MetadataEvent.QuantityChanged(parsed))
+                        }
                     }
                 },
                 label = { Text(stringResource(R.string.add_play_quantity_label)) },
-                placeholder = { Text("1") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
                     .width(96.dp)
+                    .onFocusChanged { focusState ->
+                        // Snap back to 1 when the field loses focus
+                        // so it never stays blank after the user taps away.
+                        if (!focusState.isFocused && rawInput.toIntOrNull().let { it == null || it < 1 }) {
+                            rawInput = "1"
+                        }
+                    }
                     .testTag("quantityField")
             )
         }
@@ -1010,7 +1017,7 @@ private fun PlayerEntryRow(
             ?: MaterialTheme.colorScheme.primaryContainer
 
         val badgeTextColor = if (colorEnum != null) {
-            LuminanceUtils.constrastColorFor(badgeColor)
+            LuminanceUtils.contrastColorFor(badgeColor)
         } else {
             MaterialTheme.colorScheme.onPrimaryContainer
         }

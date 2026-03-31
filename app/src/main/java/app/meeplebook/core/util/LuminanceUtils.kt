@@ -20,7 +20,7 @@ object LuminanceUtils {
         return luminance > 0.5f
     }
 
-    fun constrastColorFor(color: Color): Color {
+    fun contrastColorFor(color: Color): Color {
         return if (isLightColor(color))
             black
         else

@@ -226,7 +226,7 @@ private fun ColorCircleItem(
         ) {
             if (isSelected) {
                 // Checkmark — use contrasting colour for visibility.
-                val checkTint = LuminanceUtils.constrastColorFor(circleColor)
+                val checkTint = LuminanceUtils.contrastColorFor(circleColor)
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
