@@ -115,7 +115,12 @@ fun AddPlayScreenRoot(
             title = { Text(stringResource(R.string.add_play_discard_title)) },
             text = { Text(stringResource(R.string.add_play_discard_message)) },
             confirmButton = {
-                TextButton(onClick = { onEvent(AddPlayEvent.ActionEvent.CancelClicked) }) {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onEvent(AddPlayEvent.ActionEvent.CancelClicked)
+                    }
+                ) {
                     Text(stringResource(R.string.add_play_discard_confirm))
                 }
             },
