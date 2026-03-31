@@ -1,5 +1,6 @@
 package app.meeplebook.core.preferences
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -15,6 +16,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 ) : UserPreferencesRepository {
 
     private companion object {
+        private const val TAG = "UserPreferencesRepo"
         val KEY_STARTING_SCREEN = stringPreferencesKey("pref_starting_screen")
         val KEY_COLLECTION_VIEW_MODE = stringPreferencesKey("pref_collection_view_mode")
         val KEY_COLLECTION_ALPHABET_JUMP_VISIBLE = booleanPreferencesKey("pref_collection_alphabet_jump_visible")
@@ -23,11 +25,19 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override fun getPreferences(): Flow<UserPreferences> =
         dataStore.data.map { prefs ->
             val startingScreen = prefs[KEY_STARTING_SCREEN]
-                ?.let { runCatching { StartingScreen.valueOf(it) }.getOrNull() }
+                ?.let { raw ->
+                    runCatching { StartingScreen.valueOf(raw) }
+                        .onFailure { Log.w(TAG, "Unknown StartingScreen value '$raw', falling back to default") }
+                        .getOrNull()
+                }
                 ?: StartingScreen.OVERVIEW
 
             val collectionViewMode = prefs[KEY_COLLECTION_VIEW_MODE]
-                ?.let { runCatching { CollectionViewMode.valueOf(it) }.getOrNull() }
+                ?.let { raw ->
+                    runCatching { CollectionViewMode.valueOf(raw) }
+                        .onFailure { Log.w(TAG, "Unknown CollectionViewMode value '$raw', falling back to default") }
+                        .getOrNull()
+                }
                 ?: CollectionViewMode.LIST
 
             val alphabetJumpVisible = prefs[KEY_COLLECTION_ALPHABET_JUMP_VISIBLE] ?: true
