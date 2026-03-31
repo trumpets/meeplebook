@@ -43,7 +43,7 @@ import app.meeplebook.ui.theme.MeepleBookTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationSection(
+internal fun AddPlaySections.Location(
     locationState: LocationState,
     onEvent: (AddPlayEvent) -> Unit
 ) {
@@ -146,6 +146,6 @@ private fun LocationSectionPreview(
     @PreviewParameter(LocationSectionPreviewProvider::class) state: LocationState,
 ) {
     MeepleBookTheme {
-        LocationSection(locationState = state, onEvent = {})
+        AddPlaySections.Location(locationState = state, onEvent = {})
     }
 }

@@ -13,7 +13,7 @@ import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.ui.components.ScreenPadding
 
 @Composable
-fun CommentsSection(
+internal fun AddPlaySections.Comments(
     comments: String,
     onEvent: (AddPlayEvent) -> Unit
 ) {

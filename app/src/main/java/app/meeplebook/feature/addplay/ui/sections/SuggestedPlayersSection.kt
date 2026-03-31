@@ -36,7 +36,7 @@ import app.meeplebook.ui.components.ScreenPadding
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
-fun SuggestedPlayersSection(
+internal fun AddPlaySections.SuggestedPlayers(
     state: AddPlayUiState.GameSelected,
     onEvent: (AddPlayEvent) -> Unit
 ) {
@@ -137,6 +137,6 @@ private fun SuggestedPlayersSectionPreview(
     state: AddPlayUiState.GameSelected,
 ) {
     MeepleBookTheme {
-        SuggestedPlayersSection(state = state, onEvent = {})
+        AddPlaySections.SuggestedPlayers(state = state, onEvent = {})
     }
 }

@@ -35,7 +35,7 @@ import app.meeplebook.ui.components.ScreenPadding
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
-fun QuantityIncompleteRow(
+internal fun AddPlaySections.QuantityIncomplete(
     state: AddPlayUiState.GameSelected,
     onEvent: (AddPlayEvent) -> Unit
 ) {
@@ -114,11 +114,11 @@ private class QuantityIncompleteSectionPreviewProvider :
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun QuantityIncompleteRowPreview(
+private fun QuantityIncompletePreview(
     @PreviewParameter(QuantityIncompleteSectionPreviewProvider::class)
     state: AddPlayUiState.GameSelected,
 ) {
     MeepleBookTheme {
-        QuantityIncompleteRow(state = state, onEvent = {})
+        AddPlaySections.QuantityIncomplete(state = state, onEvent = {})
     }
 }

@@ -10,12 +10,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
-import app.meeplebook.feature.addplay.ui.sections.CommentsSection
-import app.meeplebook.feature.addplay.ui.sections.DateDurationSection
-import app.meeplebook.feature.addplay.ui.sections.LocationSection
-import app.meeplebook.feature.addplay.ui.sections.PlayersSection
-import app.meeplebook.feature.addplay.ui.sections.QuantityIncompleteRow
-import app.meeplebook.feature.addplay.ui.sections.SuggestedPlayersSection
+import app.meeplebook.feature.addplay.ui.sections.AddPlaySections
+import app.meeplebook.feature.addplay.ui.sections.Comments
+import app.meeplebook.feature.addplay.ui.sections.DateDuration
+import app.meeplebook.feature.addplay.ui.sections.Location
+import app.meeplebook.feature.addplay.ui.sections.Players
+import app.meeplebook.feature.addplay.ui.sections.QuantityIncomplete
+import app.meeplebook.feature.addplay.ui.sections.SuggestedPlayers
 
 @Composable
 fun GameSelectedContent(
@@ -30,24 +31,24 @@ fun GameSelectedContent(
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         item {
-            LocationSection(
+            AddPlaySections.Location(
                 locationState = state.location,
                 onEvent = onEvent
             )
         }
 
-        item { DateDurationSection(date = state.date, durationMinutes = state.durationMinutes, onEvent = onEvent) }
+        item { AddPlaySections.DateDuration(date = state.date, durationMinutes = state.durationMinutes, onEvent = onEvent) }
 
         if (state.showQuantity || state.showIncomplete) {
-            item { QuantityIncompleteRow(state = state, onEvent = onEvent) }
+            item { AddPlaySections.QuantityIncomplete(state = state, onEvent = onEvent) }
         }
 
         if (state.showComments) {
-            item { CommentsSection(comments = state.comments, onEvent = onEvent) }
+            item { AddPlaySections.Comments(comments = state.comments, onEvent = onEvent) }
         }
 
-        item { SuggestedPlayersSection(state = state, onEvent = onEvent) }
+        item { AddPlaySections.SuggestedPlayers(state = state, onEvent = onEvent) }
 
-        item { PlayersSection(state = state, onEvent = onEvent, snackbarHostState = snackbarHostState) }
+        item { AddPlaySections.Players(state = state, onEvent = onEvent, snackbarHostState = snackbarHostState) }
     }
 }

@@ -60,7 +60,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayersSection(
+internal fun AddPlaySections.Players(
     state: AddPlayUiState.GameSelected,
     onEvent: (AddPlayEvent) -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -250,6 +250,6 @@ private fun PlayersSectionPreview(
     @PreviewParameter(PlayersSectionPreviewProvider::class) state: AddPlayUiState.GameSelected,
 ) {
     MeepleBookTheme {
-        PlayersSection(state = state, onEvent = {}, snackbarHostState = SnackbarHostState())
+        AddPlaySections.Players(state = state, onEvent = {}, snackbarHostState = SnackbarHostState())
     }
 }

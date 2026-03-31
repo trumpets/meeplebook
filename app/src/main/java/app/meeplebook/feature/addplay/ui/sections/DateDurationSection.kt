@@ -42,7 +42,7 @@ import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateDurationSection(
+internal fun AddPlaySections.DateDuration(
     date: Instant,
     durationMinutes: Int?,
     onEvent: (AddPlayEvent) -> Unit
@@ -147,7 +147,7 @@ fun DateDurationSection(
 @Composable
 private fun DateDurationSectionNoDurationPreview() {
     MeepleBookTheme {
-        DateDurationSection(
+        AddPlaySections.DateDuration(
             date = Instant.parse("2026-03-30T18:00:00Z"),
             durationMinutes = null,
             onEvent = {},
@@ -160,7 +160,7 @@ private fun DateDurationSectionNoDurationPreview() {
 @Composable
 private fun DateDurationSectionWithDurationPreview() {
     MeepleBookTheme {
-        DateDurationSection(
+        AddPlaySections.DateDuration(
             date = Instant.parse("2026-03-30T18:00:00Z"),
             durationMinutes = 90,
             onEvent = {},
