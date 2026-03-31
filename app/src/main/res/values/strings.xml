@@ -95,7 +95,7 @@
     <string name="play_player_name_only">%1$s</string>
     <string name="play_player_with_details">%1$s (%2$s)</string>
     <string name="play_player_won">won</string>
-    <string name="play_player_score">%1$d</string>
+    <string name="play_player_score">%1$s</string>
 
     <!-- Add Play Screen -->
     <string name="add_play_cant_save">Can\'t save play</string>

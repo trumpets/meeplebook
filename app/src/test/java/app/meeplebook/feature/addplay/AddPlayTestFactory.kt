@@ -55,7 +55,7 @@ object AddPlayTestFactory {
         ),
         players = PlayersState(
             players = players,
-            colorsHistory = PlayerColor.entries.map { it.colorString }
+            colorsHistory = PlayerColor.entries
         ),
         playersByLocation = emptyList(),
         isSaving = isSaving

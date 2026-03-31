@@ -210,7 +210,7 @@ class AddPlayEffectProducerTest {
         assertEquals("alice99", cmd.username)
         assertEquals(42L, cmd.userId)
         assertEquals(2, cmd.startPosition)
-        assertEquals(150, cmd.score)
+        assertEquals(150.0, cmd.score)
         assertEquals("Red", cmd.color)
         assertEquals(true, cmd.win)
     }
@@ -285,7 +285,7 @@ class AddPlayEffectProducerTest {
     fun `ScoreChanged produces no effects`() {
         val identity = makeIdentity("Alice")
         val state = makeGameSelectedState()
-        val result = producer.produce(newState = state, event = AddPlayEvent.PlayerScoreEvent.ScoreChanged(identity, 42))
+        val result = producer.produce(newState = state, event = AddPlayEvent.PlayerScoreEvent.ScoreChanged(identity, 42.0))
         assertNoEffects(result)
     }
 

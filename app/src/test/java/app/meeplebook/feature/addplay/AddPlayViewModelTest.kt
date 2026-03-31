@@ -6,6 +6,7 @@ import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory
 import app.meeplebook.core.plays.domain.CreatePlayUseCase
+import app.meeplebook.core.plays.domain.ObserveColorsUsedForGameUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
@@ -213,6 +214,7 @@ class AddPlayViewModelTest {
         observeRecentLocations = ObserveRecentLocationsUseCase(playsRepository),
         searchLocations = SearchLocationsUseCase(playsRepository),
         observePlayerSuggestions = ObservePlayerSuggestionsUseCase(playsRepository),
+        observeColorsUsedForGame = ObserveColorsUsedForGameUseCase(playsRepository),
         observeCollection = ObserveCollectionUseCase(fakeCollectionRepository),
         createPlay = CreatePlayUseCase(playsRepository)
     )

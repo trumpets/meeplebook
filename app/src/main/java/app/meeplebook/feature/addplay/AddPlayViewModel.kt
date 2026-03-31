@@ -104,6 +104,8 @@ class AddPlayViewModel @Inject constructor(
             else flowOf(emptyList())
         }
 
+    val recentLocationsFlow = observeRecentLocations()
+
     val combinedUiState: StateFlow<AddPlayUiState> =
         combine(
             _uiState,
@@ -127,7 +129,7 @@ class AddPlayViewModel @Inject constructor(
                 )
             }
         }.combine(
-            observeRecentLocations()
+            recentLocationsFlow
         ) { state, recentLocations ->
 
             when (state) {
@@ -143,7 +145,11 @@ class AddPlayViewModel @Inject constructor(
         ) { state, usedColors ->
             when (state) {
                 is AddPlayUiState.GameSearch -> state
-                is AddPlayUiState.GameSelected -> state.copy(usedColorsForGame = usedColors)
+                is AddPlayUiState.GameSelected -> state.copy(
+                    players = state.players.copy(
+                        colorsHistory = usedColors
+                    )
+                )
             }
         }.stateIn(
             viewModelScope,

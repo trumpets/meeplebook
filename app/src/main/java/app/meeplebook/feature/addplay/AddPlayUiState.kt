@@ -7,7 +7,6 @@ import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import java.time.Instant
-import kotlin.math.roundToInt
 
 /**
  * Immutable state consumed by the Add Play screen.
@@ -34,8 +33,6 @@ sealed interface AddPlayUiState {
         val players: PlayersState,
 
         val playersByLocation: List<PlayerSuggestion>,
-
-        val usedColorsForGame: List<PlayerColor> = emptyList(),
 
         val quantity: Int = 1,
         val incomplete: Boolean = false,
@@ -68,7 +65,7 @@ sealed interface AddPlayUiState {
                             userId = it.playerIdentity.userId,
                             startPosition = it.startPosition,
                             color = it.color,
-                            score = it.score?.roundToInt(),
+                            score = it.score,
                             win = it.isWinner
                         )
                     },
@@ -95,8 +92,7 @@ data class LocationState(
  */
 data class PlayersState(
     val players: List<PlayerEntryUi>,
-    val colorsHistory: List<String>,
-//    val editingPlayerId: PlayerEntryId?
+    val colorsHistory: List<PlayerColor>
 )
 
 /**
