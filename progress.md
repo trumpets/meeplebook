@@ -368,3 +368,22 @@ PR Link: (local session — AddPlayUiState sealed interface test refactor)
     - `asGameSelected { }` (production, `AddPlayUiState.kt`) returns `null` silently; `requireGameSelected()` / `requireGameSearch()` (test-only, `AddPlayTestFactory.kt`) throw for assertion failures. Don't mix them.
     - `GameSelected.canSave` is now `!isSaving` only (gameName non-null is structural); no need to test `canSave=false` due to null gameName — that case is impossible in `GameSelected`.
 ---
+## 2026-03-31
+PR Link: (inline refinements, no PR)
+- Replaced old `PlayersSection` + `PlayerEntryRow` with full player row overhaul
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayScreen.kt`
+- **What was implemented:**
+    - Rich player rows: position badge (circular), color dot from PlayerColor enum (or text fallback for custom colors), name + @username in column, score (tappable placeholder), winner star toggle (amber when winner), drag handle
+    - `SwipeToDismissBox`: swipe right → delete with red background + trash icon; swipe left → edit no-op with secondary background + edit icon
+    - Undo snackbar: deleted player queued in `pendingUndo`, `LaunchedEffect` shows snackbar, ActionPerformed fires `RestorePlayer`
+    - Drag reorder: `detectDragGestures` on drag handle, `graphicsLayer` for visual feedback, `PlayerReordered` event on release
+    - Winner rows get light `primaryContainer` tint background; winner name is bold
+    - Added `graphicsLayer` import (`androidx.compose.ui.graphics.graphicsLayer`)
+- **Learnings for future iterations:**
+    - `graphicsLayer` Modifier needs `import androidx.compose.ui.graphics.graphicsLayer` (not `.ui.draw.*`)
+    - `SwipeToDismissBox.backgroundContent` uses `swipeState.targetValue` (not `currentValue`) for directional icon display
+    - Undo must be handled in `PlayersSection` not the row itself — row leaves composition after delete
+    - `LaunchedEffect(pendingUndo)` with snackbar is the right pattern; reset `pendingUndo = null` after snackbar call
+    - `android.graphics.Color.parseColor(hexColor)` works inside Compose; wrap result in `androidx.compose.ui.graphics.Color(…)`
+---

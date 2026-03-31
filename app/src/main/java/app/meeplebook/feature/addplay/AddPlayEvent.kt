@@ -70,6 +70,21 @@ sealed interface AddPlayEvent {
             val playerIdentity: PlayerIdentity
         ) : PlayerListEvent
 
+        /** User reordered the player from [fromIndex] to [toIndex] via drag-to-reorder. */
+        data class PlayerReordered(
+            val fromIndex: Int,
+            val toIndex: Int,
+        ) : PlayerListEvent
+
+        /**
+         * User tapped "Undo" after a swipe-to-delete.
+         * Restores [player] at [atIndex] in the list.
+         */
+        data class RestorePlayer(
+            val player: PlayerEntryUi,
+            val atIndex: Int,
+        ) : PlayerListEvent
+
         /** User tapped a player row to open its inline edit panel. */
         data class EditPlayer(
             val playerIdentity: PlayerIdentity
