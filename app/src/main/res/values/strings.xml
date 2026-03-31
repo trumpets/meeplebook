@@ -138,7 +138,7 @@
     <string name="score_input_placeholder">—</string>
 
     <!-- Color picker dialog -->
-    <string name="color_picker_title">Pick a colour</string>
+    <string name="color_picker_title">Pick a color</string>
     <string name="color_picker_more">More</string>
 
 </resources>
