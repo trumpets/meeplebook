@@ -68,6 +68,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.CollectionViewMode
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.uiText

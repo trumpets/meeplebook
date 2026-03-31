@@ -9,9 +9,11 @@ import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
 import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.CollectionViewMode
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.model.AuthCredentials
+import app.meeplebook.core.preferences.FakeUserPreferencesRepository
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
@@ -56,6 +58,7 @@ class CollectionViewModelTest {
     private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
+    private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
     private lateinit var observeCollectionUseCase: ObserveCollectionUseCase
     private lateinit var buildSectionsUseCase: BuildCollectionSectionsUseCase
     private lateinit var observeCollectionDomainSectionsUseCase: ObserveCollectionDomainSectionsUseCase
@@ -78,6 +81,7 @@ class CollectionViewModelTest {
         fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
+        fakeUserPreferencesRepository = FakeUserPreferencesRepository()
         observeCollectionUseCase = ObserveCollectionUseCase(fakeCollectionRepository)
         buildSectionsUseCase = BuildCollectionSectionsUseCase()
         observeCollectionDomainSectionsUseCase = ObserveCollectionDomainSectionsUseCase(
@@ -101,7 +105,8 @@ class CollectionViewModelTest {
         viewModel = CollectionViewModel(
             observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
-            syncCollection = syncCollectionUseCase
+            syncCollection = syncCollectionUseCase,
+            userPreferencesRepository = fakeUserPreferencesRepository
         )
     }
 

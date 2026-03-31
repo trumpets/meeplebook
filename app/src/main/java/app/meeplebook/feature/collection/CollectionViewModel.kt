@@ -6,7 +6,10 @@ import app.meeplebook.R
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
+import app.meeplebook.core.collection.model.CollectionViewMode
 import app.meeplebook.core.collection.model.QuickFilter
+import app.meeplebook.core.preferences.UserPreferences
+import app.meeplebook.core.preferences.UserPreferencesRepository
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.uiTextRes
@@ -34,7 +37,8 @@ import javax.inject.Inject
 class CollectionViewModel @Inject constructor(
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
     private val observeCollectionSummary: ObserveCollectionSummaryUseCase,
-    private val syncCollection: SyncCollectionUseCase
+    private val syncCollection: SyncCollectionUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val rawSearchQuery = MutableStateFlow("")
@@ -52,8 +56,15 @@ class CollectionViewModel @Inject constructor(
 
     private val quickFilter = MutableStateFlow(QuickFilter.ALL)
     private val sort = MutableStateFlow(CollectionSort.ALPHABETICAL)
-    private val viewMode = MutableStateFlow(CollectionViewMode.LIST)
     private val isRefreshing = MutableStateFlow(false)
+
+    private val userPreferences: StateFlow<UserPreferences> =
+        userPreferencesRepository.getPreferences()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                UserPreferences()
+            )
 
     private val collectionDataQuery: StateFlow<CollectionDataQuery> =
         combine(
@@ -105,12 +116,12 @@ class CollectionViewModel @Inject constructor(
                     val sectionIndices = buildSectionIndices(uiSections)
 
                     CollectionUiState.Content(
-                        viewMode = viewMode.value,
+                        viewMode = userPreferences.value.collectionViewMode,
                         sort = sort.value,
                         availableSortOptions = CollectionSort.entries,
                         sections = uiSections,
                         sectionIndices = sectionIndices,
-                        showAlphabetJump = uiSections.size > 1,
+                        showAlphabetJump = uiSections.size > 1 && userPreferences.value.collectionAlphabetJumpVisible,
                         isSortSheetVisible = false,
 
                         searchQuery = rawSearchQuery.value,
@@ -130,14 +141,15 @@ class CollectionViewModel @Inject constructor(
     val uiState: StateFlow<CollectionUiState> =
         combine(
             contentState,
-            viewMode,
+            userPreferences,
             rawSearchQuery,
             quickFilter
-        ) { state, viewMode, rawQuery, filter ->
+        ) { state, prefs, rawQuery, filter ->
             when (state) {
                 is CollectionUiState.Content ->
                     state.copy(
-                        viewMode = viewMode,
+                        viewMode = prefs.collectionViewMode,
+                        showAlphabetJump = state.sections.size > 1 && prefs.collectionAlphabetJumpVisible,
                         searchQuery = rawQuery,
                         activeQuickFilter = filter
                     )
@@ -176,7 +188,9 @@ class CollectionViewModel @Inject constructor(
             }
 
             is CollectionEvent.ViewModeSelected -> {
-                viewMode.value = event.viewMode
+                viewModelScope.launch {
+                    userPreferencesRepository.setCollectionViewMode(event.viewMode)
+                }
             }
 
             is CollectionEvent.JumpToLetter -> {
