@@ -35,14 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
-import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.ui.asString
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
 import app.meeplebook.feature.addplay.ui.GameSearchContent
 import app.meeplebook.feature.addplay.ui.GameSelectedContent
 import app.meeplebook.feature.addplay.ui.components.AddFieldFab
+import app.meeplebook.feature.addplay.ui.previewGameSearchState
+import app.meeplebook.feature.addplay.ui.previewGameSelectedState
+import app.meeplebook.feature.addplay.ui.previewPlayers
+import app.meeplebook.feature.addplay.ui.previewSuggestions
 import app.meeplebook.ui.theme.MeepleBookTheme
-import java.time.Instant
 
 val PLAYER_ROW_HEIGHT = 72.dp
 
@@ -210,66 +212,13 @@ fun AddPlayScreenRoot(
 // Previews
 // ─────────────────────────────────────────────────────────────────────────────
 
-private fun previewGameSearchState(query: String = "", hasResults: Boolean = false) =
-    AddPlayUiState.GameSearch(
-        gameSearchQuery = query,
-        gameSearchResults = if (hasResults) listOf(
-            SearchResultGameItem(1L, "Catan", 1995, null),
-            SearchResultGameItem(2L, "Ticket to Ride", 2004, null),
-            SearchResultGameItem(3L, "Pandemic", 2008, null),
-        ) else emptyList()
-    )
-
-private fun previewGameSelectedState(
-    isSaving: Boolean = false,
-    hasPlayers: Boolean = true,
-    hasSuggestions: Boolean = true
-): AddPlayUiState.GameSelected {
-    val players = if (hasPlayers) listOf(
-        PlayerEntryUi.empty("Alice", 1),
-        PlayerEntryUi.empty("Bob", 2)
-    ) else emptyList()
-
-    val suggestions = if (hasSuggestions) listOf(
-        PlayerSuggestion(PlayerIdentity("Charlie", null, null)),
-        PlayerSuggestion(PlayerIdentity("Diana", "diana_bgg", null)),
-        PlayerSuggestion(PlayerIdentity("Eve", null, null)),
-        PlayerSuggestion(PlayerIdentity("Frank", null, null)),
-        PlayerSuggestion(PlayerIdentity("Grace", null, null)),
-        PlayerSuggestion(PlayerIdentity("Heidi", null, null)),
-        PlayerSuggestion(PlayerIdentity("Ivan", null, null)),
-        PlayerSuggestion(PlayerIdentity("Judy", null, null)),
-        PlayerSuggestion(PlayerIdentity("Kyle", null, null)),
-        PlayerSuggestion(PlayerIdentity("Laura", null, null)),
-        PlayerSuggestion(PlayerIdentity("Mallory", null, null)),
-    ) else emptyList()
-
-    return AddPlayUiState.GameSelected(
-        gameId = 13,
-        gameName = "Catan",
-        date = Instant.parse("2026-03-30T18:00:00Z"),
-        durationMinutes = 90,
-        location = LocationState(
-            value = "Home",
-            suggestions = emptyList(),
-            recentLocations = listOf("Home", "Game Café", "Bob's place")
-        ),
-        players = PlayersState(
-            players = players,
-            colorsHistory = emptyList()
-        ),
-        playersByLocation = suggestions,
-        isSaving = isSaving
-    )
-}
-
 class AddPlayUiStatePreviewProvider : PreviewParameterProvider<AddPlayUiState> {
     override val values: Sequence<AddPlayUiState> = sequenceOf(
         previewGameSearchState(),
         previewGameSearchState(query = "Cat", hasResults = true),
         previewGameSelectedState(),
         previewGameSelectedState(isSaving = true),
-        previewGameSelectedState(hasPlayers = false, hasSuggestions = false),
+        previewGameSelectedState(players = previewPlayers(), suggestions = previewSuggestions(11)),
     )
 }
 
