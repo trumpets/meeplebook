@@ -25,14 +25,14 @@ jobs:
           java-version-file: .github/workflows/.java-version
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Assemble debug APK
         env:
           BGG_BEARER_TOKEN: ${{ secrets.BGG_BEARER_TOKEN }}
         run: ./gradlew assembleDebug
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: meeplebook-debug-apk
           path: app/build/outputs/apk/debug/*.apk
