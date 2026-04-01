@@ -108,7 +108,7 @@
     <string name="add_play_location_placeholder">Where did you play?</string>
     <string name="add_play_duration_label">Duration</string>
     <string name="add_play_duration_placeholder">e.g. 90min</string>
-    <string name="add_play_players_label">Players</string>
+    <string name="add_play_players_label_with_count">Players - %d</string>
     <string name="add_play_suggested_players_label">Suggested players</string>
     <string name="add_play_more_players">More</string>
     <string name="add_play_more_players_title">All Suggested Players</string>

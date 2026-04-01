@@ -130,7 +130,7 @@ internal fun AddPlaySections.Players(
             .padding(horizontal = ScreenPadding.Horizontal, vertical = ScreenPadding.Small)
     ) {
         Text(
-            text = stringResource(R.string.add_play_players_label),
+            text = stringResource(R.string.add_play_players_label_with_count, players.size),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
