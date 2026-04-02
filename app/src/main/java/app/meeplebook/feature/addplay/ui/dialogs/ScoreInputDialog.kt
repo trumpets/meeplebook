@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -86,6 +88,7 @@ fun ScoreInputDialog(
     onDismiss: () -> Unit,
 ) {
     var input by remember(player) { mutableStateOf(player.score.toScoreInputString()) }
+    val haptic = LocalHapticFeedback.current
 
     val colorEnum = PlayerColor.fromString(player.color)
     val headerColor = colorEnum?.let { Color(it.hexColor.toColorInt()) }
@@ -152,7 +155,7 @@ fun ScoreInputDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = input.ifEmpty { stringResource(R.string.score_input_placeholder) },
+                        text = input,
                         style = MaterialTheme.typography.displaySmall.copy(
                             fontSize = 36.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -166,7 +169,10 @@ fun ScoreInputDialog(
                     )
                     Spacer(modifier = Modifier.size(12.dp))
                     FilledIconButton(
-                        onClick = { input = input.dropLast(1) },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            input = input.dropLast(1)
+                        },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -204,6 +210,7 @@ fun ScoreInputDialog(
                                         .weight(1f)
                                         .height(56.dp),
                                     onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         input = handleNumpadKey(key, input)
                                     },
                                 )
