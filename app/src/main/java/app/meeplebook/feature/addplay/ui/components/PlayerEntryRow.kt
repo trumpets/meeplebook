@@ -90,9 +90,8 @@ fun PlayerEntryRow(
                 .clip(CircleShape)
                 .background(badgeColor)
                 .border(
-                    width = if (colorEnum != null) 0.dp else 1.dp,
-                    color = if (colorEnum != null) Color.Transparent
-                    else MaterialTheme.colorScheme.outlineVariant,
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                     shape = CircleShape,
                 )
                 .clickable(onClick = onColorClick),
