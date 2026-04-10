@@ -11,6 +11,27 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
     - Test suites should cover: normal operation, empty state, reactivity to data changes, and edge cases like different time periods
     - Fake repositories should compute derived values (like unique games count) in `updateComputedValues` to keep all counters consistent when `setPlays` is called
 ---
+
+## 2026-04-10
+PR Link: <pending>
+- Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
+- Files changed:
+  - `AGENTS.md`
+  - `.github/copilot-instructions.md`
+  - `.github/skills/architecture/android-architecture/SKILL.md`
+  - `.github/skills/architecture/android-viewmodel/SKILL.md`
+  - `.github/skills/architecture/android-data-layer/SKILL.md`
+  - `.github/skills/build_and_tooling/android-gradle-logic/SKILL.md`
+  - `.github/skills/concurrency_and_networking/android-retrofit/SKILL.md`
+  - `.github/skills/ui/compose-navigation/SKILL.md`
+  - `.github/skills/testing_and_automation/android-testing/SKILL.md`
+  - `.github/skills/performance/gradle-build-performance/SKILL.md`
+- **Learnings for future iterations:**
+    - The repo must be documented from its current package-based `:app` structure first; multi-module remains a future target, not an assumed present state.
+    - Skill docs drift quickly when they embed generic Android examples with hardcoded module names, task names, or library setup; MeepleBook-specific notes should be added near the top of those docs.
+    - Screenshot guidance for this repo is Paparazzi-first if/when added; Roborazzi should only be mentioned as an explicit future user choice and never as an assumed dependency.
+    - CI/source-of-truth verification commands are `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest`.
+---
 ## 2026-01-29T22:20:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743783872)
 - Created comprehensive test suite `ObservePlaysUseCaseTest` with 8 test cases covering query passthrough, mapping correctness, and flow reactivity

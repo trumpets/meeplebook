@@ -2,6 +2,7 @@
 - Android app `app.meeplebook` built with Kotlin + Compose + Hilt; modules are `:app` and `:lint-rules` (`settings.gradle.kts`).
 - App entry: `app/src/main/java/app/meeplebook/MainActivity.kt` decides start route from `AuthRepository.getCurrentUser()` and then mounts `AppNavHost`.
 - Navigation uses typed routes (`composable<Screen.X>`) in `ui/navigation/AppNavHost.kt` and tabbed home navigation in `feature/home/navigation/HomeNavHost.kt`.
+- **Source of truth rule:** use the repo as it exists today when giving guidance or making changes. Multi-module is a planned future direction, but agents must not invent `:core:*` / `:feature:*` modules or rewrite docs as if they already exist unless the user explicitly asks for modularization work.
 
 # Architecture That Matters
 - Offline-first shape is implemented today: remote fetch -> local Room write -> UI observes flows from DB through repositories/use cases.
@@ -191,6 +192,7 @@ Goal: eliminate hidden state, implicit sync, and lifecycle-driven logic
 - Test placement and style in this repo:
   - Pure Kotlin/domain/viewmodel: `app/src/test` (fake-first, Turbine for flow assertions).
   - Room/Compose/Hilt/instrumented: `app/src/androidTest`.
+- Screenshot testing is not wired into the repo today. If screenshot guidance is needed, treat **Paparazzi** as the intended first choice once added; mention **Roborazzi** only as an optional future user decision for a small number of critical screens, never as an assumed dependency.
 - CI definitions to mirror locally: `.github/workflows/verify-unit.yml`, `.github/workflows/verify-full.yml`, `.github/workflows/master-build.yml`.
 
 # Agent Working Agreement For This Repo
