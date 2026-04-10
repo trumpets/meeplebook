@@ -131,7 +131,6 @@
     <!-- More Players Dialog -->
     <string name="add_play_more_players_title">Previously played at this Location</string>
     <string name="add_play_no_player_suggestions">No suggestions for this location</string>
-    <string name="add_play_add_new_player">Add New Player</string>
     <string name="player_name_with_username">%1$s (@%2$s)</string>
 
     <!-- Add/Edit Player Dialog -->
