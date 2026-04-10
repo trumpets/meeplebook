@@ -55,14 +55,28 @@ def main():
         except Exception:
             pass
             
-    if args.grep:
-        full_cmd.extend(["|", "grep", args.grep])
-
     print(f"Running: {' '.join(full_cmd)}")
     try:
-        # Use subprocess directly to stream
-        process = subprocess.Popen(full_cmd, stdout=sys.stdout, stderr=sys.stderr)
-        process.wait()
+        if args.grep:
+            process = subprocess.Popen(
+                full_cmd,
+                stdout=subprocess.PIPE,
+                stderr=sys.stderr,
+                text=True,
+                bufsize=1,
+            )
+            try:
+                for line in process.stdout:
+                    if args.grep in line:
+                        print(line, end="")
+                        sys.stdout.flush()
+            finally:
+                if process.stdout:
+                    process.stdout.close()
+            process.wait()
+        else:
+            process = subprocess.Popen(full_cmd, stdout=sys.stdout, stderr=sys.stderr)
+            process.wait()
     except KeyboardInterrupt:
         sys.exit(0)
 

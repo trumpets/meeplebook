@@ -13,7 +13,7 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
 ---
 
 ## 2026-04-10
-PR Link: <pending>
+PR Link: https://github.com/trumpets/meeplebook/pull/103
 - Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
 - Files changed:
   - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
@@ -22,7 +22,7 @@ PR Link: <pending>
 ---
 
 ## 2026-04-10
-PR Link: <pending>
+PR Link: https://github.com/trumpets/meeplebook/pull/103
 - Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
 - Files changed:
   - `AGENTS.md`

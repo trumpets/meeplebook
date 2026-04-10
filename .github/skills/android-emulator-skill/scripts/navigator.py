@@ -9,6 +9,7 @@ import argparse
 import sys
 import shlex
 import subprocess
+import time
 from common import resolve_serial, run_adb_command
 from screen_mapper import ScreenMapper
 

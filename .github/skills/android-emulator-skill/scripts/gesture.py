@@ -8,7 +8,7 @@ Perform gestures on the Android device.
 import argparse
 import sys
 import subprocess
-from common import resolve_serial, run_adb_command, get_device_screen_size as get_size
+from common import resolve_serial, run_adb_command, get_screen_size as get_size
 
 def perform_swipe(serial, direction, duration=300):
     """

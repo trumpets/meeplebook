@@ -189,25 +189,31 @@ fun AddEditPlayerDialog(
                         stringResource(R.string.add_edit_player_color_preview_description, it.colorString)
                     } ?: stringResource(R.string.add_edit_player_color_pick_description)
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .then(
-                                if (swatchColor != null) {
-                                    Modifier.background(swatchColor)
-                                } else {
-                                    Modifier
-                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                        .border(
-                                            width = 1.dp,
-                                            color = MaterialTheme.colorScheme.outline,
-                                            shape = CircleShape,
-                                        )
-                                }
-                            )
+                            .size(48.dp)
                             .clickable { showColorPicker = true }
                             .semantics { contentDescription = colorDesc },
-                    )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .then(
+                                    if (swatchColor != null) {
+                                        Modifier.background(swatchColor)
+                                    } else {
+                                        Modifier
+                                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            .border(
+                                                width = 1.dp,
+                                                color = MaterialTheme.colorScheme.outline,
+                                                shape = CircleShape,
+                                            )
+                                    }
+                                ),
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -250,8 +256,8 @@ private fun <T> PlayerAutocompleteField(
     suggestionText: (T) -> UiText,
     modifier: Modifier = Modifier,
 ) {
-    var fieldFocused by remember { mutableStateOf(false) }
-    val showDropdown = fieldFocused && suggestions.isNotEmpty()
+    var expanded by remember { mutableStateOf(false) }
+    val showDropdown = expanded && suggestions.isNotEmpty()
 
     Box(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -261,17 +267,19 @@ private fun <T> PlayerAutocompleteField(
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .onFocusChanged { fieldFocused = it.isFocused },
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) expanded = true
+                },
         )
         DropdownMenu(
             expanded = showDropdown,
-            onDismissRequest = { fieldFocused = false },
+            onDismissRequest = { expanded = false },
         ) {
             suggestions.forEach { suggestion ->
                 DropdownMenuItem(
                     text = { UiTextText(suggestionText(suggestion)) },
                     onClick = {
-                        fieldFocused = false
+                        expanded = false
                         onSuggestionSelected(suggestion)
                     },
                 )
