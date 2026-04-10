@@ -11,7 +11,6 @@ import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 import app.meeplebook.core.plays.remote.dto.RemotePlayerDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -265,7 +264,21 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         )
     }
 
-    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> =
+        playsFlow.map { plays ->
+            plays
+                .flatMap { it.players }
+                .filter { it.name.contains(query, ignoreCase = true) }
+                .distinctBy { it.name.lowercase() }
+                .map { PlayerIdentity(name = it.name, username = it.username, userId = it.userId) }
+        }
 
-    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> =
+        playsFlow.map { plays ->
+            plays
+                .flatMap { it.players }
+                .filter { !it.username.isNullOrBlank() && it.username.contains(query, ignoreCase = true) }
+                .distinctBy { it.username!!.lowercase() }
+                .map { PlayerIdentity(name = it.name, username = it.username, userId = it.userId) }
+        }
 }

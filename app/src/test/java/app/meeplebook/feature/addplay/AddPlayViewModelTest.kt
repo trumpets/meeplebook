@@ -207,6 +207,110 @@ class AddPlayViewModelTest {
 
     // endregion
 
+    // region AddEditPlayerDialog — search debounce
+
+    @Test
+    fun `AddEditNameChanged with non-blank name populates nameSuggestions after debounce`() = runTest {
+        fakePlaysRepository.setPlays(
+            listOf(
+                PlayTestFactory.createPlay(
+                    localPlayId = 1L,
+                    gameName = "Catan",
+                    players = listOf(PlayTestFactory.createPlayer(playId = 1L, name = "Alice", username = "alice_bgg"))
+                )
+            )
+        )
+
+        viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ShowAddPlayerDialog)
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditNameChanged("Ali"))
+
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(viewModel) { s ->
+            (s as? AddPlayUiState.GameSelected)
+                ?.addEditPlayerDialog
+                ?.nameSuggestions
+                ?.isNotEmpty() == true
+        }
+
+        val suggestions = state.addEditPlayerDialog!!.nameSuggestions
+        assertEquals(1, suggestions.size)
+        assertEquals("Alice", suggestions.first().name)
+    }
+
+    @Test
+    fun `AddEditUsernameChanged with non-blank query populates usernameSuggestions after debounce`() = runTest {
+        fakePlaysRepository.setPlays(
+            listOf(
+                PlayTestFactory.createPlay(
+                    localPlayId = 1L,
+                    gameName = "Catan",
+                    players = listOf(PlayTestFactory.createPlayer(playId = 1L, name = "Alice", username = "alice_bgg"))
+                )
+            )
+        )
+
+        viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ShowAddPlayerDialog)
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditUsernameChanged("alice"))
+
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(viewModel) { s ->
+            (s as? AddPlayUiState.GameSelected)
+                ?.addEditPlayerDialog
+                ?.usernameSuggestions
+                ?.isNotEmpty() == true
+        }
+
+        val suggestions = state.addEditPlayerDialog!!.usernameSuggestions
+        assertEquals(1, suggestions.size)
+        assertEquals("alice_bgg", suggestions.first().username)
+    }
+
+    @Test
+    fun `AddEditNameChanged with blank query leaves nameSuggestions empty`() = runTest {
+        viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ShowAddPlayerDialog)
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditNameChanged(""))
+
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(viewModel) { s ->
+            s is AddPlayUiState.GameSelected && s.addEditPlayerDialog != null
+        }
+
+        assertEquals(emptyList<Any>(), state.addEditPlayerDialog!!.nameSuggestions)
+    }
+
+    @Test
+    fun `ConfirmAddEditPlayer resets name and username query flows to empty`() = runTest {
+        fakePlaysRepository.setPlays(
+            listOf(
+                PlayTestFactory.createPlay(
+                    localPlayId = 1L,
+                    gameName = "Catan",
+                    players = listOf(PlayTestFactory.createPlayer(playId = 1L, name = "Alice", username = "alice_bgg"))
+                )
+            )
+        )
+
+        viewModel.onEvent(AddPlayEvent.GameSearchEvent.GameSelected(1L, "Catan"))
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ShowAddPlayerDialog)
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditNameChanged("Alice"))
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditUsernameChanged("alice_bgg"))
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ConfirmAddEditPlayer)
+
+        // After confirm the dialog is gone so suggestions live outside the dialog context;
+        // verify the raw query flows were reset — triggering ShowAddPlayerDialog again should
+        // open a dialog with empty suggestions (blank query → blank search).
+        viewModel.onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ShowAddPlayerDialog)
+
+        val state = awaitUiStateAfterDebounce<AddPlayUiState.GameSelected>(viewModel) { s ->
+            s is AddPlayUiState.GameSelected && s.addEditPlayerDialog != null
+        }
+
+        assertEquals(emptyList<Any>(), state.addEditPlayerDialog!!.nameSuggestions)
+        assertEquals(emptyList<Any>(), state.addEditPlayerDialog!!.usernameSuggestions)
+    }
+
+    // endregion
+
     // region Helpers
 
     private fun buildViewModel(

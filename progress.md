@@ -453,3 +453,18 @@ PR Link: N/A (local session)
     - The `AddEditPlayerDialogReducer` takes `GameSelected` directly (not just the player list) because it modifies both `addEditPlayerDialog` state AND `players.players` on confirm
     - `PlayerLocationProjection` (from `core/database/projection/`) can be reused for player search DAO queries — same shape (name, username, MAX(userId))
 ---
+
+## 2026-04-10
+- **Task:** AddEditPlayerDialogReducer tests + Fake search implementations
+- **Files changed:**
+  - `app/src/test/.../FakePlaysRepository.kt` — implemented `searchPlayersByName`/`searchPlayersByUsername` (was `flowOf(emptyList())`)
+  - `app/src/test/.../local/FakePlaysLocalDataSource.kt` — same for local data source fake
+  - `app/src/test/.../reducer/AddEditPlayerDialogReducerTest.kt` — new file, 28 tests covering all reducer branches
+  - `app/src/test/.../AddPlayViewModelTest.kt` — 4 new tests for AddEdit dialog search debounce flows
+  - Also fixed 3 test files with stale `PlayersReducer(addEditDialogReducer=...)` API references
+- **Learnings for future iterations:**
+  - Fake search methods now filter `_plays`/`playsFlow` by name/username contains (case-insensitive) with `distinctBy` — usable in ViewModel search debounce tests
+  - `AddEditPlayerDialogReducer` clears suggestions on field changes; they are populated externally by the ViewModel debounce flows
+  - `ConfirmAddEditPlayer` resets raw name/username query flows in the ViewModel — reopening the dialog shows empty suggestions
+  - `PlayTestFactory.createPlay(localPlayId, gameName, ...)` — `gameName` is a required parameter (not defaulted)
+---

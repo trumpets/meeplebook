@@ -10,7 +10,6 @@ import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -240,7 +239,21 @@ class FakePlaysRepository : PlaysRepository {
         _uniqueGamesCount.value = plays.map { it.gameId }.distinct().count().toLong()
     }
 
-    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> =
+        _plays.map { plays ->
+            plays
+                .flatMap { it.players }
+                .filter { it.name.contains(query, ignoreCase = true) }
+                .distinctBy { it.name.lowercase() }
+                .map { PlayerIdentity(name = it.name, username = it.username, userId = it.userId) }
+        }
 
-    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> =
+        _plays.map { plays ->
+            plays
+                .flatMap { it.players }
+                .filter { !it.username.isNullOrBlank() && it.username.contains(query, ignoreCase = true) }
+                .distinctBy { it.username!!.lowercase() }
+                .map { PlayerIdentity(name = it.name, username = it.username, userId = it.userId) }
+        }
 }
