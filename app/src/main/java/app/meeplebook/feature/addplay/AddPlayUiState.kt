@@ -208,3 +208,10 @@ fun AddPlayUiState.updateGameSearch(
 inline fun <T> AddPlayUiState.asGameSelected(block: AddPlayUiState.GameSelected.() -> T): T? {
     return (this as? AddPlayUiState.GameSelected)?.block()
 }
+
+/**
+ * Safely run [block] if the state is [AddPlayUiState.GameSearch], otherwise return null.
+ */
+inline fun <T> AddPlayUiState.asGameSearch(block: AddPlayUiState.GameSearch.() -> T): T? {
+    return (this as? AddPlayUiState.GameSearch)?.block()
+}
