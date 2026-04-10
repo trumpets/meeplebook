@@ -10,6 +10,7 @@ import app.meeplebook.core.plays.model.Player
 import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -238,4 +239,8 @@ class FakePlaysRepository : PlaysRepository {
         _recentPlays.value = plays.sortedByDescending { it.date }.take(5)
         _uniqueGamesCount.value = plays.map { it.gameId }.distinct().count().toLong()
     }
+
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
+
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
 }

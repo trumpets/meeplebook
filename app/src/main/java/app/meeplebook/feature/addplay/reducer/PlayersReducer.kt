@@ -10,7 +10,7 @@ import javax.inject.Inject
  *
  * Dispatches each event to the appropriate sub-reducer ([PlayerEditReducer],
  * [PlayerListReducer], [PlayerScoreReducer], or [PlayerColorReducer]) and
- * writes the resulting player list back into [AddPlayUiState.players].
+ * writes the resulting player list back into [AddPlayUiState.GameSelected.players].
  */
 class PlayersReducer @Inject constructor(
     private val editReducer: PlayerEditReducer,

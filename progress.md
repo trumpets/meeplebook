@@ -432,3 +432,24 @@ PR Link: N/A (local session)
     - DAO test helper functions with `score: Int?` must be updated to `score: Double?` when `PlayerEntity.score` changes type
     - `AddPlayScreenRoot` accepts state directly — tests pass pre-constructed `AddPlayUiState` (no Hilt needed)
 ---
+
+## 2026-04-02
+PR Link: N/A (local session)
+- Added "Add New Player" button to `MorePlayersDialog` + updated title to "Add Player"
+- Created `AddEditPlayerDialog` for adding new players or editing existing ones (name, username, team/color with live color swatch, autocomplete dropdowns for both name and username fields)
+- Added player search to data layer: `PlayerDao.searchDistinctPlayersByName/searchDistinctPlayersByUsername` (DISTINCT + LIKE queries), `PlaysLocalDataSource`, `PlaysRepository`, `SearchPlayersByNameUseCase`, `SearchPlayersByUsernameUseCase`
+- Added `AddEditPlayerDialogState` to `GameSelected` UiState and `AddEditPlayerDialogEvent` sealed interface to `AddPlayEvent`
+- Created `AddEditPlayerDialogReducer` (handles open/dismiss/field edits/confirm for both add-new and edit-existing flows)
+- Wired `AddEditPlayerDialogReducer` into `PlayersReducer` pipeline
+- Updated `AddPlayViewModel` with two debounced search flows (`rawAddEditNameQuery`, `rawAddEditUsernameQuery`) following existing `rawLocationQuery` pattern; search results fold into dialog state suggestions
+- Wired EndToStart swipe-to-edit in `PlayersSection` → `ShowEditPlayerDialog` (was previously unimplemented)
+- Updated `SuggestedPlayersSection` to pass `onAddNewPlayer` → `ShowAddPlayerDialog`
+- Updated `FakePlaysRepository` and `FakePlaysLocalDataSource` test fakes with stub implementations of new interface methods
+- Fixed `PlayersReducerTest`, `AddPlayReducerTest`, `AddPlayViewModelTest` to pass `AddEditPlayerDialogReducer` to `PlayersReducer`
+- **Learnings for future iterations:**
+    - Reducers that need early-return logic (guard clauses) must use block body `fun f(): T { return when(...) {...} }` not expression body `fun f(): T = when(...) {...}` — Kotlin forbids `return` inside expression bodies
+    - When adding new methods to `PlaysRepository`/`PlaysLocalDataSource` interfaces, always update `FakePlaysRepository` and `FakePlaysLocalDataSource` in `src/test/` or unit test compilation fails
+    - Player search queries go in `PlayerDao` (direct players table), not `PlayDao` (which needs JOIN with plays)
+    - The `AddEditPlayerDialogReducer` takes `GameSelected` directly (not just the player list) because it modifies both `addEditPlayerDialog` state AND `players.players` on confirm
+    - `PlayerLocationProjection` (from `core/database/projection/`) can be reused for player search DAO queries — same shape (name, username, MAX(userId))
+---

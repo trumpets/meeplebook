@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.database.projection.PlayerLocationProjection
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -71,4 +72,42 @@ interface PlayerDao {
         ORDER BY color ASC
     """)
     fun observeColorsUsedForGame(gameId: Long): Flow<List<String>>
+
+    /**
+     * Searches distinct players whose name contains [query].
+     *
+     * @param query Substring to match against player names.
+     * @return Flow emitting up to 20 matching distinct (name, username, userId) rows.
+     */
+    @Query("""
+        SELECT 
+            player.name AS name,
+            player.username AS username,
+            MAX(player.userId) AS userId
+        FROM players AS player
+        WHERE player.name LIKE '%' || :query || '%' COLLATE NOCASE
+        GROUP BY player.name COLLATE NOCASE, player.username COLLATE NOCASE
+        ORDER BY player.name ASC
+        LIMIT 20
+    """)
+    fun searchDistinctPlayersByName(query: String): Flow<List<PlayerLocationProjection>>
+
+    /**
+     * Searches distinct players whose username contains [query].
+     *
+     * @param query Substring to match against usernames.
+     * @return Flow emitting up to 20 matching distinct (name, username, userId) rows.
+     */
+    @Query("""
+        SELECT 
+            player.name AS name,
+            player.username AS username,
+            MAX(player.userId) AS userId
+        FROM players AS player
+        WHERE player.username LIKE '%' || :query || '%' COLLATE NOCASE
+        GROUP BY player.name COLLATE NOCASE, player.username COLLATE NOCASE
+        ORDER BY player.username ASC
+        LIMIT 20
+    """)
+    fun searchDistinctPlayersByUsername(query: String): Flow<List<PlayerLocationProjection>>
 }

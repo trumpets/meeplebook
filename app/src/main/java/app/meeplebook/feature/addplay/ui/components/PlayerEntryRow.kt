@@ -107,7 +107,7 @@ fun PlayerEntryRow(
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        // Name + username
+        // Name + username + team label (when color is a free-text team, not a known PlayerColor)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = player.playerIdentity.name,
@@ -117,6 +117,15 @@ fun PlayerEntryRow(
             player.playerIdentity.username?.let { uname ->
                 Text(
                     text = "@$uname",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // Show team/color as text only when it isn't a recognised PlayerColor
+            // (in that case the badge already reflects the colour visually)
+            if (player.color != null && colorEnum == null) {
+                Text(
+                    text = player.color,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -199,6 +208,13 @@ private class PlayerEntryRowPreviewProvider : PreviewParameterProvider<PlayerEnt
             startPosition = 4,
             color = PlayerColor.WHITE.colorString,
             score = -5.5,
+            isWinner = false,
+        ),
+        PlayerEntryUi(
+            playerIdentity = PlayerIdentity("Eve", username = null, userId = null),
+            startPosition = 5,
+            color = "Team Rocket",
+            score = null,
             isWinner = false,
         ),
     )

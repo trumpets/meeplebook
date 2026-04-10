@@ -152,4 +152,16 @@ class PlaysLocalDataSourceImpl @Inject constructor(
     override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
         return playerDao.observeColorsUsedForGame(gameId)
     }
+
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> {
+        return playerDao.searchDistinctPlayersByName(query).map { projections ->
+            projections.map { it.toPlayerIdentity() }
+        }
+    }
+
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> {
+        return playerDao.searchDistinctPlayersByUsername(query).map { projections ->
+            projections.map { it.toPlayerIdentity() }
+        }
+    }
 }

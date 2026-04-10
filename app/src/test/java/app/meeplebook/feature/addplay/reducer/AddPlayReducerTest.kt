@@ -21,7 +21,8 @@ class AddPlayReducerTest {
             editReducer = PlayerEditReducer(),
             listReducer = PlayerListReducer(),
             scoreReducer = PlayerScoreReducer(),
-            colorReducer = PlayerColorReducer()
+            colorReducer = PlayerColorReducer(),
+            addEditDialogReducer = AddEditPlayerDialogReducer(),
         )
     )
 

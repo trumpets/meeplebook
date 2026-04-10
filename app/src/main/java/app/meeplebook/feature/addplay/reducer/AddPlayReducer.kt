@@ -9,9 +9,10 @@ import javax.inject.Inject
  *
  * Composes sub-reducers in a fixed pipeline, threading state through each in order:
  *
- * 1. [GameSearchReducer] — handles game search events (query changes, game selection)
- * 2. [MetaReducer]       — handles play metadata events (date, duration, location)
- * 3. [PlayersReducer]    — handles all player-related events
+ * 1. [GameSearchReducer]          — handles game search events (query changes, game selection)
+ * 2. [MetaReducer]                — handles play metadata events (date, duration, location)
+ * 3. [PlayersReducer]             — handles all player-related events
+ * 3. [AddEditPlayerDialogReducer] — handles all player-add/edit events
  *
  * Each sub-reducer receives the output of the previous one, so every event is
  * handled exactly once and validation always reflects the latest state.
@@ -19,7 +20,8 @@ import javax.inject.Inject
 class AddPlayReducer @Inject constructor(
     private val gameSearchReducer: GameSearchReducer,
     private val metaReducer: MetaReducer,
-    private val playersReducer: PlayersReducer
+    private val playersReducer: PlayersReducer,
+    private val addEditPlayerDialogReducer: AddEditPlayerDialogReducer
 ) {
 
     /**
@@ -37,7 +39,8 @@ class AddPlayReducer @Inject constructor(
         val afterGameSearch = gameSearchReducer.reduce(state, event)
         val afterMeta = metaReducer.reduce(afterGameSearch, event)
         val afterPlayers = playersReducer.reduce(afterMeta, event)
+        val afterAddEditPlayer = addEditPlayerDialogReducer.reduce(afterPlayers, event)
 
-        return afterPlayers
+        return afterAddEditPlayer
     }
 }

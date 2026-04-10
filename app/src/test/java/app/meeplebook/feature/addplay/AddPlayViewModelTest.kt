@@ -10,9 +10,12 @@ import app.meeplebook.core.plays.domain.ObserveColorsUsedForGameUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
+import app.meeplebook.core.plays.domain.SearchPlayersByNameUseCase
+import app.meeplebook.core.plays.domain.SearchPlayersByUsernameUseCase
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.addplay.effect.AddPlayEffectProducer
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
+import app.meeplebook.feature.addplay.reducer.AddEditPlayerDialogReducer
 import app.meeplebook.feature.addplay.reducer.AddPlayReducer
 import app.meeplebook.feature.addplay.reducer.GameSearchReducer
 import app.meeplebook.feature.addplay.reducer.MetaReducer
@@ -216,7 +219,9 @@ class AddPlayViewModelTest {
         observePlayerSuggestions = ObservePlayerSuggestionsUseCase(playsRepository),
         observeColorsUsedForGame = ObserveColorsUsedForGameUseCase(playsRepository),
         observeCollection = ObserveCollectionUseCase(fakeCollectionRepository),
-        createPlay = CreatePlayUseCase(playsRepository)
+        createPlay = CreatePlayUseCase(playsRepository),
+        searchPlayersByName = SearchPlayersByNameUseCase(playsRepository),
+        searchPlayersByUsername = SearchPlayersByUsernameUseCase(playsRepository),
     )
 
     private fun buildReducer() = AddPlayReducer(
@@ -226,7 +231,8 @@ class AddPlayViewModelTest {
             editReducer = PlayerEditReducer(),
             listReducer = PlayerListReducer(),
             scoreReducer = PlayerScoreReducer(),
-            colorReducer = PlayerColorReducer()
+            colorReducer = PlayerColorReducer(),
+            addEditDialogReducer = AddEditPlayerDialogReducer(),
         )
     )
 

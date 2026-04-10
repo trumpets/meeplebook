@@ -156,4 +156,31 @@ sealed interface AddPlayEvent {
         /** User tapped Cancel; the ViewModel should discard changes and navigate back. */
         data object CancelClicked : ActionEvent
     }
+
+    /** Events that control the Add/Edit Player dialog. */
+    sealed interface AddEditPlayerDialogEvent : AddPlayEvent {
+
+        /** User tapped "Add New Player" — open dialog in add-new mode. */
+        data object ShowAddPlayerDialog : AddEditPlayerDialogEvent
+
+        /** User swiped-to-edit a player row — open dialog pre-filled with [playerIdentity]. */
+        data class ShowEditPlayerDialog(
+            val playerIdentity: PlayerIdentity
+        ) : AddEditPlayerDialogEvent
+
+        /** User dismissed the dialog without confirming. */
+        data object DismissAddEditPlayerDialog : AddEditPlayerDialogEvent
+
+        /** User changed the name field in the dialog. */
+        data class AddEditNameChanged(val name: String) : AddEditPlayerDialogEvent
+
+        /** User changed the username field in the dialog. */
+        data class AddEditUsernameChanged(val username: String) : AddEditPlayerDialogEvent
+
+        /** User changed the team/color field in the dialog. */
+        data class AddEditColorChanged(val color: String) : AddEditPlayerDialogEvent
+
+        /** User tapped Confirm in the dialog. */
+        data object ConfirmAddEditPlayer : AddEditPlayerDialogEvent
+    }
 }
