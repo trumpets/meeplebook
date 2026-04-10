@@ -9,7 +9,7 @@ import app.meeplebook.core.plays.domain.PlayerIdentity
 data class PlayerLocationProjection(
     val name: String,
     val username: String?,
-    val userId: Long
+    val userId: Long?
 )
 
 /**

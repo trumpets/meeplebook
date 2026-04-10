@@ -275,7 +275,7 @@ class AddPlayViewModelTest {
             s is AddPlayUiState.GameSelected && s.addEditPlayerDialog != null
         }
 
-        assertEquals(emptyList<Any>(), state.addEditPlayerDialog!!.nameSuggestions)
+        assertTrue(state.addEditPlayerDialog!!.nameSuggestions.isEmpty())
     }
 
     @Test
@@ -305,8 +305,8 @@ class AddPlayViewModelTest {
             s is AddPlayUiState.GameSelected && s.addEditPlayerDialog != null
         }
 
-        assertEquals(emptyList<Any>(), state.addEditPlayerDialog!!.nameSuggestions)
-        assertEquals(emptyList<Any>(), state.addEditPlayerDialog!!.usernameSuggestions)
+        assertTrue(state.addEditPlayerDialog!!.nameSuggestions.isEmpty())
+        assertTrue(state.addEditPlayerDialog!!.usernameSuggestions.isEmpty())
     }
 
     // endregion
