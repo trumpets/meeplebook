@@ -14,6 +14,15 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
 
 ## 2026-04-10
 PR Link: <pending>
+- Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
+- **Learnings for future iterations:**
+    - `player_name_with_username` should be reused for user-visible player labels, and a matching simple name resource keeps formatting/localization consistent across features.
+---
+
+## 2026-04-10
+PR Link: <pending>
 - Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
 - Files changed:
   - `AGENTS.md`

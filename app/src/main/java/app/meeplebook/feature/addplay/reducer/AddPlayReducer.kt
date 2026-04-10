@@ -12,7 +12,7 @@ import javax.inject.Inject
  * 1. [GameSearchReducer]          — handles game search events (query changes, game selection)
  * 2. [MetaReducer]                — handles play metadata events (date, duration, location)
  * 3. [PlayersReducer]             — handles all player-related events
- * 3. [AddEditPlayerDialogReducer] — handles all player-add/edit events
+ * 4. [AddEditPlayerDialogReducer] — handles all player-add/edit events
  *
  * Each sub-reducer receives the output of the previous one, so every event is
  * handled exactly once and validation always reflects the latest state.

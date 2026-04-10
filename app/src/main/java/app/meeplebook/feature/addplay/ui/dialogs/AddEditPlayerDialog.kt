@@ -46,8 +46,11 @@ import androidx.core.graphics.toColorInt
 import app.meeplebook.R
 import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.addplay.AddEditPlayerDialogState
-import app.meeplebook.feature.addplay.ui.dialogs.ColorPickerDialog
+import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 /**
@@ -134,7 +137,13 @@ fun AddEditPlayerDialog(
                         onUsernameChanged(suggestion.username.orEmpty())
                     },
                     suggestionText = { s ->
-                        s.username?.let { "${s.name} (@$it)" } ?: s.name
+                        s.username?.let {
+                            uiTextRes(
+                                R.string.player_name_with_username,
+                                s.name,
+                                it,
+                            )
+                        } ?: uiText(s.name)
                     },
                 )
 
@@ -151,7 +160,13 @@ fun AddEditPlayerDialog(
                         onUsernameChanged(suggestion.username.orEmpty())
                     },
                     suggestionText = { s ->
-                        s.username?.let { "${s.name} (@$it)" } ?: s.name
+                        s.username?.let {
+                            uiTextRes(
+                                R.string.player_name_with_username,
+                                s.name,
+                                it,
+                            )
+                        } ?: uiText(s.name)
                     },
                 )
 
@@ -232,7 +247,7 @@ private fun <T> PlayerAutocompleteField(
     label: String,
     suggestions: List<T>,
     onSuggestionSelected: (T) -> Unit,
-    suggestionText: (T) -> String,
+    suggestionText: (T) -> UiText,
     modifier: Modifier = Modifier,
 ) {
     var fieldFocused by remember { mutableStateOf(false) }
@@ -254,7 +269,7 @@ private fun <T> PlayerAutocompleteField(
         ) {
             suggestions.forEach { suggestion ->
                 DropdownMenuItem(
-                    text = { Text(suggestionText(suggestion)) },
+                    text = { UiTextText(suggestionText(suggestion)) },
                     onClick = {
                         fieldFocused = false
                         onSuggestionSelected(suggestion)
