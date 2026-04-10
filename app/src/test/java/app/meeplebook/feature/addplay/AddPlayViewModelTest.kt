@@ -232,8 +232,8 @@ class AddPlayViewModelTest {
             listReducer = PlayerListReducer(),
             scoreReducer = PlayerScoreReducer(),
             colorReducer = PlayerColorReducer(),
-            addEditDialogReducer = AddEditPlayerDialogReducer(),
-        )
+        ),
+        addEditPlayerDialogReducer = AddEditPlayerDialogReducer(),
     )
 
     suspend inline fun <reified T : AddPlayUiState> TestScope.awaitUiStateAfterDebounce(
