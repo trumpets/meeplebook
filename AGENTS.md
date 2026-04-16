@@ -21,6 +21,13 @@
 - Search uses debounced flows (`searchableFlow` in `core/ui/flow/SearchableFlow.kt`, and direct debounce in collection).
 - Avoid infinite wall-clock reactive flows with `while(true)+delay`; compute time-dependent values on demand (see `.github/copilot-instructions.md`).
 - `UiText` is the app-level text abstraction (`core/ui/UiText.kt`); render via `UiTextText` or `asString()` helpers.
+- Shared reducer/effect screen abstractions live in `core/ui/architecture/`:
+  - `Reducer<State, Event>`
+  - `EffectProducer<State, Event, DomainEffect, UiEffect>`
+  - `ProducedEffects<DomainEffect, UiEffect>`
+  - `ReducerViewModel<State, Event, DomainEffect, UiEffect>`
+- Reuse those abstractions for reducer-driven screens, but keep feature-owned base state, query flows,
+  external observers, and `combine(baseState, externalData) -> uiState` mapping inside the feature.
 
 ## Single Source of Truth (CRITICAL)
 For any given piece of UI data, there must be exactly ONE source of truth.
@@ -169,6 +176,8 @@ UI → Event → Reducer → State → (combine with external flows) → UI
 - Reducer is the ONLY place where state changes
 - External flows enrich state but do not replace it
 - ViewModel must be deterministic
+- Prefer the shared `core/ui/architecture` contracts/helper for the `onEvent -> reduce -> produce`
+  pipeline; do not build a generic framework for the feature-specific `combine(...)` layer
 
 Goal: eliminate hidden state, implicit sync, and lifecycle-driven logic
 

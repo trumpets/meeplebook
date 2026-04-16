@@ -179,6 +179,17 @@ For DB flows: use .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000)
 
 Use Dispatchers.IO for DB & network. Provide a @IoDispatcher via DI.
 
+For reducer-driven screens, prefer the shared abstractions in `core/ui/architecture/`:
+- `Reducer<State, Event>`
+- `EffectProducer<State, Event, DomainEffect, UiEffect>`
+- `ProducedEffects<DomainEffect, UiEffect>`
+- `ReducerViewModel<State, Event, DomainEffect, UiEffect>`
+
+Use those shared contracts for the `onEvent -> reduce -> produce -> handle effects` pipeline, but
+keep feature-specific base state, query-flow derivation, external observers, and
+`combine(baseState, externalData) -> uiState` mapping local to the feature. Do **not** try to force
+that `combine(...)` layer into a generic framework unless a later task explicitly asks for it.
+
 ## 8 — DI & qualifiers (Hilt)
 Hilt modules:
 

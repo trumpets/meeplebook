@@ -1,10 +1,10 @@
 package app.meeplebook.feature.plays
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
+import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.DebounceDurations
@@ -17,11 +17,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -48,13 +45,15 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class PlaysViewModel @Inject constructor(
-    private val reducer: PlaysReducer,
-    private val effectProducer: PlaysEffectProducer,
+    reducer: PlaysReducer,
+    effectProducer: PlaysEffectProducer,
     private val observePlaysScreenData: ObservePlaysScreenDataUseCase,
     private val syncPlays: SyncPlaysUseCase
-) : ViewModel() {
-
-    private val baseState = MutableStateFlow(PlaysBaseState())
+) : ReducerViewModel<PlaysBaseState, PlaysEvent, PlaysEffect, PlaysUiEffect>(
+    initialState = PlaysBaseState(),
+    reducer = reducer,
+    effectProducer = effectProducer
+) {
 
     private val searchQueryFlow =
         baseState
@@ -82,9 +81,6 @@ class PlaysViewModel @Inject constructor(
             PlaysUiState.Loading
         )
 
-    private val _uiEffect = MutableSharedFlow<PlaysUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
-
     private var refreshJob: Job? = null
 
     /**
@@ -94,28 +90,12 @@ class PlaysViewModel @Inject constructor(
      * mutation and side-effect routing remain explicit and testable.
      */
     fun onEvent(event: PlaysEvent) {
-        val oldState = baseState.value
-        val newState = reducer.reduce(oldState, event)
-        baseState.value = newState
-
-        val effects = effectProducer.produce(newState, event)
-        handleDomainEffects(effects.effects)
-        handleUiEffects(effects.uiEffects)
+        dispatchEvent(event)
     }
 
-    private fun handleDomainEffects(effects: List<PlaysEffect>) {
-        effects.forEach { effect ->
-            when (effect) {
-                PlaysEffect.Refresh -> refresh()
-            }
-        }
-    }
-
-    private fun handleUiEffects(uiEffects: List<PlaysUiEffect>) {
-        uiEffects.forEach { effect ->
-            viewModelScope.launch {
-                _uiEffect.emit(effect)
-            }
+    override fun handleDomainEffect(effect: PlaysEffect) {
+        when (effect) {
+            PlaysEffect.Refresh -> refresh()
         }
     }
 
@@ -131,7 +111,7 @@ class PlaysViewModel @Inject constructor(
                         // Sync successful, data will update automatically via flows.
                     },
                     onFailure = { _ ->
-                        _uiEffect.emit(PlaysUiEffect.ShowSnackbar(uiTextRes(R.string.sync_plays_failed_error)))
+                        emitUiEffect(PlaysUiEffect.ShowSnackbar(uiTextRes(R.string.sync_plays_failed_error)))
                     }
                 )
             } finally {

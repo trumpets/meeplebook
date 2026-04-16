@@ -1,3 +1,6 @@
+## Codebase Patterns
+- For reducer-driven screens, use the shared `core/ui/architecture` contracts/helper for `onEvent -> reduce -> produce -> handle effects`, but keep feature-owned base state, query flows, and `combine(baseState, externalData) -> uiState` mapping local to the feature.
+
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
 - Extended `FakePlaysRepository` to implement missing `observeUniqueGamesCount()` method with test helper
@@ -563,4 +566,23 @@ PR Link: <pending>
 - **Learnings for future iterations:**
   - When documenting reducer-driven screens in this repo, describe all four layers together: events, reducer-owned state, derived UI state, and one-shot effects.
   - KDoc for mapper functions should explain architectural responsibility, not just field mapping, when they are the boundary between base state and display state.
+---
+
+## 2026-04-16T20:17:56Z
+PR Link: <pending>
+- Added reusable reducer/effect architecture primitives and a lightweight `ReducerViewModel` base for future screen migrations.
+- Updated agent guidance so future work reuses the shared contracts without forcing the feature-specific `combine(...)` layer into a generic framework.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/Reducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/EffectProducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/ProducedEffects.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/ReducerViewModel.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/ui/architecture/ProducedEffectsTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/ui/architecture/ReducerViewModelTest.kt` (new)
+  - `AGENTS.md`
+  - `.github/copilot-instructions.md`
+- **Learnings for future iterations:**
+  - The reusable seam is the reducer/effect pipeline, not the full screen-state composition; keep `combine(baseState, externalData) -> uiState` inside each feature.
+  - `ReducerViewModel` should stay lightweight: own reducer state and one-shot UI effects, while leaving query-flow derivation and domain-specific effect handling to subclasses.
+  - `ProducedEffects.none()` is the generic replacement for per-feature `None` bundles when future screens adopt the shared contracts.
 ---

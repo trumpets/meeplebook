@@ -1,6 +1,7 @@
 package app.meeplebook.feature.plays.effect
 
 import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.ui.architecture.ProducedEffects
 import app.meeplebook.feature.plays.PlaysBaseState
 import app.meeplebook.feature.plays.PlaysEvent
 import org.junit.Assert.assertEquals
@@ -41,7 +42,7 @@ class PlaysEffectProducerTest {
             event = PlaysEvent.SearchChanged("wingspan")
         )
 
-        assertEquals(PlaysEffects.None, result)
+        assertEquals(ProducedEffects.none<PlaysEffect, PlaysUiEffect>(), result)
     }
 
     @Test
@@ -51,6 +52,6 @@ class PlaysEffectProducerTest {
             event = PlaysEvent.ActionEvent.LogPlayClicked
         )
 
-        assertEquals(PlaysEffects.None, result)
+        assertEquals(ProducedEffects.none<PlaysEffect, PlaysUiEffect>(), result)
     }
 }
