@@ -1,110 +1,203 @@
 ---
 name: android-emulator-skill
-version: 1.0.0
-description: Production-ready scripts for Android app testing, building, and automation. Provides semantic UI navigation, build automation, log monitoring, and emulator lifecycle management. Optimized for AI agents with minimal token output.
+description: Use Maestro CLI, Maestro MCP, and Maestro flows for Android emulator management, app launching, semantic UI interaction, hierarchy inspection, screenshots, and test execution.
 ---
 
 # Android Emulator Skill
 
-Build, test, and automate Android applications using accessibility-driven navigation and structured data instead of pixel coordinates.
+Use **Maestro** as the default tool for Android device automation in this repo.
 
-## Quick Start
+## MeepleBook repo note
+
+For build, lint, and unit/instrumented test tasks, use the repo's normal Gradle commands unless the
+user explicitly asks for Maestro flows.
+
+## When to use this skill
+
+Use this skill when the user asks to:
+
+- start or target an Android emulator
+- launch the app and navigate through UI flows
+- tap, type, scroll, or go back semantically
+- inspect the current screen hierarchy
+- take screenshots during an automation flow
+- run local E2E flows against a device
+- produce Maestro test artifacts or reports
+
+## Maestro tools to prefer
+
+### Maestro CLI
+
+Use Maestro CLI for local execution and artifacts:
 
 ```bash
-# 1. Check environment (use .sh on macOS/Linux, .ps1 on Windows)
-bash scripts/emu_health_check.sh
-# or on Windows: .\scripts\emu_health_check.ps1
+# Start a Maestro-compatible Android emulator
+maestro start-device --platform android
 
-# 2. Launch app
-python scripts/app_launcher.py --launch com.example.app
+# Run a flow
+maestro test .maestro/login.yaml
 
-# 3. Map screen to see elements
-python scripts/screen_mapper.py
+# Store artifacts in a predictable repo folder
+maestro test --test-output-dir=build/maestro-results .maestro/login.yaml
 
-# 4. Tap button
-python scripts/navigator.py --find-text "Login" --tap
+# Store debug logs as well
+maestro test --test-output-dir=build/maestro-results --debug-output=build/maestro-debug .maestro/login.yaml
 
-# 5. Enter text
-python scripts/navigator.py --find-type EditText --enter-text "user@example.com"
+# Generate JUnit output for CI
+maestro test --format junit --output build/maestro-report.xml .maestro
 ```
 
-All scripts support `--help` for detailed options and `--json` for machine-readable output.
+### Maestro MCP
 
-## Production Scripts
+When Maestro MCP is configured, prefer these commands for direct automation:
 
-### Build & Development
+- `start_device`
+- `list_devices`
+- `launch_app`
+- `stop_app`
+- `inspect_view_hierarchy`
+- `tap_on`
+- `input_text`
+- `back`
+- `take_screenshot`
+- `run_flow`
+- `run_flow_files`
+- `check_flow_syntax`
+- `query_docs`
 
-1. **build_and_test.py** - Build Android projects, run tests, parse results
-   - Wrapper around Gradle
-   - Support for assemble, install, and connectedCheck
-   - Parse build errors and test results
-   - Options: `--task`, `--clean`, `--json`
+### Maestro flows
 
-2. **log_monitor.py** - Real-time log monitoring with intelligent filtering
-   - Wrapper around `adb logcat`
-   - Filter by tag, priority, or PID
-   - Deduplicate repeated messages
-   - Options: `--package`, `--tag`, `--priority`, `--duration`, `--json`
+Use YAML flows for repeatable app journeys.
 
-### Navigation & Interaction
+Example:
 
-3. **screen_mapper.py** - Analyze current screen and list interactive elements
-   - Dump UI hierarchy using `uiautomator`
-   - Parse XML to identify buttons, text fields, etc.
-   - Options: `--verbose`, `--json`
+```yaml
+appId: app.meeplebook
+---
+- launchApp
+- tapOn: "Log Play"
+- assertVisible: "Player Name"
+- tapOn:
+    id: "playerNameField"
+- inputText: "Alice"
+- tapOn: "Save"
+```
 
-4. **navigator.py** - Find and interact with elements semantically
-   - Find by text (fuzzy matching), resource-id, or class name
-   - Interactive tapping and text entry
-   - Options: `--find-text`, `--find-id`, `--tap`, `--enter-text`, `--json`
+## Common Maestro patterns
 
-5. **gesture.py** - Perform swipes, scrolls, and other gestures
-   - Swipe up/down/left/right
-   - Scroll lists
-   - Options: `--swipe`, `--scroll`, `--duration`, `--json`
+### 1. Start a device
 
-6. **keyboard.py** - Key events and hardware buttons
-   - Input key events (Home, Back, Enter, Tab)
-   - Type text via ADB
-   - Options: `--key`, `--text`, `--json`
+```bash
+maestro start-device --platform android
+```
 
-7. **app_launcher.py** - App lifecycle management
-   - Launch apps (`adb shell am start`)
-   - Terminate apps (`adb shell am force-stop`)
-   - Install/Uninstall APKs
-   - List installed packages
-   - Options: `--launch`, `--terminate`, `--install`, `--uninstall`, `--list`, `--json`
+If multiple devices are running, target one explicitly:
 
-### Emulator Lifecycle Management
+```bash
+maestro --device emulator-5554 test .maestro/smoke.yaml
+```
 
-8. **emulator_manage.py** - Manage Android Virtual Devices (AVDs)
-   - List available AVDs
-   - Boot emulators
-   - Shutdown emulators
-   - Options: `--list`, `--boot`, `--shutdown`, `--json`
+### 2. Launch / stop the app
 
-9. **emu_health_check** - Verify environment is properly configured
-    - Use `emu_health_check.sh` on macOS/Linux and `emu_health_check.ps1` on Windows
-    - Check ADB, Emulator, Java, Gradle, ANDROID_HOME
-    - List connected devices
+```yaml
+appId: app.meeplebook
+---
+- launchApp
+- stopApp
+```
 
-## Common Patterns
+You can also reset app state on launch:
 
-**Auto-Device Detection**: Scripts target the single connected device/emulator if only one is present, or require `-s <serial>` if multiple are connected.
+```yaml
+appId: app.meeplebook
+---
+- launchApp:
+    clearState: true
+```
 
-**Output Formats**: Default is concise human-readable output. Use `--json` for machine-readable output.
+### 3. Tap and type semantically
 
-## Requirements
+Prefer visible text, IDs, or other stable selectors over coordinates:
 
-- Android SDK Platform-Tools (adb, fastboot)
-- Android Emulator
-- Java / OpenJDK
-- Python 3
+```yaml
+appId: app.meeplebook
+---
+- launchApp
+- tapOn: "Username"
+- inputText: "alice"
+- tapOn:
+    id: "loginButton"
+```
 
-## Key Design Principles
+### 4. Navigate and scroll
 
-**Semantic Navigation**: Find elements by text, resource-id, or content-description.
+```yaml
+appId: app.meeplebook
+---
+- launchApp
+- scroll
+- swipe:
+    direction: UP
+- back
+```
 
-**Token Efficiency**: Concise default output with optional verbose and JSON modes.
+### 5. Inspect the current screen
 
-**Zero Configuration**: Works with standard Android SDK installation.
+Use Maestro hierarchy tools instead of custom UIAutomator XML parsing:
+
+```bash
+maestro hierarchy
+```
+
+Or via MCP:
+
+- `inspect_view_hierarchy`
+
+### 6. Take screenshots and collect artifacts
+
+```yaml
+appId: app.meeplebook
+---
+- launchApp
+- takeScreenshot: "add-play-screen"
+```
+
+Artifact-oriented CLI run:
+
+```bash
+maestro test \
+  --test-output-dir=build/maestro-results \
+  --debug-output=build/maestro-debug \
+  .maestro
+```
+
+This gives you access to:
+
+- screenshots and video (`--test-output-dir`)
+- `commands-*.json`
+- `maestro.log` (`--debug-output`)
+- optional JUnit / HTML reports
+
+## Debugging guidance
+
+When a flow fails:
+
+1. inspect the hierarchy with `maestro hierarchy` or Maestro MCP
+2. rerun with `--debug-output`
+3. save screenshots / reports with `--test-output-dir`
+4. use stable selectors (`id`, exact visible text) before falling back to looser matching
+
+## Selector guidance
+
+Prefer selectors in this order:
+
+1. stable view ID
+2. exact visible text
+3. constrained selector objects
+4. custom swipe/repeat logic only when necessary
+
+Avoid coordinate-based automation unless the user explicitly asks for it and Maestro selectors are
+not viable.
+
+Use Maestro where it is a direct fit, and use the repo's normal Gradle / Android tooling for
+non-Maestro concerns outside UI automation.
