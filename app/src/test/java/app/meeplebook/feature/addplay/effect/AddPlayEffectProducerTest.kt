@@ -3,6 +3,7 @@ package app.meeplebook.feature.addplay.effect
 import app.meeplebook.R
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.architecture.ProducedEffects
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayTestFactory.makeGameSearchState
 import app.meeplebook.feature.addplay.AddPlayTestFactory.makeGameSelectedState
@@ -303,7 +304,7 @@ class AddPlayEffectProducerTest {
         (producer.produce(newState = state, event = AddPlayEvent.ActionEvent.SaveClicked)
             .effects.first() as AddPlayEffect.SavePlay).play
 
-    private fun assertNoEffects(result: AddPlayEffects) {
+    private fun assertNoEffects(result: ProducedEffects<AddPlayEffect, AddPlayUiEffect>) {
         assertTrue(result.effects.isEmpty())
         assertTrue(result.uiEffects.isEmpty())
     }

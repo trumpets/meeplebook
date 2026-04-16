@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.reducer
 
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 import javax.inject.Inject
@@ -22,7 +23,7 @@ class AddPlayReducer @Inject constructor(
     private val metaReducer: MetaReducer,
     private val playersReducer: PlayersReducer,
     private val addEditPlayerDialogReducer: AddEditPlayerDialogReducer
-) {
+) : Reducer<AddPlayUiState, AddPlayEvent> {
 
     /**
      * Runs [state] and [event] through the full sub-reducer pipeline.
@@ -31,7 +32,7 @@ class AddPlayReducer @Inject constructor(
      * @param event The user-driven event to process.
      * @return The new UI state after all sub-reducers (including validation) have run.
      */
-    fun reduce(
+    override fun reduce(
         state: AddPlayUiState,
         event: AddPlayEvent
     ): AddPlayUiState {

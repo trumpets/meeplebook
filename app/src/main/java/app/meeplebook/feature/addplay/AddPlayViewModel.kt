@@ -1,6 +1,5 @@
 package app.meeplebook.feature.addplay
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.collection.domain.DomainCollectionItem
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
@@ -15,6 +14,7 @@ import app.meeplebook.core.plays.domain.SearchPlayersByNameUseCase
 import app.meeplebook.core.plays.domain.SearchPlayersByUsernameUseCase
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.addplay.effect.AddPlayEffect
@@ -25,11 +25,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -85,9 +82,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class AddPlayViewModel @Inject constructor(
-    private val reducer: AddPlayReducer,
-    private val effectProducer: AddPlayEffectProducer,
-    private val observeRecentLocations: ObserveRecentLocationsUseCase,
+    reducer: AddPlayReducer,
+    effectProducer: AddPlayEffectProducer,
+    observeRecentLocations: ObserveRecentLocationsUseCase,
     private val searchLocations: SearchLocationsUseCase,
     private val observePlayerSuggestions: ObservePlayerSuggestionsUseCase,
     private val observeColorsUsedForGame: ObserveColorsUsedForGameUseCase,
@@ -95,9 +92,11 @@ class AddPlayViewModel @Inject constructor(
     private val createPlay: CreatePlayUseCase,
     private val searchPlayersByName: SearchPlayersByNameUseCase,
     private val searchPlayersByUsername: SearchPlayersByUsernameUseCase,
-) : ViewModel() {
-
-    private val baseState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
+) : ReducerViewModel<AddPlayUiState, AddPlayEvent, AddPlayEffect, AddPlayUiEffect>(
+    initialState = AddPlayUiState.GameSearch(),
+    reducer = reducer,
+    effectProducer = effectProducer
+) {
 
     private val gameSearchQueryFlow =
         baseState
@@ -249,34 +248,17 @@ class AddPlayViewModel @Inject constructor(
             AddPlayUiState.GameSearch()
         )
 
-    private val _uiEffect = MutableSharedFlow<AddPlayUiEffect>()
-    val uiEffect = _uiEffect.asSharedFlow()
-
     private var suggestionsJob: Job? = null
     private var saveJob: Job? = null
 
     fun onEvent(event: AddPlayEvent) {
-        val oldState = baseState.value
-        val newState = reducer.reduce(oldState, event)
-        baseState.value = newState
-
-        val effects = effectProducer.produce(newState, event)
-        handleDomainEffects(effects.effects)
-        handleUiEffects(effects.uiEffects)
+        dispatchEvent(event)
     }
 
-    private fun handleDomainEffects(effects: List<AddPlayEffect>) {
-        effects.forEach { effect ->
-            when (effect) {
-                is AddPlayEffect.LoadPlayerSuggestions -> loadPlayerSuggestions(effect)
-                is AddPlayEffect.SavePlay -> savePlay(effect)
-            }
-        }
-    }
-
-    private fun handleUiEffects(uiEffects: List<AddPlayUiEffect>) {
-        uiEffects.forEach { effect ->
-            viewModelScope.launch { _uiEffect.emit(effect) }
+    override fun handleDomainEffect(effect: AddPlayEffect) {
+        when (effect) {
+            is AddPlayEffect.LoadPlayerSuggestions -> loadPlayerSuggestions(effect)
+            is AddPlayEffect.SavePlay -> savePlay(effect)
         }
     }
 
@@ -298,7 +280,7 @@ class AddPlayViewModel @Inject constructor(
             createPlay(effect.play).fold(
                 onSuccess = {
                     baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
-                    _uiEffect.emit(AddPlayUiEffect.NavigateBack)
+                    emitUiEffect(AddPlayUiEffect.NavigateBack)
                 },
                 onFailure = {
                     baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
