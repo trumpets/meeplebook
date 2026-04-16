@@ -545,3 +545,22 @@ PR Link: <pending>
   - Keep `SharedFlow` UI effects separate from derived `StateFlow` UI state so navigation and snackbar behavior stay one-shot during architecture refactors.
   - `:app:testDebugUnitTest` validates this Plays migration successfully; broader lint / Android-test issues in this worktree remain unrelated repo blockers.
 ---
+
+## 2026-04-16
+PR Link: <pending>
+- Updated KDoc across the Plays architecture files so the reducer/base-state/derived-ui-state flow is documented consistently.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffects.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/reducer/PlaysReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+- **Learnings for future iterations:**
+  - When documenting reducer-driven screens in this repo, describe all four layers together: events, reducer-owned state, derived UI state, and one-shot effects.
+  - KDoc for mapper functions should explain architectural responsibility, not just field mapping, when they are the boundary between base state and display state.
+---

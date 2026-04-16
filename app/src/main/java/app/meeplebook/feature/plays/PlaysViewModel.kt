@@ -30,6 +30,22 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for the Plays screen.
+ *
+ * The Plays feature uses the same high-level architecture as AddPlay, but with a smaller internal
+ * state surface:
+ *
+ * - reducer-owned [PlaysBaseState] for synchronous UI inputs
+ * - debounced query flow derived from [PlaysBaseState.searchQuery]
+ * - domain observer output from [ObservePlaysScreenDataUseCase]
+ * - derived [PlaysUiState] for rendering
+ * - [PlaysUiEffect] for one-shot UI work
+ *
+ * The reducer mutates only [baseState]. Display-state derivation happens by combining `baseState`
+ * with `searchResults`, and refresh/navigation work is triggered through
+ * [PlaysEffectProducer]-produced effects.
+ */
 @HiltViewModel
 class PlaysViewModel @Inject constructor(
     private val reducer: PlaysReducer,
@@ -71,6 +87,12 @@ class PlaysViewModel @Inject constructor(
 
     private var refreshJob: Job? = null
 
+    /**
+     * Entry point for UI events.
+     *
+     * Each event goes through the reducer first, then through the effect producer so that state
+     * mutation and side-effect routing remain explicit and testable.
+     */
     fun onEvent(event: PlaysEvent) {
         val oldState = baseState.value
         val newState = reducer.reduce(oldState, event)

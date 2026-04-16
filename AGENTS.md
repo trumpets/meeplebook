@@ -210,7 +210,7 @@ Goal: eliminate hidden state, implicit sync, and lifecycle-driven logic
 ## Progress Report Format
 After completing each PR, you must document your learnings to help future iterations. This is critical for maintaining and improving the codebase over time.
 
-APPEND to progress.md (never replace, always append):
+APPEND to progress.md (never replace, always append) AT THE END OF THE FILE with the following format:
 
 ```
 ## [Date/Time]

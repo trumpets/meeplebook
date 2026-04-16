@@ -4,12 +4,11 @@ import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.ui.UiText
 
 /**
- * One-time UI effects for the Plays screen.
+ * One-shot UI effects emitted by the Plays feature.
  *
- * Unlike [app.meeplebook.feature.plays.PlaysUiState], which represents the continuous state of the screen,
- * UI effects are one-time events that trigger side effects such as navigation,
- * scrolling, or showing dialogs. Effects are emitted via a SharedFlow and consumed
- * once by the UI layer.
+ * These are collected from a `SharedFlow` and must not be modeled inside
+ * [app.meeplebook.feature.plays.PlaysUiState], because they represent transient work such as
+ * navigation or snackbars.
  */
 sealed interface PlaysUiEffect {
 

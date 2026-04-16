@@ -15,9 +15,7 @@ import app.meeplebook.core.util.formatRelativeDate
 import app.meeplebook.feature.plays.domain.DomainPlaysScreenData
 import app.meeplebook.feature.plays.domain.DomainPlaysSection
 
-/**
- * Maps a [DomainPlayItem] to a [PlayItem] for plays display.
- */
+/** Maps a domain play item into the render-ready [PlayItem] used by the Plays UI. */
 fun DomainPlayItem.toPlayItem(): PlayItem {
     val durationUiText = if (durationMinutes != null) formatDuration(durationMinutes) else uiTextEmpty()
 
@@ -35,10 +33,13 @@ fun DomainPlayItem.toPlayItem(): PlayItem {
 }
 
 /**
- * Formats a summary of players for a play, including their names, wins, and scores.
+ * Formats the player summary line shown in a play row.
  *
- * @param players the list of players in the play
- * @return a UiText representing the formatted player summary
+ * Players are sorted by `startPosition` when available. Wins and scores are appended as localized
+ * details so the row can be rendered directly with [UiText].
+ *
+ * @param players Players belonging to a single play.
+ * @return A localized summary of the players for UI display.
  */
 fun formatPlayerSummary(players: List<DomainPlayerItem>): UiText {
     if (players.isEmpty()) {
@@ -72,9 +73,7 @@ fun formatPlayerSummary(players: List<DomainPlayerItem>): UiText {
     )
 }
 
-/**
- * Maps a [DomainPlaysSection] to a [PlaysSection] for plays display.
- */
+/** Maps a domain section to the UI section model used on the Plays screen. */
 fun DomainPlaysSection.toPlaysSection(): PlaysSection {
     return PlaysSection(
         monthYearDate = monthYearDate,
@@ -82,9 +81,7 @@ fun DomainPlaysSection.toPlaysSection(): PlaysSection {
     )
 }
 
-/**
- * Maps a [DomainPlayStatsSummary] to a [PlayStats] for plays statistics display.
- */
+/** Maps domain play statistics to the summary card model shown by the Plays UI. */
 fun DomainPlayStatsSummary.toPlayStats(): PlayStats {
     return PlayStats(
         uniqueGamesCount = uniqueGamesCount,
@@ -94,6 +91,12 @@ fun DomainPlayStatsSummary.toPlayStats(): PlayStats {
     )
 }
 
+/**
+ * Converts full domain screen data plus reducer-owned [baseState] into a [PlaysUiState].
+ *
+ * This is the join point between the domain observer ([DomainPlaysScreenData]) and the reducer
+ * pipeline ([PlaysBaseState]). The function keeps display-state derivation out of the reducer.
+ */
 fun DomainPlaysScreenData.toUiState(baseState: PlaysBaseState): PlaysUiState {
     val common = PlaysCommonState(
         searchQuery = baseState.searchQuery,
@@ -115,6 +118,7 @@ fun DomainPlaysScreenData.toUiState(baseState: PlaysBaseState): PlaysUiState {
     }
 }
 
+/** Derives the appropriate empty-state reason from the current search query. */
 private fun emptyReasonFor(searchQuery: String): EmptyReason {
     return if (searchQuery.isNotBlank()) {
         EmptyReason.NO_SEARCH_RESULTS
