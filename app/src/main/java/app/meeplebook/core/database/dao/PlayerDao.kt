@@ -87,7 +87,7 @@ interface PlayerDao {
         FROM players AS player
         WHERE player.name LIKE '%' || :query || '%' COLLATE NOCASE
         GROUP BY player.name COLLATE NOCASE, player.username COLLATE NOCASE
-        ORDER BY player.name ASC
+        ORDER BY player.name COLLATE NOCASE ASC
         LIMIT 20
     """)
     fun searchDistinctPlayersByName(query: String): Flow<List<PlayerLocationProjection>>
@@ -106,7 +106,7 @@ interface PlayerDao {
         FROM players AS player
         WHERE player.username LIKE '%' || :query || '%' COLLATE NOCASE
         GROUP BY player.name COLLATE NOCASE, player.username COLLATE NOCASE
-        ORDER BY player.username ASC
+        ORDER BY player.username COLLATE NOCASE ASC
         LIMIT 20
     """)
     fun searchDistinctPlayersByUsername(query: String): Flow<List<PlayerLocationProjection>>

@@ -118,6 +118,7 @@ internal fun AddPlaySections.Players(
     state.addEditPlayerDialog?.let { dialogState ->
         AddEditPlayerDialog(
             state = dialogState,
+            colorsHistory = state.players.colorsHistory,
             onNameChanged = { name ->
                 onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditNameChanged(name))
             },

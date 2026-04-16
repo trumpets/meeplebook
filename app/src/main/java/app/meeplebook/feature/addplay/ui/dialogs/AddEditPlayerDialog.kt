@@ -67,6 +67,7 @@ import app.meeplebook.ui.theme.MeepleBookTheme
  * when it is pre-filled with an existing player's data.
  *
  * @param state Current dialog state (field values and autocomplete suggestions).
+ * @param colorsHistory History of recently used colors to pre-populate the color picker.
  * @param onNameChanged Called with the updated name string when the user types in the name field.
  * @param onUsernameChanged Called with the updated username string when the user types in the username field.
  * @param onColorChanged Called with the updated color string when the user types in the color field.
@@ -76,6 +77,7 @@ import app.meeplebook.ui.theme.MeepleBookTheme
 @Composable
 fun AddEditPlayerDialog(
     state: AddEditPlayerDialogState,
+    colorsHistory: List<PlayerColor>,
     onNameChanged: (String) -> Unit,
     onUsernameChanged: (String) -> Unit,
     onColorChanged: (String) -> Unit,
@@ -95,7 +97,7 @@ fun AddEditPlayerDialog(
     if (showColorPicker) {
         ColorPickerDialog(
             currentColor = resolvedColor,
-            colorsHistory = emptyList(),
+            colorsHistory = colorsHistory,
             onColorSelected = { color ->
                 onColorChanged(color.colorString)
                 showColorPicker = false
@@ -267,9 +269,7 @@ private fun <T> PlayerAutocompleteField(
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .onFocusChanged { focusState ->
-                    if (focusState.isFocused) expanded = true
-                },
+                .onFocusChanged { focusState -> expanded = focusState.isFocused },
         )
         DropdownMenu(
             expanded = showDropdown,
@@ -328,6 +328,7 @@ private fun AddEditPlayerDialogPreview(
     MeepleBookTheme {
         AddEditPlayerDialog(
             state = state,
+            colorsHistory = emptyList(),
             onNameChanged = {},
             onUsernameChanged = {},
             onColorChanged = {},
