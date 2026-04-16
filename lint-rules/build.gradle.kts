@@ -6,6 +6,15 @@ plugins {
 group = "app.meeplebook.lint"
 version = "1.0"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+kotlin {
+    jvmToolchain(17)
+}
+
 dependencies {
     compileOnly(libs.lint.api)
     compileOnly(libs.lint.checks)
