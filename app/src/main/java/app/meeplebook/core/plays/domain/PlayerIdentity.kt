@@ -13,7 +13,7 @@ data class PlayerIdentity(
      * Returns true when [other] refers to the same person: names match case-insensitively
      * and both usernames are either both absent or equal case-sensitive.
      * [userId] is intentionally excluded — it may differ between a freshly-added player
-     * (null) and a DB-sourced suggestion (0L when no BGG id is stored).
+     * (null) and a DB-sourced suggestion (also null when no BGG id is stored).
      */
     fun matches(other: PlayerIdentity): Boolean =
         name.equals(other.name, ignoreCase = true) &&
