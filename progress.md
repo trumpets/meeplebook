@@ -586,3 +586,43 @@ PR Link: <pending>
   - `ReducerViewModel` should stay lightweight: own reducer state and one-shot UI effects, while leaving query-flow derivation and domain-specific effect handling to subclasses.
   - `ProducedEffects.none()` is the generic replacement for per-feature `None` bundles when future screens adopt the shared contracts.
 ---
+
+## 2026-04-16T22:05:27Z
+PR Link: <pending>
+- Fixed the Collection reducer migration so Collection now follows the same base-state architecture as Plays.
+- Rebuilt `CollectionViewModel` around reducer-owned state and state-derived flows, and moved sort-sheet visibility out of UI effects into reducer/base state.
+- Updated Collection screen, unit tests, and androidTest sources to the nested event model and singular `CollectionUiEffect` type.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionDisplayReducer.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/collection/CollectionScreenRootTest.kt`
+- **Learnings for future iterations:**
+  - Persistent UI chrome such as sort-sheet visibility belongs in reducer-owned base state, not in `SharedFlow` UI effects.
+  - For debounced search screens, fetch queries should derive from reducer-owned raw input, but renderable UI state should still read the raw reducer value so typing updates immediately.
+  - When migrating a feature to nested event groups, update UI, unit tests, and android tests together; otherwise stale flat event references hide in one layer after another.
+---
+
+## 2026-04-16T22:36:12Z
+PR Link: <pending>
+- Updated Collection KDoc so the migrated reducer architecture is documented consistently across state, events, reducers, effects, and ViewModel orchestration.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionDisplayReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionFilterReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionSearchReducer.kt`
+- **Learnings for future iterations:**
+  - After migrating a feature to reducer-owned base state, refresh KDoc across all state/event/reducer/effect files in the same pass so the feature doesn’t keep explaining the pre-migration architecture.
+  - Collection docs should explicitly distinguish persistent UI state (sort sheet, view mode, filters) from one-shot UI effects (navigation, scroll, snackbar), because that boundary is easy to blur during refactors.
+---

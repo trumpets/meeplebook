@@ -874,7 +874,7 @@ class PlayDaoTest {
         assertEquals(102L, result[1].userId)
         assertEquals("Charlie", result[2].name)
         assertNull(result[2].username)
-        assertEquals(0L, result[2].userId) // Default value from MAX when null
+        assertEquals(null, result[2].userId) // Default value from MAX when null
     }
 
     @Test

@@ -120,7 +120,7 @@ fun DomainPlaysScreenData.toUiState(baseState: PlaysBaseState): PlaysUiState {
 
 /** Derives the appropriate empty-state reason from the current search query. */
 private fun emptyReasonFor(searchQuery: String): EmptyReason {
-    return if (searchQuery.isNotBlank()) {
+    return if (searchQuery.trim().isNotEmpty()) {
         EmptyReason.NO_SEARCH_RESULTS
     } else {
         EmptyReason.NO_PLAYS
