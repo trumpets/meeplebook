@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.reducer
 
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.updateGameSelected
@@ -17,9 +18,9 @@ class PlayersReducer @Inject constructor(
     private val listReducer: PlayerListReducer,
     private val scoreReducer: PlayerScoreReducer,
     private val colorReducer: PlayerColorReducer
-) {
+) : Reducer<AddPlayUiState, AddPlayEvent> {
 
-    fun reduce(
+    override fun reduce(
         state: AddPlayUiState,
         event: AddPlayEvent
     ): AddPlayUiState {
@@ -27,16 +28,16 @@ class PlayersReducer @Inject constructor(
         return state.updateGameSelected {
             val updatedPlayers = when (event) {
                 is AddPlayEvent.PlayerEditEvent ->
-                    editReducer.reduce(players.players, event)
+                    editReducer.reduce(state = players.players, event)
 
                 is AddPlayEvent.PlayerListEvent ->
-                    listReducer.reduce(players.players, event)
+                    listReducer.reduce(state = players.players, event)
 
                 is AddPlayEvent.PlayerScoreEvent ->
-                    scoreReducer.reduce(players.players, event)
+                    scoreReducer.reduce(state = players.players, event)
 
                 is AddPlayEvent.PlayerColorEvent ->
-                    colorReducer.reduce(players.players, event)
+                    colorReducer.reduce(state = players.players, event)
 
                 else -> players.players
             }
