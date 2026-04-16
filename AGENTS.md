@@ -189,6 +189,11 @@ Goal: eliminate hidden state, implicit sync, and lifecycle-driven logic
   - `./gradlew lint`
 - Instrumented path used in CI when Android-affecting files change:
   - `./gradlew connectedDebugAndroidTest`
+- For Android emulator/device UI automation, prefer **Maestro** (`maestro` CLI, Maestro MCP, or
+  Maestro YAML flows) for app launch/stop, semantic interaction, hierarchy inspection,
+  screenshots, and repeatable end-to-end flows.
+- Keep normal Gradle commands for build/lint/unit/instrumented verification; do not recreate the
+  deleted custom emulator helper scripts for those tasks.
 - Test placement and style in this repo:
   - Pure Kotlin/domain/viewmodel: `app/src/test` (fake-first, Turbine for flow assertions).
   - Room/Compose/Hilt/instrumented: `app/src/androidTest`.
