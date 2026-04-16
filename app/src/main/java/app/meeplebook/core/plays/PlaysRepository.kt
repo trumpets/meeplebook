@@ -107,4 +107,14 @@ interface PlaysRepository {
      * @return Flow emitting an ordered list of distinct color strings
      */
     fun observeColorsUsedForGame(gameId: Long): Flow<List<String>>
+
+    /**
+     * Searches distinct players whose name contains [query].
+     */
+    fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>>
+
+    /**
+     * Searches distinct players whose username contains [query].
+     */
+    fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>>
 }

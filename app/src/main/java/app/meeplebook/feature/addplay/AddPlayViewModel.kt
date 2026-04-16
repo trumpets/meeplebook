@@ -9,7 +9,10 @@ import app.meeplebook.core.plays.domain.CreatePlayUseCase
 import app.meeplebook.core.plays.domain.ObserveColorsUsedForGameUseCase
 import app.meeplebook.core.plays.domain.ObservePlayerSuggestionsUseCase
 import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
+import app.meeplebook.core.plays.domain.SearchPlayersByNameUseCase
+import app.meeplebook.core.plays.domain.SearchPlayersByUsernameUseCase
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.result.fold
 import app.meeplebook.core.ui.flow.searchableFlow
@@ -40,25 +43,44 @@ import javax.inject.Inject
 /**
  * ViewModel for the Add Play screen.
  *
- * Orchestrates the [AddPlayReducer] + [AddPlayEffectProducer] pipeline and manages
- * the reactive data flows (location suggestions, recent locations, game search).
+ * Orchestrates the [AddPlayReducer] + [AddPlayEffectProducer] pipeline and merges reactive
+ * external data (search results, suggestions, color history) into the exposed [uiState].
  *
  * ## Entry paths
- * - **Path 1 — no game pre-selected**: The screen starts with [AddPlayUiState.GameSearch.gameId] `null`.
- *   The screen drives game search via [AddPlayEvent.GameSearchEvent] events and then fires
- *   [AddPlayEvent.GameSearchEvent.GameSelected] (typically from a `LaunchedEffect`) once a
- *   game is resolved.
+ * - **Path 1 — no game pre-selected**: The screen starts with [AddPlayUiState.GameSearch.gameId]
+ *   `null`. The user searches and then fires [AddPlayEvent.GameSearchEvent.GameSelected] to
+ *   transition into the full play form.
  * - **Path 2 — game pre-selected**: The screen fires [AddPlayEvent.GameSearchEvent.GameSelected]
  *   immediately (via `LaunchedEffect`) so the full form is shown from the start.
+ *
+ * ## State architecture
+ * State is split into two layers that are `combine`d into [uiState]:
+ *
+ * ```
+ * baseState  (MutableStateFlow — mutated synchronously by the reducer on every event)
+ *     +
+ * externalData  (StateFlow — reactive, driven by debounced search pipes and DB observers)
+ *     │
+ *     ├─ searchResultsGames       ← debounced collection search (from baseState.gameSearchQuery)
+ *     ├─ searchResultsLocations   ← debounced location autocomplete (from baseState.location.value)
+ *     ├─ searchResultsPlayerNames ← debounced player-name search (from baseState.addEditPlayerDialog.name)
+ *     ├─ searchResultsPlayerUsernames ← debounced player-username search (from ...dialog.username)
+ *     ├─ recentLocationsFlow      ← DB observer (all-time recent locations)
+ *     └─ usedColorsForGameFlow    ← DB observer (colors used in past plays for the selected game)
+ * ```
+ *
+ * Query values for all debounce pipes are derived directly from `baseState` via
+ * `map + distinctUntilChanged`, so no separate raw query flows are needed.
  *
  * ## Event flow
  * ```
  * onEvent(event)
- *   ├─ update rawGameSearchQuery / rawLocationQuery  (drive reactive debounce pipes)
- *   └─ reducer.reduce(state, event) → newState
- *        └─ effectProducer.produce(newState, event) → effects
+ *   └─ reducer.reduce(baseState, event) → newState  (synchronous, updates baseState)
+ *        └─ effectProducer.produce(newState, event) → AddPlayEffects
  *             ├─ domain effects → handled here (async, job-cancellable)
- *             └─ ui effects    → emitted on [uiEffect]
+ *             │    ├─ LoadPlayerSuggestions → observePlayerSuggestions → baseState update
+ *             │    └─ SavePlay → createPlay → NavigateBack ui effect on success
+ *             └─ ui effects → emitted on [uiEffect]
  * ```
  */
 @HiltViewModel
@@ -70,51 +92,89 @@ class AddPlayViewModel @Inject constructor(
     private val observePlayerSuggestions: ObservePlayerSuggestionsUseCase,
     private val observeColorsUsedForGame: ObserveColorsUsedForGameUseCase,
     private val observeCollection: ObserveCollectionUseCase,
-    private val createPlay: CreatePlayUseCase
+    private val createPlay: CreatePlayUseCase,
+    private val searchPlayersByName: SearchPlayersByNameUseCase,
+    private val searchPlayersByUsername: SearchPlayersByUsernameUseCase,
 ) : ViewModel() {
 
-    private val rawGameSearchQuery = MutableStateFlow("")
-    private val rawLocationQuery = MutableStateFlow("")
+    private val baseState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
 
-    private data class Queries(
-        val gameQuery: String,
-        val locationQuery: String
-    )
-
-    private val queriesFlow =
-        combine(rawGameSearchQuery, rawLocationQuery) { game, location ->
-            Queries(game, location)
-        }
+    private val gameSearchQueryFlow =
+        baseState
+            .map {
+                it.asGameSearch { gameSearchQuery } ?: ""
+            }
+            .distinctUntilChanged()
+    private val locationQueryFlow =
+        baseState
+            .map {
+                it.asGameSelected { location.value } ?: ""
+            }
+            .distinctUntilChanged()
+    private val addEditNameQueryFlow =
+        baseState
+            .map {
+                it.asGameSelected { addEditPlayerDialog?.name } ?: ""
+            }
+            .distinctUntilChanged()
+    private val addEditUsernameQueryFlow =
+        baseState
+            .map {
+                it.asGameSelected { addEditPlayerDialog?.username } ?: ""
+            }
+            .distinctUntilChanged()
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private val searchResultsLocations =
         searchableFlow(
-            queryFlow = rawLocationQuery,
+            queryFlow = locationQueryFlow,
             debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
         ) { query ->
-            searchLocations(query)
+            if (query.isBlank()) flowOf(emptyList())
+            else searchLocations(query)
         }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private val searchResultsGames =
         searchableFlow(
-            queryFlow = rawGameSearchQuery,
+            queryFlow = gameSearchQueryFlow,
             debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
         ) { query ->
             observeCollection(CollectionDataQuery(searchQuery = query))
         }
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private val searchResultsPlayerNames =
+        searchableFlow(
+            queryFlow = addEditNameQueryFlow,
+            debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
+        ) { query ->
+            if (query.isBlank()) flowOf(emptyList())
+            else searchPlayersByName(query)
+        }
+
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private val searchResultsPlayerUsernames =
+        searchableFlow(
+            queryFlow = addEditUsernameQueryFlow,
+            debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
+        ) { query ->
+            if (query.isBlank()) flowOf(emptyList())
+            else searchPlayersByUsername(query)
+        }
+
     private data class SearchResults(
         val games: List<DomainCollectionItem>,
-        val locations: List<String>
+        val locations: List<String>,
+        val names: List<PlayerIdentity>,
+        val usernames: List<PlayerIdentity>
     )
 
     private val searchResultsFlow =
-        combine(searchResultsGames, searchResultsLocations) { games, locations ->
-            SearchResults(games, locations)
+        combine(searchResultsGames, searchResultsLocations, searchResultsPlayerNames, searchResultsPlayerUsernames) { games, locations, names, usernames ->
+            SearchResults(games, locations, names, usernames)
         }
 
-    private val baseState = MutableStateFlow<AddPlayUiState>(AddPlayUiState.GameSearch())
 
     // Observe distinct player colors for the currently selected game.
     private val selectedGameIdFlow =
@@ -131,7 +191,6 @@ class AddPlayViewModel @Inject constructor(
     val recentLocationsFlow = observeRecentLocations()
 
     private data class ExternalData(
-        val queries: Queries,
         val search: SearchResults,
         val recentLocations: List<String>,
         val usedColors: List<PlayerColor>
@@ -139,14 +198,12 @@ class AddPlayViewModel @Inject constructor(
 
     private val externalData =
         combine(
-            queriesFlow,
             searchResultsFlow,
             recentLocationsFlow,
             usedColorsForGameFlow
-        ) { queries, search, recentLocations, usedColors ->
+        ) { search, recentLocations, usedColors ->
 
             ExternalData(
-                queries = queries,
                 search = search,
                 recentLocations = recentLocations,
                 usedColors = usedColors
@@ -155,8 +212,7 @@ class AddPlayViewModel @Inject constructor(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
             ExternalData(
-                queries = Queries(gameQuery = "", locationQuery = ""),
-                search = SearchResults(games = emptyList(), locations = emptyList()),
+                search = SearchResults(games = emptyList(), locations = emptyList(), names = emptyList(), usernames = emptyList()),
                 recentLocations = emptyList(),
                 usedColors = emptyList()
             )
@@ -170,18 +226,20 @@ class AddPlayViewModel @Inject constructor(
 
             when (state) {
                 is AddPlayUiState.GameSearch -> state.copy(
-                    gameSearchQuery = data.queries.gameQuery,
                     gameSearchResults = data.search.games.map { it.toSearchResultGameItem() },
                 )
 
                 is AddPlayUiState.GameSelected -> state.copy(
                     location = state.location.copy(
-                        value = data.queries.locationQuery,
                         suggestions = data.search.locations,
                         recentLocations = data.recentLocations
                     ),
                     players = state.players.copy(
                         colorsHistory = data.usedColors
+                    ),
+                    addEditPlayerDialog = state.addEditPlayerDialog?.copy(
+                        nameSuggestions = data.search.names,
+                        usernameSuggestions = data.search.usernames
                     )
                 )
             }
@@ -197,20 +255,7 @@ class AddPlayViewModel @Inject constructor(
     private var suggestionsJob: Job? = null
     private var saveJob: Job? = null
 
-    // region Public API
-
     fun onEvent(event: AddPlayEvent) {
-        // Feed raw query flows so debounce pipes run alongside the reducer
-        when (event) {
-            is AddPlayEvent.GameSearchEvent.GameSearchQueryChanged ->
-                rawGameSearchQuery.value = event.query
-
-            is AddPlayEvent.MetadataEvent.LocationChanged ->
-                rawLocationQuery.value = event.value
-
-            else -> Unit
-        }
-
         val oldState = baseState.value
         val newState = reducer.reduce(oldState, event)
         baseState.value = newState
@@ -219,10 +264,6 @@ class AddPlayViewModel @Inject constructor(
         handleDomainEffects(effects.effects)
         handleUiEffects(effects.uiEffects)
     }
-
-    // endregion
-
-    // region Effect handling
 
     private fun handleDomainEffects(effects: List<AddPlayEffect>) {
         effects.forEach { effect ->
@@ -265,6 +306,4 @@ class AddPlayViewModel @Inject constructor(
             )
         }
     }
-
-    // endregion
 }

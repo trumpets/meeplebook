@@ -34,6 +34,8 @@ Follow Google's NowInAndroid design and code and theming principles:
 ## 1 — Modules & folders (start single-module, plan multi-module)
 Short-term (one Gradle module :app):
 
+Current repo reality is the source of truth. Treat the package layout inside `app/` as authoritative today. Multi-module remains the intended long-term direction, but do **not** assume `:core:*` / `:feature:*` Gradle modules exist yet, and do not propose or apply modularization unless explicitly asked.
+
 ```
 app/
 src/main/java/app/meeplebook/
@@ -221,13 +223,17 @@ Room DAO tests (in-memory database).
 
 Compose UI tests using createComposeRule.
 
+### Screenshot tests
+
+Screenshot testing is not configured in this repo today. If asked to propose screenshot coverage, prefer **Paparazzi** as the default future direction. **Roborazzi** may be mentioned only as an optional user-chosen addition for a small set of critical screens, and only if/when the dependency is intentionally added.
+
 ### Integration
 
 Repository + fake network server (MockWebServer) + in-memory DB.
 
 ### CI
 
-GitHub Actions -> run ./gradlew test and connectedAndroidTest (or use emulator in CI). Also run lint & ktlint/detekt.
+GitHub Actions currently runs `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest` where applicable. Treat those as the source-of-truth verification commands over generic `./gradlew test` examples.
 
 ## 11 — CI / Release pipeline
 ### CI (GH Actions):

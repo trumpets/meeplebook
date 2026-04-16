@@ -50,10 +50,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.toColorInt
 import app.meeplebook.R
-import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.util.LuminanceUtils
-import app.meeplebook.feature.addplay.PlayerEntryUi
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 /**
@@ -88,12 +86,11 @@ internal fun remainingColors(colorsHistory: List<PlayerColor>): List<PlayerColor
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorPickerDialog(
-    player: PlayerEntryUi,
+    currentColor: PlayerColor?,
     colorsHistory: List<PlayerColor>,
     onColorSelected: (PlayerColor) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val currentColor = PlayerColor.fromString(player.color)
     val startExpanded = colorsHistory.isEmpty()
     var expanded by remember { mutableStateOf(startExpanded) }
 
@@ -251,7 +248,7 @@ private fun ColorCircleItem(
 // ── Previews ──────────────────────────────────────────────────────────────────
 
 private data class ColorPickerDialogPreviewState(
-    val player: PlayerEntryUi,
+    val currentColor: PlayerColor?,
     val colorsHistory: List<PlayerColor>,
 )
 
@@ -260,28 +257,12 @@ private class ColorPickerDialogPreviewProvider :
     override val values = sequenceOf(
         // No history — opens expanded showing all colours.
         ColorPickerDialogPreviewState(
-            player = PlayerEntryUi(
-                playerIdentity = PlayerIdentity(
-                    name = "Alice",
-                    username = "alicebgg",
-                    userId = null
-                ),
-                startPosition = 1,
-                color = PlayerColor.BLUE.colorString,
-                score = null,
-                isWinner = false,
-            ),
+            currentColor = PlayerColor.BLUE,
             colorsHistory = emptyList(),
         ),
         // Has history — opens compact with MORE button.
         ColorPickerDialogPreviewState(
-            player = PlayerEntryUi(
-                playerIdentity = PlayerIdentity(name = "Bob", username = null, userId = null),
-                startPosition = 2,
-                color = PlayerColor.RED.colorString,
-                score = null,
-                isWinner = false,
-            ),
+            currentColor = PlayerColor.RED,
             colorsHistory = listOf(PlayerColor.RED, PlayerColor.BLUE, PlayerColor.GREEN),
         ),
     )
@@ -295,7 +276,7 @@ private fun ColorPickerDialogPreview(
 ) {
     MeepleBookTheme {
         ColorPickerDialog(
-            player = state.player,
+            currentColor = state.currentColor,
             colorsHistory = state.colorsHistory,
             onColorSelected = {},
             onDismiss = {},

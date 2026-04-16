@@ -2,11 +2,14 @@ package app.meeplebook.feature.addplay.ui.sections
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -20,6 +23,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +52,7 @@ import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.PLAYER_ROW_HEIGHT
+import app.meeplebook.feature.addplay.ui.dialogs.AddEditPlayerDialog
 import app.meeplebook.feature.addplay.PlayerEntryUi
 import app.meeplebook.feature.addplay.ui.components.PlayerEntryRow
 import app.meeplebook.feature.addplay.ui.dialogs.ColorPickerDialog
@@ -95,7 +100,7 @@ internal fun AddPlaySections.Players(
 
     colorDialogPlayer?.let { target ->
         ColorPickerDialog(
-            player = target,
+            currentColor = PlayerColor.fromString(target.color),
             colorsHistory = state.players.colorsHistory,
             onColorSelected = { color ->
                 onEvent(
@@ -107,6 +112,28 @@ internal fun AddPlaySections.Players(
                 colorDialogPlayer = null
             },
             onDismiss = { colorDialogPlayer = null },
+        )
+    }
+
+    state.addEditPlayerDialog?.let { dialogState ->
+        AddEditPlayerDialog(
+            state = dialogState,
+            colorsHistory = state.players.colorsHistory,
+            onNameChanged = { name ->
+                onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditNameChanged(name))
+            },
+            onUsernameChanged = { username ->
+                onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditUsernameChanged(username))
+            },
+            onColorChanged = { color ->
+                onEvent(AddPlayEvent.AddEditPlayerDialogEvent.AddEditColorChanged(color))
+            },
+            onConfirm = {
+                onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ConfirmAddEditPlayer)
+            },
+            onDismiss = {
+                onEvent(AddPlayEvent.AddEditPlayerDialogEvent.DismissAddEditPlayerDialog)
+            },
         )
     }
 
@@ -129,11 +156,22 @@ internal fun AddPlaySections.Players(
             .fillMaxWidth()
             .padding(horizontal = ScreenPadding.Horizontal, vertical = ScreenPadding.Small)
     ) {
-        Text(
-            text = stringResource(R.string.add_play_players_label_with_count, players.size),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = stringResource(R.string.add_play_players_label_with_count, players.size),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            TextButton(
+                onClick = { onEvent(AddPlayEvent.AddEditPlayerDialogEvent.ShowAddPlayerDialog) },
+            ) {
+                Text(text = stringResource(R.string.add_play_add_player))
+            }
+        }
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         players.forEachIndexed { index, player ->
@@ -144,6 +182,13 @@ internal fun AddPlaySections.Players(
                     if (swipeState.currentValue == SwipeToDismissBoxValue.StartToEnd) {
                         pendingUndo = player to index
                         onEvent(AddPlayEvent.PlayerListEvent.RemovePlayer(player.playerIdentity))
+                    } else if (swipeState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                        swipeState.snapTo(SwipeToDismissBoxValue.Settled)
+                        onEvent(
+                            AddPlayEvent.AddEditPlayerDialogEvent.ShowEditPlayerDialog(
+                                playerIdentity = player.playerIdentity
+                            )
+                        )
                     }
                 }
 

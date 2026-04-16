@@ -44,6 +44,8 @@ sealed interface AddPlayUiState {
 
         val isSaving: Boolean,
         val error: UiText = uiTextEmpty(),
+
+        val addEditPlayerDialog: AddEditPlayerDialogState? = null,
     ) : AddPlayUiState {
 
         val canSave: Boolean
@@ -150,6 +152,25 @@ data class SearchResultGameItem(
 )
 
 /**
+ * State for the Add/Edit Player dialog.
+ *
+ * @param editingIdentity The identity of the player being edited, or `null` when adding a new player.
+ * @param name Current value of the player name field.
+ * @param username Current value of the BGG username field.
+ * @param color Current value of the team/color field.
+ * @param nameSuggestions Autocomplete suggestions matching [name], sourced from the local DB.
+ * @param usernameSuggestions Autocomplete suggestions matching [username], sourced from the local DB.
+ */
+data class AddEditPlayerDialogState(
+    val editingIdentity: PlayerIdentity? = null,
+    val name: String = "",
+    val username: String = "",
+    val color: String = "",
+    val nameSuggestions: List<PlayerIdentity> = emptyList(),
+    val usernameSuggestions: List<PlayerIdentity> = emptyList(),
+)
+
+/**
  * Safely updates the current state if it is GameSelected.
  *
  * Usage:
@@ -186,4 +207,11 @@ fun AddPlayUiState.updateGameSearch(
  */
 inline fun <T> AddPlayUiState.asGameSelected(block: AddPlayUiState.GameSelected.() -> T): T? {
     return (this as? AddPlayUiState.GameSelected)?.block()
+}
+
+/**
+ * Safely run [block] if the state is [AddPlayUiState.GameSearch], otherwise return null.
+ */
+inline fun <T> AddPlayUiState.asGameSearch(block: AddPlayUiState.GameSearch.() -> T): T? {
+    return (this as? AddPlayUiState.GameSearch)?.block()
 }

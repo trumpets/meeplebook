@@ -238,4 +238,49 @@ class FakePlaysRepository : PlaysRepository {
         _recentPlays.value = plays.sortedByDescending { it.date }.take(5)
         _uniqueGamesCount.value = plays.map { it.gameId }.distinct().count().toLong()
     }
+
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> =
+        _plays.map { plays ->
+            plays
+                .flatMap { it.players }
+                .filter { it.name.contains(query, ignoreCase = true) }
+                .groupBy { it.name.lowercase() to it.username?.lowercase() }
+                .map { (_, group) ->
+                    group.maxBy { it.userId ?: Long.MIN_VALUE }
+                }
+                .sortedBy { it.name.lowercase() }
+                .take(20)
+                .map {
+                    PlayerIdentity(
+                        name = it.name,
+                        username = it.username,
+                        userId = it.userId
+                    )
+                }
+        }
+
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> =
+        _plays.map { plays ->
+            plays
+                .flatMap { it.players }
+                .filter {
+                    !it.username.isNullOrBlank() &&
+                            it.username.contains(query, ignoreCase = true)
+                }
+                .groupBy {
+                    it.name.lowercase() to it.username!!.lowercase()
+                }
+                .map { (_, group) ->
+                    group.maxBy { it.userId ?: Long.MIN_VALUE }
+                }
+                .sortedBy { it.username?.lowercase() }
+                .take(20)
+                .map {
+                    PlayerIdentity(
+                        name = it.name,
+                        username = it.username,
+                        userId = it.userId
+                    )
+                }
+        }
 }

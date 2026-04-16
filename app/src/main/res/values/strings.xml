@@ -133,6 +133,17 @@
     <string name="add_play_no_player_suggestions">No suggestions for this location</string>
     <string name="player_name_with_username">%1$s (@%2$s)</string>
 
+    <!-- Add/Edit Player Dialog -->
+    <string name="add_edit_player_title_add">New Player</string>
+    <string name="add_edit_player_title_edit">Edit Player</string>
+    <string name="add_edit_player_name_label">Player Name</string>
+    <string name="add_edit_player_username_label">BGG Username</string>
+    <string name="add_edit_player_color_label">Team / Color</string>
+    <string name="add_edit_player_confirm">Confirm</string>
+    <string name="add_edit_player_cancel">Cancel</string>
+    <string name="add_edit_player_color_preview_description">Color preview: %1$s</string>
+    <string name="add_edit_player_color_pick_description">Pick color</string>
+
 
     <!-- Score input dialog -->
     <string name="score_input_confirm_content_description">Confirm score</string>

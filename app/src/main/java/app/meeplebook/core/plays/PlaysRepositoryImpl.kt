@@ -137,4 +137,12 @@ class PlaysRepositoryImpl @Inject constructor(
     override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
         return local.observeColorsUsedForGame(gameId)
     }
+
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> {
+        return local.searchPlayersByName(query.trim())
+    }
+
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> {
+        return local.searchPlayersByUsername(query.trim())
+    }
 }

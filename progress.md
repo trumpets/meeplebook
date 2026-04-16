@@ -11,6 +11,36 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
     - Test suites should cover: normal operation, empty state, reactivity to data changes, and edge cases like different time periods
     - Fake repositories should compute derived values (like unique games count) in `updateComputedValues` to keep all counters consistent when `setPlays` is called
 ---
+
+## 2026-04-10
+PR Link: https://github.com/trumpets/meeplebook/pull/103
+- Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
+- **Learnings for future iterations:**
+    - `player_name_with_username` should be reused for user-visible player labels, and a matching simple name resource keeps formatting/localization consistent across features.
+---
+
+## 2026-04-10
+PR Link: https://github.com/trumpets/meeplebook/pull/103
+- Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
+- Files changed:
+  - `AGENTS.md`
+  - `.github/copilot-instructions.md`
+  - `.github/skills/architecture/android-architecture/SKILL.md`
+  - `.github/skills/architecture/android-viewmodel/SKILL.md`
+  - `.github/skills/architecture/android-data-layer/SKILL.md`
+  - `.github/skills/build_and_tooling/android-gradle-logic/SKILL.md`
+  - `.github/skills/concurrency_and_networking/android-retrofit/SKILL.md`
+  - `.github/skills/ui/compose-navigation/SKILL.md`
+  - `.github/skills/testing_and_automation/android-testing/SKILL.md`
+  - `.github/skills/performance/gradle-build-performance/SKILL.md`
+- **Learnings for future iterations:**
+    - The repo must be documented from its current package-based `:app` structure first; multi-module remains a future target, not an assumed present state.
+    - Skill docs drift quickly when they embed generic Android examples with hardcoded module names, task names, or library setup; MeepleBook-specific notes should be added near the top of those docs.
+    - Screenshot guidance for this repo is Paparazzi-first if/when added; Roborazzi should only be mentioned as an explicit future user choice and never as an assumed dependency.
+    - CI/source-of-truth verification commands are `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest`.
+---
 ## 2026-01-29T22:20:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743783872)
 - Created comprehensive test suite `ObservePlaysUseCaseTest` with 8 test cases covering query passthrough, mapping correctness, and flow reactivity
@@ -431,4 +461,40 @@ PR Link: N/A (local session)
     - `BackHandler` in Compose works with `Espresso.pressBack()` in instrumented tests using `createComposeRule()`
     - DAO test helper functions with `score: Int?` must be updated to `score: Double?` when `PlayerEntity.score` changes type
     - `AddPlayScreenRoot` accepts state directly — tests pass pre-constructed `AddPlayUiState` (no Hilt needed)
+---
+
+## 2026-04-02
+PR Link: N/A (local session)
+- Added "Add New Player" button to `MorePlayersDialog` + updated title to "Add Player"
+- Created `AddEditPlayerDialog` for adding new players or editing existing ones (name, username, team/color with live color swatch, autocomplete dropdowns for both name and username fields)
+- Added player search to data layer: `PlayerDao.searchDistinctPlayersByName/searchDistinctPlayersByUsername` (DISTINCT + LIKE queries), `PlaysLocalDataSource`, `PlaysRepository`, `SearchPlayersByNameUseCase`, `SearchPlayersByUsernameUseCase`
+- Added `AddEditPlayerDialogState` to `GameSelected` UiState and `AddEditPlayerDialogEvent` sealed interface to `AddPlayEvent`
+- Created `AddEditPlayerDialogReducer` (handles open/dismiss/field edits/confirm for both add-new and edit-existing flows)
+- Wired `AddEditPlayerDialogReducer` into `PlayersReducer` pipeline
+- Updated `AddPlayViewModel` with two debounced search flows (`rawAddEditNameQuery`, `rawAddEditUsernameQuery`) following existing `rawLocationQuery` pattern; search results fold into dialog state suggestions
+- Wired EndToStart swipe-to-edit in `PlayersSection` → `ShowEditPlayerDialog` (was previously unimplemented)
+- Updated `SuggestedPlayersSection` to pass `onAddNewPlayer` → `ShowAddPlayerDialog`
+- Updated `FakePlaysRepository` and `FakePlaysLocalDataSource` test fakes with stub implementations of new interface methods
+- Fixed `PlayersReducerTest`, `AddPlayReducerTest`, `AddPlayViewModelTest` to pass `AddEditPlayerDialogReducer` to `PlayersReducer`
+- **Learnings for future iterations:**
+    - Reducers that need early-return logic (guard clauses) must use block body `fun f(): T { return when(...) {...} }` not expression body `fun f(): T = when(...) {...}` — Kotlin forbids `return` inside expression bodies
+    - When adding new methods to `PlaysRepository`/`PlaysLocalDataSource` interfaces, always update `FakePlaysRepository` and `FakePlaysLocalDataSource` in `src/test/` or unit test compilation fails
+    - Player search queries go in `PlayerDao` (direct players table), not `PlayDao` (which needs JOIN with plays)
+    - The `AddEditPlayerDialogReducer` takes `GameSelected` directly (not just the player list) because it modifies both `addEditPlayerDialog` state AND `players.players` on confirm
+    - `PlayerLocationProjection` (from `core/database/projection/`) can be reused for player search DAO queries — same shape (name, username, MAX(userId))
+---
+
+## 2026-04-10
+- **Task:** AddEditPlayerDialogReducer tests + Fake search implementations
+- **Files changed:**
+  - `app/src/test/.../FakePlaysRepository.kt` — implemented `searchPlayersByName`/`searchPlayersByUsername` (was `flowOf(emptyList())`)
+  - `app/src/test/.../local/FakePlaysLocalDataSource.kt` — same for local data source fake
+  - `app/src/test/.../reducer/AddEditPlayerDialogReducerTest.kt` — new file, 28 tests covering all reducer branches
+  - `app/src/test/.../AddPlayViewModelTest.kt` — 4 new tests for AddEdit dialog search debounce flows
+  - Also fixed 3 test files with stale `PlayersReducer(addEditDialogReducer=...)` API references
+- **Learnings for future iterations:**
+  - Fake search methods now filter `_plays`/`playsFlow` by name/username contains (case-insensitive) with `distinctBy` — usable in ViewModel search debounce tests
+  - `AddEditPlayerDialogReducer` clears suggestions on field changes; they are populated externally by the ViewModel debounce flows
+  - `ConfirmAddEditPlayer` resets raw name/username query flows in the ViewModel — reopening the dialog shows empty suggestions
+  - `PlayTestFactory.createPlay(localPlayId, gameName, ...)` — `gameName` is a required parameter (not defaulted)
 ---
