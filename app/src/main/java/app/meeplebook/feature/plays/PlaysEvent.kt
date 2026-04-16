@@ -10,14 +10,11 @@ import app.meeplebook.core.plays.model.PlayId
  */
 sealed interface PlaysEvent {
 
-    // Search
     data class SearchChanged(val query: String) : PlaysEvent
 
-    // Actions
-    data class PlayClicked(val playId: PlayId) : PlaysEvent
-    data object LogPlayClicked : PlaysEvent
-
-
-    // System
-    data object Refresh : PlaysEvent
+    sealed interface ActionEvent : PlaysEvent {
+        data class PlayClicked(val playId: PlayId) : ActionEvent
+        data object LogPlayClicked : ActionEvent
+        data object Refresh : ActionEvent
+    }
 }

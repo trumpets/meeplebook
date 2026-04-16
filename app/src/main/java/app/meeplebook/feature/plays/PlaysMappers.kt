@@ -12,6 +12,7 @@ import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.ScoreFormatter
 import app.meeplebook.core.util.formatDuration
 import app.meeplebook.core.util.formatRelativeDate
+import app.meeplebook.feature.plays.domain.DomainPlaysScreenData
 import app.meeplebook.feature.plays.domain.DomainPlaysSection
 
 /**
@@ -91,4 +92,33 @@ fun DomainPlayStatsSummary.toPlayStats(): PlayStats {
         playsThisYear = playsThisYear,
         currentYear = currentYear
     )
+}
+
+fun DomainPlaysScreenData.toUiState(baseState: PlaysBaseState): PlaysUiState {
+    val common = PlaysCommonState(
+        searchQuery = baseState.searchQuery,
+        playStats = stats.toPlayStats(),
+        isRefreshing = baseState.isRefreshing
+    )
+    val sections = this.sections.map { it.toPlaysSection() }
+
+    return if (sections.isEmpty()) {
+        PlaysUiState.Empty(
+            reason = emptyReasonFor(baseState.searchQuery),
+            common = common
+        )
+    } else {
+        PlaysUiState.Content(
+            sections = sections,
+            common = common
+        )
+    }
+}
+
+private fun emptyReasonFor(searchQuery: String): EmptyReason {
+    return if (searchQuery.isNotBlank()) {
+        EmptyReason.NO_SEARCH_RESULTS
+    } else {
+        EmptyReason.NO_PLAYS
+    }
 }

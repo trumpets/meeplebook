@@ -49,6 +49,7 @@ import app.meeplebook.R
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.asString
+import app.meeplebook.feature.plays.effect.PlaysUiEffect
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.core.ui.uiTextJoin
 import app.meeplebook.core.ui.uiTextRes
@@ -85,11 +86,11 @@ fun PlaysScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
 
-                is PlaysUiEffects.NavigateToPlay -> {
+                is PlaysUiEffect.NavigateToPlay -> {
 //                    onNavigateToPlay(effect.playId)
                 }
 
-                is PlaysUiEffects.ShowSnackbar -> {
+                is PlaysUiEffect.ShowSnackbar -> {
                     Toast.makeText(context, effect.messageUiText.asString(resources), Toast.LENGTH_SHORT).show()
 //                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
@@ -114,7 +115,7 @@ fun PlaysScreenRoot(
             .testTag("playsScreen")
     ) {
         when (uiState) {
-            PlaysUiState.Loading ->
+            is PlaysUiState.Loading ->
                 LoadingState(loadingMessageUiText = uiTextRes(R.string.plays_loading))
 
             is PlaysUiState.Empty ->
@@ -219,7 +220,7 @@ private fun PlaysScreenContent(
 ) {
     PullToRefreshBox(
         isRefreshing = isRefreshing,
-        onRefresh = { onEvent(PlaysEvent.Refresh) },
+        onRefresh = { onEvent(PlaysEvent.ActionEvent.Refresh) },
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
@@ -243,7 +244,7 @@ private fun PlaysScreenContent(
                 ) { playItem ->
                     PlayItemRow(
                         playItem = playItem,
-                        onClick = { onEvent(PlaysEvent.PlayClicked(playItem.playId)) }
+                        onClick = { onEvent(PlaysEvent.ActionEvent.PlayClicked(playItem.playId)) }
                     )
                 }
             }

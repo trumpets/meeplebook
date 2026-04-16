@@ -9,6 +9,10 @@ import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.plays.domain.ObservePlaysScreenDataUseCase
+import app.meeplebook.feature.plays.effect.PlaysEffect
+import app.meeplebook.feature.plays.effect.PlaysEffectProducer
+import app.meeplebook.feature.plays.effect.PlaysUiEffect
+import app.meeplebook.feature.plays.reducer.PlaysReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -19,23 +23,32 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PlaysViewModel @Inject constructor(
+    private val reducer: PlaysReducer,
+    private val effectProducer: PlaysEffectProducer,
     private val observePlaysScreenData: ObservePlaysScreenDataUseCase,
     private val syncPlays: SyncPlaysUseCase
 ) : ViewModel() {
 
-    private val rawSearchQuery = MutableStateFlow("")
-    private val isRefreshing = MutableStateFlow(false)
+    private val baseState = MutableStateFlow(PlaysBaseState())
+
+    private val searchQueryFlow =
+        baseState
+            .map { it.searchQuery }
+            .distinctUntilChanged()
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private val searchResults =
         searchableFlow(
-            queryFlow = rawSearchQuery,
+            queryFlow = searchQueryFlow,
             debounceMillis = DebounceDurations.SearchQuery.inWholeMilliseconds
         ) { query ->
             observePlaysScreenData(query)
@@ -43,92 +56,67 @@ class PlaysViewModel @Inject constructor(
 
     val uiState: StateFlow<PlaysUiState> =
         combine(
-            rawSearchQuery,
-            searchResults,
-            isRefreshing
-        ) { rawQuery, screenData, refreshing ->
-
-            val sections = screenData.sections.map { it.toPlaysSection() }
-            val common = PlaysCommonState(
-                searchQuery = rawQuery,
-                playStats = screenData.stats.toPlayStats(),
-                isRefreshing = refreshing
-            )
-
-            when {
-                sections.isEmpty() -> PlaysUiState.Empty(
-                    reason = emptyReason(rawQuery),
-                    common = common
-                )
-                else -> PlaysUiState.Content(
-                    sections = sections,
-                    common = common
-                )
-            }
+            baseState,
+            searchResults
+        ) { state, screenData ->
+            screenData.toUiState(state)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
             PlaysUiState.Loading
         )
 
-    private val _uiEffect = MutableSharedFlow<PlaysUiEffects>()
+    private val _uiEffect = MutableSharedFlow<PlaysUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
     private var refreshJob: Job? = null
 
     fun onEvent(event: PlaysEvent) {
-        when (event) {
-            is PlaysEvent.SearchChanged -> {
-                rawSearchQuery.value = event.query
-            }
+        val oldState = baseState.value
+        val newState = reducer.reduce(oldState, event)
+        baseState.value = newState
 
-            is PlaysEvent.PlayClicked -> {
-                emitEffect(PlaysUiEffects.NavigateToPlay(event.playId))
-            }
+        val effects = effectProducer.produce(newState, event)
+        handleDomainEffects(effects.effects)
+        handleUiEffects(effects.uiEffects)
+    }
 
-            is PlaysEvent.Refresh -> {
-                refreshJob?.cancel()
-                refreshJob = viewModelScope.launch {
-                    isRefreshing.value = true
-                    try {
-                        syncPlays().fold(
-                            onSuccess = {
-                                // Sync successful, data will update automatically via flows
-                            },
-                            onFailure = { _ ->
-                                emitEffect(
-                                    PlaysUiEffects.ShowSnackbar(
-                                        messageUiText = uiTextRes(R.string.sync_plays_failed_error)
-                                    )
-                                )
-                            }
-                        )
-                    } finally {
-                        isRefreshing.value = false
+    private fun handleDomainEffects(effects: List<PlaysEffect>) {
+        effects.forEach { effect ->
+            when (effect) {
+                PlaysEffect.Refresh -> refresh()
+            }
+        }
+    }
+
+    private fun handleUiEffects(uiEffects: List<PlaysUiEffect>) {
+        uiEffects.forEach { effect ->
+            viewModelScope.launch {
+                _uiEffect.emit(effect)
+            }
+        }
+    }
+
+    private fun refresh() {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            baseState.update { state ->
+                state.copy(isRefreshing = true)
+            }
+            try {
+                syncPlays().fold(
+                    onSuccess = {
+                        // Sync successful, data will update automatically via flows.
+                    },
+                    onFailure = { _ ->
+                        _uiEffect.emit(PlaysUiEffect.ShowSnackbar(uiTextRes(R.string.sync_plays_failed_error)))
                     }
+                )
+            } finally {
+                baseState.update { state ->
+                    state.copy(isRefreshing = false)
                 }
             }
-
-            PlaysEvent.LogPlayClicked -> {
-                // TODO: Implement navigation or handling for logging a play.
-            }
         }
     }
-
-    private fun emitEffect(effect: PlaysUiEffects) {
-        viewModelScope.launch {
-            _uiEffect.emit(effect)
-        }
-    }
-
-    private fun emptyReason(
-        searchQuery: String,
-    ): EmptyReason =
-        when {
-            searchQuery.isNotBlank() ->
-                EmptyReason.NO_SEARCH_RESULTS
-
-            else ->
-                EmptyReason.NO_PLAYS
-        }
 }

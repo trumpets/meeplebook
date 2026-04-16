@@ -12,35 +12,6 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
     - Fake repositories should compute derived values (like unique games count) in `updateComputedValues` to keep all counters consistent when `setPlays` is called
 ---
 
-## 2026-04-10
-PR Link: https://github.com/trumpets/meeplebook/pull/103
-- Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
-- Files changed:
-  - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
-- **Learnings for future iterations:**
-    - `player_name_with_username` should be reused for user-visible player labels, and a matching simple name resource keeps formatting/localization consistent across features.
----
-
-## 2026-04-10
-PR Link: https://github.com/trumpets/meeplebook/pull/103
-- Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
-- Files changed:
-  - `AGENTS.md`
-  - `.github/copilot-instructions.md`
-  - `.github/skills/architecture/android-architecture/SKILL.md`
-  - `.github/skills/architecture/android-viewmodel/SKILL.md`
-  - `.github/skills/architecture/android-data-layer/SKILL.md`
-  - `.github/skills/build_and_tooling/android-gradle-logic/SKILL.md`
-  - `.github/skills/concurrency_and_networking/android-retrofit/SKILL.md`
-  - `.github/skills/ui/compose-navigation/SKILL.md`
-  - `.github/skills/testing_and_automation/android-testing/SKILL.md`
-  - `.github/skills/performance/gradle-build-performance/SKILL.md`
-- **Learnings for future iterations:**
-    - The repo must be documented from its current package-based `:app` structure first; multi-module remains a future target, not an assumed present state.
-    - Skill docs drift quickly when they embed generic Android examples with hardcoded module names, task names, or library setup; MeepleBook-specific notes should be added near the top of those docs.
-    - Screenshot guidance for this repo is Paparazzi-first if/when added; Roborazzi should only be mentioned as an explicit future user choice and never as an assumed dependency.
-    - CI/source-of-truth verification commands are `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest`.
----
 ## 2026-01-29T22:20:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743783872)
 - Created comprehensive test suite `ObservePlaysUseCaseTest` with 8 test cases covering query passthrough, mapping correctness, and flow reactivity
@@ -497,4 +468,80 @@ PR Link: N/A (local session)
   - `AddEditPlayerDialogReducer` clears suggestions on field changes; they are populated externally by the ViewModel debounce flows
   - `ConfirmAddEditPlayer` resets raw name/username query flows in the ViewModel — reopening the dialog shows empty suggestions
   - `PlayTestFactory.createPlay(localPlayId, gameName, ...)` — `gameName` is a required parameter (not defaulted)
+---
+
+## 2026-04-10
+PR Link: https://github.com/trumpets/meeplebook/pull/103
+- Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
+- **Learnings for future iterations:**
+  - `player_name_with_username` should be reused for user-visible player labels, and a matching simple name resource keeps formatting/localization consistent across features.
+---
+
+## 2026-04-10
+PR Link: https://github.com/trumpets/meeplebook/pull/103
+- Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
+- Files changed:
+  - `AGENTS.md`
+  - `.github/copilot-instructions.md`
+  - `.github/skills/architecture/android-architecture/SKILL.md`
+  - `.github/skills/architecture/android-viewmodel/SKILL.md`
+  - `.github/skills/architecture/android-data-layer/SKILL.md`
+  - `.github/skills/build_and_tooling/android-gradle-logic/SKILL.md`
+  - `.github/skills/concurrency_and_networking/android-retrofit/SKILL.md`
+  - `.github/skills/ui/compose-navigation/SKILL.md`
+  - `.github/skills/testing_and_automation/android-testing/SKILL.md`
+  - `.github/skills/performance/gradle-build-performance/SKILL.md`
+- **Learnings for future iterations:**
+  - The repo must be documented from its current package-based `:app` structure first; multi-module remains a future target, not an assumed present state.
+  - Skill docs drift quickly when they embed generic Android examples with hardcoded module names, task names, or library setup; MeepleBook-specific notes should be added near the top of those docs.
+  - Screenshot guidance for this repo is Paparazzi-first if/when added; Roborazzi should only be mentioned as an explicit future user choice and never as an assumed dependency.
+  - CI/source-of-truth verification commands are `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest`.
+---
+
+## 2026-04-16
+PR Link: <pending>
+- Refactored the Plays feature to follow the AddPlay-style reducer/effect flow while keeping the current sealed `PlaysUiState` as the reducer-owned state shape.
+- Added Plays reducer/effect production tests, updated Plays ViewModel/UI tests for nested action events and reducer-driven state, and added an in-package markdown note documenting the cleaner alternate base-state model.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffects.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysUiEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/reducer/PlaysReducerTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/plays/effect/PlaysEffectProducerTest.kt` (new)
+  - `app/src/androidTest/java/app/meeplebook/feature/plays/PlaysScreenRootTest.kt`
+- **Learnings for future iterations:**
+  - If a sealed UI state is kept reducer-owned, convert singleton variants like `Loading` into data classes and use shared helpers such as `updateCommon(...)` to avoid variant-specific mutation boilerplate.
+  - AddPlay-style architecture ports cleanly to simpler features when the ViewModel owns only reducer state + effect handling and all debounce pipes derive from reducer-owned state.
+  - Keep alternate architecture notes close to the feature when a requested implementation path is knowingly less clean; it preserves the fallback design without mixing it into the active code.
+  - Validation in this worktree is currently split: `:app:testDebugUnitTest` passes, while repo lint and Android-test compilation are blocked by pre-existing `:lint-rules` JDK target mismatch and unrelated Collection WIP in `CollectionScreenRootTest`.
+---
+
+## 2026-04-16
+PR Link: <pending>
+- Replaced the temporary Plays reducer-owned sealed-state approach with the documented `PlaysBaseState` architecture, so the reducer now owns only search/refresh state and `PlaysUiState` is derived from observed plays data.
+- Updated Plays reducer/effect/ViewModel tests to target the base-state relationship and aligned the in-package architecture document with the implemented model.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysBaseState.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/reducer/PlaysReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/reducer/PlaysReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/effect/PlaysEffectProducerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/plays/PlaysScreenRootTest.kt`
+- **Learnings for future iterations:**
+  - For query/list screens, a small reducer-owned base state plus derived display state is easier to reason about than mutating a sealed UI state directly.
+  - Reducer tests should target the base state only; ViewModel tests should verify the `combine(baseState, externalData) -> uiState` contract.
+  - Keep `SharedFlow` UI effects separate from derived `StateFlow` UI state so navigation and snackbar behavior stay one-shot during architecture refactors.
+  - `:app:testDebugUnitTest` validates this Plays migration successfully; broader lint / Android-test issues in this worktree remain unrelated repo blockers.
 ---

@@ -12,13 +12,8 @@ import java.time.YearMonth
  */
 sealed interface PlaysUiState {
 
-    /** Common state shared across all UI state variants. */
-    val common: PlaysCommonState
-
     /** Loading state shown while initial data is being fetched. */
-    data object Loading : PlaysUiState {
-        override val common = PlaysCommonState()
-    }
+    data object Loading : PlaysUiState
 
     /**
      * Empty state shown when there are no plays to display.
@@ -27,7 +22,7 @@ sealed interface PlaysUiState {
      */
     data class Empty(
         val reason: EmptyReason,
-        override val common: PlaysCommonState
+        val common: PlaysCommonState
     ) : PlaysUiState
 
     /**
@@ -37,7 +32,7 @@ sealed interface PlaysUiState {
      */
     data class Content(
         val sections: List<PlaysSection>,
-        override val common: PlaysCommonState
+        val common: PlaysCommonState
     ) : PlaysUiState
 
     /**
@@ -47,7 +42,7 @@ sealed interface PlaysUiState {
      */
     data class Error(
         val errorMessageUiText: UiText,
-        override val common: PlaysCommonState
+        val common: PlaysCommonState
     ) : PlaysUiState
 }
 
@@ -132,27 +127,3 @@ data class PlayStats(
     val playsThisYear: Long = 0,
     val currentYear: Int = 0
 )
-
-/**
- * One-time UI effects for the Plays screen.
- *
- * Unlike [PlaysUiState], which represents the continuous state of the screen,
- * UI effects are one-time events that trigger side effects such as navigation,
- * scrolling, or showing dialogs. Effects are emitted via a SharedFlow and consumed
- * once by the UI layer.
- */
-sealed interface PlaysUiEffects {
-    /**
-     * Navigate to the details screen for a specific play.
-     *
-     * @property playId The ID of the play to view.
-     */
-    data class NavigateToPlay(val playId: PlayId) : PlaysUiEffects
-
-    /**
-     * Show a temporary snackbar message to the user.
-     *
-     * @property messageUiText The message to display.
-     */
-    data class ShowSnackbar(val messageUiText: UiText) : PlaysUiEffects
-}
