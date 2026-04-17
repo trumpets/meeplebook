@@ -3,36 +3,28 @@ package app.meeplebook.feature.overview
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -40,81 +32,93 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.home.navigation.HomeNavigator
+import app.meeplebook.feature.overview.effect.OverviewUiEffect
 import app.meeplebook.feature.overview.ui.EmptyStateMessage
 import app.meeplebook.feature.overview.ui.GameHighlightCard
 import app.meeplebook.feature.overview.ui.RecentPlayCard
-import app.meeplebook.feature.overview.ui.StatsCard
 import app.meeplebook.ui.components.SectionHeader
+import app.meeplebook.ui.components.StatItem
+import app.meeplebook.ui.components.StatsCard
+import app.meeplebook.ui.components.UiTextText
+import app.meeplebook.ui.components.screenstates.ErrorState
+import app.meeplebook.ui.components.screenstates.LoadingState
 import app.meeplebook.ui.theme.MeepleBookTheme
 
-
-/**
- * Overview screen (home tab) entry point that wires the ViewModel to the UI.
- *
- * @param viewModel The OverviewViewModel (injected by Hilt)
- */
 @Composable
 fun OverviewScreen(
     refreshOnLogin: Boolean,
-    viewModel: OverviewViewModel = hiltViewModel()
+    viewModel: OverviewViewModel = hiltViewModel(),
+    homeNavigator: HomeNavigator
 ) {
     LaunchedEffect(refreshOnLogin) {
         if (refreshOnLogin) {
-            viewModel.refresh()
+            viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
         }
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    OverviewContent(
-        uiState = uiState,
-        onRefresh = { viewModel.refresh() },
-        onErrorShown = { viewModel.clearError() },
-        onRecentPlayClick = { /* TODO: Navigate to play details */ },
-        onRecentlyAddedClick = { /* TODO: Navigate to game details */ },
-        onSuggestedGameClick = { /* TODO: Navigate to game details */ },
-        onLogPlayClick = { /* TODO: Navigate to record play screen */ }
-    )
-}
+    LaunchedEffect(viewModel) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                OverviewUiEffect.OpenAddPlay ->
+                    homeNavigator.openAddPlay(preselectedGame = null)
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // TODO remove once you rework screen with scaffold stuff
-@Composable
-fun OverviewContent(
-    uiState: OverviewUiState,
-    modifier: Modifier = Modifier,
-    onRefresh: () -> Unit = {},
-    onErrorShown: () -> Unit = {},
-    onRecentPlayClick: (RecentPlay) -> Unit = {},
-    onRecentlyAddedClick: () -> Unit = {},
-    onSuggestedGameClick: () -> Unit = {},
-    onLogPlayClick: () -> Unit = {}
-) {
-    val snackbarHostState = remember { SnackbarHostState() }
+                is OverviewUiEffect.NavigateToPlay -> {
+                    // TODO: Navigate to play details when route exists.
+                }
 
-    // Resolve error message string when errorMessageResId is not null
-    val errorMessage = uiState.errorMessageResId?.let { stringResource(id = it) }
-
-    // Show snackbar when there's an error
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            snackbarHostState.showSnackbar(message = it)
-            onErrorShown()
+                is OverviewUiEffect.NavigateToGame -> {
+                    // TODO: Navigate to game details when route exists.
+                }
+            }
         }
     }
 
+    OverviewScreenRoot(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun OverviewScreenRoot(
+    uiState: OverviewUiState,
+    onEvent: (OverviewEvent) -> Unit
+) {
+    when (uiState) {
+        OverviewUiState.Loading ->
+            LoadingState(loadingMessageUiText = uiTextRes(R.string.loading_message))
+
+        is OverviewUiState.Error ->
+            ErrorState(errorMessageUiText = uiState.errorMessageUiText)
+
+        is OverviewUiState.Content ->
+            OverviewContent(
+                uiState = uiState,
+                onEvent = onEvent
+            )
+    }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun OverviewContent(
+    uiState: OverviewUiState.Content,
+    modifier: Modifier = Modifier,
+    onEvent: (OverviewEvent) -> Unit
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .padding(16.dp)
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onLogPlayClick,
+                onClick = { onEvent(OverviewEvent.ActionEvent.LogPlayClicked) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("logPlayFab")
             ) {
@@ -124,97 +128,70 @@ fun OverviewContent(
                 )
             }
         }
-    ) { paddingValues ->
+    ) {
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
-            onRefresh = onRefresh,
+            onRefresh = { onEvent(OverviewEvent.ActionEvent.Refresh) },
             modifier = Modifier.fillMaxSize()
         ) {
-            if (uiState.isLoading) {
-                // Loading state
-                Box(
-                    modifier = modifier
-                        .testTag("loadingIndicator"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.loading_message),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+            LazyColumn(
+                modifier = modifier.testTag("overviewContent"),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    OverviewStatsCard(
+                        stats = uiState.stats,
+                        lastSyncedUiText = uiState.lastSyncedUiText
+                    )
+                }
+
+                item {
+                    SectionHeader(title = stringResource(R.string.recent_activity_title))
+                }
+
+                if (uiState.recentPlays.isEmpty()) {
+                    item {
+                        EmptyStateMessage(
+                            message = stringResource(R.string.empty_recent_plays_message),
+                            modifier = Modifier.testTag("emptyRecentPlays")
+                        )
+                    }
+                } else {
+                    items(
+                        items = uiState.recentPlays,
+                        key = { it.playId.localId }
+                    ) { play ->
+                        RecentPlayCard(
+                            play = play,
+                            onClick = { onEvent(OverviewEvent.ActionEvent.RecentPlayClicked(play.playId)) }
                         )
                     }
                 }
-            } else {
-                LazyColumn(
-                    modifier = modifier
-                        .testTag("overviewContent"),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Quick Stats Card
+
+                if (uiState.recentlyAddedGame != null || uiState.suggestedGame != null) {
                     item {
-                        StatsCard(
-                            stats = uiState.stats,
-                            lastSyncedUiText = uiState.lastSyncedUiText
-                        )
+                        SectionHeader(title = stringResource(R.string.collection_highlights_title))
                     }
 
-                    // Recent Activity Section
                     item {
-                        SectionHeader(title = stringResource(R.string.recent_activity_title))
-                    }
-
-                    // Empty state for recent plays
-                    if (uiState.recentPlays.isEmpty()) {
-                        item {
-                            EmptyStateMessage(
-                                message = stringResource(R.string.empty_recent_plays_message),
-                                modifier = Modifier.testTag("emptyRecentPlays")
-                            )
-                        }
-                    } else {
-                        items(
-                            items = uiState.recentPlays,
-                            key = { it.id }
-                        ) { play ->
-                            RecentPlayCard(
-                                play = play,
-                                onClick = { onRecentPlayClick(play) }
-                            )
-                        }
-                    }
-
-                    // Collection Highlights Section
-                    if (uiState.recentlyAddedGame != null || uiState.suggestedGame != null) {
-                        item {
-                            SectionHeader(title = stringResource(R.string.collection_highlights_title))
-                        }
-
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                uiState.recentlyAddedGame?.let { game ->
-                                    GameHighlightCard(
-                                        highlight = game,
-                                        onClick = onRecentlyAddedClick,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                uiState.suggestedGame?.let { game ->
-                                    GameHighlightCard(
-                                        highlight = game,
-                                        onClick = onSuggestedGameClick,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            uiState.recentlyAddedGame?.let { game ->
+                                GameHighlightCard(
+                                    highlight = game,
+                                    onClick = { onEvent(OverviewEvent.ActionEvent.RecentlyAddedClicked(game.id)) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            uiState.suggestedGame?.let { game ->
+                                GameHighlightCard(
+                                    highlight = game,
+                                    onClick = { onEvent(OverviewEvent.ActionEvent.SuggestedGameClicked(game.id)) },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
@@ -224,17 +201,55 @@ fun OverviewContent(
     }
 }
 
-/**
- * Provides preview parameter states for [OverviewContent]:
- * 1. Default state with sample data
- * 2. Empty state
- * 3. Loading state
- * 4. Refreshing state
- */
+@Composable
+fun OverviewStatsCard(
+    stats: OverviewStats,
+    lastSyncedUiText: UiText,
+) {
+    StatsCard(
+        modifier = Modifier.testTag("overviewStatsCard")
+    ) {
+        Text(
+            text = stringResource(R.string.your_stats_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            StatItem(
+                value = stats.gamesCount.toString(),
+                label = stringResource(R.string.stat_games)
+            )
+            StatItem(
+                value = stats.totalPlays.toString(),
+                label = stringResource(R.string.stat_total_plays)
+            )
+            StatItem(
+                value = stats.playsThisMonth.toString(),
+                label = stringResource(R.string.stat_this_month)
+            )
+            StatItem(
+                value = stats.unplayedCount.toString(),
+                label = stringResource(R.string.stat_unplayed)
+            )
+        }
+        if (lastSyncedUiText.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            UiTextText(
+                text = lastSyncedUiText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<OverviewUiState> {
     override val values: Sequence<OverviewUiState> = sequenceOf(
-        // Full state with sample data
-        OverviewUiState(
+        OverviewUiState.Content(
             stats = OverviewStats(
                 gamesCount = 127,
                 totalPlays = 342,
@@ -243,7 +258,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             recentPlays = listOf(
                 RecentPlay(
-                    id = 1,
+                    playId = PlayId.Local(1L),
                     gameName = "Catan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Today, 8:30 PM"),
@@ -251,7 +266,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                 ),
                 RecentPlay(
-                    id = 2,
+                    playId = PlayId.Local(2L),
                     gameName = "Wingspan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Yesterday"),
@@ -259,12 +274,12 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                     playerNamesUiText = uiText("You, Chris")
                 ),
                 RecentPlay(
-                    id = 3,
-                    gameName = "7 Wonders Duel",
+                    playId = PlayId.Local(3L),
+                    gameName = "Azul",
                     thumbnailUrl = null,
-                    dateUiText = uiText("Dec 2"),
-                    playerCount = 2,
-                    playerNamesUiText = uiText("You, Morgan")
+                    dateUiText = uiText("Dec 1"),
+                    playerCount = 3,
+                    playerNamesUiText = uiText("You, Taylor, Morgan")
                 )
             ),
             recentlyAddedGame = GameHighlight(
@@ -281,17 +296,12 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             lastSyncedUiText = uiText("Last synced: 5 min ago")
         ),
-        // Empty state
-        OverviewUiState(
+        OverviewUiState.Content(
             stats = OverviewStats(),
             lastSyncedUiText = uiText("Never synced")
         ),
-        // Loading state
-        OverviewUiState(
-            isLoading = true
-        ),
-        // Refreshing state
-        OverviewUiState(
+        OverviewUiState.Loading,
+        OverviewUiState.Content(
             stats = OverviewStats(
                 gamesCount = 50,
                 totalPlays = 100,
@@ -300,7 +310,7 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             recentPlays = listOf(
                 RecentPlay(
-                    id = 1,
+                    playId = PlayId.Local(1L),
                     gameName = "Catan",
                     thumbnailUrl = null,
                     dateUiText = uiText("Today"),
@@ -310,25 +320,8 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
             ),
             isRefreshing = true
         ),
-        // Error state
-        OverviewUiState(
-            stats = OverviewStats(
-                gamesCount = 50,
-                totalPlays = 100,
-                playsThisMonth = 5,
-                unplayedCount = 10
-            ),
-            recentPlays = listOf(
-                RecentPlay(
-                    id = 1,
-                    gameName = "Catan",
-                    thumbnailUrl = null,
-                    dateUiText = uiText("Today"),
-                    playerCount = 4,
-                    playerNamesUiText = uiText("You, Alex, Jordan, Sam")
-                )
-            ),
-            errorMessageResId = R.string.sync_plays_failed_error
+        OverviewUiState.Error(
+            errorMessageUiText = uiText("Sync plays failed")
         )
     )
 }
@@ -340,6 +333,9 @@ fun OverviewScreenPreview(
     @PreviewParameter(OverviewUiStatePreviewParameterProvider::class) uiState: OverviewUiState
 ) {
     MeepleBookTheme {
-        OverviewContent(uiState = uiState)
+        OverviewScreenRoot(
+            uiState = uiState,
+            onEvent = {}
+        )
     }
 }

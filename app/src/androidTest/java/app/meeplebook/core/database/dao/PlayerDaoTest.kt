@@ -3,9 +3,11 @@ package app.meeplebook.core.database.dao
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.cash.turbine.test
 import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -398,6 +400,225 @@ class PlayerDaoTest {
         assertTrue(result.isEmpty())
     }
 
+    // --- Test 8: deletePlayersForPlays ---
+
+    @Test
+    fun deletePlayersForPlaysRemovesPlayersForMultiplePlays() = runTest {
+        // Insert multiple plays
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2"),
+                createTestPlay(3, parseDateString("2024-01-03"), 300, "Game 3")
+            )
+        )
+
+        // Insert players for each play
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 1, "Bob", null, false),
+                createTestPlayer(0, 2, "Charlie", null, true),
+                createTestPlayer(0, 2, "Dave", null, false),
+                createTestPlayer(0, 3, "Eve", null, true)
+            )
+        )
+
+        // Verify initial state
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+        assertEquals(2, playerDao.getPlayersForPlay(2).size)
+        assertEquals(1, playerDao.getPlayersForPlay(3).size)
+
+        // Delete players for plays 1 and 3
+        playerDao.deletePlayersForPlays(listOf(1, 3))
+
+        // Verify plays 1 and 3 have no players
+        assertTrue(playerDao.getPlayersForPlay(1).isEmpty())
+        assertTrue(playerDao.getPlayersForPlay(3).isEmpty())
+
+        // Verify play 2 still has players
+        val play2Players = playerDao.getPlayersForPlay(2)
+        assertEquals(2, play2Players.size)
+        val sortedPlayers = play2Players.sortedBy { it.name }
+        assertEquals("Charlie", sortedPlayers[0].name)
+        assertEquals("Dave", sortedPlayers[1].name)
+    }
+
+    @Test
+    fun deletePlayersForPlaysHandlesEmptyList() = runTest {
+        // Insert play and players
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 1, "Bob", null, false)
+            )
+        )
+
+        // Verify initial state
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+
+        // Delete with empty list - should not affect any players
+        playerDao.deletePlayersForPlays(emptyList())
+
+        // Verify players still exist
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+    }
+
+    @Test
+    fun deletePlayersForPlaysHandlesNonExistentPlayIds() = runTest {
+        // Insert play and players
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 1, "Bob", null, false)
+            )
+        )
+
+        // Verify initial state
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+
+        // Delete players for non-existent plays
+        playerDao.deletePlayersForPlays(listOf(999, 888))
+
+        // Verify existing players are unaffected
+        assertEquals(2, playerDao.getPlayersForPlay(1).size)
+    }
+
+    @Test
+    fun deletePlayersForPlaysSinglePlayIdWorksCorrectly() = runTest {
+        // Insert multiple plays with players
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Game 1"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Game 2")
+            )
+        )
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true),
+                createTestPlayer(0, 2, "Bob", null, true)
+            )
+        )
+
+        // Delete players for single play
+        playerDao.deletePlayersForPlays(listOf(1))
+
+        // Verify only play 1's players are deleted
+        assertTrue(playerDao.getPlayersForPlay(1).isEmpty())
+        assertEquals(1, playerDao.getPlayersForPlay(2).size)
+    }
+
+    // --- Test 9: observeColorsUsedForGame ---
+
+    @Test
+    fun observeColorsUsedForGameReturnsLowercasedColors() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "Red"),
+                createTestPlayer(0, 1, "Bob", null, false, color = "blue")
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        // Expect lowercased colors in deterministic, ordered form
+        assertEquals(listOf("blue", "red"), result)
+    }
+
+    @Test
+    fun observeColorsUsedForGameDeduplicatesCaseInsensitively() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "Red"),
+                createTestPlayer(0, 1, "Bob", null, false, color = "red")
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("red", result[0])
+    }
+
+    @Test
+    fun observeColorsUsedForGameFiltersNullColors() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "blue"),
+                createTestPlayer(0, 1, "Bob", null, false, color = null)
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("blue", result[0])
+    }
+
+    @Test
+    fun observeColorsUsedForGameFiltersColorsByGameId() = runTest {
+        playDao.insertAll(
+            listOf(
+                createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"),
+                createTestPlay(2, parseDateString("2024-01-02"), 200, "Catan")
+            )
+        )
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = "red"),
+                createTestPlayer(0, 2, "Bob", null, true, color = "blue")
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertEquals(1, result.size)
+        assertEquals("red", result[0])
+    }
+
+    @Test
+    fun observeColorsUsedForGameReturnsEmptyWhenNoPlaysForGame() = runTest {
+        val result = playerDao.observeColorsUsedForGame(999).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observeColorsUsedForGameReturnsEmptyWhenAllColorsNull() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"))
+        playerDao.insertAll(
+            listOf(
+                createTestPlayer(0, 1, "Alice", null, true, color = null),
+                createTestPlayer(0, 1, "Bob", null, false, color = null)
+            )
+        )
+
+        val result = playerDao.observeColorsUsedForGame(100).first()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun observeColorsUsedForGameEmitsUpdatesAfterInsert() = runTest {
+        playDao.insert(createTestPlay(1, parseDateString("2024-01-01"), 100, "Chess"))
+        playerDao.insert(createTestPlayer(0, 1, "Alice", null, true, color = "red"))
+
+        playerDao.observeColorsUsedForGame(100).test {
+            assertEquals(listOf("red"), awaitItem())
+
+            playerDao.insert(createTestPlayer(0, 1, "Bob", null, false, color = "blue"))
+
+            assertEquals(listOf("blue", "red"), awaitItem())
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     // --- Helper functions ---
 
     private fun createTestPlay(
@@ -407,7 +628,8 @@ class PlayerDaoTest {
         gameName: String
     ): PlayEntity {
         return PlayEntity(
-            id = id,
+            localId = id,
+            remoteId = id * 100, // Just a convention for testing
             date = date,
             quantity = 1,
             length = 60,
@@ -415,7 +637,8 @@ class PlayerDaoTest {
             location = null,
             gameId = gameId,
             gameName = gameName,
-            comments = null
+            comments = null,
+            syncStatus = PlaySyncStatus.SYNCED
         )
     }
 
@@ -426,9 +649,9 @@ class PlayerDaoTest {
         username: String?,
         win: Boolean,
         userId: Long? = null,
-        startPosition: String? = null,
+        startPosition: Int? = null,
         color: String? = null,
-        score: String? = null
+        score: Double? = null
     ): PlayerEntity {
         return PlayerEntity(
             id = id,

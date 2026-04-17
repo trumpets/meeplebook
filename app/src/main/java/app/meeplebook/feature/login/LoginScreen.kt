@@ -1,10 +1,28 @@
 package app.meeplebook.feature.login
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -18,6 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.meeplebook.R
+import app.meeplebook.core.ui.isNotEmpty
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.login.effect.LoginUiEffect
+import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
@@ -27,18 +49,17 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Navigate on successful login
-    if (uiState.isLoggedIn) {
-        LaunchedEffect(Unit) {
-            onLoginSuccess()
+    LaunchedEffect(viewModel) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                LoginUiEffect.LoginSucceeded -> onLoginSuccess()
+            }
         }
     }
 
     LoginScreenContent(
         uiState = uiState,
-        onUsernameChange = viewModel::onUsernameChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onLoginClick = { viewModel.login() }
+        onEvent = viewModel::onEvent
     )
 }
 
@@ -46,9 +67,7 @@ fun LoginScreen(
 @Composable
 fun LoginScreenContent(
     uiState: LoginUiState,
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onLoginClick: () -> Unit
+    onEvent: (LoginEvent) -> Unit
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.login_title)) }) }
@@ -67,7 +86,7 @@ fun LoginScreenContent(
             ) {
                 TextField(
                     value = uiState.username,
-                    onValueChange = onUsernameChange,
+                    onValueChange = { onEvent(LoginEvent.UsernameChanged(it)) },
                     label = { Text(stringResource(R.string.username)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("usernameField")
@@ -75,7 +94,7 @@ fun LoginScreenContent(
                 Spacer(modifier = Modifier.height(16.dp))
                 TextField(
                     value = uiState.password,
-                    onValueChange = onPasswordChange,
+                    onValueChange = { onEvent(LoginEvent.PasswordChanged(it)) },
                     label = { Text(stringResource(R.string.password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -83,15 +102,15 @@ fun LoginScreenContent(
                     modifier = Modifier.fillMaxWidth().testTag("passwordField")
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                uiState.errorMessageResId?.let {
-                    Text(
-                        text = stringResource(it),
+                if (uiState.errorMessage.isNotEmpty()) {
+                    UiTextText(
+                        text = uiState.errorMessage,
                         color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 Button(
-                    onClick = onLoginClick,
+                    onClick = { onEvent(LoginEvent.Submit) },
                     enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -128,7 +147,7 @@ class LoginUiStatePreviewParameterProvider : PreviewParameterProvider<LoginUiSta
         LoginUiState(
             username = "wrongUser",
             password = "1234",
-            errorMessageResId = R.string.msg_invalid_credentials_error
+            errorMessage = uiTextRes(R.string.msg_invalid_credentials_error)
         )
     )
 }
@@ -142,9 +161,7 @@ fun LoginScreenPreview(
     MeepleBookTheme {
         LoginScreenContent(
             uiState = uiState,
-            onUsernameChange = {},
-            onPasswordChange = {},
-            onLoginClick = {}
+            onEvent = {}
         )
     }
 }

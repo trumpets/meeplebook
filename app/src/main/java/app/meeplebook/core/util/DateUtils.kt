@@ -7,6 +7,7 @@ import app.meeplebook.core.ui.uiTextRes
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Year
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -17,6 +18,9 @@ private const val MINUTES_IN_HOUR = 60L
 private const val MINUTES_IN_TWO_HOURS = MINUTES_IN_HOUR * 2
 private const val MINUTES_IN_DAY = MINUTES_IN_HOUR * 24
 
+private val DATE_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
 data class Range(
     val start: Instant,
     val end: Instant
@@ -25,6 +29,12 @@ data class Range(
 fun monthRangeFor(yearMonth: YearMonth, zoneId: ZoneId = ZoneOffset.UTC): Range {
     val start = yearMonth.atDay(1).atStartOfDay(zoneId).toInstant()
     val end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(zoneId).toInstant()
+    return Range(start, end)
+}
+
+fun yearRangeFor(year: Year, zoneId: ZoneId = ZoneOffset.UTC): Range {
+    val start = year.atDay(1).atStartOfDay(zoneId).toInstant()
+    val end = year.plusYears(1).atDay(1).atStartOfDay(zoneId).toInstant()
     return Range(start, end)
 }
 
@@ -64,7 +74,24 @@ fun formatRelativeDate(dateInstant: Instant): UiText {
         daysDiff == 0L -> uiTextRes(R.string.date_today)
         daysDiff == 1L -> uiTextRes(R.string.date_yesterday)
         daysDiff < 7L -> uiTextRes(R.string.date_days_ago, daysDiff)
-        else -> uiText(playDate.format(DateTimeFormatter.ofPattern("d MMM")))
+        daysDiff < 365L -> uiText(playDate.format(DateTimeFormatter.ofPattern("d MMM")))
+        else -> uiText(playDate.format(DATE_FORMATTER))
+    }
+}
+
+/**
+ * Formats a duration in minutes into a human-readable string.
+ *
+ * @param minutes the total duration in minutes
+ * @return a UiText representing the formatted duration
+ */
+fun formatDuration(minutes: Int): UiText {
+    val hours = minutes / 60
+    val mins = minutes % 60
+    return if (hours > 0) {
+        uiTextRes(R.string.duration_format_h_min, hours, mins)
+    } else {
+        uiTextRes(R.string.duration_format_min, mins)
     }
 }
 
@@ -113,3 +140,20 @@ fun formatLastSynced(time: Instant?): UiText {
 fun parseDateString(dateString: String): Instant {
     return Instant.parse("${dateString}T00:00:00Z")
 }
+
+fun Instant.toDatePickerMillis(): Long =
+    atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
+
+fun LocalDate.toEuFormattedString(): String =
+    DATE_FORMATTER.format(this)
+
+fun datePickerMillisToInstant(millis: Long): Instant =
+    Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()

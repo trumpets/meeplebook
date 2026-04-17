@@ -1,5 +1,8 @@
 # Meeple Book
 
+IMPORTANT: Always use Context7 MCP when you or I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+
+Context7 MCP is an external tooling integration that can look up documentation and generate or adapt code/configuration based on this repository’s context. If Context7 MCP is not available in your environment, fall back to using official library/API documentation, standard Android/Kotlin tooling, and the existing code in this repo to answer questions and provide setup/configuration steps.
 IMPORTANT: Don't change library version numbers. You don't have proper build tools access and you think the versions here are not even released. All the versions are proper.
 
 This will be an Android app that will allow for a user to log in to BGG, view his collection, view his plays and record plays.
@@ -21,15 +24,17 @@ Decided on a package: app.meeplebook
 
 ## When implementing a task (in addition to the task instructions):
 
-1. Read the progress log at `progress.txt` (check Codebase Patterns section first)
+1. Read the progress log at `progress.md` (check Codebase Patterns section first)
 2. Implement the task
 3. Update AGENTS.md files if you discover reusable patterns (see below)
-4. Append your progress to `progress.txt`
+4. Append your progress to `progress.md`
 
 Follow Google's NowInAndroid design and code and theming principles:
 
 ## 1 — Modules & folders (start single-module, plan multi-module)
 Short-term (one Gradle module :app):
+
+Current repo reality is the source of truth. Treat the package layout inside `app/` as authoritative today. Multi-module remains the intended long-term direction, but do **not** assume `:core:*` / `:feature:*` Gradle modules exist yet, and do not propose or apply modularization unless explicitly asked.
 
 ```
 app/
@@ -76,7 +81,7 @@ UiEvent: sealed class of user actions (object SubmitLogin, data class UsernameCh
 
 !!! IMPORTANT !!! No direct navigation calls in composables. Emit events to ViewModel.
 
-!!! IMPORTANT !!! User facing dates (in UI) should follow EU format DD/MM/YYYY. Time is HH:MM 24h format.
+!!! IMPORTANT !!! User facing dates (in UI) should follow EU format dd/MM/yyyy. Time is HH:MM 24h format.
 
 
 ### ViewModel
@@ -174,6 +179,17 @@ For DB flows: use .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000)
 
 Use Dispatchers.IO for DB & network. Provide a @IoDispatcher via DI.
 
+For reducer-driven screens, prefer the shared abstractions in `core/ui/architecture/`:
+- `Reducer<State, Event>`
+- `EffectProducer<State, Event, DomainEffect, UiEffect>`
+- `ProducedEffects<DomainEffect, UiEffect>`
+- `ReducerViewModel<State, Event, DomainEffect, UiEffect>`
+
+Use those shared contracts for the `onEvent -> reduce -> produce -> handle effects` pipeline, but
+keep feature-specific base state, query-flow derivation, external observers, and
+`combine(baseState, externalData) -> uiState` mapping local to the feature. Do **not** try to force
+that `combine(...)` layer into a generic framework unless a later task explicitly asks for it.
+
 ## 8 — DI & qualifiers (Hilt)
 Hilt modules:
 
@@ -201,6 +217,8 @@ AsyncImage whenever we have a remote URL.
 Prefer fakes to Mockks!!! Only use Mockks for 3rd party classes. If a class can't be faked, abstract it to an interface so it can be!
 When adding a new feature, examine the types of tests of similar existing features and replicate the strategy.
 
+Use `assertTrue()` instead of `assert()`.
+
 ### Unit tests
 
 ViewModel: provide fake repositories (pure Kotlin). Test state transitions. If ViewModel uses SharingStarted.WhileSubscribed() or other complex logic, use Turbine for StateFlow testing as
@@ -216,13 +234,17 @@ Room DAO tests (in-memory database).
 
 Compose UI tests using createComposeRule.
 
+### Screenshot tests
+
+Screenshot testing is not configured in this repo today. If asked to propose screenshot coverage, prefer **Paparazzi** as the default future direction. **Roborazzi** may be mentioned only as an optional user-chosen addition for a small set of critical screens, and only if/when the dependency is intentionally added.
+
 ### Integration
 
 Repository + fake network server (MockWebServer) + in-memory DB.
 
 ### CI
 
-GitHub Actions -> run ./gradlew test and connectedAndroidTest (or use emulator in CI). Also run lint & ktlint/detekt.
+GitHub Actions currently runs `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest` where applicable. Treat those as the source-of-truth verification commands over generic `./gradlew test` examples.
 
 ## 11 — CI / Release pipeline
 ### CI (GH Actions):
@@ -303,3 +325,90 @@ Before committing, check if any edited files have learnings worth preserving in 
 - Information already in progress.txt
 
 Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
+
+# ⚠️ Avoid Wall-Clock Reactive Flows (Lessons Learned)
+
+## Problem
+
+Do **not** model long-term wall-clock changes (e.g. year rollover, date boundaries) as infinite `Flow`s with `delay()` inside domain or ViewModel logic.
+
+Example of **overkill**:
+
+```kotlin
+flow {
+    while (true) {
+        emit(currentYear)
+        delay(untilNextYear)
+    }
+}
+```
+
+This pattern:
+
+* Introduces **infinite flows**
+* Requires **virtual time control** in tests
+* Can silently **block or hang tests**
+* Makes state propagation harder to reason about
+* Solves an edge case affecting a **negligible number of users**
+
+---
+
+## Why This Is a Bad Trade-off
+
+The only problem this solves is:
+
+> “User keeps the app open across a year boundary and expects live UI updates at midnight.”
+
+In real Android usage:
+
+* Apps are backgrounded, restarted, or refreshed frequently
+* Users accept stats updating on resume or interaction
+* Midnight live updates are not expected behavior
+
+The **complexity cost outweighs the UX benefit**.
+
+---
+
+## Recommended Approach
+
+✔️ **Compute time-based values on demand**, not reactively:
+
+```kotlin
+val year = Year.now(clock)
+val range = yearRangeFor(year)
+```
+
+Recalculate when:
+
+* Data changes
+* User refreshes
+* Screen is re-entered
+* App resumes
+* Process restarts
+
+This aligns with:
+
+* Android lifecycle reality
+* User expectations
+* Testability
+* Maintainable Flow graphs
+
+---
+
+## If Time-Boundary Handling Is Truly Required
+
+Prefer **explicit lifecycle or system triggers**:
+
+* Recalculate on `ON_RESUME`
+* Daily `WorkManager` job
+* Cache invalidation on date change
+
+Avoid infinite `Flow { while(true) delay(...) }` patterns.
+
+---
+
+## Rule of Thumb
+
+> **If a Flow needs `delay()` to model real time, it is probably the wrong abstraction.**
+
+Boring, finite flows are good flows.

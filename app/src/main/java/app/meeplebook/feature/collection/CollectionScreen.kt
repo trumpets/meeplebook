@@ -2,7 +2,6 @@ package app.meeplebook.feature.collection
 
 import android.content.res.Configuration
 import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -37,11 +35,9 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -51,7 +47,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,7 +59,6 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -78,8 +72,15 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.core.ui.uiTextJoin
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.collection.effect.CollectionUiEffect
+import app.meeplebook.ui.components.RowItemImage
+import app.meeplebook.ui.components.SearchBar
 import app.meeplebook.ui.components.UiTextText
 import app.meeplebook.ui.components.gameImageClip
+import app.meeplebook.ui.components.screenstates.EmptyState
+import app.meeplebook.ui.components.screenstates.ErrorState
+import app.meeplebook.ui.components.screenstates.LoadingState
 import app.meeplebook.ui.theme.MeepleBookTheme
 import coil3.compose.AsyncImage
 
@@ -106,32 +107,21 @@ fun CollectionScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
 
-                is CollectionUiEffects.ScrollToLetter -> {
-                    val content = uiState as? CollectionUiState.Content ?: return@collect
-                    val index = content.sectionIndices[effect.letter] ?: return@collect
-
-                    when (content.viewMode) {
+                is CollectionUiEffect.ScrollToIndex -> {
+                    when (effect.viewMode) {
                         CollectionViewMode.LIST ->
-                            listState.animateScrollToItem(index)
+                            listState.animateScrollToItem(effect.index)
 
                         CollectionViewMode.GRID ->
-                            gridState.animateScrollToItem(index)
+                            gridState.animateScrollToItem(effect.index)
                     }
                 }
 
-                is CollectionUiEffects.NavigateToGame -> {
+                is CollectionUiEffect.NavigateToGame -> {
 //                    onNavigateToGame(effect.gameId)
                 }
 
-                CollectionUiEffects.OpenSortSheet -> {
-                    // showModalBottomSheet()
-                }
-
-                CollectionUiEffects.DismissSortSheet -> {
-                    // hideModalBottomSheet()
-                }
-
-                is CollectionUiEffects.ShowSnackbar -> {
+                is CollectionUiEffect.ShowSnackbar -> {
                     Toast.makeText(context, effect.messageUiText.asString(resources), Toast.LENGTH_SHORT).show()
 //                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
@@ -162,27 +152,27 @@ fun CollectionScreenRoot(
     ) {
         when (uiState) {
             CollectionUiState.Loading ->
-                LoadingState()
+                LoadingState(loadingMessageUiText = uiTextRes(R.string.collection_loading))
 
             is CollectionUiState.Empty ->
                 CollectionScaffold(
-                    uiState = uiState,
+                    commonState = uiState.common,
                     onEvent = onEvent
                 ) {
-                    EmptyState(reason = uiState.reason)
+                    EmptyState(reasonMessageUiText = uiTextRes(uiState.reason.descriptionResId))
                 }
 
             is CollectionUiState.Error ->
                 CollectionScaffold(
-                    uiState = uiState,
+                    commonState = uiState.common,
                     onEvent = onEvent
                 ) {
-                    ErrorState(uiState.errorMessageResId)
+                    ErrorState(errorMessageUiText = uiState.errorMessageUiText)
                 }
 
             is CollectionUiState.Content ->
                 CollectionScaffold(
-                    uiState = uiState,
+                    commonState = uiState.common,
                     onEvent = onEvent
                 ) {
                     CollectionScreenContent(
@@ -197,31 +187,8 @@ fun CollectionScreenRoot(
 }
 
 @Composable
-fun LoadingState() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("loadingIndicator"),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.collection_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
 private fun CollectionScaffold(
-    uiState: CollectionUiState,
+    commonState: CollectionCommonState,
     onEvent: (CollectionEvent) -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -230,55 +197,20 @@ private fun CollectionScaffold(
 
             /* --- SEARCH (always visible) --- */
             SearchBar(
-                query = uiState.searchQuery,
-                onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
+                query = commonState.searchQuery,
+                placeholderResId = R.string.collection_search_games,
+                onQueryChanged = { onEvent(CollectionEvent.SearchEvent.SearchChanged(it)) }
 
             )
 
             /* --- QUICK FILTERS (always visible) --- */
             QuickFiltersRow(
-                state = uiState,
-                onFilterSelected = { onEvent(CollectionEvent.QuickFilterSelected(it)) }
+                commonState = commonState,
+                onFilterSelected = { onEvent(CollectionEvent.FilterEvent.QuickFilterSelected(it)) }
             )
 
             content()
         }
-    }
-}
-
-@Composable
-fun EmptyState(reason: EmptyReason) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("emptyState"),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(reason.descriptionResId),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(32.dp)
-        )
-    }
-}
-
-@Composable
-fun ErrorState(@StringRes errorMessageResId: Int) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("errorState"),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(errorMessageResId),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(32.dp)
-        )
     }
 }
 
@@ -296,10 +228,10 @@ fun CollectionScreenContent(
             CollectionToolbar(
                 selectedViewMode = uiState.viewMode,
                 onViewModeChanged = {
-                    onEvent(CollectionEvent.ViewModeSelected(it))
+                    onEvent(CollectionEvent.DisplayEvent.ViewModeSelected(it))
                 },
                 onSortClicked = {
-                    onEvent(CollectionEvent.OpenSortSheet)
+                    onEvent(CollectionEvent.SortSheetEvent.OpenSortSheet)
                 }
             )
 
@@ -314,7 +246,7 @@ fun CollectionScreenContent(
         if (uiState.showAlphabetJump) {
             AlphabetJumpBar(
                 onLetterSelected = {
-                    onEvent(CollectionEvent.JumpToLetter(it))
+                    onEvent(CollectionEvent.ActionEvent.JumpToLetter(it))
                 }
             )
         }
@@ -323,40 +255,19 @@ fun CollectionScreenContent(
     if (uiState.isSortSheetVisible) {
         SortBottomSheet(
             uiState = uiState,
-            onDismiss = { onEvent(CollectionEvent.DismissSortSheet) },
+            onDismiss = { onEvent(CollectionEvent.SortSheetEvent.DismissSortSheet) },
             onSortSelected = {
-                onEvent(CollectionEvent.SortSelected(it))
+                onEvent(CollectionEvent.DisplayEvent.SortSelected(it))
             }
         )
     }
-}
-
-/* ---------- SEARCH ---------- */
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChanged: (String) -> Unit
-) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChanged,
-        leadingIcon = { Icon(Icons.Default.Search, null) },
-        placeholder = { Text(stringResource(R.string.collection_search_games)) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp)
-            .testTag("collectionSearchField"),
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp)
-    )
 }
 
 /* ---------- QUICK FILTERS ---------- */
 
 @Composable
 private fun QuickFiltersRow(
-    state: CollectionUiState,
+    commonState: CollectionCommonState,
     onFilterSelected: (QuickFilter) -> Unit
 ) {
     LazyRow(
@@ -366,17 +277,17 @@ private fun QuickFiltersRow(
         // TODO: I don't like this. it's too hardcoded for my taste
         item {
             FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.ALL,
+                selected = commonState.activeQuickFilter == QuickFilter.ALL,
                 onClick = { onFilterSelected(QuickFilter.ALL) },
-                label = { Text(stringResource(R.string.collection_filter_all, state.totalGameCount)) }
+                label = { Text(stringResource(R.string.collection_filter_all, commonState.totalGameCount)) }
             )
         }
 
         item {
             FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.UNPLAYED,
+                selected = commonState.activeQuickFilter == QuickFilter.UNPLAYED,
                 onClick = { onFilterSelected(QuickFilter.UNPLAYED) },
-                label = { Text(stringResource(R.string.collection_filter_unplayed, state.unplayedGameCount)) }
+                label = { Text(stringResource(R.string.collection_filter_unplayed, commonState.unplayedGameCount)) }
             )
         }
     }
@@ -434,8 +345,8 @@ private fun CollectionContent(
     gridState: LazyGridState
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isRefreshing,
-        onRefresh = { onEvent(CollectionEvent.Refresh) },
+        isRefreshing = state.common.isRefreshing,
+        onRefresh = { onEvent(CollectionEvent.ActionEvent.Refresh) },
         modifier = Modifier.fillMaxSize()
     ) {
         when (state.viewMode) {
@@ -469,10 +380,10 @@ private fun CollectionGrid(
                 GameGridCard(
                     game = game,
                     onClick = {
-                        onEvent(CollectionEvent.GameClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.GameClicked(game.gameId))
                     },
                     onLogPlay = {
-                        onEvent(CollectionEvent.LogPlayClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.LogPlayClicked(game.gameId))
                     }
                 )
             }
@@ -502,10 +413,10 @@ private fun CollectionList(
                 GameListRow(
                     game = game,
                     onClick = {
-                        onEvent(CollectionEvent.GameClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.GameClicked(game.gameId))
                     },
                     onLogPlay = {
-                        onEvent(CollectionEvent.LogPlayClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.LogPlayClicked(game.gameId))
                     }
                 )
             }
@@ -566,9 +477,10 @@ private fun GameGridCard(
 
             UiTextText(
                 uiTextJoin(
+                    separator = " • ",
                     uiText(game.yearPublished?.toString()),
-                    game.playersSubtitleUiText,
-                    separator = " • ")
+                    game.playersSubtitleUiText
+                )
             )
 
             IconButton(
@@ -594,18 +506,10 @@ private fun GameListRow(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .gameImageClip(),
-        ) {
-            AsyncImage(
-                model = game.thumbnailUrl,
-                contentDescription = game.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        RowItemImage(
+            thumbnailUrl = game.thumbnailUrl,
+            contentDescription = game.name
+        )
 
         Spacer(Modifier.width(12.dp))
 
@@ -617,10 +521,11 @@ private fun GameListRow(
             )
             UiTextText(
                 text = uiTextJoin(
+                    separator = " • ",
                     uiText(game.yearPublished?.toString()),
                     game.playersSubtitleUiText,
-                    game.playTimeSubtitleUiText,
-                    separator = " • "),
+                    game.playTimeSubtitleUiText
+                ),
                 style = MaterialTheme.typography.bodySmall
             )
             UiTextText(
@@ -711,24 +616,29 @@ private fun SortBottomSheet(
 class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<CollectionUiState> {
     override val values: Sequence<CollectionUiState> = sequenceOf(
         sampleContentState(),
+        sampleContentState(viewMode = CollectionViewMode.LIST),
         sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
         CollectionUiState.Empty(
             reason = EmptyReason.NO_SEARCH_RESULTS,
-            searchQuery = "search term",
-            activeQuickFilter = QuickFilter.ALL,
-            totalGameCount = 100,
-            unplayedGameCount = 27,
-            isRefreshing = false
+            common = CollectionCommonState(
+                searchQuery = "search term",
+                activeQuickFilter = QuickFilter.ALL,
+                totalGameCount = 100,
+                unplayedGameCount = 27,
+                isRefreshing = false
+            )
         ),
         CollectionUiState.Loading,
         sampleContentState(isRefreshing = true),
         CollectionUiState.Error(
-            R.string.sync_collections_failed_error,
-            searchQuery = "azul",
-            activeQuickFilter = QuickFilter.ALL,
-            totalGameCount = 100,
-            unplayedGameCount = 27,
-            isRefreshing = false
+            uiTextRes(R.string.sync_collections_failed_error),
+            common = CollectionCommonState(
+                searchQuery = "azul",
+                activeQuickFilter = QuickFilter.ALL,
+                totalGameCount = 100,
+                unplayedGameCount = 27,
+                isRefreshing = false
+            )
         )
     )
 
@@ -739,18 +649,20 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
     ): CollectionUiState.Content {
         val games = sampleGames()
         return CollectionUiState.Content(
-            searchQuery = "",
             viewMode = viewMode,
             sort = CollectionSort.ALPHABETICAL,
-            activeQuickFilter = QuickFilter.ALL,
             availableSortOptions = CollectionSort.entries,
             sections = buildSections(games),
             sectionIndices = LinkedHashMap(),
-            totalGameCount = games.size.toLong(),
-            unplayedGameCount = games.size - 3L,
-            isRefreshing = isRefreshing,
             showAlphabetJump = true,
-            isSortSheetVisible = isSortSheetVisible
+            isSortSheetVisible = isSortSheetVisible,
+            common = CollectionCommonState(
+                searchQuery = "",
+                activeQuickFilter = QuickFilter.ALL,
+                totalGameCount = games.size.toLong(),
+                unplayedGameCount = games.size - 3L,
+                isRefreshing = isRefreshing
+            )
         )
     }
 

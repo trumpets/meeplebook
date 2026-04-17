@@ -7,73 +7,64 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.UiText
 
 /**
- * UI state for the Collection screen.
+ * Renderable UI state for the Collection screen.
  *
- * IMPORTANT for Ivo:
- * - Capabilities are shared.
- * - Renderers are conditional.
+ * `CollectionViewModel` derives this state by combining reducer-owned [CollectionBaseState] with
+ * observed collection data and summary statistics. The reducer never mutates this sealed state
+ * directly; it owns [CollectionBaseState] instead.
  */
 sealed interface CollectionUiState {
 
-    val searchQuery: String
-    val activeQuickFilter: QuickFilter
-    val totalGameCount: Long
-    val unplayedGameCount: Long
-    val isRefreshing: Boolean
+    /** The screen is still waiting for the first combined emission. */
+    data object Loading : CollectionUiState
 
-    data object Loading : CollectionUiState {
-        override val searchQuery = ""
-        override val activeQuickFilter = QuickFilter.ALL
-        override val totalGameCount = 0L
-        override val unplayedGameCount = 0L
-        override val isRefreshing = false
-    }
-
+    /** The collection is empty for the given [reason], while preserving shared chrome in [common]. */
     data class Empty(
         val reason: EmptyReason,
-        override val searchQuery: String,
-        override val activeQuickFilter: QuickFilter,
-        override val totalGameCount: Long,
-        override val unplayedGameCount: Long,
-        override val isRefreshing: Boolean
+        val common: CollectionCommonState
     ) : CollectionUiState
 
+    /**
+     * The collection has visible sections to render.
+     *
+     * Content-specific presentation values such as [viewMode], [sort], alphabet jump visibility, and
+     * sort-sheet visibility are copied from reducer-owned base state or derived data.
+     */
     data class Content(
-        // Presentation
         val viewMode: CollectionViewMode, // GRID or LIST
         val sort: CollectionSort,
-
         val availableSortOptions: List<CollectionSort>,
-
-        // Data
         val sections: List<CollectionSection>,
         val sectionIndices: Map<Char, Int>,
-
-        // UI chrome
         val showAlphabetJump: Boolean,
         val isSortSheetVisible: Boolean,
-
-        override val searchQuery: String,
-        override val activeQuickFilter: QuickFilter,
-        override val totalGameCount: Long,
-        override val unplayedGameCount: Long,
-        override val isRefreshing: Boolean
+        val common: CollectionCommonState
     ) : CollectionUiState
 
+    /** The screen hit a non-recoverable presentation error while still showing shared chrome. */
     data class Error(
-        @StringRes val errorMessageResId: Int,
-        override val searchQuery: String,
-        override val activeQuickFilter: QuickFilter,
-        override val totalGameCount: Long,
-        override val unplayedGameCount: Long,
-        override val isRefreshing: Boolean
+        val errorMessageUiText: UiText,
+        val common: CollectionCommonState
     ) : CollectionUiState
 }
 
+/**
+ * Shared chrome/state used across multiple collection render states.
+ */
+data class CollectionCommonState(
+    val searchQuery: String = "",
+    val activeQuickFilter: QuickFilter = QuickFilter.ALL,
+    val totalGameCount: Long = 0L,
+    val unplayedGameCount: Long = 0L,
+    val isRefreshing: Boolean = false
+)
+
+/** Available layouts for rendering collection items. */
 enum class CollectionViewMode {
     GRID, LIST
 }
 
+/** Reasons the collection can render an empty state. */
 enum class EmptyReason(
     @StringRes val descriptionResId: Int
 ) {
@@ -82,38 +73,20 @@ enum class EmptyReason(
     NO_FILTER_RESULTS(R.string.collection_filter_no_results)
 }
 
+/** One alphabetic collection section and the games it contains. */
 data class CollectionSection(
     val key: Char,
     val games: List<CollectionGameItem>
 )
 
+/** Renderable game row/card data for the Collection screen. */
 data class CollectionGameItem(
     val gameId: Long,
     val name: String,
     val yearPublished: Int?,
     val thumbnailUrl: String?,
-
-    // Subtitles
     val playsSubtitleUiText: UiText, // "42 plays"
     val playersSubtitleUiText: UiText,   // "2–4p"
     val playTimeSubtitleUiText: UiText, // "30–60m"
-
-    // Flags
     val isUnplayed: Boolean
 )
-
-/**
- * One-time UI effects for the Collection screen.
- *
- * Unlike [CollectionUiState], which represents the continuous state of the screen,
- * UI effects are one-time events that trigger side effects such as navigation,
- * scrolling, or showing dialogs. Effects are emitted via a SharedFlow and consumed
- * once by the UI layer.
- */
-sealed interface CollectionUiEffects {
-    data class ScrollToLetter(val letter: Char) : CollectionUiEffects
-    data class NavigateToGame(val gameId: Long) : CollectionUiEffects
-    data object OpenSortSheet : CollectionUiEffects
-    data object DismissSortSheet : CollectionUiEffects
-    data class ShowSnackbar(val messageUiText: UiText) : CollectionUiEffects
-}

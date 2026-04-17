@@ -39,6 +39,9 @@
     <string name="date_yesterday">Yesterday</string>
     <string name="date_days_ago">%d days ago</string>
     <string name="date_in_future">In the future</string>
+    <string name="duration_format_h_min">%dh %dmin</string>
+    <string name="duration_format_min">%dmin</string>
+
     <string name="players_none">No players</string>
     <string name="players_more">+%d</string>
 
@@ -71,5 +74,85 @@
     <string name="collection_plays_count">%d plays</string>
     <string name="collection_player_count">%d-%dp</string>
     <string name="collection_play_time">%d-%dm</string>
+
+    <!-- Plays Screen -->
+    <string name="plays_loading">Loading plays…</string>
+    <string name="plays_empty">Your play history is empty. Log some plays to see them here.</string>
+    <string name="plays_search_no_results">No plays match your search</string>
+    <string name="plays_search_placeholder">Search plays</string>
+    <string name="plays_stats_all_time">All Time</string>
+    <string name="plays_stat_unique_games">Unique Games</string>
+    <string name="plays_stat_total_plays">Total Plays</string>
+    <string name="plays_stat_this_year">In %d</string>
+    <plurals name="plays_section_count">
+        <item quantity="one">%d play</item>
+        <item quantity="other">%d plays</item>
+    </plurals>
+    <plurals name="play_players_formatted">
+        <item quantity="one">%d player: %s</item>
+        <item quantity="other">%d players: %s</item>
+    </plurals>
+    <string name="play_player_name_only">%1$s</string>
+    <string name="play_player_with_details">%1$s (%2$s)</string>
+    <string name="play_player_won">won</string>
+    <string name="play_player_score">%1$s</string>
+
+    <!-- Add Play Screen -->
+    <string name="add_play_cant_save">Can\'t save play</string>
+    <string name="add_play_title">Log Play</string>
+    <string name="add_play_search_game_placeholder">Search for a game…</string>
+    <string name="add_play_search_game_label">Game</string>
+    <string name="add_play_no_results">No games found</string>
+    <string name="add_play_date_label">Date</string>
+    <string name="add_play_location_label">Location</string>
+    <string name="add_play_location_placeholder">Where did you play?</string>
+    <string name="add_play_duration_label">Duration</string>
+    <string name="add_play_duration_placeholder">e.g. 90min</string>
+    <string name="add_play_players_label_with_count">Players - %d</string>
+    <string name="add_play_suggested_players_label">Suggested players</string>
+    <string name="add_play_more_players">More</string>
+    <string name="add_play_save">Save</string>
+    <string name="add_play_cancel">Cancel</string>
+    <string name="add_play_add_player">Add player</string>
+    <string name="player_removed">Player removed</string>
+    <string name="undo">Undo</string>
+    <string name="add_play_discard_title">Discard play?</string>
+    <string name="add_play_discard_message">Your play will not be saved.</string>
+    <string name="add_play_discard_confirm">Discard</string>
+    <string name="add_play_discard_cancel">Keep editing</string>
+    <string name="add_play_add_optional_field">Add field</string>
+    <string name="add_play_optional_quantity">Quantity</string>
+    <string name="add_play_optional_incomplete">Incomplete</string>
+    <string name="add_play_optional_comments">Comments</string>
+    <string name="add_play_quantity_label">Qty</string>
+    <string name="add_play_comments_label">Comments</string>
+    <string name="add_play_comments_placeholder">Notes about this play…</string>
+
+    <!-- More Players Dialog -->
+    <string name="add_play_more_players_title">Previously played at this Location</string>
+    <string name="add_play_no_player_suggestions">No suggestions for this location</string>
+    <string name="player_name_with_username">%1$s (@%2$s)</string>
+
+    <!-- Add/Edit Player Dialog -->
+    <string name="add_edit_player_title_add">New Player</string>
+    <string name="add_edit_player_title_edit">Edit Player</string>
+    <string name="add_edit_player_name_label">Player Name</string>
+    <string name="add_edit_player_username_label">BGG Username</string>
+    <string name="add_edit_player_color_label">Team / Color</string>
+    <string name="add_edit_player_confirm">Confirm</string>
+    <string name="add_edit_player_cancel">Cancel</string>
+    <string name="add_edit_player_color_preview_description">Color preview: %1$s</string>
+    <string name="add_edit_player_color_pick_description">Pick color</string>
+
+
+    <!-- Score input dialog -->
+    <string name="score_input_confirm_content_description">Confirm score</string>
+    <string name="score_input_delete_content_description">Delete last digit</string>
+    <string name="score_input_toggle_sign_content_description">Toggle sign</string>
+    <string name="score_input_placeholder">—</string>
+
+    <!-- Color picker dialog -->
+    <string name="color_picker_title">Pick a color</string>
+    <string name="color_picker_more">More</string>
 
 </resources>

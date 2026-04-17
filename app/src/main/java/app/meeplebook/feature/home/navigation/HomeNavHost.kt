@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import app.meeplebook.feature.addplay.PreselectedGame
 import app.meeplebook.feature.collection.CollectionScreen
 import app.meeplebook.feature.overview.OverviewScreen
 import app.meeplebook.feature.plays.PlaysScreen
@@ -21,6 +22,7 @@ import app.meeplebook.feature.profile.ProfileScreen
 @Composable
 fun HomeNavHost(
     refreshOnLogin: Boolean,
+    homeNavigator: HomeNavigator,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -31,7 +33,8 @@ fun HomeNavHost(
     ) {
         composable<HomeTabScreen.Overview> {
             OverviewScreen(
-                refreshOnLogin = refreshOnLogin
+                refreshOnLogin = refreshOnLogin,
+                homeNavigator = homeNavigator
             )
         }
         composable<HomeTabScreen.Collection> {
@@ -44,4 +47,8 @@ fun HomeNavHost(
             ProfileScreen()
         }
     }
+}
+
+fun interface HomeNavigator {
+    fun openAddPlay(preselectedGame: PreselectedGame?)
 }

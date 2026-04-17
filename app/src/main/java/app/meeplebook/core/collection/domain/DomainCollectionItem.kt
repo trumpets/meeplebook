@@ -11,15 +11,15 @@ import app.meeplebook.core.collection.model.CollectionItem
  * - Uses raw numeric counts (playCount, player counts, play times)
  * - Renames thumbnail field to thumbnailUrl for clarity
  *
- * @param gameId The BGG game ID.
- * @param name The name of the game.
- * @param yearPublished The year the game was published.
- * @param thumbnailUrl URL to the game's thumbnail image.
- * @param playCount The number of times the game has been played.
- * @param minPlayers Minimum number of players.
- * @param maxPlayers Maximum number of players.
- * @param minPlayTimeMinutes Minimum play time in minutes.
- * @param maxPlayTimeMinutes Maximum play time in minutes.
+ * @property gameId The BGG game ID.
+ * @property name The name of the game.
+ * @property yearPublished The year the game was published.
+ * @property thumbnailUrl URL to the game's thumbnail image.
+ * @property playCount The number of times the game has been played.
+ * @property minPlayers Minimum number of players.
+ * @property maxPlayers Maximum number of players.
+ * @property minPlayTimeMinutes Minimum play time in minutes.
+ * @property maxPlayTimeMinutes Maximum play time in minutes.
  */
 data class DomainCollectionItem(
     val gameId: Long,

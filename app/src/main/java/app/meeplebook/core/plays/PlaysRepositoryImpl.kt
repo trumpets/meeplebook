@@ -1,6 +1,9 @@
 package app.meeplebook.core.plays
 
+import app.meeplebook.core.database.entity.toEntity
 import app.meeplebook.core.network.RetryException
+import app.meeplebook.core.plays.domain.CreatePlayCommand
+import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
@@ -21,8 +24,13 @@ class PlaysRepositoryImpl @Inject constructor(
     private val remote: PlaysRemoteDataSource
 ) : PlaysRepository {
 
-    override fun observePlays(): Flow<List<Play>> {
-        return local.observePlays()
+    override fun observePlays(gameNameOrLocationQuery: String?): Flow<List<Play>> {
+        val query = gameNameOrLocationQuery?.trim()
+        return if (query.isNullOrEmpty()) {
+            local.observePlays()
+        } else {
+            local.observePlaysByGameNameOrLocation(query)
+        }
     }
 
     override fun observePlaysForGame(gameId: Long): Flow<List<Play>> {
@@ -42,9 +50,9 @@ class PlaysRepositoryImpl @Inject constructor(
         private const val RATE_LIMIT_DELAY_MS = 5000L
     }
 
-    override suspend fun syncPlays(username: String): AppResult<List<Play>, PlayError> {
+    override suspend fun syncPlays(username: String): AppResult<Unit, PlayError> {
         try {
-            val allPlays = mutableListOf<Play>()
+            val allRemoteIds = mutableListOf<Long>()
             var currentPage = 1
             var hasMorePages = true
 
@@ -55,8 +63,9 @@ class PlaysRepositoryImpl @Inject constructor(
                 if (plays.isEmpty()) {
                     hasMorePages = false
                 } else {
-                    allPlays.addAll(plays)
-                    local.savePlays(plays)
+                    local.saveRemotePlays(remotePlays = plays)
+
+                    allRemoteIds += plays.map { it.remoteId }
                     
                     // BGG returns 100 plays per page
                     // If we got fewer than 100, we're on the last page
@@ -66,12 +75,15 @@ class PlaysRepositoryImpl @Inject constructor(
                         currentPage++
 
                         // Wait between requests to avoid rate limiting
-                        delay(RATE_LIMIT_DELAY_MS)
+                        delay(timeMillis = RATE_LIMIT_DELAY_MS)
                     }
                 }
             }
-            
-            return AppResult.Success(allPlays)
+
+            // After all pages fetched -> reconcile deletions
+            local.retainByRemoteIds(allRemoteIds)
+
+            return AppResult.Success(Unit)
         } catch (e: Exception) {
             return when (e) {
                 is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)
@@ -81,6 +93,13 @@ class PlaysRepositoryImpl @Inject constructor(
                 else -> AppResult.Failure(PlayError.Unknown(e))
             }
         }
+    }
+
+    override suspend fun createPlay(command: CreatePlayCommand) {
+        local.insertPlay(
+            playEntity = command.toEntity(),
+            playerEntities = command.players.map { it.toEntity() }
+        )
     }
 
     override suspend fun clearPlays() {
@@ -97,5 +116,33 @@ class PlaysRepositoryImpl @Inject constructor(
 
     override fun observeRecentPlays(limit: Int): Flow<List<Play>> {
         return local.observeRecentPlays(limit)
+    }
+
+    override fun observeUniqueGamesCount(): Flow<Long> {
+        return local.observeUniqueGamesCount()
+    }
+
+    override fun observeLocations(query: String): Flow<List<String>> {
+        return local.observeLocations(query.trim())
+    }
+
+    override fun observeRecentLocations(): Flow<List<String>> {
+        return local.observeRecentLocations()
+    }
+
+    override fun observePlayersByLocation(location: String): Flow<List<PlayerIdentity>> {
+        return local.observePlayersByLocation(location.trim())
+    }
+
+    override fun observeColorsUsedForGame(gameId: Long): Flow<List<String>> {
+        return local.observeColorsUsedForGame(gameId)
+    }
+
+    override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> {
+        return local.searchPlayersByName(query.trim())
+    }
+
+    override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> {
+        return local.searchPlayersByUsername(query.trim())
     }
 }

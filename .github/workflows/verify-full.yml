@@ -21,7 +21,7 @@ jobs:
       - name: Filter paths (PR only)
         id: changes
         if: ${{ github.event_name == 'pull_request' }}
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             run_android_tests:
@@ -60,10 +60,10 @@ jobs:
           java-version-file: .github/workflows/.java-version
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Cache Android Emulator
         uses: actions/cache@v5
