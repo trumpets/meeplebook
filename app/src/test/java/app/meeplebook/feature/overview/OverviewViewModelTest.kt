@@ -13,25 +13,33 @@ import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.result.AppResult
-import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
+import app.meeplebook.core.sync.model.SyncUserDataError
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
+import app.meeplebook.feature.overview.effect.OverviewEffectProducer
+import app.meeplebook.feature.overview.effect.OverviewUiEffect
+import app.meeplebook.feature.overview.reducer.OverviewReducer
+import app.meeplebook.testutils.assertState
 import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -39,9 +47,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 
-/**
- * Unit tests for [OverviewViewModel].
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelTest {
 
@@ -66,12 +71,10 @@ class OverviewViewModelTest {
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
 
-        // Set a default user to ensure a consistent state for most tests.
-        // Tests requiring no user can clear it.
         val user = AuthCredentials(username = "testuser", password = "password")
         fakeAuthRepository.setCurrentUser(user)
 
-        val observeStats = ObserveCollectionPlayStatsUseCase(
+        val observeStats = app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase(
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
             playsRepository = fakePlaysRepository,
             clock = testClock
@@ -96,6 +99,8 @@ class OverviewViewModelTest {
         )
 
         viewModel = OverviewViewModel(
+            reducer = OverviewReducer(),
+            effectProducer = OverviewEffectProducer(),
             observeOverviewUseCase = observeOverviewUseCase,
             syncUserDataUseCase = syncUserDataUseCase
         )
@@ -107,19 +112,12 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `initial state is loading`() = runTest {
-        // When
-        val state = viewModel.uiState.value
-
-        // Then
-        assertTrue(state.isLoading)
-        assertFalse(state.isRefreshing)
-        assertNull(state.errorMessageResId)
+    fun `initial state is loading`() {
+        assertEquals(OverviewUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
     fun `uiState displays overview data correctly`() = runTest {
-        // Given
         fakeCollectionRepository.setCollectionCount(50)
         fakeCollectionRepository.setUnplayedCount(10)
         fakePlaysRepository.setTotalPlaysCount(100)
@@ -143,174 +141,163 @@ class OverviewViewModelTest {
         val recentPlays = listOf(createPlay(localPlayId = 1, gameName = "Catan"))
         fakePlaysRepository.setRecentPlays(recentPlays)
 
-        // When
-        val state = awaitLoadedUiState(viewModel)
+        val state = awaitContentUiState(viewModel)
 
-        // Then
-        assertFalse(state.isLoading)
         assertEquals(50L, state.stats.gamesCount)
         assertEquals(100L, state.stats.totalPlays)
         assertEquals(15L, state.stats.playsThisMonth)
         assertEquals(10L, state.stats.unplayedCount)
         assertEquals(1, state.recentPlays.size)
         assertEquals("Azul", state.recentlyAddedGame?.gameName)
+        assertFalse(state.isRefreshing)
     }
 
     @Test
-    fun `refresh succeeds and updates state`() = runTest {
-        // Given
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
-        )
-        fakeAuthRepository.setCurrentUser(user)
+    fun `refresh succeeds and returns content state`() = runTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
-        // When
-        viewModel.refresh()
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
 
-        // Then
-        val state = awaitLoadedUiState(viewModel)
+        val state = awaitContentUiState(viewModel)
         assertFalse(state.isRefreshing)
-        assertNull(state.errorMessageResId)
     }
 
     @Test
     fun `refresh shows refreshing state while syncing`() = runTest {
-        // Given
         val gate = CompletableDeferred<Unit>()
 
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
-        )
-        fakeAuthRepository.setCurrentUser(user)
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-
         fakeCollectionRepository.beforeSync = { gate.await() }
 
-        // When
-        viewModel.refresh()
-        // Don't advance - check intermediate state
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
 
-        // Then
-        val state = awaitLoadedUiState(viewModel)
+        val state = awaitContentUiState(viewModel) { it.isRefreshing }
         assertTrue(state.isRefreshing)
-        assertNull(state.errorMessageResId)
 
-        // Cleanup: let refresh complete
         gate.complete(Unit)
+        advanceUntilIdle()
     }
 
     @Test
-    fun `refresh shows error when not logged in`() = runTest {
-        // Given - no user logged in
+    fun `refresh shows full screen error when not logged in`() = runTest {
         fakeAuthRepository.setCurrentUser(null)
 
-        // When
-        viewModel.refresh()
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
 
-        // Then
-        val state = awaitLoadedUiState(viewModel)
-        assertFalse(state.isRefreshing)
-        assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
+        val state = awaitErrorUiState(viewModel)
+        assertEquals(uiTextRes(R.string.sync_not_logged_in_error), state.errorMessageUiText)
     }
 
     @Test
-    fun `refresh shows error when collection sync fails`() = runTest {
-        // Given
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
-        )
-        fakeAuthRepository.setCurrentUser(user)
+    fun `refresh shows full screen error when collection sync fails`() = runTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
 
-        // When
-        viewModel.refresh()
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
 
-        // Then
-        val state = awaitLoadedUiState(viewModel)
-        assertFalse(state.isRefreshing)
-        assertEquals(R.string.sync_collections_failed_error, state.errorMessageResId)
+        val state = awaitErrorUiState(viewModel)
+        assertEquals(uiTextRes(R.string.sync_collections_failed_error), state.errorMessageUiText)
     }
 
     @Test
-    fun `refresh shows error when plays sync fails`() = runTest {
-        // Given
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
-        )
-        fakeAuthRepository.setCurrentUser(user)
+    fun `refresh shows full screen error when plays sync fails`() = runTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Failure(PlayError.NetworkError)
 
-        // When
-        viewModel.refresh()
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
 
-        // Then
-        val state = awaitLoadedUiState(viewModel)
-        assertFalse(state.isRefreshing)
-        assertEquals(R.string.sync_plays_failed_error, state.errorMessageResId)
+        val state = awaitErrorUiState(viewModel)
+        assertEquals(uiTextRes(R.string.sync_plays_failed_error), state.errorMessageUiText)
     }
 
     @Test
-    fun `clearError removes error message`() = runTest {
-        // Given - trigger an error (no user logged in)
+    fun `successful refresh clears previous error and returns content`() = runTest {
         fakeAuthRepository.setCurrentUser(null)
-        viewModel.refresh()
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
+        awaitErrorUiState(viewModel)
 
-        // Verify error exists
-        var state = awaitLoadedUiState(viewModel)
-        assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
-
-        // When
-        viewModel.clearError()
-
-        // Then
-        state = awaitLoadedUiState(viewModel) {
-                !it.isLoading && it.errorMessageResId == null
-        }
-        assertNull(state.errorMessageResId)
-    }
-
-    @Test
-    fun `refresh clears previous error`() = runTest {
-        // Given - trigger an error first by logging out
-        fakeAuthRepository.setCurrentUser(null)
-
-        viewModel.refresh()
-
-        // Verify error exists
-        var state = awaitLoadedUiState(viewModel)
-        assertEquals(R.string.sync_not_logged_in_error, state.errorMessageResId)
-
-        // When - setup successful refresh
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
-        )
+        val user = AuthCredentials(username = "testuser", password = "password")
         fakeAuthRepository.setCurrentUser(user)
-
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
         fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
-        viewModel.refresh()
+        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
 
-        // Then - error is cleared
-        state = awaitLoadedUiState(viewModel) {
-                !it.isRefreshing && it.errorMessageResId == null
-        }
-        assertNull(state.errorMessageResId)
+        val state = awaitContentUiState(viewModel)
+        assertFalse(state.isRefreshing)
     }
 
-    suspend fun TestScope.awaitLoadedUiState(
+    @Test
+    fun `log play event emits open add play effect`() = runTest {
+        val effects = mutableListOf<OverviewUiEffect>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
+        viewModel.onEvent(OverviewEvent.ActionEvent.LogPlayClicked)
+        advanceUntilIdle()
+
+        assertEquals(listOf(OverviewUiEffect.OpenAddPlay), effects)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `recent play click emits navigate to play effect`() = runTest {
+        val effects = mutableListOf<OverviewUiEffect>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
+        viewModel.onEvent(OverviewEvent.ActionEvent.RecentPlayClicked(PlayId.Local(42L)))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(OverviewUiEffect.NavigateToPlay(PlayId.Local(42L))),
+            effects
+        )
+
+        job.cancel()
+    }
+
+    @Test
+    fun `highlight click emits navigate to game effect`() = runTest {
+        val effects = mutableListOf<OverviewUiEffect>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
+        viewModel.onEvent(OverviewEvent.ActionEvent.RecentlyAddedClicked(7L))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(OverviewUiEffect.NavigateToGame(7L)),
+            effects
+        )
+
+        job.cancel()
+    }
+
+    private suspend fun TestScope.awaitContentUiState(
         viewModel: OverviewViewModel,
-        predicate: (OverviewUiState) -> Boolean = { !it.isLoading }
-    ): OverviewUiState {
-        return awaitUiStateMatching(viewModel.uiState, predicate = predicate)
+        predicate: (OverviewUiState.Content) -> Boolean = { true }
+    ): OverviewUiState.Content {
+        return awaitUiStateMatching(viewModel.uiState) {
+            (it as? OverviewUiState.Content)?.let(predicate) == true
+        }.assertState()
+    }
+
+    private suspend fun TestScope.awaitErrorUiState(
+        viewModel: OverviewViewModel
+    ): OverviewUiState.Error {
+        return awaitUiStateMatching(viewModel.uiState) { it is OverviewUiState.Error }
+            .assertState()
     }
 }

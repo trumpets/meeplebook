@@ -626,3 +626,49 @@ PR Link: <pending>
   - After migrating a feature to reducer-owned base state, refresh KDoc across all state/event/reducer/effect files in the same pass so the feature doesn’t keep explaining the pre-migration architecture.
   - Collection docs should explicitly distinguish persistent UI state (sort sheet, view mode, filters) from one-shot UI effects (navigation, scroll, snackbar), because that boundary is easy to blur during refactors.
 ---
+
+## 2026-04-17T08:18:34Z
+PR Link: N/A
+- Refactored Overview to use top-level `Loading / Error / Content` screen states and the shared reducer/effect architecture
+- Replaced the old flag-based `OverviewUiState` and `_uiEffects` flow with `OverviewBaseState`, `OverviewEvent`, reducer/effect files, and a `ReducerViewModel`-based `OverviewViewModel`
+- Updated Overview unit tests and Compose tests to target the new sealed state model, plus added focused reducer/effect producer tests
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewBaseState.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewEvent.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffectProducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewUiEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/reducer/OverviewReducer.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/effect/OverviewEffectProducerTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/overview/reducer/OverviewReducerTest.kt` (new)
+  - `app/src/androidTest/java/app/meeplebook/feature/overview/OverviewContentTest.kt`
+- **Learnings for future iterations:**
+    - When a feature adopts top-level `Loading / Error / Content`, content-only composables and their tests should take the `Content` subtype directly, while root screen tests should target the screen-state switch
+    - In reducer-driven screens, async refresh/error handling belongs in reducer-owned base state plus domain effects, not in a parallel mutable UI-effects state flow
+    - Migrating a screen to sealed render states often requires updating downstream Compose tests that were constructing the old flat state directly
+---
+
+## 2026-04-17T09:04:54Z
+PR Link: N/A
+- Added and refreshed KDoc across the Overview reducer-architecture files so the docs match the current sealed screen-state model
+- Documented the distinction between reducer-owned base state, derived `OverviewUiState`, domain effects, and one-shot UI effects
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/reducer/OverviewReducer.kt`
+- **Learnings for future iterations:**
+    - For reducer-driven screens, KDoc should document both layers explicitly: reducer-owned base state and the derived renderable sealed `UiState`
+    - Effect producer docs are most useful when they explain which events become domain work versus one-shot navigation/UI effects
+    - When a reducer is intentionally minimal, document that async effect results update state through `updateBaseState` so the no-op reduce path is clearly intentional
+---

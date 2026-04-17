@@ -1,81 +1,93 @@
 package app.meeplebook.feature.overview
 
-import androidx.annotation.StringRes
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
 import app.meeplebook.core.sync.model.SyncUserDataError
-import app.meeplebook.core.util.formatLastSynced
+import app.meeplebook.core.ui.architecture.ReducerViewModel
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
+import app.meeplebook.feature.overview.effect.OverviewEffect
+import app.meeplebook.feature.overview.effect.OverviewEffectProducer
+import app.meeplebook.feature.overview.effect.OverviewUiEffect
+import app.meeplebook.feature.overview.reducer.OverviewReducer
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for the Overview screen.
+ *
+ * The screen follows the shared reducer architecture: [OverviewBaseState] owns refresh/error
+ * bookkeeping, [OverviewEvent] flows through the reducer/effect producer pipeline, and the exposed
+ * [uiState] is derived by combining base state with [ObserveOverviewUseCase].
+ */
 @HiltViewModel
 class OverviewViewModel @Inject constructor(
-    private val observeOverviewUseCase: ObserveOverviewUseCase,
+    reducer: OverviewReducer,
+    effectProducer: OverviewEffectProducer,
+    observeOverviewUseCase: ObserveOverviewUseCase,
     private val syncUserDataUseCase: SyncUserDataUseCase
-) : ViewModel() {
-
-    private val _uiEffects = MutableStateFlow(OverviewUiEffects(isRefreshing = false, errorMessageResId = null))
-
+) : ReducerViewModel<OverviewBaseState, OverviewEvent, OverviewEffect, OverviewUiEffect>(
+    initialState = OverviewBaseState(),
+    reducer = reducer,
+    effectProducer = effectProducer
+) {
+    /**
+     * Renderable screen state derived from reducer-owned base state and the observed domain data.
+     */
     val uiState: StateFlow<OverviewUiState> =
         combine(
+            baseState,
             observeOverviewUseCase()
-                .map { domain ->
-                    OverviewUiState(
-                        stats = domain.stats.toOverviewStats(),
-                        recentPlays = domain.recentPlays.map { it.toRecentPlay() },
-                        recentlyAddedGame = domain.recentlyAddedGame?.toGameHighlight(),
-                        suggestedGame = domain.suggestedGame?.toGameHighlight(),
-                        lastSyncedUiText = formatLastSynced(domain.lastSyncedDate),
-                        isLoading = false
-                    )
-                },
-            _uiEffects
-        ) { data, effects ->
-            data.copy(
-                isRefreshing = effects.isRefreshing,
-                errorMessageResId = effects.errorMessageResId
-            )
-        }
-        .stateIn(
+        ) { state, domainOverview ->
+            state.errorMessageUiText?.let { errorMessageUiText ->
+                OverviewUiState.Error(errorMessageUiText)
+            } ?: domainOverview.toContentState(isRefreshing = state.isRefreshing)
+        }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            OverviewUiState(isLoading = true)
+            OverviewUiState.Loading
         )
 
     private var refreshJob: Job? = null
 
-    /**
-     * Triggers a refresh by syncing data from BGG.
-     */
-    fun refresh() {
+    fun onEvent(event: OverviewEvent) {
+        dispatchEvent(event)
+    }
+
+    override fun handleDomainEffect(effect: OverviewEffect) {
+        when (effect) {
+            OverviewEffect.Refresh -> refresh()
+        }
+    }
+
+    private fun refresh() {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
-            _uiEffects.update {
-                it.copy(isRefreshing = true, errorMessageResId = null)
+            updateBaseState {
+                it.copy(
+                    isRefreshing = true,
+                    errorMessageUiText = null
+                )
             }
 
             when (val result = syncUserDataUseCase()) {
                 is AppResult.Success -> {
-                    _uiEffects.update { it.copy(isRefreshing = false) }
+                    updateBaseState { it.copy(isRefreshing = false) }
                 }
+
                 is AppResult.Failure -> {
-                    _uiEffects.update {
+                    updateBaseState {
                         it.copy(
                             isRefreshing = false,
-                            errorMessageResId = mapSyncError(result.error)
+                            errorMessageUiText = mapSyncError(result.error)
                         )
                     }
                 }
@@ -83,23 +95,15 @@ class OverviewViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Clears the current error message.
-     */
-    fun clearError() {
-        _uiEffects.update { it.copy(errorMessageResId = null) }
-    }
-
-    @StringRes
-    private fun mapSyncError(error: SyncUserDataError): Int =
+    private fun mapSyncError(error: SyncUserDataError) =
         when (error) {
             SyncUserDataError.NotLoggedIn ->
-                R.string.sync_not_logged_in_error
+                uiTextRes(R.string.sync_not_logged_in_error)
 
             is SyncUserDataError.CollectionSyncFailed ->
-                R.string.sync_collections_failed_error
+                uiTextRes(R.string.sync_collections_failed_error)
 
             is SyncUserDataError.PlaysSyncFailed ->
-                R.string.sync_plays_failed_error
+                uiTextRes(R.string.sync_plays_failed_error)
         }
 }

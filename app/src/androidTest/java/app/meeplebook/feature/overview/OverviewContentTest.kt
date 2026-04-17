@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -34,7 +35,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         stats = OverviewStats(
                             gamesCount = 127,
                             totalPlays = 342,
@@ -65,7 +66,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         recentPlays = listOf(
                             RecentPlay(
                                 playId = PlayId.Local(1),
@@ -105,7 +106,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         recentPlays = listOf(
                             RecentPlay(
                                 playId = PlayId.Local(42),
@@ -136,7 +137,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(),
+                    uiState = contentState(),
                     onLogPlayClick = { fabClicked = true }
                 )
             }
@@ -154,7 +155,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         recentlyAddedGame = GameHighlight(
                             id = 100,
                             gameName = "Azul",
@@ -186,7 +187,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         stats = OverviewStats(),
                         lastSyncedUiText = uiText("Never synced")
                     )
@@ -212,7 +213,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         recentlyAddedGame = GameHighlight(
                             id = 100,
                             gameName = "Azul",
@@ -242,11 +243,12 @@ class OverviewContentTest {
     }
 
     @Test
-    fun overviewContent_loadingState_displaysLoadingIndicator() {
+    fun overviewScreenRoot_loadingState_displaysLoadingIndicator() {
         composeTestRule.setContent {
             MeepleBookTheme {
-                OverviewContent(
-                    uiState = OverviewUiState(isLoading = true)
+                OverviewScreenRoot(
+                    uiState = OverviewUiState.Loading,
+                    onEvent = {}
                 )
             }
         }
@@ -256,7 +258,7 @@ class OverviewContentTest {
         composeTestRule.onNodeWithText(stringRes(R.string.loading_message)).assertIsDisplayed()
 
         // Verify overview content is not displayed
-        composeTestRule.onNodeWithTag("overviewContent").assertDoesNotExist()
+        composeTestRule.onAllNodesWithTag("overviewContent").assertCountEquals(0)
     }
 
     @Test
@@ -264,9 +266,9 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         stats = OverviewStats(),
-                        recentPlays = emptyList()
+                        recentPlays = emptyList<RecentPlay>()
                     )
                 )
             }
@@ -282,7 +284,7 @@ class OverviewContentTest {
         composeTestRule.setContent {
             MeepleBookTheme {
                 OverviewContent(
-                    uiState = OverviewUiState(
+                    uiState = contentState(
                         isRefreshing = true,
                         recentPlays = listOf(
                             RecentPlay(
@@ -305,5 +307,23 @@ class OverviewContentTest {
         
         // Note: PullToRefreshBox's refresh indicator is an internal implementation detail
         // and doesn't expose test tags. The isRefreshing state is properly passed to the component.
+    }
+
+    private fun contentState(
+        stats: OverviewStats = OverviewStats(),
+        recentPlays: List<RecentPlay> = emptyList(),
+        recentlyAddedGame: GameHighlight? = null,
+        suggestedGame: GameHighlight? = null,
+        lastSyncedUiText: app.meeplebook.core.ui.UiText = uiText(""),
+        isRefreshing: Boolean = false
+    ): OverviewUiState.Content {
+        return OverviewUiState.Content(
+            stats = stats,
+            recentPlays = recentPlays,
+            recentlyAddedGame = recentlyAddedGame,
+            suggestedGame = suggestedGame,
+            lastSyncedUiText = lastSyncedUiText,
+            isRefreshing = isRefreshing
+        )
     }
 }
