@@ -7,11 +7,13 @@ import app.meeplebook.core.plays.domain.DomainRecentPlay
 import app.meeplebook.core.stats.domain.DomainOverviewStats
 import app.meeplebook.core.stats.model.CollectionPlayStats
 import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.core.util.formatLastSynced
 import app.meeplebook.core.util.formatPlayerNames
 import app.meeplebook.core.util.formatRelativeDate
+import app.meeplebook.feature.overview.domain.DomainOverview
 
 /**
- * Maps a [DomainGameHighlight] to a [GameHighlight] for overview display.
+ * Maps a domain collection highlight to the UI model consumed by Overview highlight cards.
  */
 fun DomainGameHighlight.toGameHighlight(): GameHighlight {
     return GameHighlight(
@@ -28,7 +30,7 @@ fun DomainGameHighlight.toGameHighlight(): GameHighlight {
 }
 
 /**
- * Maps a [DomainRecentPlay] to a [RecentPlay] for overview display.
+ * Maps a domain recent play snapshot to the UI model consumed by Overview recent-play cards.
  */
 fun DomainRecentPlay.toRecentPlay(): RecentPlay {
     return RecentPlay(
@@ -42,7 +44,7 @@ fun DomainRecentPlay.toRecentPlay(): RecentPlay {
 }
 
 /**
- * Maps a [CollectionPlayStats] to a [OverviewStats] for overview display.
+ * Maps domain overview stats to the stats-card model rendered by Overview.
  */
 fun DomainOverviewStats.toOverviewStats(): OverviewStats {
     return OverviewStats(
@@ -50,5 +52,20 @@ fun DomainOverviewStats.toOverviewStats(): OverviewStats {
         totalPlays = totalPlays,
         playsThisMonth = playsInPeriod,
         unplayedCount = unplayedCount
+    )
+}
+
+/**
+ * Builds the renderable [OverviewUiState.Content] from the current domain overview snapshot plus
+ * reducer-owned refresh state.
+ */
+fun DomainOverview.toContentState(isRefreshing: Boolean): OverviewUiState.Content {
+    return OverviewUiState.Content(
+        stats = stats.toOverviewStats(),
+        recentPlays = recentPlays.map { it.toRecentPlay() },
+        recentlyAddedGame = recentlyAddedGame?.toGameHighlight(),
+        suggestedGame = suggestedGame?.toGameHighlight(),
+        lastSyncedUiText = formatLastSynced(lastSyncedDate),
+        isRefreshing = isRefreshing
     )
 }

@@ -73,6 +73,7 @@ import app.meeplebook.core.ui.asString
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.core.ui.uiTextJoin
 import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.collection.effect.CollectionUiEffect
 import app.meeplebook.ui.components.RowItemImage
 import app.meeplebook.ui.components.SearchBar
 import app.meeplebook.ui.components.UiTextText
@@ -106,32 +107,21 @@ fun CollectionScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
 
-                is CollectionUiEffects.ScrollToLetter -> {
-                    val content = uiState as? CollectionUiState.Content ?: return@collect
-                    val index = content.sectionIndices[effect.letter] ?: return@collect
-
-                    when (content.viewMode) {
+                is CollectionUiEffect.ScrollToIndex -> {
+                    when (effect.viewMode) {
                         CollectionViewMode.LIST ->
-                            listState.animateScrollToItem(index)
+                            listState.animateScrollToItem(effect.index)
 
                         CollectionViewMode.GRID ->
-                            gridState.animateScrollToItem(index)
+                            gridState.animateScrollToItem(effect.index)
                     }
                 }
 
-                is CollectionUiEffects.NavigateToGame -> {
+                is CollectionUiEffect.NavigateToGame -> {
 //                    onNavigateToGame(effect.gameId)
                 }
 
-                CollectionUiEffects.OpenSortSheet -> {
-                    // showModalBottomSheet()
-                }
-
-                CollectionUiEffects.DismissSortSheet -> {
-                    // hideModalBottomSheet()
-                }
-
-                is CollectionUiEffects.ShowSnackbar -> {
+                is CollectionUiEffect.ShowSnackbar -> {
                     Toast.makeText(context, effect.messageUiText.asString(resources), Toast.LENGTH_SHORT).show()
 //                    scaffoldState.snackbarHostState.showSnackbar(stringResource(effect.messageResId))
                 }
@@ -166,7 +156,7 @@ fun CollectionScreenRoot(
 
             is CollectionUiState.Empty ->
                 CollectionScaffold(
-                    uiState = uiState,
+                    commonState = uiState.common,
                     onEvent = onEvent
                 ) {
                     EmptyState(reasonMessageUiText = uiTextRes(uiState.reason.descriptionResId))
@@ -174,15 +164,15 @@ fun CollectionScreenRoot(
 
             is CollectionUiState.Error ->
                 CollectionScaffold(
-                    uiState = uiState,
+                    commonState = uiState.common,
                     onEvent = onEvent
                 ) {
-                    ErrorState(errorMessageUiText = uiTextRes(uiState.errorMessageResId))
+                    ErrorState(errorMessageUiText = uiState.errorMessageUiText)
                 }
 
             is CollectionUiState.Content ->
                 CollectionScaffold(
-                    uiState = uiState,
+                    commonState = uiState.common,
                     onEvent = onEvent
                 ) {
                     CollectionScreenContent(
@@ -198,7 +188,7 @@ fun CollectionScreenRoot(
 
 @Composable
 private fun CollectionScaffold(
-    uiState: CollectionUiState,
+    commonState: CollectionCommonState,
     onEvent: (CollectionEvent) -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -207,16 +197,16 @@ private fun CollectionScaffold(
 
             /* --- SEARCH (always visible) --- */
             SearchBar(
-                query = uiState.searchQuery,
+                query = commonState.searchQuery,
                 placeholderResId = R.string.collection_search_games,
-                onQueryChanged = { onEvent(CollectionEvent.SearchChanged(it)) }
+                onQueryChanged = { onEvent(CollectionEvent.SearchEvent.SearchChanged(it)) }
 
             )
 
             /* --- QUICK FILTERS (always visible) --- */
             QuickFiltersRow(
-                state = uiState,
-                onFilterSelected = { onEvent(CollectionEvent.QuickFilterSelected(it)) }
+                commonState = commonState,
+                onFilterSelected = { onEvent(CollectionEvent.FilterEvent.QuickFilterSelected(it)) }
             )
 
             content()
@@ -238,10 +228,10 @@ fun CollectionScreenContent(
             CollectionToolbar(
                 selectedViewMode = uiState.viewMode,
                 onViewModeChanged = {
-                    onEvent(CollectionEvent.ViewModeSelected(it))
+                    onEvent(CollectionEvent.DisplayEvent.ViewModeSelected(it))
                 },
                 onSortClicked = {
-                    onEvent(CollectionEvent.OpenSortSheet)
+                    onEvent(CollectionEvent.SortSheetEvent.OpenSortSheet)
                 }
             )
 
@@ -256,7 +246,7 @@ fun CollectionScreenContent(
         if (uiState.showAlphabetJump) {
             AlphabetJumpBar(
                 onLetterSelected = {
-                    onEvent(CollectionEvent.JumpToLetter(it))
+                    onEvent(CollectionEvent.ActionEvent.JumpToLetter(it))
                 }
             )
         }
@@ -265,9 +255,9 @@ fun CollectionScreenContent(
     if (uiState.isSortSheetVisible) {
         SortBottomSheet(
             uiState = uiState,
-            onDismiss = { onEvent(CollectionEvent.DismissSortSheet) },
+            onDismiss = { onEvent(CollectionEvent.SortSheetEvent.DismissSortSheet) },
             onSortSelected = {
-                onEvent(CollectionEvent.SortSelected(it))
+                onEvent(CollectionEvent.DisplayEvent.SortSelected(it))
             }
         )
     }
@@ -277,7 +267,7 @@ fun CollectionScreenContent(
 
 @Composable
 private fun QuickFiltersRow(
-    state: CollectionUiState,
+    commonState: CollectionCommonState,
     onFilterSelected: (QuickFilter) -> Unit
 ) {
     LazyRow(
@@ -287,17 +277,17 @@ private fun QuickFiltersRow(
         // TODO: I don't like this. it's too hardcoded for my taste
         item {
             FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.ALL,
+                selected = commonState.activeQuickFilter == QuickFilter.ALL,
                 onClick = { onFilterSelected(QuickFilter.ALL) },
-                label = { Text(stringResource(R.string.collection_filter_all, state.totalGameCount)) }
+                label = { Text(stringResource(R.string.collection_filter_all, commonState.totalGameCount)) }
             )
         }
 
         item {
             FilterChip(
-                selected = state.activeQuickFilter == QuickFilter.UNPLAYED,
+                selected = commonState.activeQuickFilter == QuickFilter.UNPLAYED,
                 onClick = { onFilterSelected(QuickFilter.UNPLAYED) },
-                label = { Text(stringResource(R.string.collection_filter_unplayed, state.unplayedGameCount)) }
+                label = { Text(stringResource(R.string.collection_filter_unplayed, commonState.unplayedGameCount)) }
             )
         }
     }
@@ -355,8 +345,8 @@ private fun CollectionContent(
     gridState: LazyGridState
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isRefreshing,
-        onRefresh = { onEvent(CollectionEvent.Refresh) },
+        isRefreshing = state.common.isRefreshing,
+        onRefresh = { onEvent(CollectionEvent.ActionEvent.Refresh) },
         modifier = Modifier.fillMaxSize()
     ) {
         when (state.viewMode) {
@@ -390,10 +380,10 @@ private fun CollectionGrid(
                 GameGridCard(
                     game = game,
                     onClick = {
-                        onEvent(CollectionEvent.GameClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.GameClicked(game.gameId))
                     },
                     onLogPlay = {
-                        onEvent(CollectionEvent.LogPlayClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.LogPlayClicked(game.gameId))
                     }
                 )
             }
@@ -423,10 +413,10 @@ private fun CollectionList(
                 GameListRow(
                     game = game,
                     onClick = {
-                        onEvent(CollectionEvent.GameClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.GameClicked(game.gameId))
                     },
                     onLogPlay = {
-                        onEvent(CollectionEvent.LogPlayClicked(game.gameId))
+                        onEvent(CollectionEvent.ActionEvent.LogPlayClicked(game.gameId))
                     }
                 )
             }
@@ -630,21 +620,25 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
         sampleContentState(viewMode = CollectionViewMode.LIST, isSortSheetVisible = true),
         CollectionUiState.Empty(
             reason = EmptyReason.NO_SEARCH_RESULTS,
-            searchQuery = "search term",
-            activeQuickFilter = QuickFilter.ALL,
-            totalGameCount = 100,
-            unplayedGameCount = 27,
-            isRefreshing = false
+            common = CollectionCommonState(
+                searchQuery = "search term",
+                activeQuickFilter = QuickFilter.ALL,
+                totalGameCount = 100,
+                unplayedGameCount = 27,
+                isRefreshing = false
+            )
         ),
         CollectionUiState.Loading,
         sampleContentState(isRefreshing = true),
         CollectionUiState.Error(
-            R.string.sync_collections_failed_error,
-            searchQuery = "azul",
-            activeQuickFilter = QuickFilter.ALL,
-            totalGameCount = 100,
-            unplayedGameCount = 27,
-            isRefreshing = false
+            uiTextRes(R.string.sync_collections_failed_error),
+            common = CollectionCommonState(
+                searchQuery = "azul",
+                activeQuickFilter = QuickFilter.ALL,
+                totalGameCount = 100,
+                unplayedGameCount = 27,
+                isRefreshing = false
+            )
         )
     )
 
@@ -655,18 +649,20 @@ class CollectionUiStatePreviewParameterProvider : PreviewParameterProvider<Colle
     ): CollectionUiState.Content {
         val games = sampleGames()
         return CollectionUiState.Content(
-            searchQuery = "",
             viewMode = viewMode,
             sort = CollectionSort.ALPHABETICAL,
-            activeQuickFilter = QuickFilter.ALL,
             availableSortOptions = CollectionSort.entries,
             sections = buildSections(games),
             sectionIndices = LinkedHashMap(),
-            totalGameCount = games.size.toLong(),
-            unplayedGameCount = games.size - 3L,
-            isRefreshing = isRefreshing,
             showAlphabetJump = true,
-            isSortSheetVisible = isSortSheetVisible
+            isSortSheetVisible = isSortSheetVisible,
+            common = CollectionCommonState(
+                searchQuery = "",
+                activeQuickFilter = QuickFilter.ALL,
+                totalGameCount = games.size.toLong(),
+                unplayedGameCount = games.size - 3L,
+                isRefreshing = isRefreshing
+            )
         )
     }
 

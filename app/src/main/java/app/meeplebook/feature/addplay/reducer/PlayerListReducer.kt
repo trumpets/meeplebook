@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.reducer
 
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
 import javax.inject.Inject
@@ -9,49 +10,49 @@ import javax.inject.Inject
  * from the player list.  Edit/navigation events (e.g. [AddPlayEvent.PlayerListEvent.EditPlayer])
  * are passed through unchanged.
  */
-class PlayerListReducer @Inject constructor() {
+class PlayerListReducer @Inject constructor() : Reducer<List<PlayerEntryUi>, AddPlayEvent.PlayerListEvent> {
 
-    fun reduce(
-        players: List<PlayerEntryUi>,
+    override fun reduce(
+        state: List<PlayerEntryUi>,
         event: AddPlayEvent.PlayerListEvent
     ): List<PlayerEntryUi> {
 
         return when (event) {
 
             is AddPlayEvent.PlayerListEvent.AddNewPlayer ->
-                players + PlayerEntryUi.empty(
+                state + PlayerEntryUi.empty(
                     playerName = event.playerName,
                     startPosition = event.startPosition
                 )
 
             is AddPlayEvent.PlayerListEvent.AddPlayerFromSuggestion ->
-                players + PlayerEntryUi.fromPlayerIdentity(
+                state + PlayerEntryUi.fromPlayerIdentity(
                     playerIdentity = event.playerIdentity,
                     startPosition = event.startPosition
                 )
 
             is AddPlayEvent.PlayerListEvent.RemovePlayer ->
-                players.filterNot { it.playerIdentity == event.playerIdentity }
+                state.filterNot { it.playerIdentity == event.playerIdentity }
                     .renumbered()
 
             is AddPlayEvent.PlayerListEvent.PlayerReordered -> {
-                val from = event.fromIndex.coerceIn(0, players.lastIndex)
-                val to = event.toIndex.coerceIn(0, players.lastIndex)
-                if (from == to) return players
-                players.toMutableList()
+                val from = event.fromIndex.coerceIn(0, state.lastIndex)
+                val to = event.toIndex.coerceIn(0, state.lastIndex)
+                if (from == to) return state
+                state.toMutableList()
                     .apply { add(to, removeAt(from)) }
                     .renumbered()
             }
 
             is AddPlayEvent.PlayerListEvent.RestorePlayer -> {
-                val insertAt = event.atIndex.coerceIn(0, players.size)
-                players.toMutableList()
+                val insertAt = event.atIndex.coerceIn(0, state.size)
+                state.toMutableList()
                     .apply { add(insertAt, event.player) }
                     .renumbered()
             }
 
             else ->
-                players
+                state
         }
     }
 }

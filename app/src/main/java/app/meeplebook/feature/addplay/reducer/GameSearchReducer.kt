@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.reducer
 
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.core.ui.uiTextEmpty
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
@@ -14,9 +15,9 @@ import javax.inject.Inject
  * top-level game identity.
  * All other events are passed through unchanged.
  */
-class GameSearchReducer @Inject constructor() {
+class GameSearchReducer @Inject constructor() : Reducer<AddPlayUiState, AddPlayEvent> {
 
-    fun reduce(
+    override fun reduce(
         state: AddPlayUiState,
         event: AddPlayEvent
     ): AddPlayUiState {

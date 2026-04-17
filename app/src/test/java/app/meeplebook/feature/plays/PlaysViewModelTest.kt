@@ -13,8 +13,11 @@ import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
 import app.meeplebook.core.util.DebounceDurations
+import app.meeplebook.feature.plays.effect.PlaysEffectProducer
+import app.meeplebook.feature.plays.effect.PlaysUiEffect
 import app.meeplebook.feature.plays.domain.BuildPlaysSectionsUseCase
 import app.meeplebook.feature.plays.domain.ObservePlaysScreenDataUseCase
+import app.meeplebook.feature.plays.reducer.PlaysReducer
 import app.meeplebook.testutils.assertState
 import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.Dispatchers
@@ -93,6 +96,8 @@ class PlaysViewModelTest {
 
         // Create ViewModel
         viewModel = PlaysViewModel(
+            reducer = PlaysReducer(),
+            effectProducer = PlaysEffectProducer(),
             observePlaysScreenData = observePlaysScreenDataUseCase,
             syncPlays = syncPlaysUseCase
         )
@@ -220,19 +225,19 @@ class PlaysViewModelTest {
     @Test
     fun `PlayClicked emits NavigateToPlay effect`() = runTest {
         // Given
-        val effects = mutableListOf<PlaysUiEffects>()
+        val effects = mutableListOf<PlaysUiEffect>()
         val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiEffect.collect { effects.add(it) }
         }
 
         // When
-        viewModel.onEvent(PlaysEvent.PlayClicked(PlayId.Local(123L)))
+        viewModel.onEvent(PlaysEvent.ActionEvent.PlayClicked(PlayId.Local(123L)))
         advanceUntilIdle()
 
         // Then
         assertEquals(1, effects.size)
-        assertTrue(effects[0] is PlaysUiEffects.NavigateToPlay)
-        assertEquals(123L, (effects[0] as PlaysUiEffects.NavigateToPlay).playId.localId)
+        assertTrue(effects[0] is PlaysUiEffect.NavigateToPlay)
+        assertEquals(123L, (effects[0] as PlaysUiEffect.NavigateToPlay).playId.localId)
 
         job.cancel()
     }
@@ -344,7 +349,7 @@ class PlaysViewModelTest {
         assertFalse(initialState.common.isRefreshing)
 
         // When - Refresh event is triggered
-        viewModel.onEvent(PlaysEvent.Refresh)
+        viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         // Then - sync was called
@@ -371,13 +376,13 @@ class PlaysViewModelTest {
         assertFalse(initialState.common.isRefreshing)
 
         // Given - collect effects
-        val effects = mutableListOf<PlaysUiEffects>()
+        val effects = mutableListOf<PlaysUiEffect>()
         val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiEffect.collect { effects.add(it) }
         }
 
         // When - Refresh event is triggered
-        viewModel.onEvent(PlaysEvent.Refresh)
+        viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         // Then - sync was attempted
@@ -389,7 +394,7 @@ class PlaysViewModelTest {
 
         // And - ShowSnackbar effect was emitted
         assertEquals(1, effects.size)
-        assertTrue(effects[0] is PlaysUiEffects.ShowSnackbar)
+        assertTrue(effects[0] is PlaysUiEffect.ShowSnackbar)
 
         job.cancel()
     }
@@ -405,7 +410,7 @@ class PlaysViewModelTest {
         awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
 
         // When - Refresh event is triggered
-        viewModel.onEvent(PlaysEvent.Refresh)
+        viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         // Then - sync was not called (use case returned NotLoggedIn error before attempting repository sync)
@@ -421,7 +426,7 @@ class PlaysViewModelTest {
         fakePlaysRepository.setUniqueGamesCount(1)
 
         // When - LogPlayClicked is triggered (currently a no-op)
-        viewModel.onEvent(PlaysEvent.LogPlayClicked)
+        viewModel.onEvent(PlaysEvent.ActionEvent.LogPlayClicked)
         advanceUntilIdle()
 
         // Then - no crash, state remains consistent

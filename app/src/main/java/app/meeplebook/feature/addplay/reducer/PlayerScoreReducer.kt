@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.reducer
 
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.PlayerEntryUi
 import javax.inject.Inject
@@ -11,17 +12,17 @@ import javax.inject.Inject
  * player(s) with the highest score as winners.
  * On [AddPlayEvent.PlayerScoreEvent.WinnerToggled] the winner flag is set explicitly.
  */
-class PlayerScoreReducer @Inject constructor() {
+class PlayerScoreReducer @Inject constructor() : Reducer<List<PlayerEntryUi>, AddPlayEvent.PlayerScoreEvent> {
 
-    fun reduce(
-        players: List<PlayerEntryUi>,
+    override fun reduce(
+        state: List<PlayerEntryUi>,
         event: AddPlayEvent.PlayerScoreEvent
     ): List<PlayerEntryUi> {
 
         return when (event) {
 
             is AddPlayEvent.PlayerScoreEvent.ScoreChanged -> {
-                val updatedPlayers = players.map {
+                val updatedPlayers = state.map {
                     if (it.playerIdentity == event.playerIdentity)
                         it.copy(score = event.score)
                     else it
@@ -38,7 +39,7 @@ class PlayerScoreReducer @Inject constructor() {
             }
 
             is AddPlayEvent.PlayerScoreEvent.WinnerToggled ->
-                players.map {
+                state.map {
                     if (it.playerIdentity == event.playerIdentity)
                         it.copy(isWinner = event.isWinner)
                     else it

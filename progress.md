@@ -1,3 +1,8 @@
+## Codebase Patterns
+- For reducer-driven screens, use the shared `core/ui/architecture` contracts/helper for `onEvent -> reduce -> produce -> handle effects`, but keep feature-owned base state, query flows, and `combine(baseState, externalData) -> uiState` mapping local to the feature.
+- For simple reducer-driven forms with no external observed data, expose reducer-owned state directly as `uiState` and use one-shot `UiEffect`s for success navigation instead of persistent success flags.
+- If a one-shot UI effect depends on derived render data that exists only in final `uiState`, emit a domain effect and resolve it in the ViewModel against the latest derived `uiState` rather than duplicating the data into base state or reading captured UI state in Compose.
+
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
 - Extended `FakePlaysRepository` to implement missing `observeUniqueGamesCount()` method with test helper
@@ -12,35 +17,6 @@ PR Link: https://github.com/trumpets/meeplebook/pull/71
     - Fake repositories should compute derived values (like unique games count) in `updateComputedValues` to keep all counters consistent when `setPlays` is called
 ---
 
-## 2026-04-10
-PR Link: https://github.com/trumpets/meeplebook/pull/103
-- Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
-- Files changed:
-  - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
-- **Learnings for future iterations:**
-    - `player_name_with_username` should be reused for user-visible player labels, and a matching simple name resource keeps formatting/localization consistent across features.
----
-
-## 2026-04-10
-PR Link: https://github.com/trumpets/meeplebook/pull/103
-- Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
-- Files changed:
-  - `AGENTS.md`
-  - `.github/copilot-instructions.md`
-  - `.github/skills/architecture/android-architecture/SKILL.md`
-  - `.github/skills/architecture/android-viewmodel/SKILL.md`
-  - `.github/skills/architecture/android-data-layer/SKILL.md`
-  - `.github/skills/build_and_tooling/android-gradle-logic/SKILL.md`
-  - `.github/skills/concurrency_and_networking/android-retrofit/SKILL.md`
-  - `.github/skills/ui/compose-navigation/SKILL.md`
-  - `.github/skills/testing_and_automation/android-testing/SKILL.md`
-  - `.github/skills/performance/gradle-build-performance/SKILL.md`
-- **Learnings for future iterations:**
-    - The repo must be documented from its current package-based `:app` structure first; multi-module remains a future target, not an assumed present state.
-    - Skill docs drift quickly when they embed generic Android examples with hardcoded module names, task names, or library setup; MeepleBook-specific notes should be added near the top of those docs.
-    - Screenshot guidance for this repo is Paparazzi-first if/when added; Roborazzi should only be mentioned as an explicit future user choice and never as an assumed dependency.
-    - CI/source-of-truth verification commands are `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest`.
----
 ## 2026-01-29T22:20:00Z
 PR Link: Sub-PR for https://github.com/trumpets/meeplebook/pull/69 (addressing review comment #2743783872)
 - Created comprehensive test suite `ObservePlaysUseCaseTest` with 8 test cases covering query passthrough, mapping correctness, and flow reactivity
@@ -497,4 +473,245 @@ PR Link: N/A (local session)
   - `AddEditPlayerDialogReducer` clears suggestions on field changes; they are populated externally by the ViewModel debounce flows
   - `ConfirmAddEditPlayer` resets raw name/username query flows in the ViewModel — reopening the dialog shows empty suggestions
   - `PlayTestFactory.createPlay(localPlayId, gameName, ...)` — `gameName` is a required parameter (not defaulted)
+---
+
+## 2026-04-10
+PR Link: https://github.com/trumpets/meeplebook/pull/103
+- Replaced hardcoded suggestion-label interpolation in `AddEditPlayerDialog` with string-resource formatting for consistent localization using UiText.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/addplay/ui/dialogs/AddEditPlayerDialog.kt`
+- **Learnings for future iterations:**
+  - `player_name_with_username` should be reused for user-visible player labels, and a matching simple name resource keeps formatting/localization consistent across features.
+---
+
+## 2026-04-10
+PR Link: https://github.com/trumpets/meeplebook/pull/103
+- Updated repo guidance and skill docs so MeepleBook itself is the source of truth for architecture, navigation, networking, and test workflow guidance.
+- Files changed:
+  - `AGENTS.md`
+  - `.github/copilot-instructions.md`
+  - `.github/skills/architecture/android-architecture/SKILL.md`
+  - `.github/skills/architecture/android-viewmodel/SKILL.md`
+  - `.github/skills/architecture/android-data-layer/SKILL.md`
+  - `.github/skills/build_and_tooling/android-gradle-logic/SKILL.md`
+  - `.github/skills/concurrency_and_networking/android-retrofit/SKILL.md`
+  - `.github/skills/ui/compose-navigation/SKILL.md`
+  - `.github/skills/testing_and_automation/android-testing/SKILL.md`
+  - `.github/skills/performance/gradle-build-performance/SKILL.md`
+- **Learnings for future iterations:**
+  - The repo must be documented from its current package-based `:app` structure first; multi-module remains a future target, not an assumed present state.
+  - Skill docs drift quickly when they embed generic Android examples with hardcoded module names, task names, or library setup; MeepleBook-specific notes should be added near the top of those docs.
+  - Screenshot guidance for this repo is Paparazzi-first if/when added; Roborazzi should only be mentioned as an explicit future user choice and never as an assumed dependency.
+  - CI/source-of-truth verification commands are `./gradlew testDebugUnitTest :lint-rules:test`, `./gradlew lint`, and `./gradlew connectedDebugAndroidTest`.
+---
+
+## 2026-04-16
+PR Link: <pending>
+- Refactored the Plays feature to follow the AddPlay-style reducer/effect flow while keeping the current sealed `PlaysUiState` as the reducer-owned state shape.
+- Added Plays reducer/effect production tests, updated Plays ViewModel/UI tests for nested action events and reducer-driven state, and added an in-package markdown note documenting the cleaner alternate base-state model.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffects.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysUiEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/reducer/PlaysReducerTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/plays/effect/PlaysEffectProducerTest.kt` (new)
+  - `app/src/androidTest/java/app/meeplebook/feature/plays/PlaysScreenRootTest.kt`
+- **Learnings for future iterations:**
+  - If a sealed UI state is kept reducer-owned, convert singleton variants like `Loading` into data classes and use shared helpers such as `updateCommon(...)` to avoid variant-specific mutation boilerplate.
+  - AddPlay-style architecture ports cleanly to simpler features when the ViewModel owns only reducer state + effect handling and all debounce pipes derive from reducer-owned state.
+  - Keep alternate architecture notes close to the feature when a requested implementation path is knowingly less clean; it preserves the fallback design without mixing it into the active code.
+  - Validation in this worktree is currently split: `:app:testDebugUnitTest` passes, while repo lint and Android-test compilation are blocked by pre-existing `:lint-rules` JDK target mismatch and unrelated Collection WIP in `CollectionScreenRootTest`.
+---
+
+## 2026-04-16
+PR Link: <pending>
+- Replaced the temporary Plays reducer-owned sealed-state approach with the documented `PlaysBaseState` architecture, so the reducer now owns only search/refresh state and `PlaysUiState` is derived from observed plays data.
+- Updated Plays reducer/effect/ViewModel tests to target the base-state relationship and aligned the in-package architecture document with the implemented model.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysBaseState.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/reducer/PlaysReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/reducer/PlaysReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/effect/PlaysEffectProducerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/plays/PlaysScreenRootTest.kt`
+- **Learnings for future iterations:**
+  - For query/list screens, a small reducer-owned base state plus derived display state is easier to reason about than mutating a sealed UI state directly.
+  - Reducer tests should target the base state only; ViewModel tests should verify the `combine(baseState, externalData) -> uiState` contract.
+  - Keep `SharedFlow` UI effects separate from derived `StateFlow` UI state so navigation and snackbar behavior stay one-shot during architecture refactors.
+  - `:app:testDebugUnitTest` validates this Plays migration successfully; broader lint / Android-test issues in this worktree remain unrelated repo blockers.
+---
+
+## 2026-04-16
+PR Link: <pending>
+- Updated KDoc across the Plays architecture files so the reducer/base-state/derived-ui-state flow is documented consistently.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffects.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/reducer/PlaysReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+- **Learnings for future iterations:**
+  - When documenting reducer-driven screens in this repo, describe all four layers together: events, reducer-owned state, derived UI state, and one-shot effects.
+  - KDoc for mapper functions should explain architectural responsibility, not just field mapping, when they are the boundary between base state and display state.
+---
+
+## 2026-04-16T20:17:56Z
+PR Link: <pending>
+- Added reusable reducer/effect architecture primitives and a lightweight `ReducerViewModel` base for future screen migrations.
+- Updated agent guidance so future work reuses the shared contracts without forcing the feature-specific `combine(...)` layer into a generic framework.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/Reducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/EffectProducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/ProducedEffects.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/ui/architecture/ReducerViewModel.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/ui/architecture/ProducedEffectsTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/ui/architecture/ReducerViewModelTest.kt` (new)
+  - `AGENTS.md`
+  - `.github/copilot-instructions.md`
+- **Learnings for future iterations:**
+  - The reusable seam is the reducer/effect pipeline, not the full screen-state composition; keep `combine(baseState, externalData) -> uiState` inside each feature.
+  - `ReducerViewModel` should stay lightweight: own reducer state and one-shot UI effects, while leaving query-flow derivation and domain-specific effect handling to subclasses.
+  - `ProducedEffects.none()` is the generic replacement for per-feature `None` bundles when future screens adopt the shared contracts.
+---
+
+## 2026-04-16T22:05:27Z
+PR Link: <pending>
+- Fixed the Collection reducer migration so Collection now follows the same base-state architecture as Plays.
+- Rebuilt `CollectionViewModel` around reducer-owned state and state-derived flows, and moved sort-sheet visibility out of UI effects into reducer/base state.
+- Updated Collection screen, unit tests, and androidTest sources to the nested event model and singular `CollectionUiEffect` type.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionDisplayReducer.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/collection/CollectionScreenRootTest.kt`
+- **Learnings for future iterations:**
+  - Persistent UI chrome such as sort-sheet visibility belongs in reducer-owned base state, not in `SharedFlow` UI effects.
+  - For debounced search screens, fetch queries should derive from reducer-owned raw input, but renderable UI state should still read the raw reducer value so typing updates immediately.
+  - When migrating a feature to nested event groups, update UI, unit tests, and android tests together; otherwise stale flat event references hide in one layer after another.
+---
+
+## 2026-04-16T22:36:12Z
+PR Link: <pending>
+- Updated Collection KDoc so the migrated reducer architecture is documented consistently across state, events, reducers, effects, and ViewModel orchestration.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionDisplayReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionFilterReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionReducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/reducer/CollectionSearchReducer.kt`
+- **Learnings for future iterations:**
+  - After migrating a feature to reducer-owned base state, refresh KDoc across all state/event/reducer/effect files in the same pass so the feature doesn’t keep explaining the pre-migration architecture.
+  - Collection docs should explicitly distinguish persistent UI state (sort sheet, view mode, filters) from one-shot UI effects (navigation, scroll, snackbar), because that boundary is easy to blur during refactors.
+---
+
+## 2026-04-17T08:18:34Z
+PR Link: N/A
+- Refactored Overview to use top-level `Loading / Error / Content` screen states and the shared reducer/effect architecture
+- Replaced the old flag-based `OverviewUiState` and `_uiEffects` flow with `OverviewBaseState`, `OverviewEvent`, reducer/effect files, and a `ReducerViewModel`-based `OverviewViewModel`
+- Updated Overview unit tests and Compose tests to target the new sealed state model, plus added focused reducer/effect producer tests
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewBaseState.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewEvent.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffectProducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewUiEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/reducer/OverviewReducer.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/effect/OverviewEffectProducerTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/overview/reducer/OverviewReducerTest.kt` (new)
+  - `app/src/androidTest/java/app/meeplebook/feature/overview/OverviewContentTest.kt`
+- **Learnings for future iterations:**
+    - When a feature adopts top-level `Loading / Error / Content`, content-only composables and their tests should take the `Content` subtype directly, while root screen tests should target the screen-state switch
+    - In reducer-driven screens, async refresh/error handling belongs in reducer-owned base state plus domain effects, not in a parallel mutable UI-effects state flow
+    - Migrating a screen to sealed render states often requires updating downstream Compose tests that were constructing the old flat state directly
+---
+
+## 2026-04-17T09:04:54Z
+PR Link: N/A
+- Added and refreshed KDoc across the Overview reducer-architecture files so the docs match the current sealed screen-state model
+- Documented the distinction between reducer-owned base state, derived `OverviewUiState`, domain effects, and one-shot UI effects
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewUiEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/reducer/OverviewReducer.kt`
+- **Learnings for future iterations:**
+    - For reducer-driven screens, KDoc should document both layers explicitly: reducer-owned base state and the derived renderable sealed `UiState`
+    - Effect producer docs are most useful when they explain which events become domain work versus one-shot navigation/UI effects
+    - When a reducer is intentionally minimal, document that async effect results update state through `updateBaseState` so the no-op reduce path is clearly intentional
+---
+
+## 2026-04-17T09:14:55Z
+PR Link: N/A
+- Refactored Login to the shared reducer/effect architecture using a thin form-focused implementation
+- Replaced direct mutator methods and persistent `isLoggedIn` state with `LoginEvent`, `LoginEffect`, `LoginUiEffect`, `LoginEffectProducer`, and `LoginReducer`
+- Updated `LoginScreen` to emit events and collect the success UI effect, migrated Login error rendering to `UiText`, and refreshed Login tests to the new contract
+- Files changed:
+  - `AGENTS.md`
+  - `app/src/main/java/app/meeplebook/feature/login/LoginEvent.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/LoginUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/login/LoginViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/login/LoginScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/login/effect/LoginEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/effect/LoginUiEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/effect/LoginEffectProducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/reducer/LoginReducer.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/login/LoginViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/login/LoginScreenContentTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/overview/OverviewContentTest.kt`
+- **Learnings for future iterations:**
+    - Simple form screens can still use the shared reducer architecture without a separate base-state/derived-state split when there is no external observed data
+    - Replace persistent success booleans with one-shot `UiEffect`s when the UI only needs navigation or another transient outcome
+    - Migrating older screens to `UiText` often requires both ViewModel assertions and Compose tests to stop depending on raw string resource ids
+---
+
+## 2026-04-17T11:01:26Z
+PR Link: N/A
+- Fixed Collection alphabet-jump architecture so jump resolution happens in `CollectionViewModel` from the latest derived `CollectionUiState.Content`
+- Changed `JumpToLetter` handling to emit a domain effect first, then resolve and emit a fully populated `ScrollToIndex` UI effect
+- Updated Collection tests to verify resolved scroll effects and non-content no-op behavior
+- Files changed:
+  - `AGENTS.md`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+- **Learnings for future iterations:**
+    - When a UI effect needs data from derived render state, route through a domain effect and resolve in the ViewModel, not in the `EffectProducer`
+    - `EffectProducer` should express intent from reducer/base state, while the ViewModel may safely consult the latest derived `uiState` to produce a complete one-shot UI effect
+    - Avoid pushing derived render-only data like section indices back into base state just to satisfy an effect payload
 ---

@@ -8,17 +8,15 @@ import app.meeplebook.core.ui.UiText
 import java.time.YearMonth
 
 /**
- * UI state for the Plays screen.
+ * Display-facing UI state for the Plays screen.
+ *
+ * Unlike [PlaysBaseState], this sealed model is not mutated directly by the reducer. It is derived
+ * by combining reducer-owned state with observed domain screen data.
  */
 sealed interface PlaysUiState {
 
-    /** Common state shared across all UI state variants. */
-    val common: PlaysCommonState
-
-    /** Loading state shown while initial data is being fetched. */
-    data object Loading : PlaysUiState {
-        override val common = PlaysCommonState()
-    }
+    /** Initial state shown before the first combined screen data arrives. */
+    data object Loading : PlaysUiState
 
     /**
      * Empty state shown when there are no plays to display.
@@ -27,7 +25,7 @@ sealed interface PlaysUiState {
      */
     data class Empty(
         val reason: EmptyReason,
-        override val common: PlaysCommonState
+        val common: PlaysCommonState
     ) : PlaysUiState
 
     /**
@@ -37,7 +35,7 @@ sealed interface PlaysUiState {
      */
     data class Content(
         val sections: List<PlaysSection>,
-        override val common: PlaysCommonState
+        val common: PlaysCommonState
     ) : PlaysUiState
 
     /**
@@ -47,17 +45,14 @@ sealed interface PlaysUiState {
      */
     data class Error(
         val errorMessageUiText: UiText,
-        override val common: PlaysCommonState
+        val common: PlaysCommonState
     ) : PlaysUiState
 }
 
 /**
- * Common state shared across all [PlaysUiState] variants.
+ * Common display properties shared by non-loading [PlaysUiState] variants.
  *
- * This includes properties that are always present regardless of whether
- * the screen is loading, empty, showing content, or displaying an error.
- *
- * @property searchQuery Current search query text entered by the user.
+ * @property searchQuery Current search query shown in the UI.
  * @property playStats Aggregated statistics about the user's plays.
  * @property isRefreshing Whether a refresh operation is currently in progress.
  */
@@ -68,9 +63,9 @@ data class PlaysCommonState(
 )
 
 /**
- * Reasons why the plays screen might be empty.
+ * Reasons why the Plays screen is empty.
  *
- * @property descriptionResId String resource ID for the description to show to the user.
+ * @property descriptionResId String resource ID to show in the empty-state body.
  */
 enum class EmptyReason(
     @StringRes val descriptionResId: Int
@@ -83,10 +78,10 @@ enum class EmptyReason(
 }
 
 /**
- * A section of plays grouped by month/year.
+ * UI section of plays grouped by month/year.
  *
- * @property monthYearDate The month/year that this section represents.
- * @property plays List of play items recorded during this month.
+ * @property monthYearDate The month/year represented by this section.
+ * @property plays Play rows rendered beneath the section header.
  */
 data class PlaysSection(
     val monthYearDate: YearMonth,
@@ -94,17 +89,17 @@ data class PlaysSection(
 )
 
 /**
- * Represents a single play record in the UI.
+ * Render-ready representation of a single play row.
  *
- * @property playId Unique identifier for the play record.
- * @property gameName Name of the game that was played.
- * @property thumbnailUrl Optional URL to the game's thumbnail image.
- * @property dateUiText Formatted date text for display (e.g., "27/01/2026").
- * @property durationUiText Formatted duration text for display (e.g., "120 min").
- * @property playerSummaryUiText Summary of players who participated (e.g., "3 players").
- * @property location Optional location where the game was played.
- * @property comments Optional user comments about the play.
- * @property syncStatus Current synchronization status with BGG.
+ * @property playId Unique identifier for the play.
+ * @property gameName Name of the played game.
+ * @property thumbnailUrl Optional thumbnail URL for the game.
+ * @property dateUiText Formatted date shown to the user.
+ * @property durationUiText Formatted duration shown to the user.
+ * @property playerSummaryUiText Formatted summary of participating players.
+ * @property location Optional location where the play happened.
+ * @property comments Optional comments shown in the row.
+ * @property syncStatus Current sync status with BGG.
  */
 data class PlayItem(
     val playId: PlayId,
@@ -119,12 +114,12 @@ data class PlayItem(
 )
 
 /**
- * Statistics summary shown on the plays screen.
+ * Summary statistics displayed at the top of the Plays screen.
  *
  * @property uniqueGamesCount Total number of unique games played.
- * @property totalPlays Total number of play records.
- * @property playsThisYear Number of plays recorded in the current year.
- * @property currentYear The current year for which [playsThisYear] is calculated.
+ * @property totalPlays Total number of recorded plays.
+ * @property playsThisYear Number of plays recorded in [currentYear].
+ * @property currentYear The current year used for the yearly count.
  */
 data class PlayStats(
     val uniqueGamesCount: Long = 0,
@@ -132,27 +127,3 @@ data class PlayStats(
     val playsThisYear: Long = 0,
     val currentYear: Int = 0
 )
-
-/**
- * One-time UI effects for the Plays screen.
- *
- * Unlike [PlaysUiState], which represents the continuous state of the screen,
- * UI effects are one-time events that trigger side effects such as navigation,
- * scrolling, or showing dialogs. Effects are emitted via a SharedFlow and consumed
- * once by the UI layer.
- */
-sealed interface PlaysUiEffects {
-    /**
-     * Navigate to the details screen for a specific play.
-     *
-     * @property playId The ID of the play to view.
-     */
-    data class NavigateToPlay(val playId: PlayId) : PlaysUiEffects
-
-    /**
-     * Show a temporary snackbar message to the user.
-     *
-     * @property messageUiText The message to display.
-     */
-    data class ShowSnackbar(val messageUiText: UiText) : PlaysUiEffects
-}

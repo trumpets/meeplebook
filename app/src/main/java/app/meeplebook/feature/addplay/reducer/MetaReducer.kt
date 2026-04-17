@@ -1,5 +1,6 @@
 package app.meeplebook.feature.addplay.reducer
 
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
 import app.meeplebook.feature.addplay.OptionalField
@@ -11,9 +12,9 @@ import javax.inject.Inject
  * top-level play metadata: date, duration, location.
  * All other events are passed through unchanged.
  */
-class MetaReducer @Inject constructor() {
+class MetaReducer @Inject constructor() : Reducer<AddPlayUiState, AddPlayEvent> {
 
-    fun reduce(
+    override fun reduce(
         state: AddPlayUiState,
         event: AddPlayEvent
     ): AddPlayUiState {

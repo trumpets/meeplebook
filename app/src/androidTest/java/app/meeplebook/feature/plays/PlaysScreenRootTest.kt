@@ -271,7 +271,7 @@ class PlaysScreenRootTest {
                         common = PlaysCommonState(playStats = createTestStats())
                     ),
                     onEvent = { event ->
-                        if (event is PlaysEvent.PlayClicked) {
+                        if (event is PlaysEvent.ActionEvent.PlayClicked) {
                             capturedPlayId = event.playId.localId
                         }
                     }

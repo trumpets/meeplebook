@@ -2,6 +2,7 @@ package app.meeplebook.feature.addplay.reducer
 
 import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.PlayerColor
+import app.meeplebook.core.ui.architecture.Reducer
 import app.meeplebook.feature.addplay.AddEditPlayerDialogState
 import app.meeplebook.feature.addplay.AddPlayEvent
 import app.meeplebook.feature.addplay.AddPlayUiState
@@ -22,9 +23,9 @@ import javax.inject.Inject
  * [AddEditPlayerDialogState.usernameSuggestions]) are populated externally by the
  * ViewModel's debounced search flows, not by this reducer.
  */
-class AddEditPlayerDialogReducer @Inject constructor() {
+class AddEditPlayerDialogReducer @Inject constructor() : Reducer<AddPlayUiState, AddPlayEvent> {
 
-    fun reduce(
+    override fun reduce(
         state: AddPlayUiState,
         event: AddPlayEvent,
     ): AddPlayUiState {

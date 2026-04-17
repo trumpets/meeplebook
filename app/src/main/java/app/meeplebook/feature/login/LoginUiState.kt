@@ -1,11 +1,14 @@
 package app.meeplebook.feature.login
 
-import androidx.annotation.StringRes
+import app.meeplebook.core.ui.UiText
+import app.meeplebook.core.ui.uiTextEmpty
 
+/**
+ * Reducer-owned UI state for the Login screen.
+ */
 data class LoginUiState(
     val username: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
-    @StringRes val errorMessageResId: Int? = null,
-    val isLoggedIn: Boolean = false
+    val errorMessage: UiText = uiTextEmpty()
 )

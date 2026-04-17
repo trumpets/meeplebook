@@ -20,6 +20,12 @@ import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.BuildCollectionSectionsUseCase
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
+import app.meeplebook.feature.collection.effect.CollectionEffectProducer
+import app.meeplebook.feature.collection.effect.CollectionUiEffect
+import app.meeplebook.feature.collection.reducer.CollectionReducer
+import app.meeplebook.feature.collection.reducer.CollectionDisplayReducer
+import app.meeplebook.feature.collection.reducer.CollectionFilterReducer
+import app.meeplebook.feature.collection.reducer.CollectionSearchReducer
 import app.meeplebook.testutils.assertState
 import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.Dispatchers
@@ -99,6 +105,12 @@ class CollectionViewModelTest {
         
         // Create ViewModel
         viewModel = CollectionViewModel(
+            reducer = CollectionReducer(
+                searchReducer = CollectionSearchReducer(),
+                filterReducer = CollectionFilterReducer(),
+                displayReducer = CollectionDisplayReducer()
+            ),
+            effectProducer = CollectionEffectProducer(),
             observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
             syncCollection = syncCollectionUseCase
@@ -138,7 +150,7 @@ class CollectionViewModelTest {
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertEquals(2, state.totalGameCount)
+        assertEquals(2, state.common.totalGameCount)
         assertEquals(2, state.sections.size)
     }
 
@@ -149,11 +161,11 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(items)
 
         // When
-        viewModel.onEvent(CollectionEvent.SearchChanged("test query"))
+        viewModel.onEvent(CollectionEvent.SearchEvent.SearchChanged("test query"))
 
         // Then - search query should be updated immediately
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertEquals("test query", state.searchQuery)
+        assertEquals("test query", state.common.searchQuery)
     }
 
     @Test
@@ -175,17 +187,17 @@ class CollectionViewModelTest {
             } while (current is CollectionUiState.Loading)
 
             val initial = current.assertState<CollectionUiState.Content>()
-            assertEquals("", initial.searchQuery)
-            assertEquals(2, initial.totalGameCount)
+            assertEquals("", initial.common.searchQuery)
+            assertEquals(2, initial.common.totalGameCount)
 
             // Initial content state
             // When - send search query
-            viewModel.onEvent(CollectionEvent.SearchChanged("Azul"))
+            viewModel.onEvent(CollectionEvent.SearchEvent.SearchChanged("Azul"))
 
             // Then: UI state updates immediately with raw query, but not filtered yet.
             val immediate = awaitItem().assertState<CollectionUiState.Content>()
-            assertEquals("Azul", immediate.searchQuery)
-            assertEquals(2, immediate.totalGameCount)
+            assertEquals("Azul", immediate.common.searchQuery)
+            assertEquals(2, immediate.common.totalGameCount)
 
             // And: before debounce expires, nothing else should be emitted.
             advanceTimeBy(DebounceDurations.SearchQuery.inWholeMilliseconds - 1)
@@ -208,7 +220,7 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(items)
 
         // When - search returns no results (simulated by empty collection)
-        viewModel.onEvent(CollectionEvent.SearchChanged("NonexistentGame"))
+        viewModel.onEvent(CollectionEvent.SearchEvent.SearchChanged("NonexistentGame"))
         fakeCollectionRepository.setCollection(emptyList())
 
         // Then
@@ -222,7 +234,7 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(emptyList())
 
         // When - select non-ALL filter
-        viewModel.onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
+        viewModel.onEvent(CollectionEvent.FilterEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
 
         // Then - should show NO_FILTER_RESULTS
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
@@ -239,7 +251,7 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(items)
 
         // When
-        viewModel.onEvent(CollectionEvent.SortSelected(CollectionSort.YEAR_PUBLISHED_NEWEST))
+        viewModel.onEvent(CollectionEvent.DisplayEvent.SortSelected(CollectionSort.YEAR_PUBLISHED_NEWEST))
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
@@ -253,7 +265,7 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(items)
 
         // When
-        viewModel.onEvent(CollectionEvent.ViewModeSelected(CollectionViewMode.GRID))
+        viewModel.onEvent(CollectionEvent.DisplayEvent.ViewModeSelected(CollectionViewMode.GRID))
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
@@ -334,81 +346,106 @@ class CollectionViewModelTest {
     }
 
     @Test
-    fun `JumpToLetter emits ScrollToLetter effect`() = runTest {
+    fun `JumpToLetter emits resolved ScrollToIndex effect from latest content state`() = runTest {
         // Given
-        val effects = mutableListOf<CollectionUiEffects>()
+        val items = listOf(
+            createCollectionItem(gameId = 1, name = "Azul"),
+            createCollectionItem(gameId = 2, name = "Brass: Birmingham"),
+            createCollectionItem(gameId = 3, name = "Catan")
+        )
+        fakeCollectionRepository.setCollection(items)
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+
+        val effects = mutableListOf<CollectionUiEffect>()
         val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiEffect.collect { effects.add(it) }
         }
 
         // When
-        viewModel.onEvent(CollectionEvent.JumpToLetter('A'))
+        viewModel.onEvent(CollectionEvent.ActionEvent.JumpToLetter('A'))
         advanceUntilIdle()
 
         // Then
         assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffects.ScrollToLetter)
-        assertEquals('A', (effects[0] as CollectionUiEffects.ScrollToLetter).letter)
+        assertTrue(effects[0] is CollectionUiEffect.ScrollToIndex)
+        val effect = effects[0] as CollectionUiEffect.ScrollToIndex
+        assertEquals(CollectionViewMode.LIST, effect.viewMode)
+        assertEquals(0, effect.index)
         
+        job.cancel()
+    }
+
+    @Test
+    fun `JumpToLetter emits no effect when latest uiState is not content`() = runTest {
+        val effects = mutableListOf<CollectionUiEffect>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
+        viewModel.onEvent(CollectionEvent.ActionEvent.JumpToLetter('A'))
+        advanceUntilIdle()
+
+        assertTrue(effects.isEmpty())
+
         job.cancel()
     }
 
     @Test
     fun `GameClicked emits NavigateToGame effect`() = runTest {
         // Given
-        val effects = mutableListOf<CollectionUiEffects>()
+        val effects = mutableListOf<CollectionUiEffect>()
         val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiEffect.collect { effects.add(it) }
         }
 
         // When
-        viewModel.onEvent(CollectionEvent.GameClicked(123))
+        viewModel.onEvent(CollectionEvent.ActionEvent.GameClicked(123))
         advanceUntilIdle()
 
         // Then
         assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffects.NavigateToGame)
-        assertEquals(123L, (effects[0] as CollectionUiEffects.NavigateToGame).gameId)
+        assertTrue(effects[0] is CollectionUiEffect.NavigateToGame)
+        assertEquals(123L, (effects[0] as CollectionUiEffect.NavigateToGame).gameId)
         
         job.cancel()
     }
 
     @Test
-    fun `OpenSortSheet emits OpenSortSheet effect`() = runTest {
+    fun `OpenSortSheet updates content state`() = runTest {
         // Given
-        val effects = mutableListOf<CollectionUiEffects>()
-        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiEffect.collect { effects.add(it) }
-        }
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
 
         // When
-        viewModel.onEvent(CollectionEvent.OpenSortSheet)
+        viewModel.onEvent(CollectionEvent.SortSheetEvent.OpenSortSheet)
         advanceUntilIdle()
 
         // Then
-        assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffects.OpenSortSheet)
-        
-        job.cancel()
+        val state = awaitUiStateMatching<CollectionUiState, CollectionUiState.Content>(viewModel.uiState) {
+            (it as? CollectionUiState.Content)?.isSortSheetVisible == true
+        }
+        assertTrue(state.isSortSheetVisible)
     }
 
     @Test
-    fun `DismissSortSheet emits DismissSortSheet effect`() = runTest {
+    fun `DismissSortSheet updates content state`() = runTest {
         // Given
-        val effects = mutableListOf<CollectionUiEffects>()
-        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiEffect.collect { effects.add(it) }
-        }
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        viewModel.onEvent(CollectionEvent.SortSheetEvent.OpenSortSheet)
+        advanceUntilIdle()
 
         // When
-        viewModel.onEvent(CollectionEvent.DismissSortSheet)
+        viewModel.onEvent(CollectionEvent.SortSheetEvent.DismissSortSheet)
         advanceUntilIdle()
 
         // Then
-        assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffects.DismissSortSheet)
-        
-        job.cancel()
+        val state = awaitUiStateMatching<CollectionUiState, CollectionUiState.Content>(viewModel.uiState) {
+            (it as? CollectionUiState.Content)?.isSortSheetVisible == false
+        }
+        assertFalse(state.isSortSheetVisible)
     }
 
     @Test
@@ -418,7 +455,7 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setCollection(initialItems)
 
         val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertEquals(1, initialState.totalGameCount)
+        assertEquals(1, initialState.common.totalGameCount)
 
         // When - repository data changes
         val updatedItems = listOf(
@@ -429,10 +466,10 @@ class CollectionViewModelTest {
 
         // Then - state should update
         val updatedState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel) {
-            it !is CollectionUiState.Loading && it.totalGameCount == 2L
+            (it as? CollectionUiState.Content)?.common?.totalGameCount == 2L
         }
 
-        assertEquals(2, updatedState.totalGameCount)
+        assertEquals(2, updatedState.common.totalGameCount)
     }
 
     @Test
@@ -483,7 +520,7 @@ class CollectionViewModelTest {
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertFalse(state.isRefreshing)
+        assertFalse(state.common.isRefreshing)
     }
 
     @Test
@@ -509,7 +546,7 @@ class CollectionViewModelTest {
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertEquals(5L, state.unplayedGameCount)
+        assertEquals(5L, state.common.unplayedGameCount)
     }
 
     @Test
@@ -521,7 +558,7 @@ class CollectionViewModelTest {
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertEquals(0L, state.unplayedGameCount)
+        assertEquals(0L, state.common.unplayedGameCount)
     }
 
     @Test
@@ -533,7 +570,7 @@ class CollectionViewModelTest {
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_GAMES, state.reason)
-        assertEquals(0L, state.unplayedGameCount)
+        assertEquals(0L, state.common.unplayedGameCount)
     }
 
     @Test
@@ -550,13 +587,13 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setUnplayedCount(2)
 
         // When - search returns no results
-        viewModel.onEvent(CollectionEvent.SearchChanged("NonexistentGame"))
+        viewModel.onEvent(CollectionEvent.SearchEvent.SearchChanged("NonexistentGame"))
         fakeCollectionRepository.setCollection(emptyList())
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_SEARCH_RESULTS, state.reason)
-        assertEquals(2L, state.unplayedGameCount)
+        assertEquals(2L, state.common.unplayedGameCount)
     }
 
     @Test
@@ -573,13 +610,13 @@ class CollectionViewModelTest {
         fakeCollectionRepository.setUnplayedCount(4)
 
         // When - select non-ALL filter, then set empty collection to simulate filter results
-        viewModel.onEvent(CollectionEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
+        viewModel.onEvent(CollectionEvent.FilterEvent.QuickFilterSelected(QuickFilter.UNPLAYED))
         fakeCollectionRepository.setCollection(emptyList())
 
         // Then
         val state = awaitUiStateAfterDebounce<CollectionUiState.Empty>(viewModel)
         assertEquals(EmptyReason.NO_FILTER_RESULTS, state.reason)
-        assertEquals(4L, state.unplayedGameCount)
+        assertEquals(4L, state.common.unplayedGameCount)
     }
 
     @Test
@@ -592,10 +629,10 @@ class CollectionViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(items)
         
         val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertFalse(initialState.isRefreshing)
+        assertFalse(initialState.common.isRefreshing)
 
         // When - Refresh event is triggered
-        viewModel.onEvent(CollectionEvent.Refresh)
+        viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         // Then - sync was called
@@ -604,7 +641,7 @@ class CollectionViewModelTest {
         
         // And - isRefreshing returns to false
         val finalState = viewModel.uiState.value as CollectionUiState.Content
-        assertFalse(finalState.isRefreshing)
+        assertFalse(finalState.common.isRefreshing)
     }
 
     @Test
@@ -617,16 +654,16 @@ class CollectionViewModelTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
         
         val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertFalse(initialState.isRefreshing)
+        assertFalse(initialState.common.isRefreshing)
 
         // Given - collect effects
-        val effects = mutableListOf<CollectionUiEffects>()
+        val effects = mutableListOf<CollectionUiEffect>()
         val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiEffect.collect { effects.add(it) }
         }
 
         // When - Refresh event is triggered
-        viewModel.onEvent(CollectionEvent.Refresh)
+        viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         // Then - sync was attempted
@@ -634,14 +671,14 @@ class CollectionViewModelTest {
         
         // And - isRefreshing returns to false even after error
         val finalState = viewModel.uiState.value as CollectionUiState.Content
-        assertFalse(finalState.isRefreshing)
+        assertFalse(finalState.common.isRefreshing)
         
         // And - ShowSnackbar effect was emitted
         assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffects.ShowSnackbar)
+        assertTrue(effects[0] is CollectionUiEffect.ShowSnackbar)
 
         // Verify the message contains the expected error text
-        val snackbarEffect = effects[0] as CollectionUiEffects.ShowSnackbar
+        val snackbarEffect = effects[0] as CollectionUiEffect.ShowSnackbar
         assertEquals("string_${R.string.sync_collections_failed_error}", snackbarEffect.messageUiText.asString(fakeStringProvider))
 
         job.cancel()
@@ -656,7 +693,7 @@ class CollectionViewModelTest {
         awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
 
         // When - Refresh event is triggered
-        viewModel.onEvent(CollectionEvent.Refresh)
+        viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         // Then - sync was not called (use case returned NotLoggedIn error before attempting repository sync)

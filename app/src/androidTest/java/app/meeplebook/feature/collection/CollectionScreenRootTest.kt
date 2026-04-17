@@ -16,6 +16,8 @@ import app.meeplebook.R
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.collection.CollectionCommonState
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
@@ -68,11 +70,13 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Empty(
                         reason = EmptyReason.NO_GAMES,
-                        searchQuery = "",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 0,
-                        unplayedGameCount = 0,
-                        isRefreshing = false
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 0,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -94,11 +98,13 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Empty(
                         reason = EmptyReason.NO_SEARCH_RESULTS,
-                        searchQuery = "azul",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 100,
-                        unplayedGameCount = 27,
-                        isRefreshing = false
+                        common = CollectionCommonState(
+                            searchQuery = "azul",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 100,
+                            unplayedGameCount = 27,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -119,11 +125,13 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Empty(
                         reason = EmptyReason.NO_FILTER_RESULTS,
-                        searchQuery = "",
-                        activeQuickFilter = QuickFilter.UNPLAYED,
-                        totalGameCount = 100,
-                        unplayedGameCount = 0,
-                        isRefreshing = false
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.UNPLAYED,
+                            totalGameCount = 100,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -145,12 +153,14 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Error(
-                        errorMessageResId = errorMsgResId,
-                        searchQuery = "",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 0,
-                        unplayedGameCount = 0,
-                        isRefreshing = false
+                        errorMessageUiText = uiTextRes(errorMsgResId),
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 0,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -187,18 +197,20 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
-                        searchQuery = "",
                         viewMode = CollectionViewMode.GRID,
                         sort = CollectionSort.ALPHABETICAL,
-                        activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
                         sections = sections,
                         sectionIndices = mapOf('C' to 0),
-                        totalGameCount = 1,
-                        unplayedGameCount = 0,
-                        isRefreshing = false,
                         showAlphabetJump = true,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 1,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        ),
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -241,18 +253,20 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
-                        searchQuery = "",
                         viewMode = CollectionViewMode.LIST,
                         sort = CollectionSort.ALPHABETICAL,
-                        activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
                         sections = sections,
                         sectionIndices = mapOf('W' to 0),
-                        totalGameCount = 1,
-                        unplayedGameCount = 0,
-                        isRefreshing = false,
                         showAlphabetJump = true,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 1,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -274,14 +288,16 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Empty(
                         reason = EmptyReason.NO_GAMES,
-                        searchQuery = "",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 0,
-                        unplayedGameCount = 0,
-                        isRefreshing = false
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 0,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = { event ->
-                        if (event is CollectionEvent.SearchChanged) {
+                        if (event is CollectionEvent.SearchEvent.SearchChanged) {
                             capturedQuery = event.query
                         }
                     },
@@ -307,14 +323,16 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Empty(
                         reason = EmptyReason.NO_GAMES,
-                        searchQuery = "",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 100,
-                        unplayedGameCount = 27,
-                        isRefreshing = false
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 100,
+                            unplayedGameCount = 27,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = { event ->
-                        if (event is CollectionEvent.QuickFilterSelected) {
+                        if (event is CollectionEvent.FilterEvent.QuickFilterSelected) {
                             capturedFilter = event.filter
                         }
                     },
@@ -356,21 +374,23 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
-                        searchQuery = "",
                         viewMode = CollectionViewMode.GRID,
                         sort = CollectionSort.ALPHABETICAL,
-                        activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
                         sections = sections,
                         sectionIndices = mapOf('C' to 0),
-                        totalGameCount = 1,
-                        unplayedGameCount = 0,
-                        isRefreshing = false,
                         showAlphabetJump = true,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 1,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = { event ->
-                        if (event is CollectionEvent.ViewModeSelected) {
+                        if (event is CollectionEvent.DisplayEvent.ViewModeSelected) {
                             capturedViewMode = event.viewMode
                         }
                     },
@@ -412,18 +432,20 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
-                        searchQuery = "",
                         viewMode = CollectionViewMode.GRID,
                         sort = CollectionSort.ALPHABETICAL,
-                        activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
                         sections = sections,
                         sectionIndices = mapOf('C' to 0),
-                        totalGameCount = 1,
-                        unplayedGameCount = 0,
-                        isRefreshing = false,
                         showAlphabetJump = true,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 1,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = { event ->
                         capturedEvent = event
@@ -438,7 +460,7 @@ class CollectionScreenRootTest {
         composeTestRule.onNodeWithContentDescription(stringRes(R.string.collection_sort)).performClick()
 
         // Verify callback was triggered with correct event type
-        assertTrue(capturedEvent is CollectionEvent.OpenSortSheet)
+        assertTrue(capturedEvent is CollectionEvent.SortSheetEvent.OpenSortSheet)
     }
 
     @Test
@@ -448,11 +470,13 @@ class CollectionScreenRootTest {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Empty(
                         reason = EmptyReason.NO_SEARCH_RESULTS,
-                        searchQuery = "test",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 100,
-                        unplayedGameCount = 27,
-                        isRefreshing = false
+                        common = CollectionCommonState(
+                            searchQuery = "test",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 100,
+                            unplayedGameCount = 27,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -475,12 +499,14 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Error(
-                        errorMessageResId = R.string.sync_collections_failed_error,
-                        searchQuery = "",
-                        activeQuickFilter = QuickFilter.ALL,
-                        totalGameCount = 100,
-                        unplayedGameCount = 27,
-                        isRefreshing = false
+                        errorMessageUiText = uiTextRes(R.string.sync_collections_failed_error),
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 100,
+                            unplayedGameCount = 27,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -542,18 +568,20 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
-                        searchQuery = "",
                         viewMode = CollectionViewMode.LIST,
                         sort = CollectionSort.ALPHABETICAL,
-                        activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
                         sections = sections,
                         sectionIndices = mapOf('A' to 0, 'C' to 1, 'W' to 2),
-                        totalGameCount = 3,
-                        unplayedGameCount = 0,
-                        isRefreshing = false,
                         showAlphabetJump = true,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 3,
+                            unplayedGameCount = 0,
+                            isRefreshing = false
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
@@ -599,18 +627,20 @@ class CollectionScreenRootTest {
             MeepleBookTheme {
                 CollectionScreenRoot(
                     uiState = CollectionUiState.Content(
-                        searchQuery = "",
                         viewMode = CollectionViewMode.GRID,
                         sort = CollectionSort.ALPHABETICAL,
-                        activeQuickFilter = QuickFilter.ALL,
                         availableSortOptions = CollectionSort.entries,
                         sections = sections,
                         sectionIndices = mapOf('C' to 0),
-                        totalGameCount = 1,
-                        unplayedGameCount = 0,
-                        isRefreshing = true,
                         showAlphabetJump = true,
-                        isSortSheetVisible = false
+                        isSortSheetVisible = false,
+                        common = CollectionCommonState(
+                            searchQuery = "",
+                            activeQuickFilter = QuickFilter.ALL,
+                            totalGameCount = 1,
+                            unplayedGameCount = 0,
+                            isRefreshing = true
+                        )
                     ),
                     onEvent = {},
                     listState = LazyListState(),
