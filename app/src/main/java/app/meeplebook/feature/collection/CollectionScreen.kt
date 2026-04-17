@@ -107,16 +107,13 @@ fun CollectionScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
 
-                is CollectionUiEffect.ScrollToLetter -> {
-                    val content = uiState as? CollectionUiState.Content ?: return@collect
-                    val index = content.sectionIndices[effect.letter] ?: return@collect
-
-                    when (content.viewMode) {
+                is CollectionUiEffect.ScrollToIndex -> {
+                    when (effect.viewMode) {
                         CollectionViewMode.LIST ->
-                            listState.animateScrollToItem(index)
+                            listState.animateScrollToItem(effect.index)
 
                         CollectionViewMode.GRID ->
-                            gridState.animateScrollToItem(index)
+                            gridState.animateScrollToItem(effect.index)
                     }
                 }
 

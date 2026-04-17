@@ -8,13 +8,13 @@ import javax.inject.Inject
 /**
  * Reducer for Collection quick-filter selection.
  */
-class CollectionFilterReducer @Inject constructor(): Reducer<CollectionBaseState, CollectionEvent> {
+class CollectionFilterReducer @Inject constructor() : Reducer<CollectionBaseState, CollectionEvent> {
 
     override fun reduce(
         state: CollectionBaseState,
         event: CollectionEvent
     ): CollectionBaseState {
-        return when(event) {
+        return when (event) {
             is CollectionEvent.FilterEvent.QuickFilterSelected -> {
                 state.copy(quickFilter = event.filter)
             }

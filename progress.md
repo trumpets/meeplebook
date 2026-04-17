@@ -1,6 +1,7 @@
 ## Codebase Patterns
 - For reducer-driven screens, use the shared `core/ui/architecture` contracts/helper for `onEvent -> reduce -> produce -> handle effects`, but keep feature-owned base state, query flows, and `combine(baseState, externalData) -> uiState` mapping local to the feature.
 - For simple reducer-driven forms with no external observed data, expose reducer-owned state directly as `uiState` and use one-shot `UiEffect`s for success navigation instead of persistent success flags.
+- If a one-shot UI effect depends on derived render data that exists only in final `uiState`, emit a domain effect and resolve it in the ViewModel against the latest derived `uiState` rather than duplicating the data into base state or reading captured UI state in Compose.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -696,4 +697,21 @@ PR Link: N/A
     - Simple form screens can still use the shared reducer architecture without a separate base-state/derived-state split when there is no external observed data
     - Replace persistent success booleans with one-shot `UiEffect`s when the UI only needs navigation or another transient outcome
     - Migrating older screens to `UiText` often requires both ViewModel assertions and Compose tests to stop depending on raw string resource ids
+---
+
+## 2026-04-17T11:01:26Z
+PR Link: N/A
+- Fixed Collection alphabet-jump architecture so jump resolution happens in `CollectionViewModel` from the latest derived `CollectionUiState.Content`
+- Changed `JumpToLetter` handling to emit a domain effect first, then resolve and emit a fully populated `ScrollToIndex` UI effect
+- Updated Collection tests to verify resolved scroll effects and non-content no-op behavior
+- Files changed:
+  - `AGENTS.md`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+- **Learnings for future iterations:**
+    - When a UI effect needs data from derived render state, route through a domain effect and resolve in the ViewModel, not in the `EffectProducer`
+    - `EffectProducer` should express intent from reducer/base state, while the ViewModel may safely consult the latest derived `uiState` to produce a complete one-shot UI effect
+    - Avoid pushing derived render-only data like section indices back into base state just to satisfy an effect payload
 ---

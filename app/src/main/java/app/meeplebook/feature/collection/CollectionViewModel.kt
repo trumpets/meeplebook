@@ -177,6 +177,7 @@ class CollectionViewModel @Inject constructor(
     override fun handleDomainEffect(effect: CollectionEffect) {
         when (effect) {
             CollectionEffect.Refresh -> refresh()
+            is CollectionEffect.ResolveJumpToLetter -> resolveJumpToLetter(effect.letter)
         }
     }
 
@@ -207,6 +208,17 @@ class CollectionViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun resolveJumpToLetter(letter: Char) {
+        val content = uiState.value as? CollectionUiState.Content ?: return
+        val index = content.sectionIndices[letter] ?: return
+        tryEmitUiEffect(
+            CollectionUiEffect.ScrollToIndex(
+                viewMode = content.viewMode,
+                index = index
+            )
+        )
     }
 
     private fun buildSectionIndices(sections: List<CollectionSection>): Map<Char, Int> {

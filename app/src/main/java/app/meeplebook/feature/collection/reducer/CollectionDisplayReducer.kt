@@ -18,7 +18,7 @@ class CollectionDisplayReducer @Inject constructor() : Reducer<CollectionBaseSta
         state: CollectionBaseState,
         event: CollectionEvent
     ): CollectionBaseState {
-        return when(event) {
+        return when (event) {
             is CollectionEvent.DisplayEvent.ViewModeSelected -> {
                 state.copy(viewMode = event.viewMode)
             }

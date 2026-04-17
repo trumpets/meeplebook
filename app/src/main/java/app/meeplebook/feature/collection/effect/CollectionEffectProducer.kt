@@ -30,7 +30,7 @@ class CollectionEffectProducer @Inject constructor() :
                 uiEffects += CollectionUiEffect.NavigateToGame(event.gameId)
 
             is CollectionEvent.ActionEvent.JumpToLetter ->
-                uiEffects += CollectionUiEffect.ScrollToLetter(event.letter)
+                effects += CollectionEffect.ResolveJumpToLetter(event.letter)
 
             CollectionEvent.ActionEvent.Refresh ->
                 effects += CollectionEffect.Refresh

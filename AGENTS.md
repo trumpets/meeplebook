@@ -31,6 +31,10 @@
 - For simple reducer-driven forms with no external observed data (for example Login), expose the
   reducer-owned state directly as `uiState` instead of inventing a `combine(...)` layer, and model
   successful navigation as a one-shot `UiEffect` rather than a persistent success flag.
+- If a one-shot UI effect depends on **derived** screen data that only exists in the final `uiState`
+  (for example Collection alphabet-jump indices), emit a domain effect from the `EffectProducer`
+  and resolve it in the ViewModel against the latest derived `uiState`. Do not duplicate that
+  derived data into base state and do not make the Composable look it up from captured state.
 
 ## Single Source of Truth (CRITICAL)
 For any given piece of UI data, there must be exactly ONE source of truth.

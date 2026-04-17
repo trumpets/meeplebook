@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -102,7 +101,7 @@ class PlaysViewModel @Inject constructor(
     private fun refresh() {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
-            baseState.update { state ->
+            updateBaseState { state ->
                 state.copy(isRefreshing = true)
             }
             try {
@@ -115,7 +114,7 @@ class PlaysViewModel @Inject constructor(
                     }
                 )
             } finally {
-                baseState.update { state ->
+                updateBaseState { state ->
                     state.copy(isRefreshing = false)
                 }
             }

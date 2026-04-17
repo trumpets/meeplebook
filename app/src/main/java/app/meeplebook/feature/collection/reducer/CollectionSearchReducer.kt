@@ -8,7 +8,7 @@ import javax.inject.Inject
 /**
  * Reducer for Collection search-query changes.
  */
-class CollectionSearchReducer @Inject constructor(): Reducer<CollectionBaseState, CollectionEvent> {
+class CollectionSearchReducer @Inject constructor() : Reducer<CollectionBaseState, CollectionEvent> {
 
     override fun reduce(
         state: CollectionBaseState,

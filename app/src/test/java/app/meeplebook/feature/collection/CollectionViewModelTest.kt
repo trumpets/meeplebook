@@ -346,8 +346,16 @@ class CollectionViewModelTest {
     }
 
     @Test
-    fun `JumpToLetter emits ScrollToLetter effect`() = runTest {
+    fun `JumpToLetter emits resolved ScrollToIndex effect from latest content state`() = runTest {
         // Given
+        val items = listOf(
+            createCollectionItem(gameId = 1, name = "Azul"),
+            createCollectionItem(gameId = 2, name = "Brass: Birmingham"),
+            createCollectionItem(gameId = 3, name = "Catan")
+        )
+        fakeCollectionRepository.setCollection(items)
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+
         val effects = mutableListOf<CollectionUiEffect>()
         val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiEffect.collect { effects.add(it) }
@@ -359,9 +367,26 @@ class CollectionViewModelTest {
 
         // Then
         assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffect.ScrollToLetter)
-        assertEquals('A', (effects[0] as CollectionUiEffect.ScrollToLetter).letter)
+        assertTrue(effects[0] is CollectionUiEffect.ScrollToIndex)
+        val effect = effects[0] as CollectionUiEffect.ScrollToIndex
+        assertEquals(CollectionViewMode.LIST, effect.viewMode)
+        assertEquals(0, effect.index)
         
+        job.cancel()
+    }
+
+    @Test
+    fun `JumpToLetter emits no effect when latest uiState is not content`() = runTest {
+        val effects = mutableListOf<CollectionUiEffect>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
+
+        viewModel.onEvent(CollectionEvent.ActionEvent.JumpToLetter('A'))
+        advanceUntilIdle()
+
+        assertTrue(effects.isEmpty())
+
         job.cancel()
     }
 

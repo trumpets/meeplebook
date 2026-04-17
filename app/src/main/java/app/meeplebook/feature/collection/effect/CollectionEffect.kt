@@ -9,4 +9,7 @@ package app.meeplebook.feature.collection.effect
 sealed interface CollectionEffect {
     /** Perform a collection sync/refresh operation. */
     data object Refresh : CollectionEffect
+
+    /** Resolve the latest content state for an alphabet jump request. */
+    data class ResolveJumpToLetter(val letter: Char) : CollectionEffect
 }
