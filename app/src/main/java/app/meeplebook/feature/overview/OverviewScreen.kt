@@ -36,6 +36,7 @@ import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.isNotEmpty
 import app.meeplebook.core.ui.uiText
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.home.navigation.HomeNavigator
 import app.meeplebook.feature.overview.effect.OverviewUiEffect
 import app.meeplebook.feature.overview.ui.EmptyStateMessage
@@ -93,7 +94,7 @@ fun OverviewScreenRoot(
 ) {
     when (uiState) {
         OverviewUiState.Loading ->
-            LoadingState(loadingMessageUiText = uiText(stringResource(R.string.loading_message)))
+            LoadingState(loadingMessageUiText = uiTextRes(R.string.loading_message))
 
         is OverviewUiState.Error ->
             ErrorState(errorMessageUiText = uiState.errorMessageUiText)
