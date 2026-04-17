@@ -199,7 +199,7 @@ class CollectionViewModel @Inject constructor(
                         // Sync successful, data will update automatically via flows.
                     },
                     onFailure = {
-                        tryEmitUiEffect(CollectionUiEffect.ShowSnackbar(uiTextRes(R.string.sync_collections_failed_error)))
+                        postUiEffect(CollectionUiEffect.ShowSnackbar(uiTextRes(R.string.sync_collections_failed_error)))
                     }
                 )
             } finally {
@@ -213,7 +213,7 @@ class CollectionViewModel @Inject constructor(
     private fun resolveJumpToLetter(letter: Char) {
         val content = uiState.value as? CollectionUiState.Content ?: return
         val index = content.sectionIndices[letter] ?: return
-        tryEmitUiEffect(
+        postUiEffect(
             CollectionUiEffect.ScrollToIndex(
                 viewMode = content.viewMode,
                 index = index

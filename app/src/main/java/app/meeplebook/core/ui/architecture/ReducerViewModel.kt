@@ -73,11 +73,12 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
     }
 
     /**
-     * Tries to emit a one-shot [effect] to the UI layer without suspending. If the buffer is full,
-     * the oldest effect will be dropped.
+     * Emits a one-shot [effect] to the UI layer without suspending.
      */
-    protected fun tryEmitUiEffect(effect: UiEffect) {
-        _uiEffect.tryEmit(effect)
+    protected fun postUiEffect(effect: UiEffect) {
+        viewModelScope.launch {
+            emitUiEffect(effect)
+        }
     }
 
     /**
