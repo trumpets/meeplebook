@@ -28,6 +28,9 @@
   - `ReducerViewModel<State, Event, DomainEffect, UiEffect>`
 - Reuse those abstractions for reducer-driven screens, but keep feature-owned base state, query flows,
   external observers, and `combine(baseState, externalData) -> uiState` mapping inside the feature.
+- For simple reducer-driven forms with no external observed data (for example Login), expose the
+  reducer-owned state directly as `uiState` instead of inventing a `combine(...)` layer, and model
+  successful navigation as a one-shot `UiEffect` rather than a persistent success flag.
 
 ## Single Source of Truth (CRITICAL)
 For any given piece of UI data, there must be exactly ONE source of truth.

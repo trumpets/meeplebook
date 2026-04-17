@@ -1,14 +1,21 @@
 package app.meeplebook.feature.login
 
 import app.meeplebook.R
-import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.auth.domain.LoginUseCase
+import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
+import app.meeplebook.core.ui.uiTextEmpty
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.login.effect.LoginEffectProducer
+import app.meeplebook.feature.login.effect.LoginUiEffect
+import app.meeplebook.feature.login.reducer.LoginReducer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -34,7 +41,11 @@ class LoginViewModelTest {
         Dispatchers.setMain(testDispatcher)
         fakeAuthRepository = FakeAuthRepository()
         loginUseCase = LoginUseCase(fakeAuthRepository)
-        viewModel = LoginViewModel(loginUseCase)
+        viewModel = LoginViewModel(
+            loginUseCase = loginUseCase,
+            reducer = LoginReducer(),
+            effectProducer = LoginEffectProducer()
+        )
     }
 
     @After
@@ -48,48 +59,51 @@ class LoginViewModelTest {
         assertEquals("", state.username)
         assertEquals("", state.password)
         assertFalse(state.isLoading)
-        assertNull(state.errorMessageResId)
-        assertFalse(state.isLoggedIn)
+        assertEquals(uiTextEmpty(), state.errorMessage)
     }
 
     @Test
     fun `onUsernameChange updates username in state`() {
-        viewModel.onUsernameChange("testUser")
+        viewModel.onEvent(LoginEvent.UsernameChanged("testUser"))
         assertEquals("testUser", viewModel.uiState.value.username)
     }
 
     @Test
     fun `onPasswordChange updates password in state`() {
-        viewModel.onPasswordChange("testPass")
+        viewModel.onEvent(LoginEvent.PasswordChanged("testPass"))
         assertEquals("testPass", viewModel.uiState.value.password)
     }
 
     @Test
-    fun `login success sets isLoggedIn to true`() = runTest {
+    fun `login success emits success effect and clears loading`() = runTest {
         val credentials = AuthCredentials("user", "pass")
         fakeAuthRepository.loginResult = AppResult.Success(credentials)
+        val effects = mutableListOf<LoginUiEffect>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiEffect.collect { effects.add(it) }
+        }
 
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.UsernameChanged("user"))
+        viewModel.onEvent(LoginEvent.PasswordChanged("pass"))
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertTrue(state.isLoggedIn)
         assertFalse(state.isLoading)
-        assertNull(state.errorMessageResId)
+        assertEquals(uiTextEmpty(), state.errorMessage)
+        assertEquals(listOf(LoginUiEffect.LoginSucceeded), effects)
+
+        job.cancel()
     }
 
     @Test
     fun `login with empty credentials maps to empty credentials error`() = runTest {
-        // Empty credentials are validated by LoginUseCase before reaching repository
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertFalse(state.isLoggedIn)
         assertFalse(state.isLoading)
-        assertEquals(R.string.msg_empty_credentials_error, state.errorMessageResId)
+        assertEquals(uiTextRes(R.string.msg_empty_credentials_error), state.errorMessage)
         assertEquals(0, fakeAuthRepository.loginCallCount)
     }
 
@@ -97,72 +111,67 @@ class LoginViewModelTest {
     fun `login with network error maps to login failed error`() = runTest {
         fakeAuthRepository.loginResult = AppResult.Failure(AuthError.NetworkError)
 
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.UsernameChanged("user"))
+        viewModel.onEvent(LoginEvent.PasswordChanged("pass"))
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertFalse(state.isLoggedIn)
         assertFalse(state.isLoading)
-        assertEquals(R.string.msg_login_failed_error, state.errorMessageResId)
+        assertEquals(uiTextRes(R.string.msg_login_failed_error), state.errorMessage)
     }
 
     @Test
     fun `login with invalid credentials maps to invalid credentials error`() = runTest {
         fakeAuthRepository.loginResult = AppResult.Failure(AuthError.InvalidCredentials)
 
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.UsernameChanged("user"))
+        viewModel.onEvent(LoginEvent.PasswordChanged("pass"))
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertFalse(state.isLoggedIn)
         assertFalse(state.isLoading)
-        assertEquals(R.string.msg_invalid_credentials_error, state.errorMessageResId)
+        assertEquals(uiTextRes(R.string.msg_invalid_credentials_error), state.errorMessage)
     }
 
     @Test
     fun `login with unknown error maps to login failed error`() = runTest {
         fakeAuthRepository.loginResult = AppResult.Failure(AuthError.Unknown(RuntimeException("Unexpected")))
 
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.UsernameChanged("user"))
+        viewModel.onEvent(LoginEvent.PasswordChanged("pass"))
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertFalse(state.isLoggedIn)
         assertFalse(state.isLoading)
-        assertEquals(R.string.msg_login_failed_error, state.errorMessageResId)
+        assertEquals(uiTextRes(R.string.msg_login_failed_error), state.errorMessage)
     }
 
     @Test
     fun `login clears previous error before attempting login`() = runTest {
-        // First login fails with empty credentials
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
-        assertEquals(R.string.msg_empty_credentials_error, viewModel.uiState.value.errorMessageResId)
+        assertEquals(uiTextRes(R.string.msg_empty_credentials_error), viewModel.uiState.value.errorMessage)
 
-        // Second login attempt should clear the error
         fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("user", "pass"))
-        viewModel.onUsernameChange("user")
-        viewModel.onPasswordChange("pass")
-        viewModel.login()
-
-        // Error should be cleared when login starts
+        viewModel.onEvent(LoginEvent.UsernameChanged("user"))
+        assertEquals(uiTextEmpty(), viewModel.uiState.value.errorMessage)
+        viewModel.onEvent(LoginEvent.PasswordChanged("pass"))
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
-        assertNull(viewModel.uiState.value.errorMessageResId)
+
+        assertEquals(uiTextEmpty(), viewModel.uiState.value.errorMessage)
     }
 
     @Test
     fun `login passes correct credentials to repository`() = runTest {
         fakeAuthRepository.loginResult = AppResult.Success(AuthCredentials("myUser", "myPass"))
 
-        viewModel.onUsernameChange("myUser")
-        viewModel.onPasswordChange("myPass")
-        viewModel.login()
+        viewModel.onEvent(LoginEvent.UsernameChanged("myUser"))
+        viewModel.onEvent(LoginEvent.PasswordChanged("myPass"))
+        viewModel.onEvent(LoginEvent.Submit)
         advanceUntilIdle()
 
         assertEquals("myUser", fakeAuthRepository.lastLoginUsername)

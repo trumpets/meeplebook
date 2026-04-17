@@ -43,7 +43,8 @@ class OverviewContentTest {
                             unplayedCount = 23
                         ),
                         lastSyncedUiText = uiText("Last synced: 5 min ago")
-                    )
+                    ),
+                    onEvent = {}
                 )
             }
         }
@@ -85,7 +86,8 @@ class OverviewContentTest {
                                 playerNamesUiText = uiText("You, Chris")
                             )
                         )
-                    )
+                    ),
+                    onEvent = {}
                 )
             }
         }
@@ -118,7 +120,11 @@ class OverviewContentTest {
                             )
                         )
                     ),
-                    onRecentPlayClick = { clickedPlayId = it.playId.localId }
+                    onEvent = { event ->
+                        if (event is OverviewEvent.ActionEvent.RecentPlayClicked) {
+                            clickedPlayId = event.playId.localId
+                        }
+                    }
                 )
             }
         }
@@ -138,7 +144,11 @@ class OverviewContentTest {
             MeepleBookTheme {
                 OverviewContent(
                     uiState = contentState(),
-                    onLogPlayClick = { fabClicked = true }
+                    onEvent = { event ->
+                        if (event == OverviewEvent.ActionEvent.LogPlayClicked) {
+                            fabClicked = true
+                        }
+                    }
                 )
             }
         }
@@ -168,7 +178,8 @@ class OverviewContentTest {
                             thumbnailUrl = null,
                             subtitleUiText = uiText("Try Tonight?")
                         )
-                    )
+                    ),
+                    onEvent = {}
                 )
             }
         }
@@ -190,7 +201,8 @@ class OverviewContentTest {
                     uiState = contentState(
                         stats = OverviewStats(),
                         lastSyncedUiText = uiText("Never synced")
-                    )
+                    ),
+                    onEvent = {}
                 )
             }
         }
@@ -227,8 +239,13 @@ class OverviewContentTest {
                             subtitleUiText = uiText("Try Tonight?")
                         )
                     ),
-                    onRecentlyAddedClick = { recentlyAddedClicked = true },
-                    onSuggestedGameClick = { suggestedClicked = true }
+                    onEvent = { event ->
+                        when (event) {
+                            is OverviewEvent.ActionEvent.RecentlyAddedClicked -> recentlyAddedClicked = true
+                            is OverviewEvent.ActionEvent.SuggestedGameClicked -> suggestedClicked = true
+                            else -> Unit
+                        }
+                    }
                 )
             }
         }
@@ -269,7 +286,8 @@ class OverviewContentTest {
                     uiState = contentState(
                         stats = OverviewStats(),
                         recentPlays = emptyList<RecentPlay>()
-                    )
+                    ),
+                    onEvent = {}
                 )
             }
         }
@@ -296,7 +314,8 @@ class OverviewContentTest {
                                 playerNamesUiText = uiText("You, Alex, Jordan, Sam")
                             )
                         )
-                    )
+                    ),
+                    onEvent = {}
                 )
             }
         }

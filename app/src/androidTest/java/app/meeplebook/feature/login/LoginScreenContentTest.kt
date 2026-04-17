@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
+import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
 import org.junit.Assert.assertEquals
@@ -36,9 +37,7 @@ class LoginScreenContentTest {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = {}
                 )
             }
         }
@@ -66,9 +65,7 @@ class LoginScreenContentTest {
                         username = "testUser",
                         password = "testPassword"
                     ),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = {}
                 )
             }
         }
@@ -89,9 +86,7 @@ class LoginScreenContentTest {
                         password = "password123",
                         isLoading = true
                     ),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = {}
                 )
             }
         }
@@ -111,11 +106,9 @@ class LoginScreenContentTest {
                     uiState = LoginUiState(
                         username = "wrongUser",
                         password = "wrongPass",
-                        errorMessageResId = errorMsgResId
+                        errorMessage = uiTextRes(errorMsgResId)
                     ),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = {}
                 )
             }
         }
@@ -132,11 +125,9 @@ class LoginScreenContentTest {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(
-                        errorMessageResId = errorMsgResId
+                        errorMessage = uiTextRes(errorMsgResId)
                     ),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = {}
                 )
             }
         }
@@ -155,11 +146,9 @@ class LoginScreenContentTest {
                     uiState = LoginUiState(
                         username = "user",
                         password = "pass",
-                        errorMessageResId = errorMsgResId
+                        errorMessage = uiTextRes(errorMsgResId)
                     ),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = {}
                 )
             }
         }
@@ -170,15 +159,17 @@ class LoginScreenContentTest {
 
     @Test
     fun loginScreen_loginButtonClick_triggersCallback() {
-        var loginClicked = false
+        var loginSubmitted = false
 
         composeTestRule.setContent {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = { loginClicked = true }
+                    onEvent = { event ->
+                        if (event == LoginEvent.Submit) {
+                            loginSubmitted = true
+                        }
+                    }
                 )
             }
         }
@@ -187,7 +178,7 @@ class LoginScreenContentTest {
         composeTestRule.onNodeWithText(stringRes(R.string.login)).performClick()
 
         // Verify callback was triggered
-        assertTrue(loginClicked)
+        assertTrue(loginSubmitted)
     }
 
     @Test
@@ -198,9 +189,11 @@ class LoginScreenContentTest {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(),
-                    onUsernameChange = { capturedUsername = it },
-                    onPasswordChange = {},
-                    onLoginClick = {}
+                    onEvent = { event ->
+                        if (event is LoginEvent.UsernameChanged) {
+                            capturedUsername = event.username
+                        }
+                    }
                 )
             }
         }
@@ -220,9 +213,11 @@ class LoginScreenContentTest {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(),
-                    onUsernameChange = {},
-                    onPasswordChange = { capturedPassword = it },
-                    onLoginClick = {}
+                    onEvent = { event ->
+                        if (event is LoginEvent.PasswordChanged) {
+                            capturedPassword = event.password
+                        }
+                    }
                 )
             }
         }
@@ -236,15 +231,17 @@ class LoginScreenContentTest {
 
     @Test
     fun loginScreen_loadingState_buttonClickDoesNotTriggerCallback() {
-        var loginClicked = false
+        var loginSubmitted = false
 
         composeTestRule.setContent {
             MeepleBookTheme {
                 LoginScreenContent(
                     uiState = LoginUiState(isLoading = true),
-                    onUsernameChange = {},
-                    onPasswordChange = {},
-                    onLoginClick = { loginClicked = true }
+                    onEvent = { event ->
+                        if (event == LoginEvent.Submit) {
+                            loginSubmitted = true
+                        }
+                    }
                 )
             }
         }
@@ -253,6 +250,6 @@ class LoginScreenContentTest {
         composeTestRule.onNodeWithText(stringRes(R.string.login)).performClick()
 
         // Verify callback was NOT triggered (button is disabled during loading)
-        assertFalse(loginClicked)
+        assertFalse(loginSubmitted)
     }
 }

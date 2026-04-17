@@ -1,55 +1,87 @@
 package app.meeplebook.feature.login
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
-import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.auth.domain.LoginUseCase
+import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.ui.architecture.ReducerViewModel
+import app.meeplebook.core.ui.uiTextEmpty
+import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.login.effect.LoginEffect
+import app.meeplebook.feature.login.effect.LoginEffectProducer
+import app.meeplebook.feature.login.effect.LoginUiEffect
+import app.meeplebook.feature.login.reducer.LoginReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+/**
+ * ViewModel for the Login screen using the shared reducer/effect pipeline.
+ */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
+    reducer: LoginReducer,
+    effectProducer: LoginEffectProducer,
     private val loginUseCase: LoginUseCase
-) : ViewModel() {
+) : ReducerViewModel<LoginUiState, LoginEvent, LoginEffect, LoginUiEffect>(
+    initialState = LoginUiState(),
+    reducer = reducer,
+    effectProducer = effectProducer
+) {
 
-    private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<LoginUiState> = baseState
 
-    fun onUsernameChange(newUsername: String) {
-        _uiState.update { it.copy(username = newUsername) }
+    fun onEvent(event: LoginEvent) {
+        dispatchEvent(event)
     }
 
-    fun onPasswordChange(newPassword: String) {
-        _uiState.update { it.copy(password = newPassword) }
+    override fun handleDomainEffect(effect: LoginEffect) {
+        when (effect) {
+            is LoginEffect.Login -> login(effect.username, effect.password)
+        }
     }
 
-    fun login() {
-        val currentState = _uiState.value
-
+    private fun login(
+        username: String,
+        password: String
+    ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessageResId = null) }
+            updateBaseState {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = uiTextEmpty()
+                )
+            }
 
-            loginUseCase(currentState.username, currentState.password).fold(
+            loginUseCase(username, password).fold(
                 onSuccess = {
-                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                    updateBaseState {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = uiTextEmpty()
+                        )
+                    }
+                    emitUiEffect(LoginUiEffect.LoginSucceeded)
                 },
                 onFailure = { error ->
-                    val resId = when (error) {
-                        is AuthError.EmptyCredentials -> R.string.msg_empty_credentials_error
-                        is AuthError.NetworkError -> R.string.msg_login_failed_error
-                        is AuthError.InvalidCredentials -> R.string.msg_invalid_credentials_error
-                        is AuthError.Unknown -> R.string.msg_login_failed_error
+                    updateBaseState {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = mapError(error)
+                        )
                     }
-                    _uiState.update { it.copy(isLoading = false, errorMessageResId = resId) }
                 }
             )
         }
     }
+
+    private fun mapError(error: AuthError) =
+        when (error) {
+            is AuthError.EmptyCredentials -> uiTextRes(R.string.msg_empty_credentials_error)
+            is AuthError.NetworkError -> uiTextRes(R.string.msg_login_failed_error)
+            is AuthError.InvalidCredentials -> uiTextRes(R.string.msg_invalid_credentials_error)
+            is AuthError.Unknown -> uiTextRes(R.string.msg_login_failed_error)
+        }
 }

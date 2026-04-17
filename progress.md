@@ -1,5 +1,6 @@
 ## Codebase Patterns
 - For reducer-driven screens, use the shared `core/ui/architecture` contracts/helper for `onEvent -> reduce -> produce -> handle effects`, but keep feature-owned base state, query flows, and `combine(baseState, externalData) -> uiState` mapping local to the feature.
+- For simple reducer-driven forms with no external observed data, expose reducer-owned state directly as `uiState` and use one-shot `UiEffect`s for success navigation instead of persistent success flags.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -671,4 +672,28 @@ PR Link: N/A
     - For reducer-driven screens, KDoc should document both layers explicitly: reducer-owned base state and the derived renderable sealed `UiState`
     - Effect producer docs are most useful when they explain which events become domain work versus one-shot navigation/UI effects
     - When a reducer is intentionally minimal, document that async effect results update state through `updateBaseState` so the no-op reduce path is clearly intentional
+---
+
+## 2026-04-17T09:14:55Z
+PR Link: N/A
+- Refactored Login to the shared reducer/effect architecture using a thin form-focused implementation
+- Replaced direct mutator methods and persistent `isLoggedIn` state with `LoginEvent`, `LoginEffect`, `LoginUiEffect`, `LoginEffectProducer`, and `LoginReducer`
+- Updated `LoginScreen` to emit events and collect the success UI effect, migrated Login error rendering to `UiText`, and refreshed Login tests to the new contract
+- Files changed:
+  - `AGENTS.md`
+  - `app/src/main/java/app/meeplebook/feature/login/LoginEvent.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/LoginUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/login/LoginViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/login/LoginScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/login/effect/LoginEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/effect/LoginUiEffect.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/effect/LoginEffectProducer.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/login/reducer/LoginReducer.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/login/LoginViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/login/LoginScreenContentTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/overview/OverviewContentTest.kt`
+- **Learnings for future iterations:**
+    - Simple form screens can still use the shared reducer architecture without a separate base-state/derived-state split when there is no external observed data
+    - Replace persistent success booleans with one-shot `UiEffect`s when the UI only needs navigation or another transient outcome
+    - Migrating older screens to `UiText` often requires both ViewModel assertions and Compose tests to stop depending on raw string resource ids
 ---
