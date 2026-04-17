@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,7 +31,7 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
     /**
      * Reducer-owned mutable state. Features derive query flows and UI state from this source.
      */
-    protected val baseState = MutableStateFlow(initialState)
+    private val _baseState = MutableStateFlow(initialState)
 
     private val _uiEffect = MutableSharedFlow<UiEffect>()
 
@@ -38,20 +39,21 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
      * One-shot UI effects emitted by [dispatchEvent] or by subclass effect handlers.
      */
     val uiEffect: SharedFlow<UiEffect> = _uiEffect.asSharedFlow()
+    val baseState: StateFlow<State> = _baseState
 
     /**
      * Current reducer-owned state snapshot.
      */
     protected val currentBaseState: State
-        get() = baseState.value
+        get() = _baseState.value
 
     /**
      * Runs a single [event] through the standard reducer/effect pipeline.
      */
     protected fun dispatchEvent(event: Event) {
-        val oldState = baseState.value
+        val oldState = _baseState.value
         val newState = reducer.reduce(oldState, event)
-        baseState.value = newState
+        _baseState.value = newState
 
         val producedEffects = effectProducer.produce(newState, event)
         handleDomainEffects(producedEffects.effects)
@@ -62,7 +64,7 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
      * Updates reducer-owned state for async effect results without replacing the flow instance.
      */
     protected fun updateBaseState(transform: (State) -> State) {
-        baseState.update(transform)
+        _baseState.update(transform)
     }
 
     /**

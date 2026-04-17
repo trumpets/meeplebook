@@ -270,21 +270,29 @@ class AddPlayViewModel @Inject constructor(
                 .first()
                 .map { identity -> PlayerSuggestion(playerIdentity = identity) }
 
-            baseState.value = baseState.value.updateGameSelected { copy(playersByLocation = suggestions) }
+            updateBaseState {
+                it.updateGameSelected { copy(playersByLocation = suggestions) }
+            }
         }
     }
 
     private fun savePlay(effect: AddPlayEffect.SavePlay) {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
-            baseState.value = baseState.value.updateGameSelected { copy(isSaving = true) }
+            updateBaseState {
+                it.updateGameSelected { copy(isSaving = true) }
+            }
             createPlay(effect.play).fold(
                 onSuccess = {
-                    baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
+                    updateBaseState {
+                        it.updateGameSelected { copy(isSaving = false) }
+                    }
                     emitUiEffect(AddPlayUiEffect.NavigateBack)
                 },
                 onFailure = {
-                    baseState.value = baseState.value.updateGameSelected { copy(isSaving = false) }
+                    updateBaseState {
+                        it.updateGameSelected { copy(isSaving = false) }
+                    }
                 }
             )
         }
