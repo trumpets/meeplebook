@@ -19,7 +19,7 @@ abstract class EffectProducer<State, Event, DomainEffect, UiEffect> {
         val producedEffects = produceEffects(newState, event)
         return if (producedEffects.isEmpty()) {
             ProducedEffects.none()
-        }else {
+        } else {
             producedEffects
         }
     }
