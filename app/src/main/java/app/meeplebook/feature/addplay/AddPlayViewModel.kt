@@ -287,7 +287,7 @@ class AddPlayViewModel @Inject constructor(
                     updateBaseState {
                         it.updateGameSelected { copy(isSaving = false) }
                     }
-                    emitUiEffect(AddPlayUiEffect.NavigateBack)
+                    postUiEffect(AddPlayUiEffect.NavigateBack)
                 },
                 onFailure = {
                     updateBaseState {

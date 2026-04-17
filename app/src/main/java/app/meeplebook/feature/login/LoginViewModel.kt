@@ -63,7 +63,7 @@ class LoginViewModel @Inject constructor(
                             errorMessage = uiTextEmpty()
                         )
                     }
-                    emitUiEffect(LoginUiEffect.LoginSucceeded)
+                    postUiEffect(LoginUiEffect.LoginSucceeded)
                 },
                 onFailure = { error ->
                     updateBaseState {

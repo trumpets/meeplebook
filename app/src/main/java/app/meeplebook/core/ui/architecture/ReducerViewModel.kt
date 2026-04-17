@@ -68,18 +68,11 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
     }
 
     /**
-     * Emits a one-shot [effect] to the UI layer.
-     */
-    protected suspend fun emitUiEffect(effect: UiEffect) {
-        _uiEffect.emit(effect)
-    }
-
-    /**
      * Emits a one-shot [effect] to the UI layer without suspending.
      */
     protected fun postUiEffect(effect: UiEffect) {
         viewModelScope.launch {
-            emitUiEffect(effect)
+            _uiEffect.emit(effect)
         }
     }
 
@@ -104,7 +97,7 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
         if (uiEffects.isEmpty()) return
         viewModelScope.launch {
             uiEffects.forEach{
-                emitUiEffect(it)
+                _uiEffect.emit(it)
             }
         }
     }
