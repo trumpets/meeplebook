@@ -73,7 +73,8 @@ import javax.inject.Inject
  * ```
  * onEvent(event)
  *   └─ reducer.reduce(baseState, event) → newState  (synchronous, updates baseState)
- *        └─ effectProducer.produce(newState, event) → AddPlayEffects
+ *        └─ effectProducer.produce(newState, event) →
+ *             ProducedEffects<AddPlayEffect, AddPlayUiEffect>
  *             ├─ domain effects → handled here (async, job-cancellable)
  *             │    ├─ LoadPlayerSuggestions → observePlayerSuggestions → baseState update
  *             │    └─ SavePlay → createPlay → NavigateBack ui effect on success
