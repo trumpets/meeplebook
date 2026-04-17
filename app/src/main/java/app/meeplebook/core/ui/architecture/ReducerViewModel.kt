@@ -1,13 +1,12 @@
 package app.meeplebook.core.ui.architecture
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /**
  * Lightweight base [ViewModel] for screens that follow the reducer/effect pipeline.
@@ -32,7 +31,10 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
      */
     protected val baseState = MutableStateFlow(initialState)
 
-    private val _uiEffect = MutableSharedFlow<UiEffect>()
+    private val _uiEffect = MutableSharedFlow<UiEffect>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
     /**
      * One-shot UI effects emitted by [dispatchEvent] or by subclass effect handlers.
@@ -73,6 +75,14 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
     }
 
     /**
+     * Tries to emit a one-shot [effect] to the UI layer without suspending. If the buffer is full,
+     * the oldest effect will be dropped.
+     */
+    protected fun tryEmitUiEffect(effect: UiEffect) {
+        _uiEffect.tryEmit(effect)
+    }
+
+    /**
      * Handles domain effects produced for the last transition.
      *
      * The default behavior routes each effect to [handleDomainEffect] in order.
@@ -90,10 +100,6 @@ abstract class ReducerViewModel<State, Event, DomainEffect, UiEffect>(
      * Emits produced UI effects through [uiEffect].
      */
     protected open fun handleUiEffects(uiEffects: List<UiEffect>) {
-        uiEffects.forEach { effect ->
-            viewModelScope.launch {
-                emitUiEffect(effect)
-            }
-        }
+        uiEffects.forEach(::tryEmitUiEffect)
     }
 }

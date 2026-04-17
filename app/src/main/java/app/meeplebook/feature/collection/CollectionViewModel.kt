@@ -198,7 +198,7 @@ class CollectionViewModel @Inject constructor(
                         // Sync successful, data will update automatically via flows.
                     },
                     onFailure = {
-                        emitUiEffect(CollectionUiEffect.ShowSnackbar(uiTextRes(R.string.sync_collections_failed_error)))
+                        tryEmitUiEffect(CollectionUiEffect.ShowSnackbar(uiTextRes(R.string.sync_collections_failed_error)))
                     }
                 )
             } finally {

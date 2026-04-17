@@ -111,7 +111,7 @@ class PlaysViewModel @Inject constructor(
                         // Sync successful, data will update automatically via flows.
                     },
                     onFailure = { _ ->
-                        emitUiEffect(PlaysUiEffect.ShowSnackbar(uiTextRes(R.string.sync_plays_failed_error)))
+                        tryEmitUiEffect(PlaysUiEffect.ShowSnackbar(uiTextRes(R.string.sync_plays_failed_error)))
                     }
                 )
             } finally {
