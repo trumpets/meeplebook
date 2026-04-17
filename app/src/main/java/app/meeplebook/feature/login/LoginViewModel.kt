@@ -13,6 +13,7 @@ import app.meeplebook.feature.login.effect.LoginEffectProducer
 import app.meeplebook.feature.login.effect.LoginUiEffect
 import app.meeplebook.feature.login.reducer.LoginReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +34,8 @@ class LoginViewModel @Inject constructor(
 
     val uiState: StateFlow<LoginUiState> = baseState
 
+    private var loginJob: Job? = null
+
     fun onEvent(event: LoginEvent) {
         dispatchEvent(event)
     }
@@ -47,7 +50,8 @@ class LoginViewModel @Inject constructor(
         username: String,
         password: String
     ) {
-        viewModelScope.launch {
+        loginJob?.cancel()
+        loginJob = viewModelScope.launch {
             updateBaseState {
                 it.copy(
                     isLoading = true,
