@@ -210,8 +210,8 @@ class CollectionScreenRootTest {
                             totalGameCount = 1,
                             unplayedGameCount = 0,
                             isRefreshing = false
-                        )
-                                ),
+                        ),
+                    ),
                     onEvent = {},
                     listState = LazyListState(),
                     gridState = LazyGridState()
