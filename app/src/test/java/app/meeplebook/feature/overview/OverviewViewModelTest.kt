@@ -17,8 +17,9 @@ import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
+import app.meeplebook.core.sync.domain.SyncCollectionUseCase
+import app.meeplebook.core.sync.domain.SyncPlaysUseCase
 import app.meeplebook.core.sync.domain.SyncUserDataUseCase
-import app.meeplebook.core.sync.model.SyncUserDataError
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
 import app.meeplebook.feature.overview.effect.OverviewEffectProducer
@@ -90,13 +91,13 @@ class OverviewViewModelTest {
             observeLastSync = observeLastSync
         )
 
-        val syncCollectionUseCase = app.meeplebook.core.sync.domain.SyncCollectionUseCase(
+        val syncCollectionUseCase = SyncCollectionUseCase(
             authRepository = fakeAuthRepository,
             collectionRepository = fakeCollectionRepository,
             syncTimeRepository = fakeSyncTimeRepository,
             clock = testClock
         )
-        val syncPlaysUseCase = app.meeplebook.core.sync.domain.SyncPlaysUseCase(
+        val syncPlaysUseCase = SyncPlaysUseCase(
             authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
             syncTimeRepository = fakeSyncTimeRepository,
