@@ -2,6 +2,7 @@ package app.meeplebook.core.sync
 
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.model.SyncType
+import app.meeplebook.testutils.assertThrows
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -87,14 +88,14 @@ class SyncRunnerTest {
     fun `run marks failed and rethrows when work throws`() = runTest {
         val throwable = IOException("network down")
 
-        try {
+        val actual = assertThrows<IOException> {
             syncRunner.run<Unit, Unit>(
                 type = SyncType.COLLECTION,
                 block = { throw throwable }
             )
-        } catch (actual: IOException) {
-            assertEquals(throwable, actual)
         }
+
+        assertEquals(throwable, actual)
 
         assertEquals(
             listOf(
