@@ -62,6 +62,12 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         playsFlow.value = existingPlays
     }
 
+    override suspend fun getPendingOrFailedPlays(): List<Play> {
+        return playsFlow.value
+            .filter { it.syncStatus == PlaySyncStatus.PENDING || it.syncStatus == PlaySyncStatus.FAILED }
+            .sortedBy { it.date }
+    }
+
     override suspend fun insertPlay(
         playEntity: PlayEntity,
         playerEntities: List<PlayerEntity>
@@ -96,6 +102,29 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
         )
 
         playsFlow.value = existingPlays
+    }
+
+    override suspend fun markPlayAsSynced(localPlayId: Long, remotePlayId: Long) {
+        playsFlow.value = playsFlow.value.map { play ->
+            if (play.playId.localId != localPlayId) {
+                play
+            } else {
+                play.copy(
+                    playId = PlayId.Remote(localPlayId, remotePlayId),
+                    syncStatus = PlaySyncStatus.SYNCED
+                )
+            }
+        }
+    }
+
+    override suspend fun markPlayAsFailed(localPlayId: Long) {
+        playsFlow.value = playsFlow.value.map { play ->
+            if (play.playId.localId != localPlayId) {
+                play
+            } else {
+                play.copy(syncStatus = PlaySyncStatus.FAILED)
+            }
+        }
     }
 
     override suspend fun clearPlays() {

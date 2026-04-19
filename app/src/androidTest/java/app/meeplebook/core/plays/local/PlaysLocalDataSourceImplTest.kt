@@ -7,11 +7,13 @@ import app.meeplebook.core.database.MeepleBookDatabase
 import app.meeplebook.core.database.dao.PlayDao
 import app.meeplebook.core.database.dao.PlayerDao
 import app.meeplebook.core.database.entity.PlayEntity
+import app.meeplebook.core.database.entity.PlayerEntity
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -127,9 +129,67 @@ class PlaysLocalDataSourceImplTest {
         assertEquals(keepId, remaining[0].remoteId)
     }
 
+    @Test
+    fun getPendingOrFailedPlays_returnsOnlyRetryablePlays() = runTest {
+        playDao.insertAll(
+            listOf(
+                makePlay(localId = 1, remoteId = null, syncStatus = PlaySyncStatus.PENDING),
+                makePlay(localId = 2, remoteId = 2002, syncStatus = PlaySyncStatus.FAILED),
+                makePlay(localId = 3, remoteId = 3003, syncStatus = PlaySyncStatus.SYNCED)
+            )
+        )
+        playerDao.insertAll(
+            listOf(
+                makePlayer(playId = 1, name = "Pending Player"),
+                makePlayer(playId = 2, name = "Failed Player"),
+                makePlayer(playId = 3, name = "Synced Player")
+            )
+        )
+
+        val result = dataSource.getPendingOrFailedPlays()
+
+        assertEquals(listOf(1L, 2L), result.map { it.playId.localId })
+        assertEquals(
+            listOf(PlaySyncStatus.PENDING, PlaySyncStatus.FAILED),
+            result.map { it.syncStatus }
+        )
+    }
+
+    @Test
+    fun markPlayAsSynced_updatesStatusAndRemoteId() = runTest {
+        playDao.insert(makeLocalPlay(localId = 1))
+
+        dataSource.markPlayAsSynced(localPlayId = 1, remotePlayId = 9001)
+
+        val updated = playDao.getPlayById(1)!!
+        assertEquals(PlaySyncStatus.SYNCED, updated.syncStatus)
+        assertEquals(9001L, updated.remoteId)
+    }
+
+    @Test
+    fun markPlayAsFailed_preservesRemoteIdAndMarksFailed() = runTest {
+        playDao.insert(makePlay(localId = 1, remoteId = 8001, syncStatus = PlaySyncStatus.PENDING))
+
+        dataSource.markPlayAsFailed(localPlayId = 1)
+
+        val updated = playDao.getPlayById(1)!!
+        assertEquals(PlaySyncStatus.FAILED, updated.syncStatus)
+        assertEquals(8001L, updated.remoteId)
+    }
+
     // --- Helpers ---
 
     private fun makeRemotePlay(localId: Long, remoteId: Long): PlayEntity =
+        makePlay(localId = localId, remoteId = remoteId, syncStatus = PlaySyncStatus.SYNCED)
+
+    private fun makeLocalPlay(localId: Long): PlayEntity =
+        makePlay(localId = localId, remoteId = null, syncStatus = PlaySyncStatus.PENDING)
+
+    private fun makePlay(
+        localId: Long,
+        remoteId: Long?,
+        syncStatus: PlaySyncStatus
+    ): PlayEntity =
         PlayEntity(
             localId = localId,
             remoteId = remoteId,
@@ -141,21 +201,19 @@ class PlaysLocalDataSourceImplTest {
             gameId = 1L,
             gameName = "Test Game",
             comments = null,
-            syncStatus = PlaySyncStatus.SYNCED,
+            syncStatus = syncStatus,
         )
 
-    private fun makeLocalPlay(localId: Long): PlayEntity =
-        PlayEntity(
-            localId = localId,
-            remoteId = null,
-            date = Instant.parse("2024-06-01T12:00:00Z"),
-            quantity = 1,
-            length = null,
-            incomplete = false,
-            location = null,
-            gameId = 1L,
-            gameName = "Local Game",
-            comments = null,
-            syncStatus = PlaySyncStatus.PENDING,
+    private fun makePlayer(playId: Long, name: String): PlayerEntity =
+        PlayerEntity(
+            id = 0,
+            playId = playId,
+            username = null,
+            userId = null,
+            name = name,
+            startPosition = null,
+            color = null,
+            score = null,
+            win = false
         )
 }

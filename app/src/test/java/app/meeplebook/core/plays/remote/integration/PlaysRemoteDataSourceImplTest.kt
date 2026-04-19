@@ -1,9 +1,17 @@
 package app.meeplebook.core.plays.remote.integration
 
+import app.meeplebook.core.auth.CurrentCredentialsStore
+import app.meeplebook.core.auth.local.FakeAuthLocalDataSource
+import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.network.BggApi
 import app.meeplebook.core.network.RetryException
+import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSourceImpl
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -23,10 +31,12 @@ import java.util.concurrent.TimeUnit
  * These tests verify the retry logic, exponential backoff, and proper resource cleanup
  * for various response codes from the BGG API.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PlaysRemoteDataSourceImplTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var dataSource: PlaysRemoteDataSourceImpl
+    private lateinit var credentialsStore: CurrentCredentialsStore
 
     @Before
     fun setUp() {
@@ -377,5 +387,44 @@ class PlaysRemoteDataSourceImplTest {
         // Then
         assertEquals(1, result.size)
         assertEquals(4, mockWebServer.requestCount)
+    }
+
+    @Test
+    fun `uploadPlay throws IllegalArgumentException when response says login required`() = runTest {
+        val play = createPlay(localPlayId = 1, gameName = "Example Game", gameId = 448159)
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("""{"error":"You must login to save plays"}""")
+        )
+
+        try {
+            dataSource.uploadPlay(play)
+            fail("Expected IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            assertEquals("You must login to save plays", e.message)
+        }
+    }
+
+    @Test
+    fun `uploadPlay returns play id from successful json response`() = runTest {
+        val play = createPlay(localPlayId = 1, gameName = "Example Game", gameId = 448159)
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody(
+                    """
+                    {
+                        "playid": "113013160",
+                        "numplays": 2,
+                        "html": "Plays: <a href=\"/plays/thing/448159?userid=361844\">2</a>"
+                    }
+                    """.trimIndent()
+                )
+        )
+
+        val remoteId = dataSource.uploadPlay(play)
+
+        assertEquals(113013160L, remoteId)
     }
 }

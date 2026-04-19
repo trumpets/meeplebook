@@ -79,6 +79,10 @@ class FakePlaysRepository : PlaysRepository {
         return result
     }
 
+    override suspend fun syncPendingPlays(): AppResult<Unit, PlayError> {
+        return AppResult.Success(Unit)
+    }
+
     override suspend fun createPlay(command: CreatePlayCommand) {
         beforeCreatePlay?.invoke()
         createPlayException?.let { throw it }

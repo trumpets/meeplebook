@@ -10,6 +10,7 @@ import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.plays.remote.FakePlaysRemoteDataSource
+import app.meeplebook.core.plays.remote.PlayUploadException
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.util.parseDateString
 import kotlinx.coroutines.flow.first
@@ -265,6 +266,107 @@ class PlaysRepositoryImplTest {
         val error = (result as AppResult.Failure).error
         assertTrue(error is PlayError.Unknown)
         assertEquals(exception, (error as PlayError.Unknown).throwable)
+    }
+
+    @Test
+    fun `syncPendingPlays uploads pending and failed plays sequentially and marks them synced`() = runTest {
+        val pendingPlay = createPlay(
+            localPlayId = 1,
+            gameName = "Pending Game",
+            syncStatus = PlaySyncStatus.PENDING
+        )
+        val failedPlay = createPlay(
+            localPlayId = 2,
+            gameName = "Failed Game",
+            syncStatus = PlaySyncStatus.FAILED
+        )
+        val syncedPlay = createPlay(
+            localPlayId = 3,
+            gameName = "Synced Game",
+            syncStatus = PlaySyncStatus.SYNCED
+        )
+        local.setPlays(listOf(pendingPlay, failedPlay, syncedPlay))
+        remote.uploadedRemoteIdsByLocalId = mapOf(
+            1L to 1001L,
+            2L to 1002L
+        )
+
+        val result = repository.syncPendingPlays()
+
+        assertTrue(result is AppResult.Success)
+        assertEquals(listOf(1L, 2L), remote.uploadedLocalIds)
+
+        val plays = local.getPlays()
+        val uploadedPending = plays.first { it.playId.localId == 1L }
+        val uploadedFailed = plays.first { it.playId.localId == 2L }
+        assertTrue(uploadedPending.playId is PlayId.Remote)
+        assertEquals(1001L, (uploadedPending.playId as PlayId.Remote).remoteId)
+        assertEquals(PlaySyncStatus.SYNCED, uploadedPending.syncStatus)
+        assertTrue(uploadedFailed.playId is PlayId.Remote)
+        assertEquals(1002L, (uploadedFailed.playId as PlayId.Remote).remoteId)
+        assertEquals(PlaySyncStatus.SYNCED, uploadedFailed.syncStatus)
+        assertEquals(PlaySyncStatus.SYNCED, plays.first { it.playId.localId == 3L }.syncStatus)
+    }
+
+    @Test
+    fun `syncPendingPlays marks fatal upload failure and stops later uploads`() = runTest {
+        val firstPending = createPlay(
+            localPlayId = 1,
+            gameName = "First",
+            syncStatus = PlaySyncStatus.PENDING
+        )
+        val secondPending = createPlay(
+            localPlayId = 2,
+            gameName = "Second",
+            syncStatus = PlaySyncStatus.PENDING
+        )
+        local.setPlays(listOf(firstPending, secondPending))
+        remote.uploadExceptionsByLocalId = mapOf(
+            1L to IOException("offline")
+        )
+
+        val result = repository.syncPendingPlays()
+
+        assertTrue(result is AppResult.Failure)
+        assertEquals(PlayError.NetworkError, (result as AppResult.Failure).error)
+        assertEquals(listOf(1L), remote.uploadedLocalIds)
+
+        val plays = local.getPlays()
+        assertEquals(PlaySyncStatus.FAILED, plays.first { it.playId.localId == 1L }.syncStatus)
+        assertEquals(PlaySyncStatus.PENDING, plays.first { it.playId.localId == 2L }.syncStatus)
+    }
+
+    @Test
+    fun `syncPendingPlays keeps going after non fatal upload failure and retries failed plays`() = runTest {
+        val failedPlay = createPlay(
+            localPlayId = 1,
+            gameName = "Retry Me",
+            syncStatus = PlaySyncStatus.FAILED
+        )
+        val pendingPlay = createPlay(
+            localPlayId = 2,
+            gameName = "Upload Me",
+            syncStatus = PlaySyncStatus.PENDING
+        )
+        local.setPlays(listOf(failedPlay, pendingPlay))
+        remote.uploadExceptionsByLocalId = mapOf(
+            1L to PlayUploadException("validation failed")
+        )
+        remote.uploadedRemoteIdsByLocalId = mapOf(
+            2L to 2002L
+        )
+
+        val result = repository.syncPendingPlays()
+
+        assertTrue(result is AppResult.Success)
+        assertEquals(listOf(1L, 2L), remote.uploadedLocalIds)
+
+        val plays = local.getPlays()
+        assertEquals(PlaySyncStatus.FAILED, plays.first { it.playId.localId == 1L }.syncStatus)
+        val uploadedPlay = plays.first { it.playId.localId == 2L }
+        assertTrue(uploadedPlay.playId is PlayId.Remote)
+        assertEquals(2002L, (uploadedPlay.playId as PlayId.Remote).remoteId)
+        assertEquals(PlaySyncStatus.SYNCED, uploadedPlay.syncStatus)
     }
 
     @Test

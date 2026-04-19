@@ -60,6 +60,11 @@ interface PlaysLocalDataSource {
     suspend fun saveRemotePlays(remotePlays: List<RemotePlayDto>)
 
     /**
+     * Returns local plays that should be retried by the outbox upload path.
+     */
+    suspend fun getPendingOrFailedPlays(): List<Play>
+
+    /**
      * Inserts a single locally created play.
      *
      * This is the local-write half of the outbox pattern. The inserted play remains available for a
@@ -69,6 +74,16 @@ interface PlaysLocalDataSource {
      * @param playerEntities The player entities associated with the play.
      */
     suspend fun insertPlay(playEntity: PlayEntity, playerEntities: List<PlayerEntity>)
+
+    /**
+     * Marks a locally stored play as synced and optionally assigns the remote id returned by BGG.
+     */
+    suspend fun markPlayAsSynced(localPlayId: Long, remotePlayId: Long)
+
+    /**
+     * Marks a locally stored play as failed so it will be retried later.
+     */
+    suspend fun markPlayAsFailed(localPlayId: Long)
 
     /**
      * Clears all plays.

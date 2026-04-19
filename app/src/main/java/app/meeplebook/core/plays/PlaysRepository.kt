@@ -55,6 +55,16 @@ interface PlaysRepository {
     suspend fun syncPlays(username: String): AppResult<Unit, PlayError>
 
     /**
+     * Uploads locally queued plays whose sync status is [app.meeplebook.core.plays.model.PlaySyncStatus.PENDING]
+     * or [app.meeplebook.core.plays.model.PlaySyncStatus.FAILED].
+     *
+     * Uploads happen sequentially so each play can independently transition to `SYNCED` or `FAILED`.
+     * Fatal transport/auth failures stop the batch and return a failure; per-play validation failures
+     * are persisted as `FAILED` and the repository continues to later plays.
+     */
+    suspend fun syncPendingPlays(): AppResult<Unit, PlayError>
+
+    /**
      * Creates a new play locally as part of the outbox flow.
      *
      * The created play is persisted immediately and marked with a non-synced status so background

@@ -14,8 +14,10 @@
 # BGG Integration Patterns
 - XML endpoints are in `core/network/BggApi.kt`; responses are parsed manually with XmlPull (`CollectionXmlParser`, `PlaysXmlParser`).
 - Retry/backoff is centralized in `core/network/Retry.kt` and used by remote data sources for `202`, `429`, and `5xx`.
+- Keep BGG wire dates on `yyyy-MM-dd` (`parseBggDate` / `formatBggDate`) even though user-facing dates are EU formatted `dd/MM/yyyy`; do not reuse the UI formatter for network parsing.
 - Collection sync fetches boardgames and expansions separately with a 5s delay between calls (`CollectionRemoteDataSourceImpl`).
 - Plays sync is paginated (100/page), delays 5s between pages, then reconciles deletions via `retainByRemoteIds` (`PlaysRepositoryImpl`).
+- Pending play uploads post `FormBody` data to `geekplay.php` using the authenticated cookie session from `CurrentCredentialsStore`; include `playid` only for edits, keep `playdate`/`dateinput` aligned as `yyyy-MM-dd`, and retry both `PENDING` and `FAILED` plays on later sync attempts.
 
 # UI + State Conventions
 - ViewModels expose immutable `StateFlow` and consume events (`CollectionViewModel.onEvent`, `PlaysViewModel.onEvent`).

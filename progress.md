@@ -3,6 +3,7 @@
 - For simple reducer-driven forms with no external observed data, expose reducer-owned state directly as `uiState` and use one-shot `UiEffect`s for success navigation instead of persistent success flags.
 - If a one-shot UI effect depends on derived render data that exists only in final `uiState`, emit a domain effect and resolve it in the ViewModel against the latest derived `uiState` rather than duplicating the data into base state or reading captured UI state in Compose.
 - Sync use cases are the worker-facing/auth-gated orchestration boundary; repositories remain responsible for remote sync business logic and local persistence.
+- Keep BGG wire dates on `yyyy-MM-dd` and UI dates on `dd/MM/yyyy`; do not reuse the EU UI formatter for remote XML parsing or serialization.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -809,4 +810,56 @@ PR Link: N/A (sync refactor follow-up)
   - `SyncRunner` is the single place that should persist start/success/failure lifecycle transitions for sync work
   - Room partial lifecycle updates can avoid extra reads by using `INSERT ... ON CONFLICT DO UPDATE` queries that only touch the needed columns
   - Full-sync time remains a derived value: the older of the collection and plays success timestamps
+---
+
+## 2026-04-19T21:23:41Z
+PR Link: <pending>
+- Implemented Prompt 3 from `BACKGROUND_SYNC_PLAN.md`: pending play outbox upload support across repository, local, and remote layers
+- Added BGG play-save POST support via `geekplay.php`, including aligned `playdate`/`dateinput`, indexed player form fields, and `playid` for remote edits
+- Added retryable outbox selection for both `PENDING` and `FAILED` plays, with local transitions to `SYNCED` and `FAILED`
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/network/BggApi.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/PlaysRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/PlaysRepositoryImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlaysRemoteDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlaysRemoteDataSourceImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlayUploadException.kt`
+  - `app/src/main/java/app/meeplebook/core/database/dao/PlayDao.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImplTest.kt`
+  - test fakes and integration tests under `app/src/test/java/app/meeplebook/core/plays/`
+- **Learnings for future iterations:**
+  - Pending play uploads use the authenticated cookie session already tracked in `CurrentCredentialsStore`; treat missing or expired auth as a fatal sync failure, not a silent skip
+  - `syncPendingPlays()` retries both `PENDING` and `FAILED` plays on each run, but only network, auth, and retry-exhaustion failures should stop the batch early
+  - Per-play validation or parse failures should mark that play `FAILED` and continue so one bad play does not block the rest of the outbox
+  - `geekplay.php` edits require `playid`, while new uploads omit it; always keep `playdate` and `dateinput` synchronized in `yyyy-MM-dd`
+---
+
+## 2026-04-19T21:55:51Z
+PR Link: <pending>
+- Refined pending-play upload response handling to match actual BGG `geekplay.php` payloads
+- Logged-out 200 responses with `{"error":"You must login to save plays"}` now map to auth failure, and successful 200 JSON payloads parse the returned `playid`
+- Added focused integration coverage for both upload response shapes
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlaysRemoteDataSourceImpl.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/remote/integration/PlaysRemoteDataSourceImplTest.kt`
+- **Learnings for future iterations:**
+  - `geekplay.php` can return HTTP 200 for both success and auth failure, so upload handling must inspect the JSON body rather than rely on status code alone
+  - Treat `{"error":"You must login to save plays"}` as a not-logged-in failure so repository mapping reaches `PlayError.NotLoggedIn`
+  - Successful upload payloads return `playid` in JSON; keep a direct parser path for that shape covered by tests
+---
+
+## 2026-04-19T22:28:14Z
+PR Link: <pending>
+- Fixed a regression where plays XML parsing returned empty results across parser, remote-data-source, and repository integration tests
+- Restored separate BGG wire date formatting so remote play dates parse and serialize as `yyyy-MM-dd` while UI dates remain `dd/MM/yyyy`
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/util/DateUtils.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - `parseBggDate` and `formatBggDate` must use BGG's ISO date format, not the user-facing EU formatter
+  - When widespread play-sync tests suddenly return zero items, check date parsing first because invalid play dates cause `PlaysXmlParser` to drop whole plays
 ---
