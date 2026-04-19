@@ -37,7 +37,10 @@ interface CollectionLocalDataSource {
     suspend fun getCollection(): List<CollectionItem>
 
     /**
-     * Saves (replaces) the collection.
+     * Saves the collection snapshot produced by remote pull sync.
+     *
+     * This method is intentionally focused on local persistence only; higher-level sync orchestration
+     * stays outside the local data source.
      *
      * @param items The collection items to save.
      */

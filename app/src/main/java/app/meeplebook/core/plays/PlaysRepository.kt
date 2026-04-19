@@ -42,10 +42,12 @@ interface PlaysRepository {
     suspend fun getPlaysForGame(gameId: Long): List<Play>
 
     /**
-     * Syncs all plays for a specific user from BGG.
+     * Performs the repository-owned **pull sync** of all remote plays for a specific user.
      *
      * Fetches all pages of plays from BGG and stores them locally.
-     * This method orchestrates multi-page fetching and merges results.
+     * This method owns remote paging, local persistence, and remote/local reconciliation for pulled
+     * plays only. Higher-level orchestration concerns such as auth gating, sync-state updates,
+     * worker execution, and future pending-play push sequencing live outside the repository.
      *
      * @param username The BGG username.
      * @return Success, or Failure with an error.
@@ -53,7 +55,10 @@ interface PlaysRepository {
     suspend fun syncPlays(username: String): AppResult<Unit, PlayError>
 
     /**
-     * Creates a new play locally.
+     * Creates a new play locally as part of the outbox flow.
+     *
+     * The created play is persisted immediately and marked with a non-synced status so background
+     * sync can upload it later.
      *
      * @param command The command containing the details of the play to create.
      */

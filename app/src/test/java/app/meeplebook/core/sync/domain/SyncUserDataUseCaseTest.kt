@@ -45,10 +45,21 @@ class SyncUserDataUseCaseTest {
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
-        useCase = SyncUserDataUseCase(
+        val syncCollectionUseCase = SyncCollectionUseCase(
             authRepository = fakeAuthRepository,
             collectionRepository = fakeCollectionRepository,
+            syncTimeRepository = fakeSyncTimeRepository,
+            clock = testClock
+        )
+        val syncPlaysUseCase = SyncPlaysUseCase(
+            authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
+            syncTimeRepository = fakeSyncTimeRepository,
+            clock = testClock
+        )
+        useCase = SyncUserDataUseCase(
+            syncCollection = syncCollectionUseCase,
+            syncPlays = syncPlaysUseCase,
             syncTimeRepository = fakeSyncTimeRepository,
             clock = testClock
         )

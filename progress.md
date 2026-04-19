@@ -2,6 +2,7 @@
 - For reducer-driven screens, use the shared `core/ui/architecture` contracts/helper for `onEvent -> reduce -> produce -> handle effects`, but keep feature-owned base state, query flows, and `combine(baseState, externalData) -> uiState` mapping local to the feature.
 - For simple reducer-driven forms with no external observed data, expose reducer-owned state directly as `uiState` and use one-shot `UiEffect`s for success navigation instead of persistent success flags.
 - If a one-shot UI effect depends on derived render data that exists only in final `uiState`, emit a domain effect and resolve it in the ViewModel against the latest derived `uiState` rather than duplicating the data into base state or reading captured UI state in Compose.
+- Sync use cases are the worker-facing/auth-gated orchestration boundary; repositories remain responsible for remote sync business logic and local persistence.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -714,4 +715,26 @@ PR Link: N/A
     - When a UI effect needs data from derived render state, route through a domain effect and resolve in the ViewModel, not in the `EffectProducer`
     - `EffectProducer` should express intent from reducer/base state, while the ViewModel may safely consult the latest derived `uiState` to produce a complete one-shot UI effect
     - Avoid pushing derived render-only data like section indices back into base state just to satisfy an effect payload
+---
+
+## 2026-04-19T16:03:49Z
+PR Link: N/A
+- Implemented Prompt 1 from `BACKGROUND_SYNC_PLAN.md` by normalizing sync boundaries without starting Room sync-state migration or WorkManager work
+- Clarified repository/local-data-source KDoc around pull sync vs outbox responsibilities and refactored `SyncUserDataUseCase` to compose `SyncCollectionUseCase` and `SyncPlaysUseCase`
+- Updated sync tests and the dependent `OverviewViewModelTest` constructor wiring to match the new full-sync composition seam
+- Files changed:
+  - `AGENTS.md`
+  - `app/src/main/java/app/meeplebook/core/collection/CollectionRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/collection/local/CollectionLocalDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/PlaysRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncCollectionUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncPlaysUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncUserDataUseCase.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+- **Learnings for future iterations:**
+    - Keep repository sync methods focused on transport, mapping, and local persistence; auth gating and full-sync sequencing belong in sync use cases
+    - `SyncUserDataUseCase` should compose narrower sync use cases instead of duplicating repository/auth/timestamp logic
+    - Prompt 1 should stop at boundary cleanup so Prompt 2 can own Room sync-state migration cleanly
 ---

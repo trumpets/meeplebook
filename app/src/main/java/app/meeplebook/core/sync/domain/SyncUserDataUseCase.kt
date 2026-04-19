@@ -1,10 +1,6 @@
 package app.meeplebook.core.sync.domain
 
-import app.meeplebook.core.auth.AuthRepository
-import app.meeplebook.core.collection.CollectionRepository
-import app.meeplebook.core.plays.PlaysRepository
 import app.meeplebook.core.result.AppResult
-import app.meeplebook.core.result.fold
 import app.meeplebook.core.sync.SyncTimeRepository
 import app.meeplebook.core.sync.model.SyncUserDataError
 import java.time.Clock
@@ -12,56 +8,37 @@ import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Synchronizes collection and plays data for the currently logged-in user.
+ * Auth-gated full-sync entry point that composes the narrower sync use cases.
  *
- * Updates sync timestamps on successful synchronization. Both collection and plays
- * must sync successfully for the operation to be considered complete.
+ * This keeps repository-specific pull-sync details inside [SyncCollectionUseCase] and
+ * [SyncPlaysUseCase] while giving manual refresh today, and workers later, a single full-sync
+ * orchestration boundary.
  */
 class SyncUserDataUseCase @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val collectionRepository: CollectionRepository,
-    private val playsRepository: PlaysRepository,
+    private val syncCollection: SyncCollectionUseCase,
+    private val syncPlays: SyncPlaysUseCase,
     private val syncTimeRepository: SyncTimeRepository,
     private val clock: Clock
 ) {
     /**
-     * Performs a full sync of collection and plays data from BGG.
+     * Runs the current full-sync pipeline.
      *
-     * Syncs collection first, then plays. If either sync fails, the operation stops
-     * and returns the error. Sync timestamps are updated after each successful sync.
+     * This slice keeps the existing sequence of collection pull followed by plays pull while moving
+     * the per-domain sync responsibility into the narrower use cases. The full-sync timestamp is
+     * updated only after both steps succeed.
      */
     suspend operator fun invoke(): AppResult<Unit, SyncUserDataError> {
-        // Get current user
-        val user = authRepository.getCurrentUser()
-            ?: return AppResult.Failure(SyncUserDataError.NotLoggedIn)
+        when (val collectionResult = syncCollection()) {
+            is AppResult.Failure -> return collectionResult
+            is AppResult.Success -> Unit
+        }
 
-        // Sync collection
-        val collectionResult = collectionRepository.syncCollection(user.username)
-        collectionResult.fold(
-            onSuccess = {
-                // Record collection sync time
-                syncTimeRepository.updateCollectionSyncTime(Instant.now(clock))
-            },
-            onFailure = { error ->
-                return AppResult.Failure(SyncUserDataError.CollectionSyncFailed(error))
-            }
-        )
+        when (val playsResult = syncPlays()) {
+            is AppResult.Failure -> return playsResult
+            is AppResult.Success -> Unit
+        }
 
-        // Sync plays
-        val playsResult = playsRepository.syncPlays(user.username)
-        playsResult.fold(
-            onSuccess = {
-                // Record plays sync time
-                syncTimeRepository.updatePlaysSyncTime(Instant.now(clock))
-            },
-            onFailure = { error ->
-                return AppResult.Failure(SyncUserDataError.PlaysSyncFailed(error))
-            }
-        )
-
-        // Record full sync time
         syncTimeRepository.updateFullSyncTime(Instant.now(clock))
-
         return AppResult.Success(Unit)
     }
 }

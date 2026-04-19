@@ -11,10 +11,11 @@ import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Synchronizes collection data for the currently logged-in user.
+ * Auth-gated entry point for collection background sync.
  *
- * Updates sync timestamp on successful synchronization.
- * Returns SyncUserDataError.NotLoggedIn if no user is currently authenticated.
+ * This use case sits between background orchestration (manual refresh today, workers later) and the
+ * repository-owned collection pull sync. It handles user/session preconditions and maps repository
+ * failures into app-level sync errors.
  */
 class SyncCollectionUseCase @Inject constructor(
     private val authRepository: AuthRepository,
@@ -23,11 +24,11 @@ class SyncCollectionUseCase @Inject constructor(
     private val clock: Clock
 ) {
     /**
-     * Performs a sync of collection data from BGG.
+     * Runs the collection pull sync for the currently logged-in user.
      *
-     * Returns SyncUserDataError.NotLoggedIn if no user is authenticated.
-     * Returns the specific SyncUserDataError.CollectionSyncFailed(CollectionError) if sync fails.
-     * Sync timestamp is updated only after successful sync.
+     * Returns [SyncUserDataError.NotLoggedIn] when no user is authenticated and
+     * [SyncUserDataError.CollectionSyncFailed] when the repository pull sync fails. Successful runs
+     * update the collection sync timestamp.
      */
     suspend operator fun invoke(): AppResult<Unit, SyncUserDataError> {
         // Get current user

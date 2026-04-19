@@ -90,10 +90,21 @@ class OverviewViewModelTest {
             observeLastSync = observeLastSync
         )
 
-        val syncUserDataUseCase = SyncUserDataUseCase(
+        val syncCollectionUseCase = app.meeplebook.core.sync.domain.SyncCollectionUseCase(
             authRepository = fakeAuthRepository,
             collectionRepository = fakeCollectionRepository,
+            syncTimeRepository = fakeSyncTimeRepository,
+            clock = testClock
+        )
+        val syncPlaysUseCase = app.meeplebook.core.sync.domain.SyncPlaysUseCase(
+            authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
+            syncTimeRepository = fakeSyncTimeRepository,
+            clock = testClock
+        )
+        val syncUserDataUseCase = SyncUserDataUseCase(
+            syncCollection = syncCollectionUseCase,
+            syncPlays = syncPlaysUseCase,
             syncTimeRepository = fakeSyncTimeRepository,
             clock = testClock
         )

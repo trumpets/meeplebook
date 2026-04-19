@@ -50,14 +50,20 @@ interface PlaysLocalDataSource {
     suspend fun getPlaysForGame(gameId: Long): List<Play>
 
     /**
-     * Saves (adds or updates) plays from remote.
+     * Saves pulled plays from the remote source into local storage.
+     *
+     * This is the local persistence half of the remote **pull sync** path. Future pending-play push
+     * support will use separate outbox-oriented operations rather than overloading this method.
      *
      * @param remotePlays The plays to save.
      */
     suspend fun saveRemotePlays(remotePlays: List<RemotePlayDto>)
 
     /**
-     * Inserts a single play.
+     * Inserts a single locally created play.
+     *
+     * This is the local-write half of the outbox pattern. The inserted play remains available for a
+     * later background upload based on its sync status.
      *
      * @param playEntity The play entity to save.
      * @param playerEntities The player entities associated with the play.
@@ -70,7 +76,10 @@ interface PlaysLocalDataSource {
     suspend fun clearPlays()
 
     /**
-     * Retains only plays whose remote IDs are present in [remoteIds].
+     * Retains only remote-backed plays whose remote IDs are present in [remoteIds].
+     *
+     * This supports reconciliation after remote **pull sync** and must not delete local outbox plays
+     * that have no remote id yet.
      *
      * @param remoteIds List of remote play IDs that should be retained locally.
      */
