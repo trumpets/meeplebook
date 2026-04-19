@@ -1,6 +1,7 @@
 package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -24,61 +25,53 @@ class ObserveLastFullSyncUseCaseTest {
     }
 
     @Test
-    fun `invoke returns last full sync time when available`() = runTest {
-        // Given
+    fun `invoke returns last full sync time when both syncs have completed`() = runTest {
         val syncTime = Instant.parse("2024-01-15T12:00:00Z")
-        fakeSyncTimeRepository.updateFullSyncTime(syncTime)
+        fakeSyncTimeRepository.markCompleted(SyncType.COLLECTION, syncTime)
+        fakeSyncTimeRepository.markCompleted(SyncType.PLAYS, syncTime)
 
-        // When
         val result = useCase().first()
 
-        // Then
         assertEquals(syncTime, result)
     }
 
     @Test
-    fun `invoke returns null when no sync has occurred`() = runTest {
-        // Given - no sync time set
+    fun `invoke returns null when only one sync has completed`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.COLLECTION,
+            Instant.parse("2024-01-15T12:00:00Z")
+        )
 
-        // When
         val result = useCase().first()
 
-        // Then
         assertNull(result)
     }
 
     @Test
-    fun `invoke updates when sync time changes`() = runTest {
-        // Given - initial sync time
-        val initialTime = Instant.parse("2024-01-15T12:00:00Z")
-        fakeSyncTimeRepository.updateFullSyncTime(initialTime)
+    fun `invoke returns the older domain sync time when they differ`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.COLLECTION,
+            Instant.parse("2024-01-15T14:00:00Z")
+        )
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.PLAYS,
+            Instant.parse("2024-01-15T12:00:00Z")
+        )
 
-        // When - first observation
-        val result1 = useCase().first()
+        val result = useCase().first()
 
-        // Then
-        assertEquals(initialTime, result1)
-
-        // When - sync time is updated
-        val updatedTime = Instant.parse("2024-01-15T14:00:00Z")
-        fakeSyncTimeRepository.updateFullSyncTime(updatedTime)
-        val result2 = useCase().first()
-
-        // Then - new time is observed
-        assertEquals(updatedTime, result2)
+        assertEquals(Instant.parse("2024-01-15T12:00:00Z"), result)
     }
 
     @Test
     fun `invoke returns null after sync times are cleared`() = runTest {
-        // Given - sync time exists
         val syncTime = Instant.parse("2024-01-15T12:00:00Z")
-        fakeSyncTimeRepository.updateFullSyncTime(syncTime)
+        fakeSyncTimeRepository.markCompleted(SyncType.COLLECTION, syncTime)
+        fakeSyncTimeRepository.markCompleted(SyncType.PLAYS, syncTime)
 
-        // When - sync times are cleared
         fakeSyncTimeRepository.clearSyncTimes()
         val result = useCase().first()
 
-        // Then
         assertNull(result)
     }
 }

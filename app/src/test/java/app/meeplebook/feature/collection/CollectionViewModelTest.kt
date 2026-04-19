@@ -14,6 +14,7 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.SyncRunner
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.ui.asString
@@ -93,8 +94,10 @@ class CollectionViewModelTest {
         syncCollectionUseCase = SyncCollectionUseCase(
             authRepository = fakeAuthRepository,
             collectionRepository = fakeCollectionRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = SyncRunner(
+                syncTimeRepository = fakeSyncTimeRepository,
+                clock = testClock
+            )
         )
         fakeStringProvider = FakeStringProvider()
         

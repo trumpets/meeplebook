@@ -738,3 +738,75 @@ PR Link: N/A
     - `SyncUserDataUseCase` should compose narrower sync use cases instead of duplicating repository/auth/timestamp logic
     - Prompt 1 should stop at boundary cleanup so Prompt 2 can own Room sync-state migration cleanly
 ---
+
+## 2026-04-19T16:54:36Z
+PR Link: N/A (Prompt 2 from `BACKGROUND_SYNC_PLAN.md`)
+- Implemented Room-backed sync execution state for collection and plays, including new sync entities, `SyncDao`, and a Room-based `SyncTimeRepositoryImpl`
+- Updated sync use cases to persist started/success/failed state per domain and derived full-sync observation from the two per-domain records
+- Added and updated tests for sync use cases, full-sync observation, and the new Room DAO
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/database/MeepleBookDatabase.kt`
+  - `app/src/main/java/app/meeplebook/core/database/dao/SyncDao.kt`
+  - `app/src/main/java/app/meeplebook/core/database/entity/CollectionSyncStateEntity.kt`
+  - `app/src/main/java/app/meeplebook/core/database/entity/PlaysSyncStateEntity.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepositoryImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncCollectionUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncPlaysUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncUserDataUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncState.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/FakeSyncTimeRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncCollectionUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncPlaysUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/SyncDaoTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Sync execution state in this repo is stored as separate Room singleton rows for collection and plays, not as a single combined record
+  - `observeLastFullSync()` now represents the latest moment both domains were synced by deriving the minimum of the two successful timestamps
+  - Domain sync use cases own started/success/failed state transitions; `SyncUserDataUseCase` should stay a thin orchestration layer
+  - DAO tests for singleton sync-state tables can follow the same in-memory Room pattern as other DAO tests, with `id = 0` rows replaced via `@Upsert`
+---
+
+## 2026-04-19T22:23:43.989+02:00
+PR Link: N/A (sync refactor follow-up)
+- Reworked sync persistence from two Room tables into a single `sync_states` table keyed by `SyncType`
+- Moved sync lifecycle writes fully behind `SyncRunner`/generic `SyncTimeRepository` methods and replaced read-modify-write updates with partial UPSERT queries in `SyncDao`
+- Added `SyncRunnerTest`, updated sync/use-case tests and DAO tests, and expanded KDoc across the sync package
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/database/converters/DateTimeConverters.kt`
+  - `app/src/main/java/app/meeplebook/core/database/MeepleBookDatabase.kt`
+  - `app/src/main/java/app/meeplebook/core/database/dao/SyncDao.kt`
+  - `app/src/main/java/app/meeplebook/core/database/entity/SyncStateEntity.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncRunner.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeModule.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepositoryImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncCollectionUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncPlaysUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncUserDataUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncState.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncType.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncUserDataError.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/FakeSyncTimeRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/SyncRunnerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncCollectionUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncPlaysUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/SyncDaoTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Sync state now has one Room row per `SyncType` in `sync_states`; do not reintroduce per-domain tables unless the storage model intentionally changes again
+  - `SyncRunner` is the single place that should persist start/success/failure lifecycle transitions for sync work
+  - Room partial lifecycle updates can avoid extra reads by using `INSERT ... ON CONFLICT DO UPDATE` queries that only touch the needed columns
+  - Full-sync time remains a derived value: the older of the collection and plays success timestamps
+---

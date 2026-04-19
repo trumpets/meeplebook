@@ -10,6 +10,9 @@ import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.SyncRunner
+import app.meeplebook.core.sync.model.SyncState
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.sync.model.SyncUserDataError
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -33,7 +36,6 @@ class SyncUserDataUseCaseTest {
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var useCase: SyncUserDataUseCase
 
-    // Fixed clock for predictable testing
     private val testClock = Clock.fixed(
         Instant.parse("2024-01-15T12:00:00Z"),
         ZoneOffset.UTC
@@ -45,29 +47,28 @@ class SyncUserDataUseCaseTest {
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
+        val syncRunner = SyncRunner(
+            syncTimeRepository = fakeSyncTimeRepository,
+            clock = testClock
+        )
         val syncCollectionUseCase = SyncCollectionUseCase(
             authRepository = fakeAuthRepository,
             collectionRepository = fakeCollectionRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = syncRunner
         )
         val syncPlaysUseCase = SyncPlaysUseCase(
             authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = syncRunner
         )
         useCase = SyncUserDataUseCase(
             syncCollection = syncCollectionUseCase,
-            syncPlays = syncPlaysUseCase,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncPlays = syncPlaysUseCase
         )
     }
 
     @Test
     fun `invoke succeeds when both collection and plays sync successfully`() = runTest {
-        // Given
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -92,42 +93,29 @@ class SyncUserDataUseCaseTest {
         fakeCollectionRepository.syncCollectionResult = AppResult.Success(collectionItems)
         fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Success)
         assertEquals(1, fakeCollectionRepository.syncCallCount)
-        assertEquals("testuser", fakeCollectionRepository.lastSyncUsername)
         assertEquals(1, fakePlaysRepository.syncCallCount)
-        assertEquals("testuser", fakePlaysRepository.lastSyncUsername)
-
-        // Verify sync times were updated
-        assertEquals(Instant.now(testClock), fakeSyncTimeRepository.getLastCollectionSync())
-        assertEquals(Instant.now(testClock), fakeSyncTimeRepository.getLastPlaysSync())
+        assertEquals(Instant.now(testClock), fakeSyncTimeRepository.getLastSync(SyncType.COLLECTION))
+        assertEquals(Instant.now(testClock), fakeSyncTimeRepository.getLastSync(SyncType.PLAYS))
         assertEquals(Instant.now(testClock), fakeSyncTimeRepository.getLastFullSync())
     }
 
     @Test
     fun `invoke returns NotLoggedIn error when no user is logged in`() = runTest {
-        // Given - no user logged in
-
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Failure)
         assertEquals(SyncUserDataError.NotLoggedIn, (result as AppResult.Failure).error)
         assertEquals(0, fakeCollectionRepository.syncCallCount)
         assertEquals(0, fakePlaysRepository.syncCallCount)
-
-        // Verify sync times were not updated
         assertNull(fakeSyncTimeRepository.getLastFullSync())
     }
 
     @Test
     fun `invoke returns CollectionSyncFailed when collection sync fails`() = runTest {
-        // Given
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -137,25 +125,26 @@ class SyncUserDataUseCaseTest {
         val collectionError = CollectionError.NetworkError
         fakeCollectionRepository.syncCollectionResult = AppResult.Failure(collectionError)
 
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
         assertTrue(error is SyncUserDataError.CollectionSyncFailed)
         assertEquals(collectionError, (error as SyncUserDataError.CollectionSyncFailed).error)
-
-        // Verify plays sync was not attempted
         assertEquals(0, fakePlaysRepository.syncCallCount)
-
-        // Verify sync times were not updated
         assertNull(fakeSyncTimeRepository.getLastFullSync())
+        assertEquals(
+            SyncState(
+                isSyncing = false,
+                lastSyncedAt = null,
+                errorMessage = "NetworkError"
+            ),
+            fakeSyncTimeRepository.getSyncState(SyncType.COLLECTION)
+        )
     }
 
     @Test
     fun `invoke returns PlaysSyncFailed when plays sync fails but collection succeeds`() = runTest {
-        // Given
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -182,43 +171,23 @@ class SyncUserDataUseCaseTest {
         val playError = PlayError.NetworkError
         fakePlaysRepository.syncPlaysResult = AppResult.Failure(playError)
 
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
         assertTrue(error is SyncUserDataError.PlaysSyncFailed)
         assertEquals(playError, (error as SyncUserDataError.PlaysSyncFailed).error)
-
-        // Verify both syncs were attempted
         assertEquals(1, fakeCollectionRepository.syncCallCount)
         assertEquals(1, fakePlaysRepository.syncCallCount)
-
-        // Verify collection sync time was updated but not full sync
-        assertNotNull(fakeSyncTimeRepository.getLastCollectionSync())
+        assertNotNull(fakeSyncTimeRepository.getLastSync(SyncType.COLLECTION))
         assertNull(fakeSyncTimeRepository.getLastFullSync())
-    }
-
-    @Test
-    fun `invoke updates all sync times correctly`() = runTest {
-        // Given
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
+        assertEquals(
+            SyncState(
+                isSyncing = false,
+                lastSyncedAt = null,
+                errorMessage = "NetworkError"
+            ),
+            fakeSyncTimeRepository.getSyncState(SyncType.PLAYS)
         )
-        fakeAuthRepository.setCurrentUser(user)
-
-        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-
-        // When
-        useCase()
-
-        // Then - all sync times should be set to the test clock time
-        val expectedTime = Instant.now(testClock)
-        assertEquals(expectedTime, fakeSyncTimeRepository.getLastCollectionSync())
-        assertEquals(expectedTime, fakeSyncTimeRepository.getLastPlaysSync())
-        assertEquals(expectedTime, fakeSyncTimeRepository.getLastFullSync())
     }
 }

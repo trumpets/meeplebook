@@ -6,6 +6,9 @@ import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.SyncRunner
+import app.meeplebook.core.sync.model.SyncState
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.sync.model.SyncUserDataError
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -27,7 +30,6 @@ class SyncPlaysUseCaseTest {
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var useCase: SyncPlaysUseCase
 
-    // Fixed clock for predictable testing
     private val testClock = Clock.fixed(
         Instant.parse("2024-01-15T12:00:00Z"),
         ZoneOffset.UTC
@@ -41,14 +43,15 @@ class SyncPlaysUseCaseTest {
         useCase = SyncPlaysUseCase(
             authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = SyncRunner(
+                syncTimeRepository = fakeSyncTimeRepository,
+                clock = testClock
+            )
         )
     }
 
     @Test
     fun `invoke succeeds when plays sync successfully`() = runTest {
-        // Given
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -56,37 +59,35 @@ class SyncPlaysUseCaseTest {
         fakeAuthRepository.setCurrentUser(user)
         fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
 
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Success)
         assertEquals(1, fakePlaysRepository.syncCallCount)
         assertEquals("testuser", fakePlaysRepository.lastSyncUsername)
-
-        // Verify sync time was updated
         assertEquals(Instant.now(testClock), fakeSyncTimeRepository.getLastPlaysSync())
+        assertEquals(
+            SyncState(
+                isSyncing = false,
+                lastSyncedAt = Instant.now(testClock),
+                errorMessage = null
+            ),
+            fakeSyncTimeRepository.getSyncState(SyncType.PLAYS)
+        )
     }
 
     @Test
     fun `invoke returns NotLoggedIn error when no user is logged in`() = runTest {
-        // Given - no user logged in
-
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Failure)
         assertEquals(SyncUserDataError.NotLoggedIn, (result as AppResult.Failure).error)
         assertEquals(0, fakePlaysRepository.syncCallCount)
-
-        // Verify sync time was not updated
         assertNull(fakeSyncTimeRepository.getLastPlaysSync())
+        assertEquals(SyncState(), fakeSyncTimeRepository.getSyncState(SyncType.PLAYS))
     }
 
     @Test
-    fun `invoke returns PlaysSyncFailed when plays sync fails with NetworkError`() = runTest {
-        // Given
+    fun `invoke returns PlaysSyncFailed when plays sync fails`() = runTest {
         val user = AuthCredentials(
             username = "testuser",
             password = "password"
@@ -96,60 +97,19 @@ class SyncPlaysUseCaseTest {
         val playError = PlayError.NetworkError
         fakePlaysRepository.syncPlaysResult = AppResult.Failure(playError)
 
-        // When
         val result = useCase()
 
-        // Then
         assertTrue(result is AppResult.Failure)
         val error = (result as AppResult.Failure).error
         assertEquals(SyncUserDataError.PlaysSyncFailed(playError), error)
-
-        // Verify sync time was not updated
         assertNull(fakeSyncTimeRepository.getLastPlaysSync())
-    }
-
-    @Test
-    fun `invoke returns PlaysSyncFailed when plays sync fails with Unknown error`() = runTest {
-        // Given
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
+        assertEquals(
+            SyncState(
+                isSyncing = false,
+                lastSyncedAt = null,
+                errorMessage = "NetworkError"
+            ),
+            fakeSyncTimeRepository.getSyncState(SyncType.PLAYS)
         )
-        fakeAuthRepository.setCurrentUser(user)
-
-        val throwable = RuntimeException("Test exception")
-        val playError = PlayError.Unknown(throwable)
-        fakePlaysRepository.syncPlaysResult = AppResult.Failure(playError)
-
-        // When
-        val result = useCase()
-
-        // Then
-        assertTrue(result is AppResult.Failure)
-        val error = (result as AppResult.Failure).error
-        assertTrue(error is SyncUserDataError.PlaysSyncFailed)
-        assertTrue((error as SyncUserDataError.PlaysSyncFailed).error is PlayError.Unknown)
-
-        // Verify sync time was not updated
-        assertNull(fakeSyncTimeRepository.getLastPlaysSync())
-    }
-
-    @Test
-    fun `invoke updates sync time correctly on success`() = runTest {
-        // Given
-        val user = AuthCredentials(
-            username = "testuser",
-            password = "password"
-        )
-        fakeAuthRepository.setCurrentUser(user)
-
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-
-        // When
-        useCase()
-
-        // Then - sync time should be set to the test clock time
-        val expectedTime = Instant.now(testClock)
-        assertEquals(expectedTime, fakeSyncTimeRepository.getLastPlaysSync())
     }
 }

@@ -8,6 +8,7 @@
 - Offline-first shape is implemented today: remote fetch -> local Room write -> UI observes flows from DB through repositories/use cases.
 - Repositories are integration boundaries: `AuthRepositoryImpl`, `CollectionRepositoryImpl`, `PlaysRepositoryImpl` combine local/remote behavior and map exceptions to `AppResult` failures.
 - Sync use cases (`core/sync/domain/*`) are the auth-gated sync entrypoints that workers should call; `SyncCollectionUseCase` and `SyncPlaysUseCase` wrap repository pull syncs, and `SyncUserDataUseCase` composes them for full sync orchestration.
+- Sync execution state is persisted in the single `sync_states` Room table keyed by `SyncType`; `SyncRunner` is the shared started/success/failed wrapper, `SyncDao` uses partial UPSERT queries for lifecycle updates, and `observeLastFullSync()` is derived from the collection/plays rows rather than stored separately.
 - Room is central (`core/database/MeepleBookDatabase.kt`): DAOs expose `Flow`, local data sources map entities <-> domain models.
 
 # BGG Integration Patterns

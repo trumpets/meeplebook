@@ -1,54 +1,121 @@
 package app.meeplebook.core.sync
 
+import app.meeplebook.core.sync.model.SyncState
+import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import java.time.Instant
 
 /**
- * Fake implementation of [SyncTimeRepository] for testing purposes.
+ * Fake implementation of [SyncTimeRepository] for unit tests.
  */
 class FakeSyncTimeRepository : SyncTimeRepository {
 
-    private val _lastCollectionSync = MutableStateFlow<Instant?>(null)
-    private val _lastPlaysSync = MutableStateFlow<Instant?>(null)
-    private val _lastFullSync = MutableStateFlow<Instant?>(null)
-
-    override fun observeLastCollectionSync(): Flow<Instant?> = _lastCollectionSync
-
-    override fun observeLastPlaysSync(): Flow<Instant?> = _lastPlaysSync
-
-    override fun observeLastFullSync(): Flow<Instant?> = _lastFullSync
-
-    override suspend fun updateCollectionSyncTime(time: Instant) {
-        _lastCollectionSync.value = time
+    data class Operation(
+        val kind: Kind,
+        val type: SyncType,
+        val time: Instant? = null,
+        val errorMessage: String? = null
+    ) {
+        enum class Kind {
+            STARTED,
+            COMPLETED,
+            FAILED,
+            CLEARED
+        }
     }
 
-    override suspend fun updatePlaysSyncTime(time: Instant) {
-        _lastPlaysSync.value = time
+    private val states = SyncType.entries.associateWith { MutableStateFlow(SyncState()) }
+    private val mutableOperations = mutableListOf<Operation>()
+
+    val operations: List<Operation> get() = mutableOperations.toList()
+
+    override fun observeSyncState(type: SyncType): Flow<SyncState> =
+        states.getValue(type)
+
+    override fun observeLastFullSync(): Flow<Instant?> =
+        combine(
+            states.getValue(SyncType.COLLECTION),
+            states.getValue(SyncType.PLAYS)
+        ) { collectionState, playsState ->
+            val collectionTime = collectionState.lastSyncedAt
+            val playsTime = playsState.lastSyncedAt
+            if (collectionTime == null || playsTime == null) {
+                null
+            } else {
+                minOf(collectionTime, playsTime)
+            }
+        }
+
+    override suspend fun markStarted(type: SyncType) {
+        states.getValue(type).value = states.getValue(type).value.copy(
+            isSyncing = true,
+            errorMessage = null
+        )
+        mutableOperations += Operation(Operation.Kind.STARTED, type)
     }
 
-    override suspend fun updateFullSyncTime(time: Instant) {
-        _lastFullSync.value = time
+    override suspend fun markCompleted(type: SyncType, time: Instant) {
+        states.getValue(type).value = states.getValue(type).value.copy(
+            isSyncing = false,
+            lastSyncedAt = time,
+            errorMessage = null
+        )
+        mutableOperations += Operation(Operation.Kind.COMPLETED, type, time = time)
+    }
+
+    override suspend fun markFailed(type: SyncType, errorMessage: String?) {
+        states.getValue(type).value = states.getValue(type).value.copy(
+            isSyncing = false,
+            errorMessage = errorMessage
+        )
+        mutableOperations += Operation(
+            kind = Operation.Kind.FAILED,
+            type = type,
+            errorMessage = errorMessage
+        )
     }
 
     override suspend fun clearSyncTimes() {
-        _lastCollectionSync.value = null
-        _lastPlaysSync.value = null
-        _lastFullSync.value = null
+        SyncType.entries.forEach { type ->
+            states.getValue(type).value = SyncState()
+            mutableOperations += Operation(Operation.Kind.CLEARED, type)
+        }
     }
 
-    /**
-     * Gets the last collection sync time for verification.
-     */
-    fun getLastCollectionSync(): Instant? = _lastCollectionSync.value
+    fun getSyncState(type: SyncType): SyncState = states.getValue(type).value
 
-    /**
-     * Gets the last plays sync time for verification.
-     */
-    fun getLastPlaysSync(): Instant? = _lastPlaysSync.value
+    fun getLastSync(type: SyncType): Instant? = states.getValue(type).value.lastSyncedAt
 
-    /**
-     * Gets the last full sync time for verification.
-     */
-    fun getLastFullSync(): Instant? = _lastFullSync.value
+    suspend fun updateCollectionSyncTime(time: Instant) {
+        markCompleted(SyncType.COLLECTION, time)
+    }
+
+    suspend fun updatePlaysSyncTime(time: Instant) {
+        markCompleted(SyncType.PLAYS, time)
+    }
+
+    suspend fun updateFullSyncTime(time: Instant) {
+        markCompleted(SyncType.COLLECTION, time)
+        markCompleted(SyncType.PLAYS, time)
+    }
+
+    fun getCollectionSyncState(): SyncState = getSyncState(SyncType.COLLECTION)
+
+    fun getPlaysSyncState(): SyncState = getSyncState(SyncType.PLAYS)
+
+    fun getLastCollectionSync(): Instant? = getLastSync(SyncType.COLLECTION)
+
+    fun getLastPlaysSync(): Instant? = getLastSync(SyncType.PLAYS)
+
+    fun getLastFullSync(): Instant? {
+        val collectionTime = getLastCollectionSync()
+        val playsTime = getLastPlaysSync()
+        return if (collectionTime == null || playsTime == null) {
+            null
+        } else {
+            minOf(collectionTime, playsTime)
+        }
+    }
 }

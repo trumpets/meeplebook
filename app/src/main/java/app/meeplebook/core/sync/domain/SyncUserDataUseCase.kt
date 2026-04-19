@@ -1,10 +1,7 @@
 package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.result.AppResult
-import app.meeplebook.core.sync.SyncTimeRepository
 import app.meeplebook.core.sync.model.SyncUserDataError
-import java.time.Clock
-import java.time.Instant
 import javax.inject.Inject
 
 /**
@@ -16,16 +13,15 @@ import javax.inject.Inject
  */
 class SyncUserDataUseCase @Inject constructor(
     private val syncCollection: SyncCollectionUseCase,
-    private val syncPlays: SyncPlaysUseCase,
-    private val syncTimeRepository: SyncTimeRepository,
-    private val clock: Clock
+    private val syncPlays: SyncPlaysUseCase
 ) {
     /**
      * Runs the current full-sync pipeline.
      *
      * This slice keeps the existing sequence of collection pull followed by plays pull while moving
-     * the per-domain sync responsibility into the narrower use cases. The full-sync timestamp is
-     * updated only after both steps succeed.
+     * the per-domain sync responsibility into the narrower use cases. The "last full sync" signal
+     * is derived from the persisted collection and plays sync records, so no separate write happens
+     * here.
      */
     suspend operator fun invoke(): AppResult<Unit, SyncUserDataError> {
         when (val collectionResult = syncCollection()) {
@@ -38,7 +34,6 @@ class SyncUserDataUseCase @Inject constructor(
             is AppResult.Success -> Unit
         }
 
-        syncTimeRepository.updateFullSyncTime(Instant.now(clock))
         return AppResult.Success(Unit)
     }
 }

@@ -5,6 +5,7 @@ import androidx.room.Room
 import app.meeplebook.core.database.dao.CollectionItemDao
 import app.meeplebook.core.database.dao.PlayDao
 import app.meeplebook.core.database.dao.PlayerDao
+import app.meeplebook.core.database.dao.SyncDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,5 +42,10 @@ object DatabaseModule {
     @Provides
     fun providePlayerDao(database: MeepleBookDatabase): PlayerDao {
         return database.playerDao()
+    }
+
+    @Provides
+    fun provideSyncDao(database: MeepleBookDatabase): SyncDao {
+        return database.syncDao()
     }
 }

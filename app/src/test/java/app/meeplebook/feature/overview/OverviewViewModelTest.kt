@@ -16,6 +16,7 @@ import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.SyncRunner
 import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
@@ -94,20 +95,22 @@ class OverviewViewModelTest {
         val syncCollectionUseCase = SyncCollectionUseCase(
             authRepository = fakeAuthRepository,
             collectionRepository = fakeCollectionRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = SyncRunner(
+                syncTimeRepository = fakeSyncTimeRepository,
+                clock = testClock
+            )
         )
         val syncPlaysUseCase = SyncPlaysUseCase(
             authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = SyncRunner(
+                syncTimeRepository = fakeSyncTimeRepository,
+                clock = testClock
+            )
         )
         val syncUserDataUseCase = SyncUserDataUseCase(
             syncCollection = syncCollectionUseCase,
-            syncPlays = syncPlaysUseCase,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncPlays = syncPlaysUseCase
         )
 
         viewModel = OverviewViewModel(

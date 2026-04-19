@@ -11,6 +11,7 @@ import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.SyncRunner
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.plays.effect.PlaysEffectProducer
@@ -90,8 +91,10 @@ class PlaysViewModelTest {
         syncPlaysUseCase = SyncPlaysUseCase(
             authRepository = fakeAuthRepository,
             playsRepository = fakePlaysRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
+            syncRunner = SyncRunner(
+                syncTimeRepository = fakeSyncTimeRepository,
+                clock = testClock
+            )
         )
 
         // Create ViewModel
