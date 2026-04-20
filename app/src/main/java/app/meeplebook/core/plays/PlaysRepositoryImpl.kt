@@ -11,6 +11,7 @@ import app.meeplebook.core.plays.remote.PlayUploadException
 import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
@@ -87,6 +88,7 @@ class PlaysRepositoryImpl @Inject constructor(
             return AppResult.Success(Unit)
         } catch (e: Exception) {
             return when (e) {
+                is CancellationException -> throw e // Don't catch cancellations, they should propagate
                 is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)
                 is IOException -> AppResult.Failure(PlayError.NetworkError)
                 is RetryException -> AppResult.Failure(PlayError.MaxRetriesExceeded(e))
@@ -122,6 +124,7 @@ class PlaysRepositoryImpl @Inject constructor(
             return AppResult.Success(Unit)
         } catch (e: Exception) {
             return when (e) {
+                is CancellationException -> throw e // Don't catch cancellations, they should propagate
                 is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)
                 is IOException -> AppResult.Failure(PlayError.NetworkError)
                 is RetryException -> AppResult.Failure(PlayError.MaxRetriesExceeded(e))
@@ -186,6 +189,7 @@ class PlaysRepositoryImpl @Inject constructor(
             PendingPlayUploadResult.Success(remote.uploadPlay(play))
         } catch (error: Exception) {
             when (error) {
+                is CancellationException -> throw error // Don't catch cancellations, they should propagate
                 is PlayUploadException -> PendingPlayUploadResult.NonFatalFailure(error)
                 is IllegalArgumentException -> PendingPlayUploadResult.FatalFailure(PlayError.NotLoggedIn)
                 is IOException -> PendingPlayUploadResult.FatalFailure(PlayError.NetworkError)

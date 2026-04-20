@@ -9,6 +9,7 @@ import app.meeplebook.core.collection.remote.CollectionFetchException
 import app.meeplebook.core.collection.remote.CollectionRemoteDataSource
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.result.AppResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
 import javax.inject.Inject
@@ -46,6 +47,7 @@ class CollectionRepositoryImpl @Inject constructor(
             return AppResult.Success(items)
         } catch (e: Exception) {
             return when (e) {
+                is CancellationException -> throw e // NEVER swallow cancellation
                 is IllegalArgumentException -> AppResult.Failure(CollectionError.NotLoggedIn)
                 is IOException -> AppResult.Failure(CollectionError.NetworkError)
                 is RetryException -> AppResult.Failure(CollectionError.MaxRetriesExceeded(e))
