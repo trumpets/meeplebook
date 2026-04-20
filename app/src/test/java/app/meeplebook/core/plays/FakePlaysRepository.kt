@@ -27,6 +27,8 @@ class FakePlaysRepository : PlaysRepository {
     var syncPlaysResult: AppResult<Unit, PlayError> =
         AppResult.Failure(PlayError.Unknown(IllegalStateException("FakePlaysRepository not configured")))
 
+    var syncPendingPlaysResult: AppResult<Unit, PlayError> = AppResult.Success(Unit)
+
     /**
      * When non-null, a successful [syncPlays] call will replace [_plays] with this list and
      * update all derived flows — mirroring the production behaviour where a successful sync
@@ -38,6 +40,9 @@ class FakePlaysRepository : PlaysRepository {
     var syncPlaysData: List<Play>? = null
 
     var syncCallCount = 0
+        private set
+
+    var syncPendingPlaysCallCount = 0
         private set
 
     var lastSyncUsername: String? = null
@@ -80,7 +85,8 @@ class FakePlaysRepository : PlaysRepository {
     }
 
     override suspend fun syncPendingPlays(): AppResult<Unit, PlayError> {
-        return AppResult.Success(Unit)
+        syncPendingPlaysCallCount++
+        return syncPendingPlaysResult
     }
 
     override suspend fun createPlay(command: CreatePlayCommand) {

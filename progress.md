@@ -4,6 +4,7 @@
 - If a one-shot UI effect depends on derived render data that exists only in final `uiState`, emit a domain effect and resolve it in the ViewModel against the latest derived `uiState` rather than duplicating the data into base state or reading captured UI state in Compose.
 - Sync use cases are the worker-facing/auth-gated orchestration boundary; repositories remain responsible for remote sync business logic and local persistence.
 - Keep BGG wire dates on `yyyy-MM-dd` and UI dates on `dd/MM/yyyy`; do not reuse the EU UI formatter for remote XML parsing or serialization.
+- Keep WorkManager workers in `core/sync/work` as thin `@HiltWorker` `CoroutineWorker`s that delegate to sync use cases/repositories, use `HiltWorkerFactory` from `MeepleBookApp`, retry only retryable network failures, fail on max-retries-exceeded, and treat logged-out runs as no-op success.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -862,4 +863,55 @@ PR Link: <pending>
 - **Learnings for future iterations:**
   - `parseBggDate` and `formatBggDate` must use BGG's ISO date format, not the user-facing EU formatter
   - When widespread play-sync tests suddenly return zero items, check date parsing first because invalid play dates cause `PlaysXmlParser` to drop whole plays
+---
+
+## 2026-04-20T11:28:40Z
+PR Link: <pending>
+- Implemented Prompt 4 from `BACKGROUND_SYNC_PLAN.md` by adding thin WorkManager workers for collection pull sync, plays pull sync, and pending-play upload sync
+- Added shared worker result mapping so retryable sync failures return `Result.retry()`, unknown failures return `Result.failure()`, and logged-out runs no-op with `Result.success()`
+- Added focused worker unit tests and the `work-runtime-ktx` dependency needed for the new workers
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncWorkerEntryPoint.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncWorkerResultMapper.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncCollectionWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPlaysWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorker.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt`
+  - `gradle/libs.versions.toml`
+  - `app/build.gradle.kts`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Prompt 4 can avoid `androidx.hilt:hilt-work` by keeping worker constructors at `(Context, WorkerParameters)` and resolving app dependencies through a Hilt `@EntryPoint`
+  - Put WorkManager result mapping in one shared helper so retry/no-op/failure policy stays consistent across all sync workers
+  - Worker tests can stay as plain unit tests by subclassing the worker and overriding the dependency accessor instead of bootstrapping real WorkManager state
+---
+
+## 2026-04-20T19:12:01Z
+PR Link: N/A (post-review hardening)
+- Replaced the temporary worker entry-point setup with proper Hilt WorkManager integration and aligned worker result policy with the review findings
+- Wired `MeepleBookApp` as the `HiltWorkerFactory` provider, removed the default `WorkManagerInitializer`, and migrated worker coverage to `TestListenableWorkerBuilder` androidTests plus a focused mapper unit test
+- Files changed:
+  - `app/src/main/java/app/meeplebook/MeepleBookApp.kt`
+  - `app/src/main/AndroidManifest.xml`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncCollectionWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPlaysWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncWorkerResultMapper.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncWorkerResultMapperTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/HiltTestRunner.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/build.gradle.kts`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - In this repo, sync workers should use `@HiltWorker` constructor injection and `MeepleBookApp`'s `HiltWorkerFactory` rather than a manual Hilt entry-point lookup
+  - `MaxRetriesExceeded` is terminal for sync workers and should map to `ListenableWorker.Result.Failure`, while transient network failures still map to `Result.Retry`
+  - Hilt-backed worker behavior is best covered here with instrumented `TestListenableWorkerBuilder` tests plus fake repositories bound through `@BindValue`
 ---
