@@ -1,17 +1,12 @@
 package app.meeplebook.core.plays.remote.integration
 
 import app.meeplebook.core.auth.CurrentCredentialsStore
-import app.meeplebook.core.auth.local.FakeAuthLocalDataSource
-import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.network.BggApi
 import app.meeplebook.core.network.RetryException
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSourceImpl
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -36,7 +31,6 @@ class PlaysRemoteDataSourceImplTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var dataSource: PlaysRemoteDataSourceImpl
-    private lateinit var credentialsStore: CurrentCredentialsStore
 
     @Before
     fun setUp() {

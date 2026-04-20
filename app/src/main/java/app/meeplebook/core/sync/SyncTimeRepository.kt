@@ -25,6 +25,11 @@ interface SyncTimeRepository {
     suspend fun markStarted(type: SyncType)
 
     /**
+     * Marks the sync [type] as idle, canceled by OS.
+     */
+    suspend fun markIdle(type: SyncType)
+
+    /**
      * Marks the sync [type] as completed successfully.
      */
     suspend fun markCompleted(type: SyncType, time: Instant)

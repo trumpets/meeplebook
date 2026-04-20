@@ -120,4 +120,44 @@ class SyncDaoTest {
             syncDao.getSyncState(SyncType.PLAYS)
         )
     }
+
+    @Test
+    fun markIdle_preservesLastSyncedAtAndClearsError() = runTest {
+        val lastSyncedAt = Instant.parse("2024-01-15T12:00:00Z")
+        syncDao.upsertSyncState(
+            SyncStateEntity(
+                type = SyncType.COLLECTION,
+                isSyncing = true,
+                lastSyncedAt = lastSyncedAt,
+                errorMessage = "OldError"
+            )
+        )
+
+        syncDao.markIdle(SyncType.COLLECTION)
+
+        assertEquals(
+            SyncStateEntity(
+                type = SyncType.COLLECTION,
+                isSyncing = false,
+                lastSyncedAt = lastSyncedAt,
+                errorMessage = null
+            ),
+            syncDao.getSyncState(SyncType.COLLECTION)
+        )
+    }
+
+    @Test
+    fun markIdle_insertsIdleRowWhenStateDoesNotExist() = runTest {
+        syncDao.markIdle(SyncType.PLAYS)
+
+        assertEquals(
+            SyncStateEntity(
+                type = SyncType.PLAYS,
+                isSyncing = false,
+                lastSyncedAt = null,
+                errorMessage = null
+            ),
+            syncDao.getSyncState(SyncType.PLAYS)
+        )
+    }
 }

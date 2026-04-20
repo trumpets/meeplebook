@@ -39,6 +39,10 @@ class SyncTimeRepositoryImpl @Inject constructor(
         syncDao.markStarted(type)
     }
 
+    override suspend fun markIdle(type: SyncType) {
+        syncDao.markIdle(type)
+    }
+
     override suspend fun markCompleted(type: SyncType, time: Instant) {
         syncDao.markCompleted(type, time)
     }

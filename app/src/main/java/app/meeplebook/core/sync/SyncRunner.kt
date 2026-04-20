@@ -2,6 +2,7 @@ package app.meeplebook.core.sync
 
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.model.SyncType
+import kotlinx.coroutines.CancellationException
 import java.time.Clock
 import javax.inject.Inject
 
@@ -35,6 +36,10 @@ class SyncRunner @Inject constructor(
                 )
             }
             result
+        } catch (e: CancellationException) {
+            // IMPORTANT: do not treat as failure. Normal cancellation due to OS cancelling Job for whatever reason
+            syncTimeRepository.markIdle(type)
+            throw e // NEVER swallow cancellation
         } catch (throwable: Throwable) {
             syncTimeRepository.markFailed(type, throwable.message)
             throw throwable

@@ -31,43 +31,47 @@ class PlaysRemoteDataSourceImpl @Inject constructor(
     override suspend fun uploadPlay(play: Play): Long {
 
         val response = api.savePlay(play.toFormBody())
-        val code = response.code()
 
-        if (code == 401 || code == 403) {
-            response.body()?.close()
-            throw IllegalArgumentException("Authenticated session required to upload plays")
-        }
+        try {
+            val code = response.code()
 
-        if (code == 429 || code in 500..599) {
-            response.body()?.close()
-            throw IOException("Upload failed with HTTP $code")
-        }
-
-        if (code !in 200..299) {
-            response.body()?.close()
-            throw PlayUploadException("Unexpected HTTP $code")
-        }
-
-        val body = response.body()
-            ?: throw IOException("Empty response body on HTTP $code")
-        val bodyText = body.string()
-
-        extractErrorMessage(bodyText)?.let { message ->
-            if (isAuthErrorMessage(message)) {
-                throw IllegalArgumentException(message)
+            if (code == 401 || code == 403) {
+                throw IllegalArgumentException("Authenticated session required to upload plays")
             }
-            throw PlayUploadException(message)
-        }
 
-        if (looksLikeAuthFailure(bodyText)) {
-            throw IllegalArgumentException("Authenticated session required to upload plays")
-        }
-
-        return extractRemoteId(bodyText, play)?.also { remoteId ->
-            if (remoteId <= 0L) {
-                throw PlayUploadException("Invalid remote play id returned")
+            if (code == 429 || code in 500..599) {
+                throw IOException("Upload failed with HTTP $code")
             }
-        } ?: throw PlayUploadException("Missing remote play id in upload response")
+
+            if (code !in 200..299) {
+                throw PlayUploadException("Unexpected HTTP $code")
+            }
+
+            val body = response.body()
+                ?: throw IOException("Empty response body on HTTP $code")
+
+            val bodyText = body.string()
+
+            extractErrorMessage(bodyText)?.let { message ->
+                if (isAuthErrorMessage(message)) {
+                    throw IllegalArgumentException(message)
+                }
+                throw PlayUploadException(message)
+            }
+
+            if (looksLikeAuthFailure(bodyText)) {
+                throw IllegalArgumentException("Authenticated session required to upload plays")
+            }
+
+            return extractRemoteId(bodyText, play)?.also { remoteId ->
+                if (remoteId <= 0L) {
+                    throw PlayUploadException("Invalid remote play id returned")
+                }
+            } ?: throw PlayUploadException("Missing remote play id in upload response")
+        } finally {
+            response.body()?.close()
+            response.errorBody()?.close()
+        }
     }
 
     /**

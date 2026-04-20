@@ -61,6 +61,20 @@ interface SyncDao {
     suspend fun markCompleted(type: SyncType, time: Instant)
 
     /**
+     * Marks the sync [type] as idle due to syncing canceled by OS.
+     */
+    @Query(
+        """
+        INSERT INTO sync_states(type, isSyncing, lastSyncedAt, errorMessage)
+        VALUES (:type, 0, NULL, NULL)
+        ON CONFLICT(type) DO UPDATE SET
+            isSyncing = 0,
+            errorMessage = NULL
+        """
+    )
+    suspend fun markIdle(type: SyncType)
+
+    /**
      * Marks the sync [type] as failed while preserving its last successful timestamp.
      */
     @Query(

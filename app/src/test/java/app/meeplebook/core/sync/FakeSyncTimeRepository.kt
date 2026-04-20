@@ -22,7 +22,8 @@ class FakeSyncTimeRepository : SyncTimeRepository {
             STARTED,
             COMPLETED,
             FAILED,
-            CLEARED
+            CLEARED,
+            IDLE
         }
     }
 
@@ -54,6 +55,14 @@ class FakeSyncTimeRepository : SyncTimeRepository {
             errorMessage = null
         )
         mutableOperations += Operation(Operation.Kind.STARTED, type)
+    }
+
+    override suspend fun markIdle(type: SyncType) {
+        states.getValue(type).value = states.getValue(type).value.copy(
+            isSyncing = false,
+            errorMessage = null
+        )
+        mutableOperations += Operation(Operation.Kind.IDLE, type)
     }
 
     override suspend fun markCompleted(type: SyncType, time: Instant) {
