@@ -69,9 +69,8 @@ class SyncPendingPlaysWorkerTest {
     }
 
     private fun buildWorker(): SyncPendingPlaysWorker =
-        TestListenableWorkerBuilder.from(
-            ApplicationProvider.getApplicationContext(),
-            SyncPendingPlaysWorker::class.java
+        TestListenableWorkerBuilder<SyncPendingPlaysWorker>(
+            ApplicationProvider.getApplicationContext()
         )
             .setWorkerFactory(workerFactory)
             .build()

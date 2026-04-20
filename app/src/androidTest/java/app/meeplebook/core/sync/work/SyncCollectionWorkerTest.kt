@@ -7,6 +7,7 @@ import androidx.work.ListenableWorker
 import androidx.work.testing.TestListenableWorkerBuilder
 import app.meeplebook.core.auth.AuthModule
 import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.auth.local.AuthLocalDataSource
 import app.meeplebook.core.collection.CollectionModule
 import app.meeplebook.core.collection.CollectionRepository
 import app.meeplebook.core.collection.model.CollectionError
@@ -34,11 +35,16 @@ class SyncCollectionWorkerTest {
     var hiltRule = HiltAndroidRule(this)
 
     private val fakeAuthRepository = FakeWorkerAuthRepository()
+    private val fakeAuthLocalDataSource = FakeWorkerAuthLocalDataSource()
     private val fakeCollectionRepository = FakeWorkerCollectionRepository()
 
     @BindValue
     @JvmField
     val authRepository: AuthRepository = fakeAuthRepository
+
+    @BindValue
+    @JvmField
+    val authLocalDataSource: AuthLocalDataSource = fakeAuthLocalDataSource
 
     @BindValue
     @JvmField
@@ -79,9 +85,8 @@ class SyncCollectionWorkerTest {
     }
 
     private fun buildWorker(): SyncCollectionWorker =
-        TestListenableWorkerBuilder.from(
-            ApplicationProvider.getApplicationContext(),
-            SyncCollectionWorker::class.java
+        TestListenableWorkerBuilder<SyncCollectionWorker>(
+            ApplicationProvider.getApplicationContext()
         )
             .setWorkerFactory(workerFactory)
             .build()

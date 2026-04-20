@@ -915,3 +915,22 @@ PR Link: N/A (post-review hardening)
   - `MaxRetriesExceeded` is terminal for sync workers and should map to `ListenableWorker.Result.Failure`, while transient network failures still map to `Result.Retry`
   - Hilt-backed worker behavior is best covered here with instrumented `TestListenableWorkerBuilder` tests plus fake repositories bound through `@BindValue`
 ---
+
+## 2026-04-20T23:03:10+02:00
+PR Link: N/A (worker test fix)
+- Fixed the Hilt worker androidTest setup so the generated test component and on-device worker instantiation succeed
+- Added a fake `AuthLocalDataSource` binding for the worker tests, switched the worker test builders off the reflective `from(...)` path, and added the missing `androidx.hilt:hilt-compiler` KSP wiring required by `hilt-work`
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/build.gradle.kts`
+  - `gradle/libs.versions.toml`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Removing `AuthModule` in Hilt androidTests also removes `AuthLocalDataSource`, so tests that still build the production OkHttp/auth graph need a replacement binding for that local datasource
+  - `hilt-work` also needs `androidx.hilt:hilt-compiler` on KSP; otherwise `HiltWorkerFactory` is created with an empty worker map and falls back to reflection
+  - When testing Hilt workers with `TestListenableWorkerBuilder`, avoid the `from(context, WorkerClass::class.java)` reflection path and use the builder with an injected worker factory instead
+---

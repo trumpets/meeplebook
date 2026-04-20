@@ -1,6 +1,7 @@
 package app.meeplebook.core.sync.work
 
 import app.meeplebook.core.auth.AuthRepository
+import app.meeplebook.core.auth.local.AuthLocalDataSource
 import app.meeplebook.core.auth.model.AuthError
 import app.meeplebook.core.collection.CollectionRepository
 import app.meeplebook.core.collection.model.CollectionDataQuery
@@ -16,6 +17,7 @@ import app.meeplebook.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 
 internal class FakeWorkerAuthRepository : AuthRepository {
@@ -40,7 +42,23 @@ internal class FakeWorkerAuthRepository : AuthRepository {
         currentUser = null
     }
 
-    override fun isLoggedIn(): Flow<Boolean> = MutableStateFlow(currentUser != null)
+    override fun isLoggedIn(): Flow<Boolean> = currentUserFlow.map { it != null }
+}
+
+internal class FakeWorkerAuthLocalDataSource : AuthLocalDataSource {
+    private val credentialsFlow = MutableStateFlow<AuthCredentials?>(null)
+
+    override fun observeCredentials(): Flow<AuthCredentials?> = credentialsFlow
+
+    override suspend fun saveCredentials(creds: AuthCredentials) {
+        credentialsFlow.value = creds
+    }
+
+    override suspend fun getCredentials(): AuthCredentials? = credentialsFlow.value
+
+    override suspend fun clear() {
+        credentialsFlow.value = null
+    }
 }
 
 internal class FakeWorkerCollectionRepository : CollectionRepository {

@@ -145,6 +145,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
+    ksp(libs.hilt.androidx.compiler)
 
     // Network
     implementation(libs.retrofit)
@@ -192,6 +193,7 @@ dependencies {
     androidTestImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.work.testing)
     kspAndroidTest(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.androidx.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
