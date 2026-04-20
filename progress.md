@@ -934,3 +934,21 @@ PR Link: N/A (worker test fix)
   - `hilt-work` also needs `androidx.hilt:hilt-compiler` on KSP; otherwise `HiltWorkerFactory` is created with an empty worker map and falls back to reflection
   - When testing Hilt workers with `TestListenableWorkerBuilder`, avoid the `from(context, WorkerClass::class.java)` reflection path and use the builder with an injected worker factory instead
 ---
+
+## 2026-04-20T23:26:00+02:00
+PR Link: N/A (Prompt 5)
+- Implemented Prompt 5 from `BACKGROUND_SYNC_PLAN.md` by introducing `SyncManager` and a WorkManager-backed orchestration implementation
+- Centralized unique work names, `NetworkType.CONNECTED` constraints, `ExistingWorkPolicy.KEEP`, and the full-sync chain order of pending plays -> plays -> collection
+- Added focused unit tests that verify unique work enqueueing, worker request constraints, and full-sync chaining order without touching trigger policy or UI wiring
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/SyncManager.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/SyncManagerModule.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/WorkManagerSyncManager.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/WorkManagerSyncManagerTest.kt` (new)
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Keep WorkManager orchestration details out of UI/viewmodels; enqueue through `SyncManager` so work names, constraints, and policy stay centralized
+  - Full sync should remain push-before-pull in this repo: pending plays upload first, then plays pull, then collection pull
+  - `ExistingWorkPolicy.KEEP` is the current de-duplication policy for one-shot sync requests and the unique full-sync chain
+---
