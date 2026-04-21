@@ -29,4 +29,9 @@ interface SyncManager {
      * pending plays -> plays pull -> collection pull.
      */
     fun enqueueFullSync(): Operation
+
+    /**
+     * Ensures a periodic full-sync trigger is scheduled.
+     */
+    fun schedulePeriodicFullSync(): Operation
 }

@@ -3,6 +3,7 @@ package app.meeplebook.feature.plays
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.R
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
@@ -47,12 +48,17 @@ class PlaysViewModel @Inject constructor(
     reducer: PlaysReducer,
     effectProducer: PlaysEffectProducer,
     private val observePlaysScreenData: ObservePlaysScreenDataUseCase,
-    private val syncPlays: SyncPlaysUseCase
+    private val syncPlays: SyncPlaysUseCase,
+    private val syncManager: SyncManager
 ) : ReducerViewModel<PlaysBaseState, PlaysEvent, PlaysEffect, PlaysUiEffect>(
     initialState = PlaysBaseState(),
     reducer = reducer,
     effectProducer = effectProducer
 ) {
+
+    init {
+        syncManager.enqueuePlaysSync()
+    }
 
     private val searchQueryFlow =
         baseState

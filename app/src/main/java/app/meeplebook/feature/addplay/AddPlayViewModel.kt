@@ -14,6 +14,7 @@ import app.meeplebook.core.plays.domain.SearchPlayersByNameUseCase
 import app.meeplebook.core.plays.domain.SearchPlayersByUsernameUseCase
 import app.meeplebook.core.plays.model.PlayerColor
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
@@ -93,6 +94,7 @@ class AddPlayViewModel @Inject constructor(
     private val createPlay: CreatePlayUseCase,
     private val searchPlayersByName: SearchPlayersByNameUseCase,
     private val searchPlayersByUsername: SearchPlayersByUsernameUseCase,
+    private val syncManager: SyncManager,
 ) : ReducerViewModel<AddPlayUiState, AddPlayEvent, AddPlayEffect, AddPlayUiEffect>(
     initialState = AddPlayUiState.GameSearch(),
     reducer = reducer,
@@ -284,6 +286,7 @@ class AddPlayViewModel @Inject constructor(
             }
             createPlay(effect.play).fold(
                 onSuccess = {
+                    syncManager.enqueuePendingPlaysSync()
                     updateBaseState {
                         it.updateGameSelected { copy(isSaving = false) }
                     }

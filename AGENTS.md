@@ -11,6 +11,7 @@
 - Sync execution state is persisted in the single `sync_states` Room table keyed by `SyncType`; `SyncRunner` is the shared started/success/failed wrapper, `SyncDao` uses partial UPSERT queries for lifecycle updates, and `observeLastFullSync()` is derived from the collection/plays rows rather than stored separately.
 - WorkManager workers live in `core/sync/work/`; keep them thin `@HiltWorker` `CoroutineWorker`s, resolve dependencies through constructor injection and `HiltWorkerFactory`, call the existing sync use cases/repository boundary, fail on max-retries-exceeded, retry only retryable network failures, and treat logged-out runs as `Result.success()`. Keep `androidx.hilt:hilt-compiler` on KSP alongside `hilt-work`; without it the worker factory map is empty and tests/runtime fall back to reflection.
 - `SyncManager` is now the WorkManager orchestration boundary in `core/sync/`; it owns unique work names, `NetworkType.CONNECTED` constraints, `ExistingWorkPolicy.KEEP`, and full-sync ordering of pending plays push -> plays pull -> collection pull.
+- Trigger policy currently wired: app start schedules a daily periodic full sync and enqueues an immediate full sync for logged-in users, Collection/Plays screen-open enqueue their domain syncs, and successful play saves enqueue pending-play upload sync. Manual refresh still uses the direct sync use cases until Prompt 7.
 - Room is central (`core/database/MeepleBookDatabase.kt`): DAOs expose `Flow`, local data sources map entities <-> domain models.
 
 # BGG Integration Patterns

@@ -13,6 +13,7 @@ import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.SyncRunner
 import app.meeplebook.core.sync.domain.SyncPlaysUseCase
+import app.meeplebook.core.sync.manager.FakeSyncManager
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.plays.effect.PlaysEffectProducer
 import app.meeplebook.feature.plays.effect.PlaysUiEffect
@@ -55,6 +56,7 @@ class PlaysViewModelTest {
     private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
+    private lateinit var fakeSyncManager: FakeSyncManager
     private lateinit var observePlaysScreenDataUseCase: ObservePlaysScreenDataUseCase
     private lateinit var syncPlaysUseCase: SyncPlaysUseCase
 
@@ -74,6 +76,7 @@ class PlaysViewModelTest {
         fakeAuthRepository = FakeAuthRepository()
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
+        fakeSyncManager = FakeSyncManager()
 
         val observePlaysUseCase = ObservePlaysUseCase(fakePlaysRepository)
         val buildPlaysSectionsUseCase = BuildPlaysSectionsUseCase()
@@ -102,7 +105,8 @@ class PlaysViewModelTest {
             reducer = PlaysReducer(),
             effectProducer = PlaysEffectProducer(),
             observePlaysScreenData = observePlaysScreenDataUseCase,
-            syncPlays = syncPlaysUseCase
+            syncPlays = syncPlaysUseCase,
+            syncManager = fakeSyncManager
         )
     }
 
@@ -115,6 +119,11 @@ class PlaysViewModelTest {
     fun `initial state is Loading`() {
         val state = viewModel.uiState.value
         assertEquals(PlaysUiState.Loading, state)
+    }
+
+    @Test
+    fun `init enqueues plays screen-open sync`() {
+        assertEquals(1, fakeSyncManager.playsSyncEnqueueCount)
     }
 
     @Test

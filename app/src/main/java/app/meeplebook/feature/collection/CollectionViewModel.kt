@@ -7,6 +7,7 @@ import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.result.fold
+import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
@@ -52,12 +53,17 @@ class CollectionViewModel @Inject constructor(
     effectProducer: CollectionEffectProducer,
     observeCollectionSummary: ObserveCollectionSummaryUseCase,
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
-    private val syncCollection: SyncCollectionUseCase
+    private val syncCollection: SyncCollectionUseCase,
+    private val syncManager: SyncManager
 ) : ReducerViewModel<CollectionBaseState, CollectionEvent, CollectionEffect, CollectionUiEffect>(
     initialState = CollectionBaseState(),
     reducer = reducer,
     effectProducer = effectProducer
 ) {
+    init {
+        syncManager.enqueueCollectionSync()
+    }
+
     /**
      * Raw search query derived from reducer state.
      *

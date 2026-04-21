@@ -952,3 +952,31 @@ PR Link: N/A (Prompt 5)
   - Full sync should remain push-before-pull in this repo: pending plays upload first, then plays pull, then collection pull
   - `ExistingWorkPolicy.KEEP` is the current de-duplication policy for one-shot sync requests and the unique full-sync chain
 ---
+
+## 2026-04-20T23:56:31+02:00
+PR Link: N/A (Prompt 6)
+- Implemented Prompt 6 from `BACKGROUND_SYNC_PLAN.md` by wiring the automatic sync trigger policy through `SyncManager`
+- App start now schedules a daily periodic full sync and enqueues an immediate full sync for logged-in users, Collection/Plays screen-open enqueue their domain syncs, and successful play saves enqueue pending-play upload sync
+- Added a periodic orchestration worker plus tests covering the new periodic request, screen-open trigger calls, play-save trigger call, and the periodic worker itself
+- Files changed:
+  - `app/src/main/java/app/meeplebook/MainActivity.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/manager/SyncManager.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/manager/WorkManagerSyncManager.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPeriodicFullSyncWorker.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayViewModel.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/manager/FakeSyncManager.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/manager/WorkManagerSyncManagerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPeriodicFullSyncWorkerTest.kt` (new)
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Keep automatic background triggers thin and routed through `SyncManager`; let Prompt 7 handle user-driven manual refresh migration separately
+  - The periodic sync default is currently one daily full-sync trigger backed by a dedicated orchestration worker that simply re-enqueues the existing full-sync chain
+  - Screen-open auto triggers are currently domain-specific: Collection opens enqueue collection pull, Plays opens enqueue plays pull, while play saves enqueue pending-play upload only
+---

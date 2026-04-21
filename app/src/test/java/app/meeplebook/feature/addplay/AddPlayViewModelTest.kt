@@ -12,6 +12,7 @@ import app.meeplebook.core.plays.domain.ObserveRecentLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchLocationsUseCase
 import app.meeplebook.core.plays.domain.SearchPlayersByNameUseCase
 import app.meeplebook.core.plays.domain.SearchPlayersByUsernameUseCase
+import app.meeplebook.core.sync.manager.FakeSyncManager
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.addplay.effect.AddPlayEffectProducer
 import app.meeplebook.feature.addplay.effect.AddPlayUiEffect
@@ -55,6 +56,7 @@ class AddPlayViewModelTest {
 
     private lateinit var fakePlaysRepository: FakePlaysRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
+    private lateinit var fakeSyncManager: FakeSyncManager
     private lateinit var viewModel: AddPlayViewModel
 
     @Before
@@ -63,6 +65,7 @@ class AddPlayViewModelTest {
 
         fakePlaysRepository = FakePlaysRepository()
         fakeCollectionRepository = FakeCollectionRepository()
+        fakeSyncManager = FakeSyncManager()
 
         viewModel = buildViewModel()
     }
@@ -174,6 +177,7 @@ class AddPlayViewModelTest {
             advanceUntilIdle()
 
             assertEquals(AddPlayUiEffect.NavigateBack, awaitItem())
+            assertEquals(1, fakeSyncManager.pendingPlaysSyncEnqueueCount)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -203,6 +207,7 @@ class AddPlayViewModelTest {
             (state as? AddPlayUiState.GameSelected)?.isSaving == false
         }
         assertTrue(!failedState.isSaving)
+        assertEquals(0, fakeSyncManager.pendingPlaysSyncEnqueueCount)
     }
 
     // endregion
@@ -326,6 +331,7 @@ class AddPlayViewModelTest {
         createPlay = CreatePlayUseCase(playsRepository),
         searchPlayersByName = SearchPlayersByNameUseCase(playsRepository),
         searchPlayersByUsername = SearchPlayersByUsernameUseCase(playsRepository),
+        syncManager = fakeSyncManager,
     )
 
     private fun buildReducer() = AddPlayReducer(

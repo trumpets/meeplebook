@@ -16,6 +16,7 @@ import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.SyncRunner
 import app.meeplebook.core.sync.domain.SyncCollectionUseCase
+import app.meeplebook.core.sync.manager.FakeSyncManager
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.DebounceDurations
@@ -68,6 +69,7 @@ class CollectionViewModelTest {
     private lateinit var observeCollectionDomainSectionsUseCase: ObserveCollectionDomainSectionsUseCase
     private lateinit var syncCollectionUseCase: SyncCollectionUseCase
     private lateinit var fakeStringProvider: FakeStringProvider
+    private lateinit var fakeSyncManager: FakeSyncManager
     
     private val testDispatcher = StandardTestDispatcher()
     
@@ -85,6 +87,7 @@ class CollectionViewModelTest {
         fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
+        fakeSyncManager = FakeSyncManager()
         observeCollectionUseCase = ObserveCollectionUseCase(fakeCollectionRepository)
         buildSectionsUseCase = BuildCollectionSectionsUseCase()
         observeCollectionDomainSectionsUseCase = ObserveCollectionDomainSectionsUseCase(
@@ -116,7 +119,8 @@ class CollectionViewModelTest {
             effectProducer = CollectionEffectProducer(),
             observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
-            syncCollection = syncCollectionUseCase
+            syncCollection = syncCollectionUseCase,
+            syncManager = fakeSyncManager
         )
     }
 
@@ -129,6 +133,11 @@ class CollectionViewModelTest {
     fun `initial state is Loading`() {
         val state = viewModel.uiState.value
         assertEquals(CollectionUiState.Loading, state)
+    }
+
+    @Test
+    fun `init enqueues collection screen-open sync`() {
+        assertEquals(1, fakeSyncManager.collectionSyncEnqueueCount)
     }
 
     @Test

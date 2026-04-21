@@ -1,14 +1,17 @@
 package app.meeplebook.core.sync.manager
 
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
+import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkContinuation
 import androidx.work.WorkManager
 import app.meeplebook.core.sync.work.SyncCollectionWorker
 import app.meeplebook.core.sync.work.SyncPendingPlaysWorker
+import app.meeplebook.core.sync.work.SyncPeriodicFullSyncWorker
 import app.meeplebook.core.sync.work.SyncPlaysWorker
 import io.mockk.every
 import io.mockk.mockk
@@ -129,10 +132,40 @@ class WorkManagerSyncManagerTest {
             expectedTag = SyncWorkNames.COLLECTION
         )
     }
+
+    @Test
+    fun schedulePeriodicFullSync_enqueuesUniquePeriodicWork() {
+        val requestSlot = slot<PeriodicWorkRequest>()
+        val operation = mockk<Operation>()
+        every {
+            workManager.enqueueUniquePeriodicWork(
+                SyncWorkNames.PERIODIC_FULL_SYNC,
+                ExistingPeriodicWorkPolicy.KEEP,
+                capture(requestSlot)
+            )
+        } returns operation
+
+        val result = subject.schedulePeriodicFullSync()
+
+        assertSame(operation, result)
+        assertPeriodicWorkRequest<SyncPeriodicFullSyncWorker>(
+            request = requestSlot.captured,
+            expectedTag = SyncWorkNames.PERIODIC_FULL_SYNC
+        )
+    }
 }
 
 private inline fun <reified T : ListenableWorker> assertWorkRequest(
     request: OneTimeWorkRequest,
+    expectedTag: String
+) {
+    assertEquals(T::class.java.name, request.workSpec.workerClassName)
+    assertEquals(NetworkType.CONNECTED, request.workSpec.constraints.requiredNetworkType)
+    assertTrue(request.tags.contains(expectedTag))
+}
+
+private inline fun <reified T : ListenableWorker> assertPeriodicWorkRequest(
+    request: PeriodicWorkRequest,
     expectedTag: String
 ) {
     assertEquals(T::class.java.name, request.workSpec.workerClassName)

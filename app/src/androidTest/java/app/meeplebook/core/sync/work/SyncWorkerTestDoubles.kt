@@ -1,5 +1,6 @@
 package app.meeplebook.core.sync.work
 
+import androidx.work.Operation
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.auth.local.AuthLocalDataSource
 import app.meeplebook.core.auth.model.AuthError
@@ -14,6 +15,7 @@ import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.result.AppResult
+import app.meeplebook.core.sync.manager.SyncManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -136,4 +138,28 @@ internal class FakeWorkerPlaysRepository : PlaysRepository {
     override fun searchPlayersByName(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
 
     override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> = flowOf(emptyList())
+}
+
+internal class FakeWorkerSyncManager : SyncManager {
+    var fullSyncEnqueueCount: Int = 0
+        private set
+
+    private val operation = object : Operation {
+        override fun getResult() = throw UnsupportedOperationException("Not used in this test")
+
+        override fun getState() = throw UnsupportedOperationException("Not used in this test")
+    }
+
+    override fun enqueuePendingPlaysSync() = throw UnsupportedOperationException("Not used in this test")
+
+    override fun enqueuePlaysSync() = throw UnsupportedOperationException("Not used in this test")
+
+    override fun enqueueCollectionSync() = throw UnsupportedOperationException("Not used in this test")
+
+    override fun enqueueFullSync() =
+        operation.also {
+            fullSyncEnqueueCount += 1
+        }
+
+    override fun schedulePeriodicFullSync() = throw UnsupportedOperationException("Not used in this test")
 }
