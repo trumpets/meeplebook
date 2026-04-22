@@ -26,9 +26,11 @@ interface CollectionRepository {
     suspend fun getCollection(): List<CollectionItem>
 
     /**
-     * Syncs the collection for a specific user from BGG.
+     * Performs the repository-owned **pull sync** for a specific user's collection.
      *
-     * Fetches the collection from BGG and stores it locally.
+     * This method is responsible only for collection fetch + local persistence. Higher-level
+     * orchestration concerns such as auth gating, sync-state updates, worker execution, and full-sync
+     * sequencing live outside the repository.
      *
      * @param username The BGG username.
      * @return Success with the collection, or Failure with an error.

@@ -49,10 +49,10 @@ import app.meeplebook.R
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.plays.model.PlaySyncStatus
 import app.meeplebook.core.ui.asString
-import app.meeplebook.feature.plays.effect.PlaysUiEffect
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.core.ui.uiTextJoin
 import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.feature.plays.effect.PlaysUiEffect
 import app.meeplebook.ui.components.RowItemImage
 import app.meeplebook.ui.components.ScreenPadding
 import app.meeplebook.ui.components.SearchBar
@@ -199,15 +199,6 @@ fun PlaysStatsCard(
                 label = stringResource(R.string.plays_stat_unique_games)
             )
         }
-        // TODO maybe show Up to Date here or Unsynced 5 lets say
-//        if (lastSyncedUiText.isNotEmpty()) {
-//            Spacer(modifier = Modifier.height(12.dp))
-//            UiTextText(
-//                text = lastSyncedUiText,
-//                style = MaterialTheme.typography.bodySmall,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
-//        }
     }
 }
 

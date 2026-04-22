@@ -163,7 +163,8 @@ fun AddPlayScreenRoot(
                         } else {
                             TextButton(
                                 onClick = { onEvent(AddPlayEvent.ActionEvent.SaveClicked) },
-                                enabled = uiState.canSave
+                                enabled = uiState.canSave,
+                                modifier = Modifier.testTag("saveButton")
                             ) {
                                 Text(stringResource(R.string.add_play_save))
                             }

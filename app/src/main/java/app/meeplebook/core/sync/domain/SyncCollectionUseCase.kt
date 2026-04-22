@@ -2,50 +2,56 @@ package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.auth.AuthRepository
 import app.meeplebook.core.collection.CollectionRepository
+import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.result.fold
-import app.meeplebook.core.sync.SyncTimeRepository
+import app.meeplebook.core.sync.SyncRunner
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.sync.model.SyncUserDataError
-import java.time.Clock
-import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Synchronizes collection data for the currently logged-in user.
+ * Auth-gated entry point for collection background sync.
  *
- * Updates sync timestamp on successful synchronization.
- * Returns SyncUserDataError.NotLoggedIn if no user is currently authenticated.
+ * This use case sits between background orchestration (manual refresh today, workers later) and the
+ * repository-owned collection pull sync. It handles user/session preconditions, persists collection
+ * sync execution state, and maps repository failures into app-level sync errors.
  */
 class SyncCollectionUseCase @Inject constructor(
     private val authRepository: AuthRepository,
     private val collectionRepository: CollectionRepository,
-    private val syncTimeRepository: SyncTimeRepository,
-    private val clock: Clock
+    private val syncRunner: SyncRunner
 ) {
     /**
-     * Performs a sync of collection data from BGG.
+     * Runs the collection pull sync for the currently logged-in user.
      *
-     * Returns SyncUserDataError.NotLoggedIn if no user is authenticated.
-     * Returns the specific SyncUserDataError.CollectionSyncFailed(CollectionError) if sync fails.
-     * Sync timestamp is updated only after successful sync.
+     * Returns [SyncUserDataError.NotLoggedIn] when no user is authenticated and
+     * [SyncUserDataError.CollectionSyncFailed] when the repository pull sync fails. Successful runs
+     * clear any previous error and update the collection sync timestamp.
      */
     suspend operator fun invoke(): AppResult<Unit, SyncUserDataError> {
-        // Get current user
         val user = authRepository.getCurrentUser()
             ?: return AppResult.Failure(SyncUserDataError.NotLoggedIn)
 
-        // Sync collection
-        val collectionResult = collectionRepository.syncCollection(user.username)
-        collectionResult.fold(
+        return syncRunner.run(
+            type = SyncType.COLLECTION,
+            parseStorageError = { error -> error.toStorageMessage() },
+            block = { collectionRepository.syncCollection(user.username) }
+        ).fold(
             onSuccess = {
-                // Record collection sync time
-                syncTimeRepository.updateCollectionSyncTime(Instant.now(clock))
+                AppResult.Success(Unit)
             },
             onFailure = { error ->
-                return AppResult.Failure(SyncUserDataError.CollectionSyncFailed(error))
+                AppResult.Failure(SyncUserDataError.CollectionSyncFailed(error))
             }
         )
-
-        return AppResult.Success(Unit)
     }
 }
+
+private fun CollectionError.toStorageMessage(): String =
+    when (this) {
+        CollectionError.NetworkError -> "NetworkError"
+        CollectionError.NotLoggedIn -> "NotLoggedIn"
+        is CollectionError.MaxRetriesExceeded -> "MaxRetriesExceeded"
+        is CollectionError.Unknown -> throwable.message ?: "Unknown"
+    }

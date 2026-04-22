@@ -4,7 +4,7 @@ import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.plays.model.PlayError
 
 /**
- * Errors that can occur during user data synchronization.
+ * Errors surfaced from the auth-gated sync use cases.
  */
 sealed class SyncUserDataError {
     data object NotLoggedIn : SyncUserDataError()

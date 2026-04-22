@@ -1,22 +1,20 @@
 package app.meeplebook.feature.plays
 
 import app.cash.turbine.test
-import app.meeplebook.core.auth.FakeAuthRepository
-import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObservePlayStatsUseCase
 import app.meeplebook.core.plays.domain.ObservePlaysUseCase
-import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
-import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
-import app.meeplebook.core.sync.domain.SyncPlaysUseCase
+import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.manager.FakeSyncManager
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.util.DebounceDurations
-import app.meeplebook.feature.plays.effect.PlaysEffectProducer
-import app.meeplebook.feature.plays.effect.PlaysUiEffect
 import app.meeplebook.feature.plays.domain.BuildPlaysSectionsUseCase
 import app.meeplebook.feature.plays.domain.ObservePlaysScreenDataUseCase
+import app.meeplebook.feature.plays.effect.PlaysEffectProducer
+import app.meeplebook.feature.plays.effect.PlaysUiEffect
 import app.meeplebook.feature.plays.reducer.PlaysReducer
 import app.meeplebook.testutils.assertState
 import app.meeplebook.testutils.awaitUiStateMatching
@@ -51,12 +49,10 @@ import java.time.ZoneOffset
 class PlaysViewModelTest {
 
     private lateinit var viewModel: PlaysViewModel
-    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
+    private lateinit var fakeSyncManager: FakeSyncManager
     private lateinit var observePlaysScreenDataUseCase: ObservePlaysScreenDataUseCase
-    private lateinit var syncPlaysUseCase: SyncPlaysUseCase
-
     private val testDispatcher = StandardTestDispatcher()
 
     // Fixed clock for predictable testing
@@ -70,9 +66,9 @@ class PlaysViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         // Set up dependencies
-        fakeAuthRepository = FakeAuthRepository()
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
+        fakeSyncManager = FakeSyncManager()
 
         val observePlaysUseCase = ObservePlaysUseCase(fakePlaysRepository)
         val buildPlaysSectionsUseCase = BuildPlaysSectionsUseCase()
@@ -87,19 +83,13 @@ class PlaysViewModelTest {
             observePlayStats = observePlayStatsUseCase
         )
 
-        syncPlaysUseCase = SyncPlaysUseCase(
-            authRepository = fakeAuthRepository,
-            playsRepository = fakePlaysRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
-        )
-
         // Create ViewModel
         viewModel = PlaysViewModel(
             reducer = PlaysReducer(),
             effectProducer = PlaysEffectProducer(),
             observePlaysScreenData = observePlaysScreenDataUseCase,
-            syncPlays = syncPlaysUseCase
+            observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            syncManager = fakeSyncManager
         )
     }
 
@@ -112,6 +102,11 @@ class PlaysViewModelTest {
     fun `initial state is Loading`() {
         val state = viewModel.uiState.value
         assertEquals(PlaysUiState.Loading, state)
+    }
+
+    @Test
+    fun `init enqueues plays screen-open sync`() {
+        assertEquals(1, fakeSyncManager.playsSyncEnqueueCount)
     }
 
     @Test
@@ -335,86 +330,40 @@ class PlaysViewModelTest {
     }
 
     @Test
-    fun `Refresh event triggers sync and sets isRefreshing to true then false`() = runTest {
-        // Given - logged in user and plays
-        val user = AuthCredentials(username = "testuser", password = "password")
-        fakeAuthRepository.setCurrentUser(user)
+    fun `Refresh event enqueues plays sync`() = runTest {
         val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-
-        val initialState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
-        assertFalse(initialState.common.isRefreshing)
-
-        // When - Refresh event is triggered
-        viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        // Then - sync was called
-        assertEquals(1, fakePlaysRepository.syncCallCount)
-        assertEquals("testuser", fakePlaysRepository.lastSyncUsername)
-
-        // And - isRefreshing returns to false
-        val finalState = viewModel.uiState.value as PlaysUiState.Content
-        assertFalse(finalState.common.isRefreshing)
-    }
-
-    @Test
-    fun `Refresh event handles sync failure gracefully`() = runTest {
-        // Given - logged in user and plays
-        val user = AuthCredentials(username = "testuser", password = "password")
-        fakeAuthRepository.setCurrentUser(user)
-        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
-        fakePlaysRepository.setPlays(plays)
-        fakePlaysRepository.setTotalPlaysCount(1)
-        fakePlaysRepository.setUniqueGamesCount(1)
-        fakePlaysRepository.syncPlaysResult = AppResult.Failure(PlayError.NetworkError)
-
-        val initialState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
-        assertFalse(initialState.common.isRefreshing)
-
-        // Given - collect effects
-        val effects = mutableListOf<PlaysUiEffect>()
-        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiEffect.collect { effects.add(it) }
-        }
-
-        // When - Refresh event is triggered
-        viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        // Then - sync was attempted
-        assertEquals(1, fakePlaysRepository.syncCallCount)
-
-        // And - isRefreshing returns to false even after error
-        val finalState = viewModel.uiState.value as PlaysUiState.Content
-        assertFalse(finalState.common.isRefreshing)
-
-        // And - ShowSnackbar effect was emitted
-        assertEquals(1, effects.size)
-        assertTrue(effects[0] is PlaysUiEffect.ShowSnackbar)
-
-        job.cancel()
-    }
-
-    @Test
-    fun `Refresh event when not logged in does not call sync`() = runTest {
-        // Given - no logged in user but plays exist
-        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
-        fakePlaysRepository.setPlays(plays)
-        fakePlaysRepository.setTotalPlaysCount(1)
-        fakePlaysRepository.setUniqueGamesCount(1)
-
         awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
 
-        // When - Refresh event is triggered
         viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
-        // Then - sync was not called (use case returned NotLoggedIn error before attempting repository sync)
-        assertEquals(0, fakePlaysRepository.syncCallCount)
+        assertEquals(2, fakeSyncManager.playsSyncEnqueueCount)
+    }
+
+    @Test
+    fun `persisted sync state drives plays refresh indicator`() = runTest {
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
+        fakePlaysRepository.setPlays(plays)
+        fakePlaysRepository.setTotalPlaysCount(1)
+        fakePlaysRepository.setUniqueGamesCount(1)
+        awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
+
+        fakeSyncTimeRepository.markStarted(SyncType.PLAYS)
+        advanceUntilIdle()
+
+        val refreshingState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel) {
+            (it as? PlaysUiState.Content)?.common?.isRefreshing == true
+        }
+        assertTrue(refreshingState.common.isRefreshing)
+
+        fakeSyncTimeRepository.markCompleted(SyncType.PLAYS, testClock.instant())
+        advanceUntilIdle()
+
+        val finalState = viewModel.uiState.value as PlaysUiState.Content
+        assertFalse(finalState.common.isRefreshing)
     }
 
     @Test

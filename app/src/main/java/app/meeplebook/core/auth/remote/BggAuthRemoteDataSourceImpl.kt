@@ -1,11 +1,11 @@
 package app.meeplebook.core.auth.remote
 
-import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.di.BggBaseUrl
-import javax.inject.Inject
+import app.meeplebook.core.model.AuthCredentials
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import javax.inject.Inject
 
 class BggAuthRemoteDataSourceImpl @Inject constructor(
     private val okHttpClient: OkHttpClient,
@@ -55,6 +55,6 @@ class BggAuthRemoteDataSourceImpl @Inject constructor(
             throw AuthenticationException("Login failed: bggpassword cookie not found")
         }
 
-        return AuthCredentials(username, password)
+        return AuthCredentials(username, capturedToken)
     }
 }

@@ -1,16 +1,15 @@
 package app.meeplebook.feature.collection
 
 import androidx.lifecycle.viewModelScope
-import app.meeplebook.R
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
-import app.meeplebook.core.result.fold
-import app.meeplebook.core.sync.domain.SyncCollectionUseCase
+import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.manager.SyncManager
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
-import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.collection.domain.ObserveCollectionDomainSectionsUseCase
 import app.meeplebook.feature.collection.effect.CollectionEffect
@@ -20,7 +19,6 @@ import app.meeplebook.feature.collection.reducer.CollectionReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,7 +26,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -52,12 +49,17 @@ class CollectionViewModel @Inject constructor(
     effectProducer: CollectionEffectProducer,
     observeCollectionSummary: ObserveCollectionSummaryUseCase,
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
-    private val syncCollection: SyncCollectionUseCase
+    observeSyncState: ObserveSyncStateUseCase,
+    private val syncManager: SyncManager
 ) : ReducerViewModel<CollectionBaseState, CollectionEvent, CollectionEffect, CollectionUiEffect>(
     initialState = CollectionBaseState(),
     reducer = reducer,
     effectProducer = effectProducer
 ) {
+    init {
+        syncManager.enqueueCollectionSync()
+    }
+
     /**
      * Raw search query derived from reducer state.
      *
@@ -126,12 +128,15 @@ class CollectionViewModel @Inject constructor(
             observeCollectionDomainSections(query)
         }
 
+    private val syncStateFlow = observeSyncState(SyncType.COLLECTION)
+
     val uiState: StateFlow<CollectionUiState> =
         combine(
             baseState,
             domainSectionsFlow,
-            observeCollectionSummary()
-        ) { state, domainSections, summary ->
+            observeCollectionSummary(),
+            syncStateFlow
+        ) { state, domainSections, summary, syncState ->
             val uiSections = domainSections.map { it.toCollectionSection() }
 
             val common = CollectionCommonState(
@@ -139,7 +144,7 @@ class CollectionViewModel @Inject constructor(
                 activeQuickFilter = state.quickFilter,
                 totalGameCount = summary.totalGames,
                 unplayedGameCount = summary.unplayedGames,
-                isRefreshing = state.isRefreshing
+                isRefreshing = syncState.isSyncing
             )
 
             if (uiSections.isEmpty()) {
@@ -168,8 +173,6 @@ class CollectionViewModel @Inject constructor(
             CollectionUiState.Loading
         )
 
-    private var refreshJob: Job? = null
-
     fun onEvent(event: CollectionEvent) {
         dispatchEvent(event)
     }
@@ -182,32 +185,10 @@ class CollectionViewModel @Inject constructor(
     }
 
     /**
-     * Executes a collection sync and mirrors its progress into reducer state.
-     *
-     * Successful syncs update the screen indirectly via the observed flows. Failures emit a
-     * one-shot snackbar effect.
+     * Enqueues collection sync through the app-level sync manager.
      */
     private fun refresh() {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch {
-            updateBaseState { state ->
-                state.copy(isRefreshing = true)
-            }
-            try {
-                syncCollection().fold(
-                    onSuccess = {
-                        // Sync successful, data will update automatically via flows.
-                    },
-                    onFailure = {
-                        postUiEffect(CollectionUiEffect.ShowSnackbar(uiTextRes(R.string.sync_collections_failed_error)))
-                    }
-                )
-            } finally {
-                updateBaseState { state ->
-                    state.copy(isRefreshing = false)
-                }
-            }
-        }
+        syncManager.enqueueCollectionSync()
     }
 
     private fun resolveJumpToLetter(letter: Char) {

@@ -3,14 +3,15 @@ package app.meeplebook.feature.overview
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.meeplebook.R
 import app.meeplebook.core.plays.model.PlayId
+import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiText
 import app.meeplebook.testutils.stringRes
 import app.meeplebook.ui.theme.MeepleBookTheme
@@ -42,7 +43,7 @@ class OverviewContentTest {
                             playsThisMonth = 18,
                             unplayedCount = 23
                         ),
-                        lastSyncedUiText = uiText("Last synced: 5 min ago")
+                        syncStatusUiText = uiText("Last synced: 5 min ago")
                     ),
                     onEvent = {}
                 )
@@ -200,7 +201,7 @@ class OverviewContentTest {
                 OverviewContent(
                     uiState = contentState(
                         stats = OverviewStats(),
-                        lastSyncedUiText = uiText("Never synced")
+                        syncStatusUiText = uiText("Never synced")
                     ),
                     onEvent = {}
                 )
@@ -333,7 +334,7 @@ class OverviewContentTest {
         recentPlays: List<RecentPlay> = emptyList(),
         recentlyAddedGame: GameHighlight? = null,
         suggestedGame: GameHighlight? = null,
-        lastSyncedUiText: app.meeplebook.core.ui.UiText = uiText(""),
+        syncStatusUiText: UiText = uiText(""),
         isRefreshing: Boolean = false
     ): OverviewUiState.Content {
         return OverviewUiState.Content(
@@ -341,7 +342,7 @@ class OverviewContentTest {
             recentPlays = recentPlays,
             recentlyAddedGame = recentlyAddedGame,
             suggestedGame = suggestedGame,
-            lastSyncedUiText = lastSyncedUiText,
+            syncStatusUiText = syncStatusUiText,
             isRefreshing = isRefreshing
         )
     }

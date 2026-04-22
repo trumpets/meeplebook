@@ -7,20 +7,27 @@
 # Architecture That Matters
 - Offline-first shape is implemented today: remote fetch -> local Room write -> UI observes flows from DB through repositories/use cases.
 - Repositories are integration boundaries: `AuthRepositoryImpl`, `CollectionRepositoryImpl`, `PlaysRepositoryImpl` combine local/remote behavior and map exceptions to `AppResult` failures.
-- Sync use cases (`core/sync/domain/*`) gate on logged-in user, then invoke repository sync and persist timestamps via `SyncTimeRepository`.
+- Sync use cases (`core/sync/domain/*`) are the auth-gated sync entrypoints that workers should call; `SyncCollectionUseCase` and `SyncPlaysUseCase` wrap repository pull syncs, while `ObserveSyncStateUseCase` / `ObserveFullSyncStateUseCase` expose persisted sync status to UI/domain observers.
+- Sync execution state is persisted in the single `sync_states` Room table keyed by `SyncType`; `SyncRunner` is the shared started/success/failed wrapper, `SyncDao` uses partial UPSERT queries for lifecycle updates, and `observeLastFullSync()` is derived from the collection/plays rows rather than stored separately.
+- WorkManager workers live in `core/sync/work/`; keep them thin `@HiltWorker` `CoroutineWorker`s, resolve dependencies through constructor injection and `HiltWorkerFactory`, call the existing sync use cases/repository boundary, fail on max-retries-exceeded, retry only retryable network failures, and treat logged-out runs as `Result.success()`. Keep `androidx.hilt:hilt-compiler` on KSP alongside `hilt-work`; without it the worker factory map is empty and tests/runtime fall back to reflection.
+- `SyncManager` is now the WorkManager orchestration boundary in `app/src/main/java/app/meeplebook/core/sync/manager/`; it owns unique work names, `NetworkType.CONNECTED` constraints, `ExistingWorkPolicy.KEEP`, and full-sync ordering of pending plays push -> plays pull -> collection pull.
+- Trigger policy currently wired: `MainActivity` only resolves the logged-in start route, `OverviewViewModel` init schedules a daily periodic full sync and enqueues an immediate full sync, Collection/Plays screen-open enqueue their domain syncs, successful play saves enqueue pending-play upload sync, and manual refresh in Overview/Collection/Plays also routes through `SyncManager`.
 - Room is central (`core/database/MeepleBookDatabase.kt`): DAOs expose `Flow`, local data sources map entities <-> domain models.
 
 # BGG Integration Patterns
 - XML endpoints are in `core/network/BggApi.kt`; responses are parsed manually with XmlPull (`CollectionXmlParser`, `PlaysXmlParser`).
 - Retry/backoff is centralized in `core/network/Retry.kt` and used by remote data sources for `202`, `429`, and `5xx`.
+- Keep BGG wire dates on `yyyy-MM-dd` (`parseBggDate` / `formatBggDate`) even though user-facing dates are EU formatted `dd/MM/yyyy`; do not reuse the UI formatter for network parsing.
 - Collection sync fetches boardgames and expansions separately with a 5s delay between calls (`CollectionRemoteDataSourceImpl`).
 - Plays sync is paginated (100/page), delays 5s between pages, then reconciles deletions via `retainByRemoteIds` (`PlaysRepositoryImpl`).
+- Pending play uploads post `FormBody` data to `geekplay.php` using the authenticated cookie session from `CurrentCredentialsStore`; include `playid` only for edits, keep `playdate`/`dateinput` aligned as `yyyy-MM-dd`, and retry both `PENDING` and `FAILED` plays on later sync attempts.
 
 # UI + State Conventions
 - ViewModels expose immutable `StateFlow` and consume events (`CollectionViewModel.onEvent`, `PlaysViewModel.onEvent`).
 - Search uses debounced flows (`searchableFlow` in `core/ui/flow/SearchableFlow.kt`, and direct debounce in collection).
 - Avoid infinite wall-clock reactive flows with `while(true)+delay`; compute time-dependent values on demand (see `.github/copilot-instructions.md`).
 - `UiText` is the app-level text abstraction (`core/ui/UiText.kt`); render via `UiTextText` or `asString()` helpers.
+- Sync chrome on Overview/Collection/Plays should be derived from persisted `SyncState` observers (`ObserveFullSyncStateUseCase` / `ObserveSyncStateUseCase`), not from direct sync results or local refresh jobs.
 - Shared reducer/effect screen abstractions live in `core/ui/architecture/`:
   - `Reducer<State, Event>`
   - `EffectProducer<State, Event, DomainEffect, UiEffect>`
@@ -205,6 +212,9 @@ Goal: eliminate hidden state, implicit sync, and lifecycle-driven logic
   - `./gradlew lint`
 - Instrumented path used in CI when Android-affecting files change:
   - `./gradlew connectedDebugAndroidTest`
+- For sync worker changes, it is fine to run targeted connected tests with
+  `-Pandroid.testInstrumentationRunnerArguments.class=...` for the affected worker test classes
+  before falling back to the full `connectedDebugAndroidTest` suite.
 - For Android emulator/device UI automation, prefer **Maestro** (`maestro` CLI, Maestro MCP, or
   Maestro YAML flows) for app launch/stop, semantic interaction, hierarchy inspection,
   screenshots, and repeatable end-to-end flows.

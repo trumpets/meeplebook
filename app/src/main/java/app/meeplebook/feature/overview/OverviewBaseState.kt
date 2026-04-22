@@ -10,6 +10,5 @@ import app.meeplebook.core.ui.UiText
  * full-screen error.
  */
 data class OverviewBaseState(
-    val isRefreshing: Boolean = false,
     val errorMessageUiText: UiText? = null
 )

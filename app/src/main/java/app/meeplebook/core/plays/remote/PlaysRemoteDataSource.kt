@@ -1,5 +1,6 @@
 package app.meeplebook.core.plays.remote
 
+import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.remote.dto.RemotePlayDto
 
 /**
@@ -23,4 +24,16 @@ interface PlaysRemoteDataSource {
      * @throws PlaysFetchException for unknown http status codes
      */
     suspend fun fetchPlays(username: String, page: Int? = null): List<RemotePlayDto>
+
+    /**
+     * Uploads a locally stored play to BGG and returns the remote play id.
+     *
+     * The request relies on the authenticated session cookies already attached by the shared
+     * OkHttp client.
+     *
+     * @throws IllegalArgumentException when no authenticated session is available.
+     * @throws java.io.IOException for transport failures.
+     * @throws PlayUploadException when BGG rejects the play or the success response is incomplete.
+     */
+    suspend fun uploadPlay(play: Play): Long
 }

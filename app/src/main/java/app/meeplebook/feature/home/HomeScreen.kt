@@ -53,13 +53,11 @@ enum class HomeNavigationDestination(
  */
 @Composable
 fun HomeScreen(
-    refreshOnLogin: Boolean,
     homeNavigator: HomeNavigator
 ) {
     val tabNavController = rememberNavController()
 
     HomeScreenContent(
-        refreshOnLogin,
         homeNavigator,
         onNavItemClick = { destination ->
             tabNavController.navigate(destination.route) {
@@ -109,7 +107,6 @@ fun HomeNavigationBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
-    refreshOnLogin: Boolean = false,
     homeNavigator: HomeNavigator,
     onNavItemClick: (HomeNavigationDestination) -> Unit = {},
     tabNavController: NavHostController
@@ -132,7 +129,6 @@ fun HomeScreenContent(
     ) { innerPadding ->
         // Delegate to HomeNavHost for tab routing
         HomeNavHost(
-            refreshOnLogin = refreshOnLogin,
             homeNavigator = homeNavigator,
             navController = tabNavController,
             modifier = Modifier.padding(innerPadding)
@@ -158,7 +154,6 @@ fun HomeScreenPreview() {
     MeepleBookTheme {
         val previewNavController = rememberNavController()
         HomeScreenContent(
-            refreshOnLogin = false,
             homeNavigator = { _ -> },
             tabNavController = previewNavController
         )

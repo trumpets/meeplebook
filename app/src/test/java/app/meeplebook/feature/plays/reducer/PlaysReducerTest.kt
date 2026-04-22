@@ -19,18 +19,17 @@ class PlaysReducerTest {
     }
 
     @Test
-    fun `SearchChanged preserves refreshing flag`() {
-        val state = PlaysBaseState(isRefreshing = true)
+    fun `SearchChanged replaces previous query`() {
+        val state = PlaysBaseState(searchQuery = "old")
 
         val result = reducer.reduce(state, PlaysEvent.SearchChanged("catan"))
 
         assertEquals("catan", result.searchQuery)
-        assertEquals(true, result.isRefreshing)
     }
 
     @Test
     fun `ActionEvent leaves state unchanged`() {
-        val state = PlaysBaseState(searchQuery = "root", isRefreshing = true)
+        val state = PlaysBaseState(searchQuery = "root")
 
         val result = reducer.reduce(state, PlaysEvent.ActionEvent.Refresh)
 

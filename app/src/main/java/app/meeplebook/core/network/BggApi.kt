@@ -1,8 +1,11 @@
 package app.meeplebook.core.network
 
+import okhttp3.FormBody
 import okhttp3.ResponseBody
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 /**
@@ -47,5 +50,13 @@ interface BggApi {
         @Query("type") type: String? = null,
         @Query("subtype") subtype: String? = null,
         @Query("page") page: Int? = null
+    ): Response<ResponseBody>
+
+    /**
+     * Saves or updates a play using the authenticated BGG web endpoint.
+     */
+    @POST("geekplay.php")
+    suspend fun savePlay(
+        @Body body: FormBody
     ): Response<ResponseBody>
 }

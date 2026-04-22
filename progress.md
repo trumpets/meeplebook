@@ -2,6 +2,10 @@
 - For reducer-driven screens, use the shared `core/ui/architecture` contracts/helper for `onEvent -> reduce -> produce -> handle effects`, but keep feature-owned base state, query flows, and `combine(baseState, externalData) -> uiState` mapping local to the feature.
 - For simple reducer-driven forms with no external observed data, expose reducer-owned state directly as `uiState` and use one-shot `UiEffect`s for success navigation instead of persistent success flags.
 - If a one-shot UI effect depends on derived render data that exists only in final `uiState`, emit a domain effect and resolve it in the ViewModel against the latest derived `uiState` rather than duplicating the data into base state or reading captured UI state in Compose.
+- Sync use cases are the worker-facing/auth-gated orchestration boundary; repositories remain responsible for remote sync business logic and local persistence.
+- Keep BGG wire dates on `yyyy-MM-dd` and UI dates on `dd/MM/yyyy`; do not reuse the EU UI formatter for remote XML parsing or serialization.
+- Keep WorkManager workers in `core/sync/work` as thin `@HiltWorker` `CoroutineWorker`s that delegate to sync use cases/repositories, use `HiltWorkerFactory` from `MeepleBookApp`, retry only retryable network failures, fail on max-retries-exceeded, and treat logged-out runs as no-op success.
+- Manual refresh and sync-status UI in Overview/Collection/Plays should go through `SyncManager` and observed persisted `SyncState`; do not drive those screens from direct sync use-case results or local refresh jobs.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -714,4 +718,341 @@ PR Link: N/A
     - When a UI effect needs data from derived render state, route through a domain effect and resolve in the ViewModel, not in the `EffectProducer`
     - `EffectProducer` should express intent from reducer/base state, while the ViewModel may safely consult the latest derived `uiState` to produce a complete one-shot UI effect
     - Avoid pushing derived render-only data like section indices back into base state just to satisfy an effect payload
+---
+
+## 2026-04-19T16:03:49Z
+PR Link: N/A
+- Implemented Prompt 1 from `BACKGROUND_SYNC_PLAN.md` by normalizing sync boundaries without starting Room sync-state migration or WorkManager work
+- Clarified repository/local-data-source KDoc around pull sync vs outbox responsibilities and refactored `SyncUserDataUseCase` to compose `SyncCollectionUseCase` and `SyncPlaysUseCase`
+- Updated sync tests and the dependent `OverviewViewModelTest` constructor wiring to match the new full-sync composition seam
+- Files changed:
+  - `AGENTS.md`
+  - `app/src/main/java/app/meeplebook/core/collection/CollectionRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/collection/local/CollectionLocalDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/PlaysRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncCollectionUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncPlaysUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncUserDataUseCase.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+- **Learnings for future iterations:**
+    - Keep repository sync methods focused on transport, mapping, and local persistence; auth gating and full-sync sequencing belong in sync use cases
+    - `SyncUserDataUseCase` should compose narrower sync use cases instead of duplicating repository/auth/timestamp logic
+    - Prompt 1 should stop at boundary cleanup so Prompt 2 can own Room sync-state migration cleanly
+---
+
+## 2026-04-19T16:54:36Z
+PR Link: N/A (Prompt 2 from `BACKGROUND_SYNC_PLAN.md`)
+- Implemented Room-backed sync execution state for collection and plays, including new sync entities, `SyncDao`, and a Room-based `SyncTimeRepositoryImpl`
+- Updated sync use cases to persist started/success/failed state per domain and derived full-sync observation from the two per-domain records
+- Added and updated tests for sync use cases, full-sync observation, and the new Room DAO
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/database/MeepleBookDatabase.kt`
+  - `app/src/main/java/app/meeplebook/core/database/dao/SyncDao.kt`
+  - `app/src/main/java/app/meeplebook/core/database/entity/CollectionSyncStateEntity.kt`
+  - `app/src/main/java/app/meeplebook/core/database/entity/PlaysSyncStateEntity.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepositoryImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncCollectionUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncPlaysUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncUserDataUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncState.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/FakeSyncTimeRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncCollectionUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncPlaysUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/SyncDaoTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Sync execution state in this repo is stored as separate Room singleton rows for collection and plays, not as a single combined record
+  - `observeLastFullSync()` now represents the latest moment both domains were synced by deriving the minimum of the two successful timestamps
+  - Domain sync use cases own started/success/failed state transitions; `SyncUserDataUseCase` should stay a thin orchestration layer
+  - DAO tests for singleton sync-state tables can follow the same in-memory Room pattern as other DAO tests, with `id = 0` rows replaced via `@Upsert`
+---
+
+## 2026-04-19T22:23:43.989+02:00
+PR Link: N/A (sync refactor follow-up)
+- Reworked sync persistence from two Room tables into a single `sync_states` table keyed by `SyncType`
+- Moved sync lifecycle writes fully behind `SyncRunner`/generic `SyncTimeRepository` methods and replaced read-modify-write updates with partial UPSERT queries in `SyncDao`
+- Added `SyncRunnerTest`, updated sync/use-case tests and DAO tests, and expanded KDoc across the sync package
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/database/converters/DateTimeConverters.kt`
+  - `app/src/main/java/app/meeplebook/core/database/MeepleBookDatabase.kt`
+  - `app/src/main/java/app/meeplebook/core/database/dao/SyncDao.kt`
+  - `app/src/main/java/app/meeplebook/core/database/entity/SyncStateEntity.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncRunner.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeModule.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/SyncTimeRepositoryImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncCollectionUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncPlaysUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/SyncUserDataUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncState.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncType.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncUserDataError.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/FakeSyncTimeRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/SyncRunnerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncCollectionUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncPlaysUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/SyncDaoTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Sync state now has one Room row per `SyncType` in `sync_states`; do not reintroduce per-domain tables unless the storage model intentionally changes again
+  - `SyncRunner` is the single place that should persist start/success/failure lifecycle transitions for sync work
+  - Room partial lifecycle updates can avoid extra reads by using `INSERT ... ON CONFLICT DO UPDATE` queries that only touch the needed columns
+  - Full-sync time remains a derived value: the older of the collection and plays success timestamps
+---
+
+## 2026-04-19T21:23:41Z
+PR Link: <pending>
+- Implemented Prompt 3 from `BACKGROUND_SYNC_PLAN.md`: pending play outbox upload support across repository, local, and remote layers
+- Added BGG play-save POST support via `geekplay.php`, including aligned `playdate`/`dateinput`, indexed player form fields, and `playid` for remote edits
+- Added retryable outbox selection for both `PENDING` and `FAILED` plays, with local transitions to `SYNCED` and `FAILED`
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/network/BggApi.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/PlaysRepository.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/PlaysRepositoryImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlaysRemoteDataSource.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlaysRemoteDataSourceImpl.kt`
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlayUploadException.kt`
+  - `app/src/main/java/app/meeplebook/core/database/dao/PlayDao.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/PlaysRepositoryImplTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/plays/local/PlaysLocalDataSourceImplTest.kt`
+  - test fakes and integration tests under `app/src/test/java/app/meeplebook/core/plays/`
+- **Learnings for future iterations:**
+  - Pending play uploads use the authenticated cookie session already tracked in `CurrentCredentialsStore`; treat missing or expired auth as a fatal sync failure, not a silent skip
+  - `syncPendingPlays()` retries both `PENDING` and `FAILED` plays on each run, but only network, auth, and retry-exhaustion failures should stop the batch early
+  - Per-play validation or parse failures should mark that play `FAILED` and continue so one bad play does not block the rest of the outbox
+  - `geekplay.php` edits require `playid`, while new uploads omit it; always keep `playdate` and `dateinput` synchronized in `yyyy-MM-dd`
+---
+
+## 2026-04-19T21:55:51Z
+PR Link: <pending>
+- Refined pending-play upload response handling to match actual BGG `geekplay.php` payloads
+- Logged-out 200 responses with `{"error":"You must login to save plays"}` now map to auth failure, and successful 200 JSON payloads parse the returned `playid`
+- Added focused integration coverage for both upload response shapes
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/plays/remote/PlaysRemoteDataSourceImpl.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/remote/integration/PlaysRemoteDataSourceImplTest.kt`
+- **Learnings for future iterations:**
+  - `geekplay.php` can return HTTP 200 for both success and auth failure, so upload handling must inspect the JSON body rather than rely on status code alone
+  - Treat `{"error":"You must login to save plays"}` as a not-logged-in failure so repository mapping reaches `PlayError.NotLoggedIn`
+  - Successful upload payloads return `playid` in JSON; keep a direct parser path for that shape covered by tests
+---
+
+## 2026-04-19T22:28:14Z
+PR Link: <pending>
+- Fixed a regression where plays XML parsing returned empty results across parser, remote-data-source, and repository integration tests
+- Restored separate BGG wire date formatting so remote play dates parse and serialize as `yyyy-MM-dd` while UI dates remain `dd/MM/yyyy`
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/util/DateUtils.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - `parseBggDate` and `formatBggDate` must use BGG's ISO date format, not the user-facing EU formatter
+  - When widespread play-sync tests suddenly return zero items, check date parsing first because invalid play dates cause `PlaysXmlParser` to drop whole plays
+---
+
+## 2026-04-20T11:28:40Z
+PR Link: <pending>
+- Implemented Prompt 4 from `BACKGROUND_SYNC_PLAN.md` by adding thin WorkManager workers for collection pull sync, plays pull sync, and pending-play upload sync
+- Added shared worker result mapping so retryable sync failures return `Result.retry()`, unknown failures return `Result.failure()`, and logged-out runs no-op with `Result.success()`
+- Added focused worker unit tests and the `work-runtime-ktx` dependency needed for the new workers
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncWorkerEntryPoint.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncWorkerResultMapper.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncCollectionWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPlaysWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorker.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/plays/FakePlaysRepository.kt`
+  - `gradle/libs.versions.toml`
+  - `app/build.gradle.kts`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Prompt 4 can avoid `androidx.hilt:hilt-work` by keeping worker constructors at `(Context, WorkerParameters)` and resolving app dependencies through a Hilt `@EntryPoint`
+  - Put WorkManager result mapping in one shared helper so retry/no-op/failure policy stays consistent across all sync workers
+  - Worker tests can stay as plain unit tests by subclassing the worker and overriding the dependency accessor instead of bootstrapping real WorkManager state
+---
+
+## 2026-04-20T19:12:01Z
+PR Link: N/A (post-review hardening)
+- Replaced the temporary worker entry-point setup with proper Hilt WorkManager integration and aligned worker result policy with the review findings
+- Wired `MeepleBookApp` as the `HiltWorkerFactory` provider, removed the default `WorkManagerInitializer`, and migrated worker coverage to `TestListenableWorkerBuilder` androidTests plus a focused mapper unit test
+- Files changed:
+  - `app/src/main/java/app/meeplebook/MeepleBookApp.kt`
+  - `app/src/main/AndroidManifest.xml`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncCollectionWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPlaysWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorker.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncWorkerResultMapper.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/work/SyncWorkerResultMapperTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/HiltTestRunner.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/build.gradle.kts`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - In this repo, sync workers should use `@HiltWorker` constructor injection and `MeepleBookApp`'s `HiltWorkerFactory` rather than a manual Hilt entry-point lookup
+  - `MaxRetriesExceeded` is terminal for sync workers and should map to `ListenableWorker.Result.Failure`, while transient network failures still map to `Result.Retry`
+  - Hilt-backed worker behavior is best covered here with instrumented `TestListenableWorkerBuilder` tests plus fake repositories bound through `@BindValue`
+---
+
+## 2026-04-20T23:03:10+02:00
+PR Link: N/A (worker test fix)
+- Fixed the Hilt worker androidTest setup so the generated test component and on-device worker instantiation succeed
+- Added a fake `AuthLocalDataSource` binding for the worker tests, switched the worker test builders off the reflective `from(...)` path, and added the missing `androidx.hilt:hilt-compiler` KSP wiring required by `hilt-work`
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/build.gradle.kts`
+  - `gradle/libs.versions.toml`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Removing `AuthModule` in Hilt androidTests also removes `AuthLocalDataSource`, so tests that still build the production OkHttp/auth graph need a replacement binding for that local datasource
+  - `hilt-work` also needs `androidx.hilt:hilt-compiler` on KSP; otherwise `HiltWorkerFactory` is created with an empty worker map and falls back to reflection
+  - When testing Hilt workers with `TestListenableWorkerBuilder`, avoid the `from(context, WorkerClass::class.java)` reflection path and use the builder with an injected worker factory instead
+---
+
+## 2026-04-20T23:26:00+02:00
+PR Link: N/A (Prompt 5)
+- Implemented Prompt 5 from `BACKGROUND_SYNC_PLAN.md` by introducing `SyncManager` and a WorkManager-backed orchestration implementation
+- Centralized unique work names, `NetworkType.CONNECTED` constraints, `ExistingWorkPolicy.KEEP`, and the full-sync chain order of pending plays -> plays -> collection
+- Added focused unit tests that verify unique work enqueueing, worker request constraints, and full-sync chaining order without touching trigger policy or UI wiring
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/SyncManager.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/SyncManagerModule.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/WorkManagerSyncManager.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/WorkManagerSyncManagerTest.kt` (new)
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Keep WorkManager orchestration details out of UI/viewmodels; enqueue through `SyncManager` so work names, constraints, and policy stay centralized
+  - Full sync should remain push-before-pull in this repo: pending plays upload first, then plays pull, then collection pull
+  - `ExistingWorkPolicy.KEEP` is the current de-duplication policy for one-shot sync requests and the unique full-sync chain
+---
+
+## 2026-04-20T23:56:31+02:00
+PR Link: N/A (Prompt 6)
+- Implemented Prompt 6 from `BACKGROUND_SYNC_PLAN.md` by wiring the automatic sync trigger policy through `SyncManager`
+- App start now schedules a daily periodic full sync and enqueues an immediate full sync for logged-in users, Collection/Plays screen-open enqueue their domain syncs, and successful play saves enqueue pending-play upload sync
+- Added a periodic orchestration worker plus tests covering the new periodic request, screen-open trigger calls, play-save trigger call, and the periodic worker itself
+- Files changed:
+  - `app/src/main/java/app/meeplebook/MainActivity.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/manager/SyncManager.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/manager/WorkManagerSyncManager.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/work/SyncPeriodicFullSyncWorker.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/addplay/AddPlayViewModel.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/manager/FakeSyncManager.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/manager/WorkManagerSyncManagerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/addplay/AddPlayViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPeriodicFullSyncWorkerTest.kt` (new)
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Keep automatic background triggers thin and routed through `SyncManager`; let Prompt 7 handle user-driven manual refresh migration separately
+  - The periodic sync default is currently one daily full-sync trigger backed by a dedicated orchestration worker that simply re-enqueues the existing full-sync chain
+  - Screen-open auto triggers are currently domain-specific: Collection opens enqueue collection pull, Plays opens enqueue plays pull, while play saves enqueue pending-play upload only
+---
+
+## 2026-04-21T10:52:20Z
+PR Link: N/A (Prompt 7)
+- Implemented Prompt 7 from `BACKGROUND_SYNC_PLAN.md` by routing Overview/Collection/Plays manual refresh through `SyncManager` and exposing persisted sync state to those screens
+- Added shared sync-state observer use cases and short sync-status text mapping so Overview, Collection, and Plays now render status from Room-backed sync rows instead of direct sync-call results
+- Updated ViewModel and UI tests to assert enqueue-driven refresh behavior and persisted-sync-driven refreshing/status rendering
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveSyncStateUseCase.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCase.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/SyncStatusText.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/overview/OverviewContentTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Manual refresh should only enqueue work; user-visible refreshing and status text must come from observed persisted sync rows so navigation or process changes do not desynchronize the UI
+  - Overview should derive its status from a combined full-sync observer, while Collection and Plays can observe their own `SyncType` rows directly
+  - When testing persisted-sync-driven UI, mutate `FakeSyncTimeRepository` and wait for the derived `UiState` instead of asserting immediately on the current `StateFlow` value
+---
+
+## 2026-04-22T00:16:31.026+02:00
+PR Link: N/A (Prompt 8)
+- Implemented Prompt 8 from `BACKGROUND_SYNC_PLAN.md` by hardening sync observer/worker/manager coverage and polishing the related sync docs
+- Added direct unit coverage for `ObserveSyncStateUseCase` and `ObserveFullSyncStateUseCase`, expanded worker androidTests for retryable network failures and logged-out collection runs, and asserted the periodic full-sync cadence in `WorkManagerSyncManagerTest`
+- Refined sync observer KDoc and added a repo note that targeted connected worker tests are an acceptable verification path for sync worker changes
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveSyncStateUseCaseTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCaseTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/manager/WorkManagerSyncManagerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveSyncStateUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCase.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - The sync observer use cases are worth testing directly because they encode behavior, not just delegation: full-sync status uses OR semantics for `isSyncing`, requires both timestamps before exposing a full-sync time, and keeps collection-first error precedence
+  - Worker result mapping should be covered both in pure unit tests (`SyncWorkerResultMapperTest`) and in Hilt-backed worker tests so retry/failure/success behavior stays verified at the actual worker entrypoint
+  - For sync worker verification on emulator, targeted `connectedDebugAndroidTest` runs scoped by `android.testInstrumentationRunnerArguments.class` are a practical repo-approved path when the changed surface is limited to a few worker test classes
+---
+
+## 2026-04-22T11:21:12+02:00
+PR Link: N/A
+- Repaired unit tests after the sync/overview refactor removed obsolete sync APIs and reducer fields
+- Deleted stale tests for removed `ObserveLastFullSyncUseCase` and `SyncUserDataUseCase`, updated reducer/ViewModel tests to the current state model, and added a replacement `ObserveFullSyncStateUseCase` assertion that full-sync time stays null until both domains complete
+- Refreshed repo guidance so the sync notes match the current trigger and sync-entrypoint structure
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/sync/FakeSyncTimeRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/reducer/OverviewReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/reducer/PlaysReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCaseTest.kt` (deleted)
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt` (deleted)
+  - `progress.md`
+- **Learnings for future iterations:**
+  - When a refactor removes a sync API entirely, update or delete the obsolete tests instead of reintroducing dead type names; keep replacement coverage focused on the behavior that still exists
+  - `OverviewViewModel` now schedules periodic sync and enqueues an immediate full sync in `init`, so tests using `FakeSyncManager` must account for an initial full-sync count before asserting manual refresh behavior
+  - Collection screen tests should assert the current `CollectionCommonState` surface only; sync status text is no longer part of collection common UI state, but subtitle mapping still needs `FakeStringProvider`
 ---

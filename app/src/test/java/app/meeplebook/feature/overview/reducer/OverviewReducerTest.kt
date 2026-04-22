@@ -10,7 +10,7 @@ class OverviewReducerTest {
     @Test
     fun `reducer leaves state unchanged for refresh event`() {
         val reducer = OverviewReducer()
-        val state = OverviewBaseState(isRefreshing = true)
+        val state = OverviewBaseState()
 
         val newState = reducer.reduce(state, OverviewEvent.ActionEvent.Refresh)
 

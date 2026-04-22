@@ -1,5 +1,7 @@
 package app.meeplebook.core.plays.model
 
+import app.meeplebook.core.plays.model.PlayId.Remote
+
 /**
  * Unique identifier for a play record.
  *
@@ -16,6 +18,11 @@ sealed interface PlayId {
 
     /** The primary key id used by the local database for this play. */
     val localId: Long
+
+    /**
+     * Returns the remote id when this identifier is [Remote], or `null` for [Local].
+     */
+    fun remoteIdOrNull(): Long? = (this as? Remote)?.remoteId
 
     /**
      * Identifier for a local-only play (not yet synced).
@@ -36,4 +43,13 @@ sealed interface PlayId {
         override val localId: Long,
         val remoteId: Long
     ) : PlayId
+}
+
+/**
+ * Executes [block] with the remote id when this [PlayId] is [Remote].
+ *
+ * No-op for [PlayId.Local].
+ */
+inline fun PlayId.onRemote(block: (Long) -> Unit) {
+    if (this is Remote) block(remoteId)
 }

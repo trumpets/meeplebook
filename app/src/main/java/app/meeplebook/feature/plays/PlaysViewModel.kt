@@ -1,12 +1,11 @@
 package app.meeplebook.feature.plays
 
 import androidx.lifecycle.viewModelScope
-import app.meeplebook.R
-import app.meeplebook.core.result.fold
-import app.meeplebook.core.sync.domain.SyncPlaysUseCase
+import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.manager.SyncManager
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
-import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.DebounceDurations
 import app.meeplebook.feature.plays.domain.ObservePlaysScreenDataUseCase
 import app.meeplebook.feature.plays.effect.PlaysEffect
@@ -16,14 +15,12 @@ import app.meeplebook.feature.plays.reducer.PlaysReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -47,12 +44,17 @@ class PlaysViewModel @Inject constructor(
     reducer: PlaysReducer,
     effectProducer: PlaysEffectProducer,
     private val observePlaysScreenData: ObservePlaysScreenDataUseCase,
-    private val syncPlays: SyncPlaysUseCase
+    observeSyncState: ObserveSyncStateUseCase,
+    private val syncManager: SyncManager
 ) : ReducerViewModel<PlaysBaseState, PlaysEvent, PlaysEffect, PlaysUiEffect>(
     initialState = PlaysBaseState(),
     reducer = reducer,
     effectProducer = effectProducer
 ) {
+
+    init {
+        syncManager.enqueuePlaysSync()
+    }
 
     private val searchQueryFlow =
         baseState
@@ -68,19 +70,20 @@ class PlaysViewModel @Inject constructor(
             observePlaysScreenData(query)
         }
 
+    private val syncStateFlow = observeSyncState(SyncType.PLAYS)
+
     val uiState: StateFlow<PlaysUiState> =
         combine(
             baseState,
-            searchResults
-        ) { state, screenData ->
-            screenData.toUiState(state)
+            searchResults,
+            syncStateFlow
+        ) { state, screenData, syncState ->
+            screenData.toUiState(state, syncState)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
             PlaysUiState.Loading
         )
-
-    private var refreshJob: Job? = null
 
     /**
      * Entry point for UI events.
@@ -99,25 +102,6 @@ class PlaysViewModel @Inject constructor(
     }
 
     private fun refresh() {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch {
-            updateBaseState { state ->
-                state.copy(isRefreshing = true)
-            }
-            try {
-                syncPlays().fold(
-                    onSuccess = {
-                        // Sync successful, data will update automatically via flows.
-                    },
-                    onFailure = { _ ->
-                        postUiEffect(PlaysUiEffect.ShowSnackbar(uiTextRes(R.string.sync_plays_failed_error)))
-                    }
-                )
-            } finally {
-                updateBaseState { state ->
-                    state.copy(isRefreshing = false)
-                }
-            }
-        }
+        syncManager.enqueuePlaysSync()
     }
 }

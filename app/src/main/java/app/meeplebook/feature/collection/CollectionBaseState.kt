@@ -11,7 +11,6 @@ import app.meeplebook.core.collection.model.QuickFilter
  * - selected quick filter
  * - selected sort order
  * - selected view mode
- * - refresh-in-progress flag
  * - sort-sheet visibility
  *
  * `CollectionViewModel` derives debounced query flows from this state and combines it with external
@@ -22,6 +21,5 @@ data class CollectionBaseState(
     val quickFilter: QuickFilter = QuickFilter.ALL,
     val sort: CollectionSort = CollectionSort.ALPHABETICAL,
     val viewMode: CollectionViewMode = CollectionViewMode.LIST,
-    val isRefreshing: Boolean = false,
     val isSortSheetVisible: Boolean = false,
 )

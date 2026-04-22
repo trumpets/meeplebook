@@ -8,7 +8,7 @@ sealed interface Screen {
     object Login : Screen
 
     @Serializable
-    data class Home(val refreshOnLogin: Boolean = false) : Screen
+    object Home : Screen
 
     @Serializable
     object AddPlay : Screen

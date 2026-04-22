@@ -21,6 +21,9 @@ private const val MINUTES_IN_DAY = MINUTES_IN_HOUR * 24
 private val DATE_FORMATTER: DateTimeFormatter =
     DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
+private val BGG_DATE_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ISO_LOCAL_DATE
+
 data class Range(
     val start: Instant,
     val end: Instant
@@ -52,12 +55,15 @@ fun parseBggDateTime(value: String?): Instant? {
 fun parseBggDate(value: String?): Instant? {
     if (value.isNullOrBlank()) return null
     return try {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val ldt = LocalDate.parse(value, formatter)
+        val ldt = LocalDate.parse(value, BGG_DATE_FORMATTER)
         ldt.atStartOfDay(ZoneOffset.UTC).toInstant()
     } catch (_: Exception) {
         null
     }
+}
+
+fun formatBggDate(instant: Instant): String {
+    return BGG_DATE_FORMATTER.format(instant.atZone(ZoneOffset.UTC).toLocalDate())
 }
 
 /**

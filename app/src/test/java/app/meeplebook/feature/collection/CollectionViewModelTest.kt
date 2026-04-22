@@ -2,19 +2,17 @@ package app.meeplebook.feature.collection
 
 import app.cash.turbine.test
 import app.meeplebook.R
-import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
-import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.model.QuickFilter
-import app.meeplebook.core.model.AuthCredentials
-import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
-import app.meeplebook.core.sync.domain.SyncCollectionUseCase
+import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.manager.FakeSyncManager
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.ui.FakeStringProvider
 import app.meeplebook.core.ui.asString
 import app.meeplebook.core.util.DebounceDurations
@@ -59,14 +57,13 @@ import java.time.ZoneOffset
 class CollectionViewModelTest {
 
     private lateinit var viewModel: CollectionViewModel
-    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var observeCollectionUseCase: ObserveCollectionUseCase
     private lateinit var buildSectionsUseCase: BuildCollectionSectionsUseCase
     private lateinit var observeCollectionDomainSectionsUseCase: ObserveCollectionDomainSectionsUseCase
-    private lateinit var syncCollectionUseCase: SyncCollectionUseCase
     private lateinit var fakeStringProvider: FakeStringProvider
+    private lateinit var fakeSyncManager: FakeSyncManager
     
     private val testDispatcher = StandardTestDispatcher()
     
@@ -81,28 +78,20 @@ class CollectionViewModelTest {
         Dispatchers.setMain(testDispatcher)
         
         // Set up dependencies
-        fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
+        fakeSyncManager = FakeSyncManager()
         observeCollectionUseCase = ObserveCollectionUseCase(fakeCollectionRepository)
         buildSectionsUseCase = BuildCollectionSectionsUseCase()
         observeCollectionDomainSectionsUseCase = ObserveCollectionDomainSectionsUseCase(
             observeCollection = observeCollectionUseCase,
             sectionBuilder = buildSectionsUseCase
         )
-        syncCollectionUseCase = SyncCollectionUseCase(
-            authRepository = fakeAuthRepository,
-            collectionRepository = fakeCollectionRepository,
-            syncTimeRepository = fakeSyncTimeRepository,
-            clock = testClock
-        )
-        fakeStringProvider = FakeStringProvider()
-        
-        // Configure string provider with expected formats
-        fakeStringProvider.setString(R.string.collection_plays_count, "%d plays")
-        fakeStringProvider.setString(R.string.collection_player_count, "%d-%dp")
-        fakeStringProvider.setString(R.string.collection_play_time, "%d-%dm")
-        
+        fakeStringProvider = FakeStringProvider().apply {
+            setString(R.string.collection_plays_count, "%d plays")
+            setString(R.string.collection_player_count, "%d-%dp")
+            setString(R.string.collection_play_time, "%d-%dm")
+        }
         // Create ViewModel
         viewModel = CollectionViewModel(
             reducer = CollectionReducer(
@@ -113,7 +102,8 @@ class CollectionViewModelTest {
             effectProducer = CollectionEffectProducer(),
             observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
-            syncCollection = syncCollectionUseCase
+            observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            syncManager = fakeSyncManager
         )
     }
 
@@ -126,6 +116,11 @@ class CollectionViewModelTest {
     fun `initial state is Loading`() {
         val state = viewModel.uiState.value
         assertEquals(CollectionUiState.Loading, state)
+    }
+
+    @Test
+    fun `init enqueues collection screen-open sync`() {
+        assertEquals(1, fakeSyncManager.collectionSyncEnqueueCount)
     }
 
     @Test
@@ -620,84 +615,36 @@ class CollectionViewModelTest {
     }
 
     @Test
-    fun `Refresh event triggers sync and sets isRefreshing to true then false`() = runTest {
-        // Given - logged in user and collection
-        val user = AuthCredentials(username = "testuser", password = "password")
-        fakeAuthRepository.setCurrentUser(user)
+    fun `Refresh event enqueues collection sync`() = runTest {
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
-        fakeCollectionRepository.syncCollectionResult = AppResult.Success(items)
-        
-        val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertFalse(initialState.common.isRefreshing)
-
-        // When - Refresh event is triggered
-        viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        // Then - sync was called
-        assertEquals(1, fakeCollectionRepository.syncCallCount)
-        assertEquals("testuser", fakeCollectionRepository.lastSyncUsername)
-        
-        // And - isRefreshing returns to false
-        val finalState = viewModel.uiState.value as CollectionUiState.Content
-        assertFalse(finalState.common.isRefreshing)
-    }
-
-    @Test
-    fun `Refresh event handles sync failure gracefully`() = runTest {
-        // Given - logged in user and collection
-        val user = AuthCredentials(username = "testuser", password = "password")
-        fakeAuthRepository.setCurrentUser(user)
-        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
-        fakeCollectionRepository.setCollection(items)
-        fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
-        
-        val initialState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-        assertFalse(initialState.common.isRefreshing)
-
-        // Given - collect effects
-        val effects = mutableListOf<CollectionUiEffect>()
-        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiEffect.collect { effects.add(it) }
-        }
-
-        // When - Refresh event is triggered
-        viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        // Then - sync was attempted
-        assertEquals(1, fakeCollectionRepository.syncCallCount)
-        
-        // And - isRefreshing returns to false even after error
-        val finalState = viewModel.uiState.value as CollectionUiState.Content
-        assertFalse(finalState.common.isRefreshing)
-        
-        // And - ShowSnackbar effect was emitted
-        assertEquals(1, effects.size)
-        assertTrue(effects[0] is CollectionUiEffect.ShowSnackbar)
-
-        // Verify the message contains the expected error text
-        val snackbarEffect = effects[0] as CollectionUiEffect.ShowSnackbar
-        assertEquals("string_${R.string.sync_collections_failed_error}", snackbarEffect.messageUiText.asString(fakeStringProvider))
-
-        job.cancel()
-    }
-
-    @Test
-    fun `Refresh event when not logged in does not call sync`() = runTest {
-        // Given - no logged in user but collection exists
-        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
-        fakeCollectionRepository.setCollection(items)
-        
         awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
 
-        // When - Refresh event is triggered
         viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
-        // Then - sync was not called (use case returned NotLoggedIn error before attempting repository sync)
-        assertEquals(0, fakeCollectionRepository.syncCallCount)
+        assertEquals(2, fakeSyncManager.collectionSyncEnqueueCount)
+    }
+
+    @Test
+    fun `persisted sync state drives collection refresh indicator`() = runTest {
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+
+        fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
+        advanceUntilIdle()
+
+        val refreshingState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel) {
+            (it as? CollectionUiState.Content)?.common?.isRefreshing == true
+        }
+        assertTrue(refreshingState.common.isRefreshing)
+
+        fakeSyncTimeRepository.markCompleted(SyncType.COLLECTION, testClock.instant())
+        advanceUntilIdle()
+
+        val finalState = viewModel.uiState.value as CollectionUiState.Content
+        assertFalse(finalState.common.isRefreshing)
     }
 
     // Helper function to create test collection items

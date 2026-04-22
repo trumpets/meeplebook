@@ -334,7 +334,7 @@ class AddPlayScreenRootTest {
             }
         }
 
-        composeRule.onNodeWithText(stringRes(R.string.add_play_save)).assertDoesNotExist()
+        composeRule.onNodeWithTag("saveButton").assertDoesNotExist()
     }
 
     @Test

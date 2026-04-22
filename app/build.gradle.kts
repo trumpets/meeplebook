@@ -38,12 +38,12 @@ android {
 
     defaultConfig {
         applicationId = "app.meeplebook"
-        minSdk = 26
+        minSdk = 30
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "app.meeplebook.HiltTestRunner"
         vectorDrawables.useSupportLibrary = true
 
         val token = getBggBearerTokenOrNull()
@@ -143,7 +143,9 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
+    ksp(libs.hilt.androidx.compiler)
 
     // Network
     implementation(libs.retrofit)
@@ -166,6 +168,9 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.okhttp3)
 
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+
     // Testing
     // Unit tests (src/test)
     testImplementation(libs.junit)
@@ -186,7 +191,9 @@ dependencies {
     androidTestImplementation(libs.room.testing) // For in-memory Room database in androidTest
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.turbine)
+    androidTestImplementation(libs.androidx.work.testing)
     kspAndroidTest(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.androidx.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

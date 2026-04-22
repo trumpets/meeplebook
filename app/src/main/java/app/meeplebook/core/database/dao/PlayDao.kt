@@ -9,6 +9,7 @@ import androidx.room.Upsert
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayWithPlayers
 import app.meeplebook.core.database.projection.PlayerLocationProjection
+import app.meeplebook.core.plays.model.PlaySyncStatus
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -71,6 +72,19 @@ interface PlayDao {
     @Transaction
     @Query("SELECT * FROM plays WHERE gameId = :gameId")
     suspend fun getPlaysWithPlayersForGame(gameId: Long): List<PlayWithPlayers>
+
+    /**
+     * Gets plays eligible for outbox upload retry.
+     */
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM plays
+        WHERE syncStatus = 'PENDING' OR syncStatus = 'FAILED'
+        ORDER BY date ASC, localId ASC
+        """
+    )
+    suspend fun getPendingOrFailedPlaysWithPlayers(): List<PlayWithPlayers>
 
     /**
      * Observes all plays.
@@ -149,6 +163,23 @@ interface PlayDao {
      */
     @Query("DELETE FROM plays WHERE remoteId IN (:remoteIds)")
     suspend fun deleteByRemoteIds(remoteIds: List<Long>)
+
+    /**
+     * Updates sync status and optionally assigns a remote id to a local play.
+     */
+    @Query(
+        """
+        UPDATE plays
+        SET syncStatus = :syncStatus,
+            remoteId = COALESCE(:remoteId, remoteId)
+        WHERE localId = :localPlayId
+        """
+    )
+    suspend fun updateSyncState(
+        localPlayId: Long,
+        syncStatus: PlaySyncStatus,
+        remoteId: Long? = null
+    )
 
     /**
      * Observes the total count of plays (sum of quantities).

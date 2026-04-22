@@ -73,7 +73,7 @@ class AuthRepositoryIntegrationTest {
         // Then
         assertTrue(result is AppResult.Success)
         assertEquals("testuser", (result as AppResult.Success).data.username)
-        assertEquals("testpass", result.data.password)
+        assertEquals("token123", result.data.password)
 
         // Verify credentials were saved locally
         assertEquals(1, fakeLocalDataSource.saveCredentialsCallCount)
@@ -115,7 +115,7 @@ class AuthRepositoryIntegrationTest {
         // Then
         val currentUser = repository.observeCurrentUser().first()
         assertEquals("myuser", currentUser?.username)
-        assertEquals("mypass", currentUser?.password)
+        assertEquals("token", currentUser?.password)
     }
 
     // --- Failed login flow ---

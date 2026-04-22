@@ -7,9 +7,11 @@ import app.meeplebook.core.plays.domain.PlayerIdentity
 import app.meeplebook.core.plays.local.PlaysLocalDataSource
 import app.meeplebook.core.plays.model.Play
 import app.meeplebook.core.plays.model.PlayError
+import app.meeplebook.core.plays.remote.PlayUploadException
 import app.meeplebook.core.plays.remote.PlaysFetchException
 import app.meeplebook.core.plays.remote.PlaysRemoteDataSource
 import app.meeplebook.core.result.AppResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
@@ -86,10 +88,46 @@ class PlaysRepositoryImpl @Inject constructor(
             return AppResult.Success(Unit)
         } catch (e: Exception) {
             return when (e) {
+                is CancellationException -> throw e // Don't catch cancellations, they should propagate
                 is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)
                 is IOException -> AppResult.Failure(PlayError.NetworkError)
                 is RetryException -> AppResult.Failure(PlayError.MaxRetriesExceeded(e))
                 is PlaysFetchException -> AppResult.Failure(PlayError.Unknown(e))
+                else -> AppResult.Failure(PlayError.Unknown(e))
+            }
+        }
+    }
+
+    override suspend fun syncPendingPlays(): AppResult<Unit, PlayError> {
+        try {
+            val playsToUpload = local.getPendingOrFailedPlays()
+            playsToUpload.forEach { play ->
+                when (val result = uploadPendingPlay(play)) {
+                    is PendingPlayUploadResult.Success -> {
+                        local.markPlayAsSynced(
+                            localPlayId = play.playId.localId,
+                            remotePlayId = result.remotePlayId
+                        )
+                    }
+
+                    is PendingPlayUploadResult.NonFatalFailure -> {
+                        local.markPlayAsFailed(play.playId.localId)
+                    }
+
+                    is PendingPlayUploadResult.FatalFailure -> {
+                        local.markPlayAsFailed(play.playId.localId)
+                        return AppResult.Failure(result.error)
+                    }
+                }
+            }
+
+            return AppResult.Success(Unit)
+        } catch (e: Exception) {
+            return when (e) {
+                is CancellationException -> throw e // Don't catch cancellations, they should propagate
+                is IllegalArgumentException -> AppResult.Failure(PlayError.NotLoggedIn)
+                is IOException -> AppResult.Failure(PlayError.NetworkError)
+                is RetryException -> AppResult.Failure(PlayError.MaxRetriesExceeded(e))
                 else -> AppResult.Failure(PlayError.Unknown(e))
             }
         }
@@ -145,4 +183,25 @@ class PlaysRepositoryImpl @Inject constructor(
     override fun searchPlayersByUsername(query: String): Flow<List<PlayerIdentity>> {
         return local.searchPlayersByUsername(query.trim())
     }
+
+    private suspend fun uploadPendingPlay(play: Play): PendingPlayUploadResult {
+        return try {
+            PendingPlayUploadResult.Success(remote.uploadPlay(play))
+        } catch (error: Exception) {
+            when (error) {
+                is CancellationException -> throw error // Don't catch cancellations, they should propagate
+                is PlayUploadException -> PendingPlayUploadResult.NonFatalFailure(error)
+                is IllegalArgumentException -> PendingPlayUploadResult.FatalFailure(PlayError.NotLoggedIn)
+                is IOException -> PendingPlayUploadResult.FatalFailure(PlayError.NetworkError)
+                is RetryException -> PendingPlayUploadResult.FatalFailure(PlayError.MaxRetriesExceeded(error))
+                else -> PendingPlayUploadResult.NonFatalFailure(error)
+            }
+        }
+    }
+}
+
+private sealed interface PendingPlayUploadResult {
+    data class Success(val remotePlayId: Long) : PendingPlayUploadResult
+    data class FatalFailure(val error: PlayError) : PendingPlayUploadResult
+    data class NonFatalFailure(val throwable: Throwable) : PendingPlayUploadResult
 }

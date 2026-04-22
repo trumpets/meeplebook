@@ -6,6 +6,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Hilt bindings for sync persistence components.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SyncTimeModule {

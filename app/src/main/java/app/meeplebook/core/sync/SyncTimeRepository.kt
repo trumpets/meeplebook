@@ -1,45 +1,41 @@
 package app.meeplebook.core.sync
 
+import app.meeplebook.core.sync.model.SyncState
+import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
 /**
- * Repository for managing sync timestamps.
+ * Repository for persisted sync execution state and the derived timestamps exposed to the UI.
  */
 interface SyncTimeRepository {
-
     /**
-     * Observes the last collection sync time.
+     * Observes the sync execution state for a single [type].
      */
-    fun observeLastCollectionSync(): Flow<Instant?>
+    fun observeSyncState(type: SyncType): Flow<SyncState>
 
     /**
-     * Observes the last plays sync time.
+     * Marks the sync [type] as started.
      */
-    fun observeLastPlaysSync(): Flow<Instant?>
+    suspend fun markStarted(type: SyncType)
 
     /**
-     * Observes the last full sync time (both collection and plays).
+     * Marks the sync [type] as idle, canceled by OS.
      */
-    fun observeLastFullSync(): Flow<Instant?>
+    suspend fun markIdle(type: SyncType)
 
     /**
-     * Updates the last collection sync time.
+     * Marks the sync [type] as completed successfully.
      */
-    suspend fun updateCollectionSyncTime(time: Instant)
+    suspend fun markCompleted(type: SyncType, time: Instant)
 
     /**
-     * Updates the last plays sync time.
+     * Marks the sync [type] as failed while preserving the last successful sync time.
      */
-    suspend fun updatePlaysSyncTime(time: Instant)
+    suspend fun markFailed(type: SyncType, errorMessage: String?)
 
     /**
-     * Updates the last full sync time.
-     */
-    suspend fun updateFullSyncTime(time: Instant)
-
-    /**
-     * Clears all sync times.
+     * Clears all persisted sync state.
      */
     suspend fun clearSyncTimes()
 }

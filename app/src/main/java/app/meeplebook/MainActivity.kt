@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                         // Check for existing credentials at startup
                         LaunchedEffect(Unit) {
                             val user = authRepository.getCurrentUser()
-                            initialRoute = if (user != null) Screen.Home(refreshOnLogin = false) else Screen.Login
+                            initialRoute = if (user != null) Screen.Home else Screen.Login
                         }
 
                         SplashScreen()

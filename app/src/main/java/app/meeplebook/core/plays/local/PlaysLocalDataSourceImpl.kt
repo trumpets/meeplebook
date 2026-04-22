@@ -64,21 +64,18 @@ class PlaysLocalDataSourceImpl @Inject constructor(
             val existingPlays = playDao.getByRemoteIds(remoteIds)
             val existingByRemoteId = existingPlays.associateBy { it.remoteId!! }
 
-            // Prepare PlayEntities
             val playEntities = remotePlays.map { remotePlay ->
                 existingByRemoteId[remotePlay.remoteId]?.let { existing ->
                     remotePlay.toEntity(localId = existing.localId, syncStatus = PlaySyncStatus.SYNCED)
-                } ?: remotePlay.toEntity(localId = 0L, syncStatus = PlaySyncStatus.SYNCED) // new
+                } ?: remotePlay.toEntity(localId = 0L, syncStatus = PlaySyncStatus.SYNCED)
             }
 
-            // Upsert plays (Room generates IDs for new ones)
             playDao.upsertAll(plays = playEntities)
 
             // Retrieve actual localIds
             val updatedPlays = playDao.getByRemoteIds(remoteIds)
             val remoteIdToLocalId = updatedPlays.associate { it.remoteId!! to it.localId }
 
-            // Prepare PlayerEntities
             val playerEntities = remotePlays.flatMap { remotePlay ->
                 val localId = remoteIdToLocalId[remotePlay.remoteId]!!
                 remotePlay.players.map { it.toEntity(playId = localId) }
@@ -91,12 +88,31 @@ class PlaysLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun getPendingOrFailedPlays(): List<Play> {
+        return playDao.getPendingOrFailedPlaysWithPlayers().map { it.toPlay() }
+    }
+
     override suspend fun insertPlay(playEntity: PlayEntity, playerEntities: List<PlayerEntity>) {
         database.withTransaction {
             val localPlayId = playDao.insert(playEntity)
             val playersWithFk = playerEntities.map { it.copy(playId = localPlayId) }
             playerDao.insertAll(players = playersWithFk)
         }
+    }
+
+    override suspend fun markPlayAsSynced(localPlayId: Long, remotePlayId: Long) {
+        playDao.updateSyncState(
+            localPlayId = localPlayId,
+            syncStatus = PlaySyncStatus.SYNCED,
+            remoteId = remotePlayId
+        )
+    }
+
+    override suspend fun markPlayAsFailed(localPlayId: Long) {
+        playDao.updateSyncState(
+            localPlayId = localPlayId,
+            syncStatus = PlaySyncStatus.FAILED
+        )
     }
 
     override suspend fun clearPlays() {

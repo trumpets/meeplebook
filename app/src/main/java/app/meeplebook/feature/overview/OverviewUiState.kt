@@ -33,7 +33,7 @@ sealed interface OverviewUiState {
         val recentPlays: List<RecentPlay> = emptyList(),
         val recentlyAddedGame: GameHighlight? = null,
         val suggestedGame: GameHighlight? = null,
-        val lastSyncedUiText: UiText = uiTextEmpty(),
+        val syncStatusUiText: UiText = uiTextEmpty(),
         val isRefreshing: Boolean = false
     ) : OverviewUiState
 }
