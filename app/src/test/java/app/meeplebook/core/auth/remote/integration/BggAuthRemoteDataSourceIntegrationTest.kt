@@ -62,7 +62,7 @@ class BggAuthRemoteDataSourceIntegrationTest {
 
         // Then
         assertEquals("testuser", result.username)
-        assertEquals("testpass", result.password)
+        assertEquals(cookieValue, result.password)
 
         // Verify the request was made correctly
         val request = mockWebServer.takeRequest()
@@ -90,7 +90,7 @@ class BggAuthRemoteDataSourceIntegrationTest {
 
         // Then
         assertEquals("user", result.username)
-        assertEquals("pass", result.password)
+        assertEquals(tokenValue, result.password)
     }
 
     @Test
