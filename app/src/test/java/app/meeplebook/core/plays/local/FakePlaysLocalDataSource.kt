@@ -65,7 +65,7 @@ class FakePlaysLocalDataSource : PlaysLocalDataSource {
     override suspend fun getPendingOrFailedPlays(): List<Play> {
         return playsFlow.value
             .filter { it.syncStatus == PlaySyncStatus.PENDING || it.syncStatus == PlaySyncStatus.FAILED }
-            .sortedBy { it.date }
+            .sortedWith(compareBy({ it.date }, { it.playId.localId }))
     }
 
     override suspend fun insertPlay(
