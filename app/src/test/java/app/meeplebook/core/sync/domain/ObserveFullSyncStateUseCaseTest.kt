@@ -64,6 +64,25 @@ class ObserveFullSyncStateUseCaseTest {
     }
 
     @Test
+    fun `invoke keeps last synced time null until both domains completed`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.COLLECTION,
+            Instant.parse("2024-01-15T14:00:00Z")
+        )
+
+        val result = useCase().first()
+
+        assertEquals(
+            SyncState(
+                isSyncing = false,
+                lastSyncedAt = null,
+                errorMessage = null
+            ),
+            result
+        )
+    }
+
+    @Test
     fun `invoke prioritizes collection error when both domains failed`() = runTest {
         fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "CollectionError")
         fakeSyncTimeRepository.markFailed(SyncType.PLAYS, "PlaysError")

@@ -4,7 +4,6 @@ import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import java.time.Instant
 
 /**
@@ -34,20 +33,6 @@ class FakeSyncTimeRepository : SyncTimeRepository {
 
     override fun observeSyncState(type: SyncType): Flow<SyncState> =
         states.getValue(type)
-
-    override fun observeLastFullSync(): Flow<Instant?> =
-        combine(
-            states.getValue(SyncType.COLLECTION),
-            states.getValue(SyncType.PLAYS)
-        ) { collectionState, playsState ->
-            val collectionTime = collectionState.lastSyncedAt
-            val playsTime = playsState.lastSyncedAt
-            if (collectionTime == null || playsTime == null) {
-                null
-            } else {
-                minOf(collectionTime, playsTime)
-            }
-        }
 
     override suspend fun markStarted(type: SyncType) {
         states.getValue(type).value = states.getValue(type).value.copy(

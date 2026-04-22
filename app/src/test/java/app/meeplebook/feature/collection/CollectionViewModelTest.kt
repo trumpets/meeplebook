@@ -2,17 +2,13 @@ package app.meeplebook.feature.collection
 
 import app.cash.turbine.test
 import app.meeplebook.R
-import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
 import app.meeplebook.core.collection.domain.ObserveCollectionUseCase
-import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.model.QuickFilter
-import app.meeplebook.core.model.AuthCredentials
-import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
 import app.meeplebook.core.sync.manager.FakeSyncManager
@@ -91,13 +87,11 @@ class CollectionViewModelTest {
             observeCollection = observeCollectionUseCase,
             sectionBuilder = buildSectionsUseCase
         )
-        fakeStringProvider = FakeStringProvider()
-        
-        // Configure string provider with expected formats
-        fakeStringProvider.setString(R.string.collection_plays_count, "%d plays")
-        fakeStringProvider.setString(R.string.collection_player_count, "%d-%dp")
-        fakeStringProvider.setString(R.string.collection_play_time, "%d-%dm")
-        
+        fakeStringProvider = FakeStringProvider().apply {
+            setString(R.string.collection_plays_count, "%d plays")
+            setString(R.string.collection_player_count, "%d-%dp")
+            setString(R.string.collection_play_time, "%d-%dm")
+        }
         // Create ViewModel
         viewModel = CollectionViewModel(
             reducer = CollectionReducer(
@@ -651,22 +645,6 @@ class CollectionViewModelTest {
 
         val finalState = viewModel.uiState.value as CollectionUiState.Content
         assertFalse(finalState.common.isRefreshing)
-    }
-
-    @Test
-    fun `collection sync failure updates sync status text`() = runTest {
-        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
-        fakeCollectionRepository.setCollection(items)
-        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
-
-        fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "NetworkError")
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value as CollectionUiState.Content
-        assertEquals(
-            "string_${R.string.sync_collections_failed_error}",
-            state.common.syncStatusUiText.asString(fakeStringProvider)
-        )
     }
 
     // Helper function to create test collection items

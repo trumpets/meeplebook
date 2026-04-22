@@ -114,6 +114,12 @@ class OverviewViewModelTest {
     }
 
     @Test
+    fun `init schedules periodic sync and enqueues full sync`() {
+        assertEquals(1, fakeSyncManager.periodicFullSyncScheduleCount)
+        assertEquals(1, fakeSyncManager.fullSyncEnqueueCount)
+    }
+
+    @Test
     fun `uiState displays overview data correctly`() = runTest {
         fakeCollectionRepository.setCollectionCount(50)
         fakeCollectionRepository.setUnplayedCount(10)
@@ -154,7 +160,7 @@ class OverviewViewModelTest {
         viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
-        assertEquals(1, fakeSyncManager.fullSyncEnqueueCount)
+        assertEquals(2, fakeSyncManager.fullSyncEnqueueCount)
     }
 
     @Test

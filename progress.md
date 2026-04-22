@@ -1035,3 +1035,24 @@ PR Link: N/A (Prompt 8)
   - Worker result mapping should be covered both in pure unit tests (`SyncWorkerResultMapperTest`) and in Hilt-backed worker tests so retry/failure/success behavior stays verified at the actual worker entrypoint
   - For sync worker verification on emulator, targeted `connectedDebugAndroidTest` runs scoped by `android.testInstrumentationRunnerArguments.class` are a practical repo-approved path when the changed surface is limited to a few worker test classes
 ---
+
+## 2026-04-22T11:21:12+02:00
+PR Link: N/A
+- Repaired unit tests after the sync/overview refactor removed obsolete sync APIs and reducer fields
+- Deleted stale tests for removed `ObserveLastFullSyncUseCase` and `SyncUserDataUseCase`, updated reducer/ViewModel tests to the current state model, and added a replacement `ObserveFullSyncStateUseCase` assertion that full-sync time stays null until both domains complete
+- Refreshed repo guidance so the sync notes match the current trigger and sync-entrypoint structure
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/sync/FakeSyncTimeRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/reducer/OverviewReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/reducer/PlaysReducerTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveLastFullSyncUseCaseTest.kt` (deleted)
+  - `app/src/test/java/app/meeplebook/core/sync/domain/SyncUserDataUseCaseTest.kt` (deleted)
+  - `progress.md`
+- **Learnings for future iterations:**
+  - When a refactor removes a sync API entirely, update or delete the obsolete tests instead of reintroducing dead type names; keep replacement coverage focused on the behavior that still exists
+  - `OverviewViewModel` now schedules periodic sync and enqueues an immediate full sync in `init`, so tests using `FakeSyncManager` must account for an initial full-sync count before asserting manual refresh behavior
+  - Collection screen tests should assert the current `CollectionCommonState` surface only; sync status text is no longer part of collection common UI state, but subtitle mapping still needs `FakeStringProvider`
+---
