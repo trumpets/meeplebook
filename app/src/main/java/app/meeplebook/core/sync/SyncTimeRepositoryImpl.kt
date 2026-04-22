@@ -5,7 +5,6 @@ import app.meeplebook.core.database.entity.SyncStateEntity
 import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import javax.inject.Inject
@@ -19,20 +18,6 @@ class SyncTimeRepositoryImpl @Inject constructor(
     override fun observeSyncState(type: SyncType): Flow<SyncState> =
         syncDao.observeSyncState(type).map { entity ->
             entity?.toModel() ?: SyncState()
-        }
-
-    override fun observeLastFullSync(): Flow<Instant?> =
-        combine(
-            observeSyncState(SyncType.COLLECTION),
-            observeSyncState(SyncType.PLAYS)
-        ) { collectionState, playsState ->
-            val collectionTime = collectionState.lastSyncedAt
-            val playsTime = playsState.lastSyncedAt
-            if (collectionTime == null || playsTime == null) {
-                null
-            } else {
-                minOf(collectionTime, playsTime)
-            }
         }
 
     override suspend fun markStarted(type: SyncType) {

@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import app.meeplebook.core.auth.AuthRepository
-import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.ui.navigation.AppNavHost
 import app.meeplebook.ui.navigation.Screen
 import app.meeplebook.ui.theme.MeepleBookTheme
@@ -30,9 +29,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authRepository: AuthRepository
-
-    @Inject
-    lateinit var syncManager: SyncManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,11 +44,7 @@ class MainActivity : ComponentActivity() {
                         // Check for existing credentials at startup
                         LaunchedEffect(Unit) {
                             val user = authRepository.getCurrentUser()
-                            if (user != null) {
-                                syncManager.schedulePeriodicFullSync()
-                                syncManager.enqueueFullSync()
-                            }
-                            initialRoute = if (user != null) Screen.Home(refreshOnLogin = false) else Screen.Login
+                            initialRoute = if (user != null) Screen.Home else Screen.Login
                         }
 
                         SplashScreen()

@@ -152,6 +152,7 @@ class WorkManagerSyncManagerTest {
             request = requestSlot.captured,
             expectedTag = SyncWorkNames.PERIODIC_FULL_SYNC
         )
+        assertEquals(24L * 60L * 60L * 1000L, requestSlot.captured.workSpec.intervalDuration)
     }
 }
 

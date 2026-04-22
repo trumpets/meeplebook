@@ -91,6 +91,16 @@ class SyncPlaysWorkerTest {
         assertTrue(result is ListenableWorker.Result.Failure)
     }
 
+    @Test
+    fun doWork_returnsRetry_whenPlaysSyncFailsWithNetworkError() = runTest {
+        fakeAuthRepository.currentUser = AuthCredentials("testuser", "password")
+        fakePlaysRepository.syncPlaysResult = AppResult.Failure(PlayError.NetworkError)
+
+        val result = buildWorker().doWork()
+
+        assertTrue(result is ListenableWorker.Result.Retry)
+    }
+
     private fun buildWorker(): SyncPlaysWorker =
         TestListenableWorkerBuilder<SyncPlaysWorker>(
             ApplicationProvider.getApplicationContext()

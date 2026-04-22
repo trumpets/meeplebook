@@ -19,17 +19,15 @@ fun AppNavHost(
         composable<Screen.Login> {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.Home(refreshOnLogin = true)) {
+                    navController.navigate(Screen.Home) {
                         // Clear login screen from back stack
                         popUpTo(Screen.Login) { inclusive = true }
                     }
                 }
             )
         }
-        composable<Screen.Home> { backStackEntry ->
-            val args = backStackEntry.toRoute<Screen.Home>()
+        composable<Screen.Home> {
             HomeScreen(
-                args.refreshOnLogin,
                 homeNavigator = { preselectedGame ->
                     if (preselectedGame == null) {
                         navController.navigate(Screen.AddPlay)
@@ -44,8 +42,7 @@ fun AppNavHost(
                 }
             )
         }
-        composable<Screen.AddPlay> { backStackEntry ->
-            val args = backStackEntry.toRoute<Screen.AddPlay>()
+        composable<Screen.AddPlay> {
             AddPlayScreen(
                 preselectedGame = null,
                 onNavigateBack = { navController.popBackStack() }

@@ -68,6 +68,15 @@ class SyncPendingPlaysWorkerTest {
         assertTrue(result is ListenableWorker.Result.Failure)
     }
 
+    @Test
+    fun doWork_returnsRetry_whenPendingSyncFailsWithNetworkError() = runTest {
+        fakePlaysRepository.syncPendingResult = AppResult.Failure(PlayError.NetworkError)
+
+        val result = buildWorker().doWork()
+
+        assertTrue(result is ListenableWorker.Result.Retry)
+    }
+
     private fun buildWorker(): SyncPendingPlaysWorker =
         TestListenableWorkerBuilder<SyncPendingPlaysWorker>(
             ApplicationProvider.getApplicationContext()

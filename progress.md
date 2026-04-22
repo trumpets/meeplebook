@@ -5,6 +5,7 @@
 - Sync use cases are the worker-facing/auth-gated orchestration boundary; repositories remain responsible for remote sync business logic and local persistence.
 - Keep BGG wire dates on `yyyy-MM-dd` and UI dates on `dd/MM/yyyy`; do not reuse the EU UI formatter for remote XML parsing or serialization.
 - Keep WorkManager workers in `core/sync/work` as thin `@HiltWorker` `CoroutineWorker`s that delegate to sync use cases/repositories, use `HiltWorkerFactory` from `MeepleBookApp`, retry only retryable network failures, fail on max-retries-exceeded, and treat logged-out runs as no-op success.
+- Manual refresh and sync-status UI in Overview/Collection/Plays should go through `SyncManager` and observed persisted `SyncState`; do not drive those screens from direct sync use-case results or local refresh jobs.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -979,4 +980,58 @@ PR Link: N/A (Prompt 6)
   - Keep automatic background triggers thin and routed through `SyncManager`; let Prompt 7 handle user-driven manual refresh migration separately
   - The periodic sync default is currently one daily full-sync trigger backed by a dedicated orchestration worker that simply re-enqueues the existing full-sync chain
   - Screen-open auto triggers are currently domain-specific: Collection opens enqueue collection pull, Plays opens enqueue plays pull, while play saves enqueue pending-play upload only
+---
+
+## 2026-04-21T10:52:20Z
+PR Link: N/A (Prompt 7)
+- Implemented Prompt 7 from `BACKGROUND_SYNC_PLAN.md` by routing Overview/Collection/Plays manual refresh through `SyncManager` and exposing persisted sync state to those screens
+- Added shared sync-state observer use cases and short sync-status text mapping so Overview, Collection, and Plays now render status from Room-backed sync rows instead of direct sync-call results
+- Updated ViewModel and UI tests to assert enqueue-driven refresh behavior and persisted-sync-driven refreshing/status rendering
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveSyncStateUseCase.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCase.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/sync/SyncStatusText.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysUiState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysMappers.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/feature/overview/OverviewContentTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Manual refresh should only enqueue work; user-visible refreshing and status text must come from observed persisted sync rows so navigation or process changes do not desynchronize the UI
+  - Overview should derive its status from a combined full-sync observer, while Collection and Plays can observe their own `SyncType` rows directly
+  - When testing persisted-sync-driven UI, mutate `FakeSyncTimeRepository` and wait for the derived `UiState` instead of asserting immediately on the current `StateFlow` value
+---
+
+## 2026-04-22T00:16:31.026+02:00
+PR Link: N/A (Prompt 8)
+- Implemented Prompt 8 from `BACKGROUND_SYNC_PLAN.md` by hardening sync observer/worker/manager coverage and polishing the related sync docs
+- Added direct unit coverage for `ObserveSyncStateUseCase` and `ObserveFullSyncStateUseCase`, expanded worker androidTests for retryable network failures and logged-out collection runs, and asserted the periodic full-sync cadence in `WorkManagerSyncManagerTest`
+- Refined sync observer KDoc and added a repo note that targeted connected worker tests are an acceptable verification path for sync worker changes
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveSyncStateUseCaseTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCaseTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/sync/manager/WorkManagerSyncManagerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncCollectionWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPlaysWorkerTest.kt`
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncPendingPlaysWorkerTest.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveSyncStateUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCase.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - The sync observer use cases are worth testing directly because they encode behavior, not just delegation: full-sync status uses OR semantics for `isSyncing`, requires both timestamps before exposing a full-sync time, and keeps collection-first error precedence
+  - Worker result mapping should be covered both in pure unit tests (`SyncWorkerResultMapperTest`) and in Hilt-backed worker tests so retry/failure/success behavior stays verified at the actual worker entrypoint
+  - For sync worker verification on emulator, targeted `connectedDebugAndroidTest` runs scoped by `android.testInstrumentationRunnerArguments.class` are a practical repo-approved path when the changed surface is limited to a few worker test classes
 ---

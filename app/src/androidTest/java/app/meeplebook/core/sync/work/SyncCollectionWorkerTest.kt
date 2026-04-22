@@ -84,6 +84,24 @@ class SyncCollectionWorkerTest {
         assertTrue(result is ListenableWorker.Result.Failure)
     }
 
+    @Test
+    fun doWork_returnsRetry_whenCollectionSyncFailsWithNetworkError() = runTest {
+        fakeAuthRepository.currentUser = AuthCredentials("testuser", "password")
+        fakeCollectionRepository.syncResult = AppResult.Failure(CollectionError.NetworkError)
+
+        val result = buildWorker().doWork()
+
+        assertTrue(result is ListenableWorker.Result.Retry)
+    }
+
+    @Test
+    fun doWork_returnsSuccess_whenNotLoggedIn() = runTest {
+        val result = buildWorker().doWork()
+
+        assertTrue(result is ListenableWorker.Result.Success)
+        assertEquals(0, fakeCollectionRepository.syncCallCount)
+    }
+
     private fun buildWorker(): SyncCollectionWorker =
         TestListenableWorkerBuilder<SyncCollectionWorker>(
             ApplicationProvider.getApplicationContext()

@@ -52,16 +52,9 @@ import app.meeplebook.ui.theme.MeepleBookTheme
 
 @Composable
 fun OverviewScreen(
-    refreshOnLogin: Boolean,
     viewModel: OverviewViewModel = hiltViewModel(),
     homeNavigator: HomeNavigator
 ) {
-    LaunchedEffect(refreshOnLogin) {
-        if (refreshOnLogin) {
-            viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
-        }
-    }
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {
@@ -142,7 +135,7 @@ fun OverviewContent(
                 item {
                     OverviewStatsCard(
                         stats = uiState.stats,
-                        lastSyncedUiText = uiState.lastSyncedUiText
+                        syncStatusUiText = uiState.syncStatusUiText
                     )
                 }
 
@@ -204,7 +197,7 @@ fun OverviewContent(
 @Composable
 fun OverviewStatsCard(
     stats: OverviewStats,
-    lastSyncedUiText: UiText,
+    syncStatusUiText: UiText,
 ) {
     StatsCard(
         modifier = Modifier.testTag("overviewStatsCard")
@@ -236,10 +229,10 @@ fun OverviewStatsCard(
                 label = stringResource(R.string.stat_unplayed)
             )
         }
-        if (lastSyncedUiText.isNotEmpty()) {
+        if (syncStatusUiText.isNotEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
             UiTextText(
-                text = lastSyncedUiText,
+                text = syncStatusUiText,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -294,11 +287,11 @@ class OverviewUiStatePreviewParameterProvider : PreviewParameterProvider<Overvie
                 thumbnailUrl = null,
                 subtitleUiText = uiText("Try tonight")
             ),
-            lastSyncedUiText = uiText("Last synced: 5 min ago")
+            syncStatusUiText = uiText("Last synced: 5 min ago")
         ),
         OverviewUiState.Content(
             stats = OverviewStats(),
-            lastSyncedUiText = uiText("Never synced")
+            syncStatusUiText = uiText("Never synced")
         ),
         OverviewUiState.Loading,
         OverviewUiState.Content(

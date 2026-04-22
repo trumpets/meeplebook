@@ -10,7 +10,7 @@ import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
 import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.sync.FakeSyncTimeRepository
-import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
+import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -50,13 +50,13 @@ class ObserveOverviewUseCaseTest {
         )
         val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
         val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
-        val observeLastSync = ObserveLastFullSyncUseCase(fakeSyncTimeRepository)
+        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository)
 
         useCase = ObserveOverviewUseCase(
             observeStats = observeStats,
             observeRecentPlays = observeRecentPlays,
             observeHighlights = observeHighlights,
-            observeLastSync = observeLastSync
+            observeFullSyncState = observeFullSyncState
         )
     }
 
@@ -124,7 +124,7 @@ class ObserveOverviewUseCaseTest {
         assertNotNull(overview.suggestedGame)
         assertEquals("Wingspan", overview.suggestedGame?.gameName)
 
-        assertEquals(syncTime, overview.lastSyncedDate)
+        assertEquals(syncTime, overview.syncState.lastSyncedAt)
     }
 
     @Test
@@ -143,7 +143,7 @@ class ObserveOverviewUseCaseTest {
         assertEquals(0, overview.recentPlays.size)
         assertNull(overview.recentlyAddedGame)
         assertNull(overview.suggestedGame)
-        assertNull(overview.lastSyncedDate)
+        assertNull(overview.syncState.lastSyncedAt)
     }
 
     @Test
@@ -177,7 +177,7 @@ class ObserveOverviewUseCaseTest {
         // Then
         assertEquals(30L, overview.stats.gamesCount)
         assertEquals(1, overview.recentPlays.size)
-        assertNull(overview.lastSyncedDate)
+        assertNull(overview.syncState.lastSyncedAt)
     }
 
     @Test

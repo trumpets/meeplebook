@@ -15,11 +15,6 @@ interface SyncTimeRepository {
     fun observeSyncState(type: SyncType): Flow<SyncState>
 
     /**
-     * Observes the last full sync time, derived from the collection and plays sync records.
-     */
-    fun observeLastFullSync(): Flow<Instant?>
-
-    /**
      * Marks the sync [type] as started.
      */
     suspend fun markStarted(type: SyncType)

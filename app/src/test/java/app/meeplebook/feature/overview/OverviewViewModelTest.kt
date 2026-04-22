@@ -1,34 +1,27 @@
 package app.meeplebook.feature.overview
 
 import app.meeplebook.R
-import app.meeplebook.core.auth.FakeAuthRepository
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionHighlightsUseCase
 import app.meeplebook.core.collection.domain.ObserveCollectionSummaryUseCase
-import app.meeplebook.core.collection.model.CollectionError
 import app.meeplebook.core.collection.model.CollectionItem
 import app.meeplebook.core.collection.model.GameSubtype
-import app.meeplebook.core.model.AuthCredentials
 import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
-import app.meeplebook.core.plays.model.PlayError
 import app.meeplebook.core.plays.model.PlayId
-import app.meeplebook.core.result.AppResult
 import app.meeplebook.core.sync.FakeSyncTimeRepository
-import app.meeplebook.core.sync.SyncRunner
-import app.meeplebook.core.sync.domain.ObserveLastFullSyncUseCase
-import app.meeplebook.core.sync.domain.SyncCollectionUseCase
-import app.meeplebook.core.sync.domain.SyncPlaysUseCase
-import app.meeplebook.core.sync.domain.SyncUserDataUseCase
-import app.meeplebook.core.ui.uiTextRes
+import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
+import app.meeplebook.core.sync.manager.FakeSyncManager
+import app.meeplebook.core.sync.model.SyncType
+import app.meeplebook.core.ui.FakeStringProvider
+import app.meeplebook.core.ui.asString
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
 import app.meeplebook.feature.overview.effect.OverviewEffectProducer
 import app.meeplebook.feature.overview.effect.OverviewUiEffect
 import app.meeplebook.feature.overview.reducer.OverviewReducer
 import app.meeplebook.testutils.assertState
 import app.meeplebook.testutils.awaitUiStateMatching
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -52,10 +45,11 @@ import java.time.ZoneOffset
 @OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelTest {
 
-    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
+    private lateinit var fakeSyncManager: FakeSyncManager
+    private lateinit var fakeStringProvider: FakeStringProvider
     private lateinit var viewModel: OverviewViewModel
 
     private val testDispatcher = StandardTestDispatcher()
@@ -68,13 +62,22 @@ class OverviewViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
-        fakeAuthRepository = FakeAuthRepository()
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
         fakeSyncTimeRepository = FakeSyncTimeRepository()
-
-        val user = AuthCredentials(username = "testuser", password = "password")
-        fakeAuthRepository.setCurrentUser(user)
+        fakeSyncManager = FakeSyncManager()
+        fakeStringProvider = FakeStringProvider().apply {
+            setString(R.string.sync_in_progress, "Syncing…")
+            setString(R.string.sync_failed_error, "Failed to sync data. Please try again.")
+            setString(R.string.sync_never, "Never synced")
+            setString(R.string.sync_last_synced, "Last synced: %s")
+            setString(R.string.sync_minutes_ago, "%d min ago")
+            setString(R.string.sync_one_hour_ago, "1 hour ago")
+            setString(R.string.sync_hours_ago, "%d hours ago")
+            setString(R.string.sync_one_day_ago, "1 day ago")
+            setString(R.string.sync_days_ago, "%d days ago")
+            setString(R.string.sync_just_now, "just now")
+        }
 
         val observeStats = app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase(
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
@@ -83,41 +86,20 @@ class OverviewViewModelTest {
         )
         val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
         val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
-        val observeLastSync = ObserveLastFullSyncUseCase(fakeSyncTimeRepository)
+        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository)
 
         val observeOverviewUseCase = ObserveOverviewUseCase(
             observeStats = observeStats,
             observeRecentPlays = observeRecentPlays,
             observeHighlights = observeHighlights,
-            observeLastSync = observeLastSync
-        )
-
-        val syncCollectionUseCase = SyncCollectionUseCase(
-            authRepository = fakeAuthRepository,
-            collectionRepository = fakeCollectionRepository,
-            syncRunner = SyncRunner(
-                syncTimeRepository = fakeSyncTimeRepository,
-                clock = testClock
-            )
-        )
-        val syncPlaysUseCase = SyncPlaysUseCase(
-            authRepository = fakeAuthRepository,
-            playsRepository = fakePlaysRepository,
-            syncRunner = SyncRunner(
-                syncTimeRepository = fakeSyncTimeRepository,
-                clock = testClock
-            )
-        )
-        val syncUserDataUseCase = SyncUserDataUseCase(
-            syncCollection = syncCollectionUseCase,
-            syncPlays = syncPlaysUseCase
+            observeFullSyncState = observeFullSyncState
         )
 
         viewModel = OverviewViewModel(
             reducer = OverviewReducer(),
             effectProducer = OverviewEffectProducer(),
             observeOverviewUseCase = observeOverviewUseCase,
-            syncUserDataUseCase = syncUserDataUseCase
+            syncManager = fakeSyncManager
         )
     }
 
@@ -168,85 +150,43 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `refresh succeeds and returns content state`() = runTest {
-        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-
+    fun `refresh event enqueues full sync`() = runTest {
         viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel)
-        assertFalse(state.isRefreshing)
+        assertEquals(1, fakeSyncManager.fullSyncEnqueueCount)
     }
 
     @Test
-    fun `refresh shows refreshing state while syncing`() = runTest {
-        val gate = CompletableDeferred<Unit>()
-
-        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-        fakeCollectionRepository.beforeSync = { gate.await() }
-
-        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+    fun `persisted full sync state drives refreshing`() = runTest {
+        fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
 
         val state = awaitContentUiState(viewModel) { it.isRefreshing }
         assertTrue(state.isRefreshing)
-
-        gate.complete(Unit)
-        advanceUntilIdle()
     }
 
     @Test
-    fun `refresh shows full screen error when not logged in`() = runTest {
-        fakeAuthRepository.setCurrentUser(null)
-
-        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        val state = awaitErrorUiState(viewModel)
-        assertEquals(uiTextRes(R.string.sync_not_logged_in_error), state.errorMessageUiText)
-    }
-
-    @Test
-    fun `refresh shows full screen error when collection sync fails`() = runTest {
-        fakeCollectionRepository.syncCollectionResult = AppResult.Failure(CollectionError.NetworkError)
-
-        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        val state = awaitErrorUiState(viewModel)
-        assertEquals(uiTextRes(R.string.sync_collections_failed_error), state.errorMessageUiText)
-    }
-
-    @Test
-    fun `refresh shows full screen error when plays sync fails`() = runTest {
-        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Failure(PlayError.NetworkError)
-
-        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-
-        val state = awaitErrorUiState(viewModel)
-        assertEquals(uiTextRes(R.string.sync_plays_failed_error), state.errorMessageUiText)
-    }
-
-    @Test
-    fun `successful refresh clears previous error and returns content`() = runTest {
-        fakeAuthRepository.setCurrentUser(null)
-        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
-        advanceUntilIdle()
-        awaitErrorUiState(viewModel)
-
-        val user = AuthCredentials(username = "testuser", password = "password")
-        fakeAuthRepository.setCurrentUser(user)
-        fakeCollectionRepository.syncCollectionResult = AppResult.Success(emptyList())
-        fakePlaysRepository.syncPlaysResult = AppResult.Success(Unit)
-
-        viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+    fun `failed full sync updates overview sync status text`() = runTest {
+        fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "NetworkError")
         advanceUntilIdle()
 
         val state = awaitContentUiState(viewModel)
-        assertFalse(state.isRefreshing)
+        assertEquals(
+            "Failed to sync data. Please try again.",
+            state.syncStatusUiText.asString(fakeStringProvider)
+        )
+    }
+
+    @Test
+    fun `completed full sync updates overview sync status text`() = runTest {
+        fakeSyncTimeRepository.updateFullSyncTime(Instant.now())
+        advanceUntilIdle()
+
+        val state = awaitContentUiState(viewModel)
+        assertEquals(
+            "Last synced: just now",
+            state.syncStatusUiText.asString(fakeStringProvider)
+        )
     }
 
     @Test
@@ -309,10 +249,4 @@ class OverviewViewModelTest {
         }.assertState()
     }
 
-    private suspend fun TestScope.awaitErrorUiState(
-        viewModel: OverviewViewModel
-    ): OverviewUiState.Error {
-        return awaitUiStateMatching(viewModel.uiState) { it is OverviewUiState.Error }
-            .assertState()
-    }
 }

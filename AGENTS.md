@@ -11,7 +11,7 @@
 - Sync execution state is persisted in the single `sync_states` Room table keyed by `SyncType`; `SyncRunner` is the shared started/success/failed wrapper, `SyncDao` uses partial UPSERT queries for lifecycle updates, and `observeLastFullSync()` is derived from the collection/plays rows rather than stored separately.
 - WorkManager workers live in `core/sync/work/`; keep them thin `@HiltWorker` `CoroutineWorker`s, resolve dependencies through constructor injection and `HiltWorkerFactory`, call the existing sync use cases/repository boundary, fail on max-retries-exceeded, retry only retryable network failures, and treat logged-out runs as `Result.success()`. Keep `androidx.hilt:hilt-compiler` on KSP alongside `hilt-work`; without it the worker factory map is empty and tests/runtime fall back to reflection.
 - `SyncManager` is now the WorkManager orchestration boundary in `core/sync/`; it owns unique work names, `NetworkType.CONNECTED` constraints, `ExistingWorkPolicy.KEEP`, and full-sync ordering of pending plays push -> plays pull -> collection pull.
-- Trigger policy currently wired: app start schedules a daily periodic full sync and enqueues an immediate full sync for logged-in users, Collection/Plays screen-open enqueue their domain syncs, and successful play saves enqueue pending-play upload sync. Manual refresh still uses the direct sync use cases until Prompt 7.
+- Trigger policy currently wired: app start schedules a daily periodic full sync and enqueues an immediate full sync for logged-in users, Collection/Plays screen-open enqueue their domain syncs, successful play saves enqueue pending-play upload sync, and manual refresh in Overview/Collection/Plays also routes through `SyncManager`.
 - Room is central (`core/database/MeepleBookDatabase.kt`): DAOs expose `Flow`, local data sources map entities <-> domain models.
 
 # BGG Integration Patterns
@@ -27,6 +27,7 @@
 - Search uses debounced flows (`searchableFlow` in `core/ui/flow/SearchableFlow.kt`, and direct debounce in collection).
 - Avoid infinite wall-clock reactive flows with `while(true)+delay`; compute time-dependent values on demand (see `.github/copilot-instructions.md`).
 - `UiText` is the app-level text abstraction (`core/ui/UiText.kt`); render via `UiTextText` or `asString()` helpers.
+- Sync chrome on Overview/Collection/Plays should be derived from persisted `SyncState` observers (`ObserveFullSyncStateUseCase` / `ObserveSyncStateUseCase`), not from direct sync results or local refresh jobs.
 - Shared reducer/effect screen abstractions live in `core/ui/architecture/`:
   - `Reducer<State, Event>`
   - `EffectProducer<State, Event, DomainEffect, UiEffect>`
@@ -211,6 +212,9 @@ Goal: eliminate hidden state, implicit sync, and lifecycle-driven logic
   - `./gradlew lint`
 - Instrumented path used in CI when Android-affecting files change:
   - `./gradlew connectedDebugAndroidTest`
+- For sync worker changes, it is fine to run targeted connected tests with
+  `-Pandroid.testInstrumentationRunnerArguments.class=...` for the affected worker test classes
+  before falling back to the full `connectedDebugAndroidTest` suite.
 - For Android emulator/device UI automation, prefer **Maestro** (`maestro` CLI, Maestro MCP, or
   Maestro YAML flows) for app launch/stop, semantic interaction, hierarchy inspection,
   screenshots, and repeatable end-to-end flows.

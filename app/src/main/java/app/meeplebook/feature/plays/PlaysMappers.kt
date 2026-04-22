@@ -4,6 +4,7 @@ import app.meeplebook.R
 import app.meeplebook.core.plays.domain.DomainPlayItem
 import app.meeplebook.core.plays.domain.DomainPlayStatsSummary
 import app.meeplebook.core.plays.domain.DomainPlayerItem
+import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.ui.UiText
 import app.meeplebook.core.ui.uiTextEmpty
 import app.meeplebook.core.ui.uiTextJoin
@@ -97,11 +98,14 @@ fun DomainPlayStatsSummary.toPlayStats(): PlayStats {
  * This is the join point between the domain observer ([DomainPlaysScreenData]) and the reducer
  * pipeline ([PlaysBaseState]). The function keeps display-state derivation out of the reducer.
  */
-fun DomainPlaysScreenData.toUiState(baseState: PlaysBaseState): PlaysUiState {
+fun DomainPlaysScreenData.toUiState(
+    baseState: PlaysBaseState,
+    syncState: SyncState
+): PlaysUiState {
     val common = PlaysCommonState(
         searchQuery = baseState.searchQuery,
         playStats = stats.toPlayStats(),
-        isRefreshing = baseState.isRefreshing
+        isRefreshing = syncState.isSyncing
     )
     val sections = this.sections.map { it.toPlaysSection() }
 
