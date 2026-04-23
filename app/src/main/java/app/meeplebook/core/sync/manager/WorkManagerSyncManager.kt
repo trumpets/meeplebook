@@ -10,7 +10,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.Operation
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.meeplebook.core.sync.work.SyncCollectionWorker
 import app.meeplebook.core.sync.work.SyncPendingPlaysWorker
@@ -36,9 +35,7 @@ class WorkManagerSyncManager @Inject constructor(
         workManager
             .getWorkInfosForUniqueWorkFlow(SyncWorkNames.FULL_SYNC)
             .map { workInfos ->
-                workInfos.any {
-                    it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
-                }
+                workInfos.any { !it.state.isFinished }
             }
             .distinctUntilChanged()
 

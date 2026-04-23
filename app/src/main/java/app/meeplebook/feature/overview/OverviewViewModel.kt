@@ -3,6 +3,7 @@ package app.meeplebook.feature.overview
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
 import app.meeplebook.core.sync.manager.SyncManager
+import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.sync.model.observeRefreshCompletion
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
@@ -29,7 +30,7 @@ class OverviewViewModel @Inject constructor(
     reducer: OverviewReducer,
     effectProducer: OverviewEffectProducer,
     observeOverviewUseCase: ObserveOverviewUseCase,
-    private val observeFullSyncState: ObserveFullSyncStateUseCase,
+    observeFullSyncState: ObserveFullSyncStateUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<OverviewBaseState, OverviewEvent, OverviewEffect, OverviewUiEffect>(
     initialState = OverviewBaseState(),
@@ -42,6 +43,13 @@ class OverviewViewModel @Inject constructor(
         syncManager.enqueueFullSync()
     }
 
+    private val syncState: StateFlow<SyncState> = observeFullSyncState()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            SyncState()
+        )
+
     /**
      * Renderable screen state derived from reducer-owned base state and the observed domain data.
      */
@@ -49,7 +57,7 @@ class OverviewViewModel @Inject constructor(
         combine(
             baseState,
             observeOverviewUseCase(),
-            observeFullSyncState()
+            syncState
         ) { state, domainOverview, syncState ->
             state.errorMessageUiText?.let { errorMessageUiText ->
                 OverviewUiState.Error(errorMessageUiText)
@@ -73,7 +81,7 @@ class OverviewViewModel @Inject constructor(
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
         syncManager.enqueueFullSync()
-        observeFullSyncState()
+        syncState
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }

@@ -5,9 +5,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.dropWhile
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 /**
  * Watches a user-initiated refresh against an existing sync-state flow and invokes
@@ -20,11 +20,11 @@ fun Flow<SyncState>.observeRefreshCompletion(
     scope: CoroutineScope,
     onRefreshComplete: () -> Unit
 ): Job {
-    return map { it.isSyncing }
-        .distinctUntilChanged()
-        .dropWhile { !it } // ignore leading false before sync starts
-        .onEach { isSyncing ->
-            if (!isSyncing) onRefreshComplete()
-        }
-        .launchIn(scope)
+    return scope.launch {
+        map { it.isSyncing }
+            .distinctUntilChanged()
+            .dropWhile { !it }      // skip leading false (background/app-start syncs)
+            .first { !it }          // suspend until the single true→false transition, then done
+        onRefreshComplete()
+    }
 }
