@@ -1,6 +1,7 @@
 package app.meeplebook.core.sync.manager
 
 import androidx.work.Operation
+import kotlinx.coroutines.flow.Flow
 
 /**
  * App-level orchestration boundary for WorkManager-backed sync.
@@ -9,6 +10,9 @@ import androidx.work.Operation
  * worker requests directly. The actual trigger policy stays outside this interface.
  */
 interface SyncManager {
+
+    fun observeFullSyncRunning(): Flow<Boolean>
+
     /**
      * Enqueues the pending-play upload worker if one is not already queued or running.
      */

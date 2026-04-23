@@ -5,6 +5,7 @@ import app.meeplebook.core.collection.domain.DomainGameHighlight
 import app.meeplebook.core.collection.domain.HighlightType
 import app.meeplebook.core.plays.domain.DomainRecentPlay
 import app.meeplebook.core.stats.domain.DomainOverviewStats
+import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.sync.toFullSyncStatusUiText
 import app.meeplebook.core.ui.uiTextRes
 import app.meeplebook.core.util.formatPlayerNames
@@ -58,13 +59,13 @@ fun DomainOverviewStats.toOverviewStats(): OverviewStats {
  * Builds the renderable [OverviewUiState.Content] from the current domain overview snapshot plus
  * reducer-owned refresh state.
  */
-fun DomainOverview.toContentState(): OverviewUiState.Content {
+fun DomainOverview.toContentState(baseState: OverviewBaseState, syncState: SyncState): OverviewUiState.Content {
     return OverviewUiState.Content(
         stats = stats.toOverviewStats(),
         recentPlays = recentPlays.map { it.toRecentPlay() },
         recentlyAddedGame = recentlyAddedGame?.toGameHighlight(),
         suggestedGame = suggestedGame?.toGameHighlight(),
         syncStatusUiText = syncState.toFullSyncStatusUiText(),
-        isRefreshing = syncState.isSyncing
+        isRefreshing = baseState.isRefreshing
     )
 }

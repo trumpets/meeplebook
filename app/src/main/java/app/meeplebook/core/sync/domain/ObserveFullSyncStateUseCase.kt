@@ -1,6 +1,7 @@
 package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.sync.SyncTimeRepository
+import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.Flow
@@ -15,15 +16,17 @@ import javax.inject.Inject
  * precedence so Overview status stays deterministic.
  */
 class ObserveFullSyncStateUseCase @Inject constructor(
-    private val syncTimeRepository: SyncTimeRepository
+    private val syncTimeRepository: SyncTimeRepository,
+    private val syncManager: SyncManager
 ) {
     operator fun invoke(): Flow<SyncState> {
         return combine(
+            syncManager.observeFullSyncRunning(),
             syncTimeRepository.observeSyncState(SyncType.COLLECTION),
             syncTimeRepository.observeSyncState(SyncType.PLAYS)
-        ) { collectionState, playsState ->
+        ) { isSyncing, collectionState, playsState ->
             SyncState(
-                isSyncing = collectionState.isSyncing || playsState.isSyncing,
+                isSyncing = isSyncing,
                 lastSyncedAt = listOfNotNull(
                     collectionState.lastSyncedAt,
                     playsState.lastSyncedAt

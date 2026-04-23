@@ -10,11 +10,15 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.Operation
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.meeplebook.core.sync.work.SyncCollectionWorker
 import app.meeplebook.core.sync.work.SyncPendingPlaysWorker
 import app.meeplebook.core.sync.work.SyncPeriodicFullSyncWorker
 import app.meeplebook.core.sync.work.SyncPlaysWorker
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -27,6 +31,16 @@ import javax.inject.Inject
 class WorkManagerSyncManager @Inject constructor(
     private val workManager: WorkManager
 ) : SyncManager {
+
+    override fun observeFullSyncRunning(): Flow<Boolean> =
+        workManager
+            .getWorkInfosForUniqueWorkFlow(SyncWorkNames.FULL_SYNC)
+            .map { workInfos ->
+                workInfos.any {
+                    it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED
+                }
+            }
+            .distinctUntilChanged()
 
     override fun enqueuePendingPlaysSync(): Operation =
         enqueueUniqueWork(

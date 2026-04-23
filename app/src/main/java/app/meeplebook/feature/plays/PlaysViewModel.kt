@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
 import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.model.SyncType
+import app.meeplebook.core.sync.model.observeRefreshCompletion
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
@@ -44,7 +45,7 @@ class PlaysViewModel @Inject constructor(
     reducer: PlaysReducer,
     effectProducer: PlaysEffectProducer,
     private val observePlaysScreenData: ObservePlaysScreenDataUseCase,
-    observeSyncState: ObserveSyncStateUseCase,
+    private val observeSyncState: ObserveSyncStateUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<PlaysBaseState, PlaysEvent, PlaysEffect, PlaysUiEffect>(
     initialState = PlaysBaseState(),
@@ -70,15 +71,12 @@ class PlaysViewModel @Inject constructor(
             observePlaysScreenData(query)
         }
 
-    private val syncStateFlow = observeSyncState(SyncType.PLAYS)
-
     val uiState: StateFlow<PlaysUiState> =
         combine(
             baseState,
-            searchResults,
-            syncStateFlow
-        ) { state, screenData, syncState ->
-            screenData.toUiState(state, syncState)
+            searchResults
+        ) { state, screenData ->
+            screenData.toUiState(state)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -102,6 +100,11 @@ class PlaysViewModel @Inject constructor(
     }
 
     private fun refresh() {
+        updateBaseState { it.copy(isRefreshing = true) }
         syncManager.enqueuePlaysSync()
+        observeSyncState(SyncType.PLAYS)
+            .observeRefreshCompletion(viewModelScope) {
+                updateBaseState { it.copy(isRefreshing = false) }
+            }
     }
 }

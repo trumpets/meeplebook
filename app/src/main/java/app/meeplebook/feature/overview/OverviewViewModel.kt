@@ -1,7 +1,9 @@
 package app.meeplebook.feature.overview
 
 import androidx.lifecycle.viewModelScope
+import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
 import app.meeplebook.core.sync.manager.SyncManager
+import app.meeplebook.core.sync.model.observeRefreshCompletion
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
 import app.meeplebook.feature.overview.effect.OverviewEffect
@@ -27,6 +29,7 @@ class OverviewViewModel @Inject constructor(
     reducer: OverviewReducer,
     effectProducer: OverviewEffectProducer,
     observeOverviewUseCase: ObserveOverviewUseCase,
+    private val observeFullSyncState: ObserveFullSyncStateUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<OverviewBaseState, OverviewEvent, OverviewEffect, OverviewUiEffect>(
     initialState = OverviewBaseState(),
@@ -45,11 +48,12 @@ class OverviewViewModel @Inject constructor(
     val uiState: StateFlow<OverviewUiState> =
         combine(
             baseState,
-            observeOverviewUseCase()
-        ) { state, domainOverview ->
+            observeOverviewUseCase(),
+            observeFullSyncState()
+        ) { state, domainOverview, syncState ->
             state.errorMessageUiText?.let { errorMessageUiText ->
                 OverviewUiState.Error(errorMessageUiText)
-            } ?: domainOverview.toContentState()
+            } ?: domainOverview.toContentState(state, syncState)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -67,6 +71,11 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun refresh() {
+        updateBaseState { it.copy(isRefreshing = true) }
         syncManager.enqueueFullSync()
+        observeFullSyncState()
+            .observeRefreshCompletion(viewModelScope) {
+                updateBaseState { it.copy(isRefreshing = false) }
+            }
     }
 }
