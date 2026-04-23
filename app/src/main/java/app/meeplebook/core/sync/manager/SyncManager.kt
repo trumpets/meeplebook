@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
  */
 interface SyncManager {
 
+    /**
+     * Observes whether the full-sync unique work chain is currently queued or running.
+     */
     fun observeFullSyncRunning(): Flow<Boolean>
 
     /**

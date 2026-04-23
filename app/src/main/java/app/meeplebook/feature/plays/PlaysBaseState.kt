@@ -8,7 +8,8 @@ package app.meeplebook.feature.plays
  * this base state with observed plays data from the domain layer.
  *
  * @property searchQuery Current raw search query entered by the user.
- * @property isRefreshing Whether a refresh/sync operation is currently in progress.
+ * @property isRefreshing Whether a user-initiated pull-to-refresh operation is currently in
+ * progress.
  */
 data class PlaysBaseState(
     val searchQuery: String = "",

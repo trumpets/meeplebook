@@ -1056,3 +1056,30 @@ PR Link: N/A
   - `OverviewViewModel` now schedules periodic sync and enqueues an immediate full sync in `init`, so tests using `FakeSyncManager` must account for an initial full-sync count before asserting manual refresh behavior
   - Collection screen tests should assert the current `CollectionCommonState` surface only; sync status text is no longer part of collection common UI state, but subtitle mapping still needs `FakeStringProvider`
 ---
+
+## 2026-04-23T12:18:26+02:00
+PR Link: N/A
+- Fixed tests after the manual-refresh-indicator refactor and updated the refresh KDoc to match the new behavior
+- Updated sync fakes and observer tests for the new `SyncManager.observeFullSyncRunning()` dependency, removed stale sync assertions from `ObserveOverviewUseCaseTest`, and rewrote Overview/Collection/Plays manual-refresh tests to keep an active `StateFlow` subscription while asserting the spinner lifecycle
+- Added explicit coverage that background sync state alone must not auto-show pull-to-refresh, while user-initiated refresh does show and stays visible until the observed work completes
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/sync/manager/FakeSyncManager.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/domain/ObserveOverviewUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncExtensions.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/manager/SyncManager.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCase.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/domain/ObserveOverviewUseCase.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Refresh-indicator tests for `WhileSubscribed` `StateFlow`s must keep an active collector during the entire refresh sequence; asserting `uiState.value` after the collector has stopped can miss state updates
+  - Background sync may update status text, but pull-to-refresh spinners are manual-only UI state and should be tested separately from sync-status observers
+  - `ObserveFullSyncStateUseCase` now reads `isSyncing` from `SyncManager.observeFullSyncRunning()` rather than inferring it from persisted domain sync rows, so fakes/tests must model both the work-running signal and the persisted timestamps/errors
+---

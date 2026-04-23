@@ -1,6 +1,7 @@
 package app.meeplebook.core.sync.domain
 
 import app.meeplebook.core.sync.FakeSyncTimeRepository
+import app.meeplebook.core.sync.manager.FakeSyncManager
 import app.meeplebook.core.sync.model.SyncState
 import app.meeplebook.core.sync.model.SyncType
 import kotlinx.coroutines.flow.first
@@ -16,23 +17,41 @@ import java.time.Instant
 class ObserveFullSyncStateUseCaseTest {
 
     private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
+    private lateinit var fakeSyncManager: FakeSyncManager
     private lateinit var useCase: ObserveFullSyncStateUseCase
 
     @Before
     fun setUp() {
         fakeSyncTimeRepository = FakeSyncTimeRepository()
-        useCase = ObserveFullSyncStateUseCase(fakeSyncTimeRepository)
+        fakeSyncManager = FakeSyncManager()
+        useCase = ObserveFullSyncStateUseCase(fakeSyncTimeRepository, fakeSyncManager)
     }
 
     @Test
-    fun `invoke reports syncing when either domain is syncing`() = runTest {
-        fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
+    fun `invoke reports syncing when full sync work is running`() = runTest {
+        fakeSyncManager.setFullSyncRunning(true)
 
         val result = useCase().first()
 
         assertEquals(
             SyncState(
                 isSyncing = true,
+                lastSyncedAt = null,
+                errorMessage = null
+            ),
+            result
+        )
+    }
+
+    @Test
+    fun `invoke does not infer syncing from domain rows alone`() = runTest {
+        fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
+
+        val result = useCase().first()
+
+        assertEquals(
+            SyncState(
+                isSyncing = false,
                 lastSyncedAt = null,
                 errorMessage = null
             ),

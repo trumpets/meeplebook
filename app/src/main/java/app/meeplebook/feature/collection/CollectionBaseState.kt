@@ -11,7 +11,7 @@ import app.meeplebook.core.collection.model.QuickFilter
  * - selected quick filter
  * - selected sort order
  * - selected view mode
- * - refresh-in-progress flag
+ * - user-initiated refresh-in-progress flag
  * - sort-sheet visibility
  *
  * `CollectionViewModel` derives debounced query flows from this state and combines it with external

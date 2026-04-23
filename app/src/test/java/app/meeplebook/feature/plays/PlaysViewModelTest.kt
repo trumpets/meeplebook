@@ -344,7 +344,7 @@ class PlaysViewModelTest {
     }
 
     @Test
-    fun `persisted sync state drives plays refresh indicator`() = runTest {
+    fun `background plays sync does not auto show refresh indicator`() = runTest {
         val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
         fakePlaysRepository.setPlays(plays)
         fakePlaysRepository.setTotalPlaysCount(1)
@@ -354,16 +354,48 @@ class PlaysViewModelTest {
         fakeSyncTimeRepository.markStarted(SyncType.PLAYS)
         advanceUntilIdle()
 
-        val refreshingState = awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel) {
-            (it as? PlaysUiState.Content)?.common?.isRefreshing == true
+        val state = viewModel.uiState.value as PlaysUiState.Content
+        assertFalse(state.common.isRefreshing)
+    }
+
+    @Test
+    fun `manual refresh shows plays indicator until sync completes`() = runTest {
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
+        fakePlaysRepository.setPlays(plays)
+        fakePlaysRepository.setTotalPlaysCount(1)
+        fakePlaysRepository.setUniqueGamesCount(1)
+        
+        viewModel.uiState.test {
+            advanceUntilIdle()
+
+            var state: PlaysUiState
+            do {
+                state = awaitItem()
+            } while (state is PlaysUiState.Loading)
+
+            viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
+            advanceUntilIdle()
+
+            var refreshingState: PlaysUiState.Content
+            do {
+                refreshingState = awaitItem().assertState()
+            } while (!refreshingState.common.isRefreshing)
+            assertTrue(refreshingState.common.isRefreshing)
+
+            fakeSyncTimeRepository.markStarted(SyncType.PLAYS)
+            advanceUntilIdle()
+
+            fakeSyncTimeRepository.markCompleted(SyncType.PLAYS, testClock.instant())
+            advanceUntilIdle()
+
+            var finalState: PlaysUiState.Content
+            do {
+                finalState = awaitItem().assertState()
+            } while (finalState.common.isRefreshing)
+            assertFalse(finalState.common.isRefreshing)
+
+            cancelAndIgnoreRemainingEvents()
         }
-        assertTrue(refreshingState.common.isRefreshing)
-
-        fakeSyncTimeRepository.markCompleted(SyncType.PLAYS, testClock.instant())
-        advanceUntilIdle()
-
-        val finalState = viewModel.uiState.value as PlaysUiState.Content
-        assertFalse(finalState.common.isRefreshing)
     }
 
     @Test

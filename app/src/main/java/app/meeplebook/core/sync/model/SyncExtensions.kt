@@ -9,6 +9,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
+/**
+ * Watches a user-initiated refresh against an existing sync-state flow and invokes
+ * [onRefreshComplete] once the flow transitions from syncing back to idle.
+ *
+ * The helper intentionally ignores leading `false` emissions so background/app-start syncs do not
+ * auto-complete a refresh indicator that the user never started.
+ */
 fun Flow<SyncState>.observeRefreshCompletion(
     scope: CoroutineScope,
     onRefreshComplete: () -> Unit

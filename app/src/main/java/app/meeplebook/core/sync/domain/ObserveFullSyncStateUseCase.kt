@@ -11,9 +11,10 @@ import javax.inject.Inject
 /**
  * Observes an app-level full-sync state derived from the collection and plays sync rows.
  *
- * The combined state reports syncing when either domain is still running, exposes a full-sync time
- * only after both domains have completed successfully, and preserves collection-first error
- * precedence so Overview status stays deterministic.
+ * `isSyncing` comes from the full-sync unique-work state exposed by [SyncManager], while
+ * `lastSyncedAt` and `errorMessage` are still derived from the collection/plays persisted rows.
+ * This keeps manual pull-to-refresh control separate from background sync status while preserving
+ * collection-first error precedence and the "both timestamps required" full-sync time rule.
  */
 class ObserveFullSyncStateUseCase @Inject constructor(
     private val syncTimeRepository: SyncTimeRepository,

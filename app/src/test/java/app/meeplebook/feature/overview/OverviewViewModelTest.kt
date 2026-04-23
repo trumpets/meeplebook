@@ -1,5 +1,6 @@
 package app.meeplebook.feature.overview
 
+import app.cash.turbine.test
 import app.meeplebook.R
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionHighlightsUseCase
@@ -86,19 +87,19 @@ class OverviewViewModelTest {
         )
         val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
         val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
-        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository)
+        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository, fakeSyncManager)
 
         val observeOverviewUseCase = ObserveOverviewUseCase(
             observeStats = observeStats,
             observeRecentPlays = observeRecentPlays,
-            observeHighlights = observeHighlights,
-            observeFullSyncState = observeFullSyncState
+            observeHighlights = observeHighlights
         )
 
         viewModel = OverviewViewModel(
             reducer = OverviewReducer(),
             effectProducer = OverviewEffectProducer(),
             observeOverviewUseCase = observeOverviewUseCase,
+            observeFullSyncState = observeFullSyncState,
             syncManager = fakeSyncManager
         )
     }
@@ -164,11 +165,47 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `persisted full sync state drives refreshing`() = runTest {
-        fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
+    fun `background full sync does not auto show refresh indicator`() = runTest {
+        fakeSyncManager.setFullSyncRunning(true)
+        advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel) { it.isRefreshing }
-        assertTrue(state.isRefreshing)
+        val state = awaitContentUiState(viewModel)
+        assertFalse(state.isRefreshing)
+    }
+
+    @Test
+    fun `manual refresh shows indicator until full sync work completes`() = runTest {
+        viewModel.uiState.test {
+            advanceUntilIdle()
+
+            var state: OverviewUiState
+            do {
+                state = awaitItem()
+            } while (state is OverviewUiState.Loading)
+
+            viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+            advanceUntilIdle()
+
+            var refreshingState: OverviewUiState.Content
+            do {
+                refreshingState = awaitItem().assertState()
+            } while (!refreshingState.isRefreshing)
+            assertTrue(refreshingState.isRefreshing)
+
+            fakeSyncManager.setFullSyncRunning(true)
+            advanceUntilIdle()
+
+            fakeSyncManager.setFullSyncRunning(false)
+            advanceUntilIdle()
+
+            var finalState: OverviewUiState.Content
+            do {
+                finalState = awaitItem().assertState()
+            } while (finalState.isRefreshing)
+            assertFalse(finalState.isRefreshing)
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

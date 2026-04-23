@@ -17,6 +17,9 @@ class ObserveOverviewUseCase @Inject constructor(
     private val observeHighlights: ObserveCollectionHighlightsUseCase
 ) {
 
+    /**
+     * Combines overview domain sources only; sync status is observed separately by the ViewModel.
+     */
     operator fun invoke(): Flow<DomainOverview> =
         combine(
             observeStats(),
