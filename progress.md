@@ -1083,3 +1083,15 @@ PR Link: N/A
   - Background sync may update status text, but pull-to-refresh spinners are manual-only UI state and should be tested separately from sync-status observers
   - `ObserveFullSyncStateUseCase` now reads `isSyncing` from `SyncManager.observeFullSyncRunning()` rather than inferring it from persisted domain sync rows, so fakes/tests must model both the work-running signal and the persisted timestamps/errors
 ---
+
+## 2026-04-23T12:30:00+02:00
+PR Link: N/A
+- Fixed the androidTest sync-worker fake after the `SyncManager.observeFullSyncRunning()` interface change so instrumented tests compile against the current sync contract
+- Verified the full androidTest suite now runs green without further refresh-indicator fallout
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - When `SyncManager` adds a new method, update both unit-test and androidTest fakes; worker test doubles can return a simple inert flow when the new signal is irrelevant to the scenario under test
+  - After fixing androidTest compile drift, rerun the full connected suite rather than stopping at compile success because interface updates can hide runtime wiring regressions
+---
