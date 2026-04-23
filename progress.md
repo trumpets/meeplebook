@@ -1095,3 +1095,16 @@ PR Link: N/A
   - When `SyncManager` adds a new method, update both unit-test and androidTest fakes; worker test doubles can return a simple inert flow when the new signal is irrelevant to the scenario under test
   - After fixing androidTest compile drift, rerun the full connected suite rather than stopping at compile success because interface updates can hide runtime wiring regressions
 ---
+
+## 2026-04-23T13:12:00+02:00
+PR Link: N/A
+- Added a reusable Turbine helper for waiting on the next typed emission from an already-active collector and refactored the OverviewViewModel sync-status tests to use it
+- Replaced the hand-rolled `do/while` loops in the Overview refresh/sync-status tests with `awaitItemMatching(...)` so the tests stay concise while preserving the required active subscription
+- Files changed:
+  - `app/src/test/java/app/meeplebook/testutils/TurbineExtensions.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Use `awaitUiStateMatching(...)` for one-shot `StateFlow` assertions, but use `ReceiveTurbine.awaitItemMatching(...)` when the collector must stay open across subsequent state changes
+  - If a ViewModel test needs to observe a transition after triggering an event, prefer a reusable Turbine helper over repeating local `do/while` drains in each test
+---

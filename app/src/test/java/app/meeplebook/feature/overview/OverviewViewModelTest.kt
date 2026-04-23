@@ -22,6 +22,7 @@ import app.meeplebook.feature.overview.effect.OverviewEffectProducer
 import app.meeplebook.feature.overview.effect.OverviewUiEffect
 import app.meeplebook.feature.overview.reducer.OverviewReducer
 import app.meeplebook.testutils.assertState
+import app.meeplebook.testutils.awaitItemMatching
 import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -178,18 +179,13 @@ class OverviewViewModelTest {
         viewModel.uiState.test {
             advanceUntilIdle()
 
-            var state: OverviewUiState
-            do {
-                state = awaitItem()
-            } while (state is OverviewUiState.Loading)
+            awaitItemMatching<OverviewUiState, OverviewUiState.Content>()
 
             viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
             advanceUntilIdle()
 
-            var refreshingState: OverviewUiState.Content
-            do {
-                refreshingState = awaitItem().assertState()
-            } while (!refreshingState.isRefreshing)
+            val refreshingState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> { it.isRefreshing }
             assertTrue(refreshingState.isRefreshing)
 
             fakeSyncManager.setFullSyncRunning(true)
@@ -198,10 +194,8 @@ class OverviewViewModelTest {
             fakeSyncManager.setFullSyncRunning(false)
             advanceUntilIdle()
 
-            var finalState: OverviewUiState.Content
-            do {
-                finalState = awaitItem().assertState()
-            } while (finalState.isRefreshing)
+            val finalState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> { !it.isRefreshing }
             assertFalse(finalState.isRefreshing)
 
             cancelAndIgnoreRemainingEvents()
@@ -210,26 +204,52 @@ class OverviewViewModelTest {
 
     @Test
     fun `failed full sync updates overview sync status text`() = runTest {
-        fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "NetworkError")
-        advanceUntilIdle()
+        viewModel.uiState.test {
+            advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel)
-        assertEquals(
-            "Failed to sync data. Please try again.",
-            state.syncStatusUiText.asString(fakeStringProvider)
-        )
+            awaitItemMatching<OverviewUiState, OverviewUiState.Content>()
+
+            fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "NetworkError")
+            advanceUntilIdle()
+
+            val failedState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> {
+                    it.syncStatusUiText.asString(fakeStringProvider) ==
+                        "Failed to sync data. Please try again."
+                }
+
+            assertEquals(
+                "Failed to sync data. Please try again.",
+                failedState.syncStatusUiText.asString(fakeStringProvider)
+            )
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
     fun `completed full sync updates overview sync status text`() = runTest {
-        fakeSyncTimeRepository.updateFullSyncTime(Instant.now())
-        advanceUntilIdle()
+        viewModel.uiState.test {
+            advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel)
-        assertEquals(
-            "Last synced: just now",
-            state.syncStatusUiText.asString(fakeStringProvider)
-        )
+            awaitItemMatching<OverviewUiState, OverviewUiState.Content>()
+
+            fakeSyncTimeRepository.updateFullSyncTime(Instant.now())
+            advanceUntilIdle()
+
+            val syncedState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> {
+                    it.syncStatusUiText.asString(fakeStringProvider) ==
+                        "Last synced: just now"
+                }
+
+            assertEquals(
+                "Last synced: just now",
+                syncedState.syncStatusUiText.asString(fakeStringProvider)
+            )
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

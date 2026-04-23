@@ -31,6 +31,21 @@ suspend fun <T> ReceiveTurbine<T>.awaitAfterDebounce(
 }
 
 /**
+ * Awaits the next turbine emission of type [T] that matches [predicate].
+ */
+suspend inline fun <S, reified T : S> ReceiveTurbine<S>.awaitItemMatching(
+    crossinline predicate: (T) -> Boolean = { true }
+): T {
+    while (true) {
+        val state = awaitItem()
+        val typedState = state as? T
+        if (typedState != null && predicate(typedState)) {
+            return typedState
+        }
+    }
+}
+
+/**
  * Awaits the next candidate state from a [StateFlow] and asserts it is [T].
  *
  * - If [debounceTime] is non-null, advances time before each awaited emission.
