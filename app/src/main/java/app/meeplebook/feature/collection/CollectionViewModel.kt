@@ -187,11 +187,11 @@ class CollectionViewModel @Inject constructor(
      */
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
-        syncManager.enqueueCollectionSync()
         observeSyncState(SyncType.COLLECTION)
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }
+        syncManager.enqueueCollectionSync()
     }
 
     private fun resolveJumpToLetter(letter: Char) {

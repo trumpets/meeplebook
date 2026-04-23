@@ -80,10 +80,10 @@ class OverviewViewModel @Inject constructor(
 
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
-        syncManager.enqueueFullSync()
         syncState
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }
+        syncManager.enqueueFullSync()
     }
 }
