@@ -101,10 +101,10 @@ class PlaysViewModel @Inject constructor(
 
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
-        syncManager.enqueuePlaysSync()
         observeSyncState(SyncType.PLAYS)
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }
+        syncManager.enqueuePlaysSync()
     }
 }
