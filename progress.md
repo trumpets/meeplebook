@@ -1108,3 +1108,16 @@ PR Link: N/A
   - Use `awaitUiStateMatching(...)` for one-shot `StateFlow` assertions, but use `ReceiveTurbine.awaitItemMatching(...)` when the collector must stay open across subsequent state changes
   - If a ViewModel test needs to observe a transition after triggering an event, prefer a reusable Turbine helper over repeating local `do/while` drains in each test
 ---
+
+## 2026-04-24T12:45:00+02:00
+PR Link: N/A
+- Fixed the `observeRefreshCompletion` timeout regression that left manual refresh indicators stuck in Overview, Collection, and Plays tests after adding `withTimeoutOrNull`
+- Moved the completion callback out of the `withTimeoutOrNull` block so both the normal true->false transition and the timeout fallback clear the refresh state, and added dedicated unit coverage for both paths
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncExtensions.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/model/SyncExtensionsTest.kt` (new)
+  - `progress.md`
+- **Learnings for future iterations:**
+  - When adding `withTimeoutOrNull` around shared async helpers, keep post-timeout cleanup outside the timeout block or the fallback path will silently skip required state resets
+  - Shared refresh helpers deserve focused unit tests for both the success path and the timeout fallback because a small coroutine refactor can break multiple screen tests at once
+---

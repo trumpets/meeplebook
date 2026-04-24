@@ -34,7 +34,7 @@ fun Flow<SyncState>.observeRefreshCompletion(
                 .distinctUntilChanged()
                 .dropWhile { !it }      // skip leading false (background/app-start syncs)
                 .first { !it }          // suspend until the single true→false transition, then done
-            onRefreshComplete()
         }
+        onRefreshComplete()
     }
 }

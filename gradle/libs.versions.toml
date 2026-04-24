@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.1"
+agp = "9.2.0"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -26,7 +26,7 @@ kxml2 = "2.3.0"
 turbine = "1.2.1"
 coil = "3.3.0"
 workManager = "2.11.2"
-lint = "32.1.1" # If the Gradle plugin version is X.Y.Z, then the Lint library version is X+23.Y.Z (wtf!? Google). For example, for AGP 7.0.0-alpha08, the lint API versions are 30.0.0-alpha08.
+lint = "32.2.0" # If the Gradle plugin version is X.Y.Z, then the Lint library version is X+23.Y.Z (wtf!? Google). For example, for AGP 7.0.0-alpha08, the lint API versions are 30.0.0-alpha08.
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
