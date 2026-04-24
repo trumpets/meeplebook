@@ -16,6 +16,7 @@ import app.meeplebook.feature.plays.reducer.PlaysReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -99,9 +100,13 @@ class PlaysViewModel @Inject constructor(
         }
     }
 
+    private var refreshJob : Job? = null
+
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
-        observeSyncState(SyncType.PLAYS)
+
+        refreshJob?.cancel()
+        refreshJob = observeSyncState(SyncType.PLAYS)
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }

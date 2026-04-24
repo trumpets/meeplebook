@@ -12,6 +12,7 @@ import app.meeplebook.feature.overview.effect.OverviewEffectProducer
 import app.meeplebook.feature.overview.effect.OverviewUiEffect
 import app.meeplebook.feature.overview.reducer.OverviewReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -78,9 +79,13 @@ class OverviewViewModel @Inject constructor(
         }
     }
 
+    private var refreshJob : Job? = null
+
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
-        syncState
+
+        refreshJob?.cancel()
+        refreshJob = syncState
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }

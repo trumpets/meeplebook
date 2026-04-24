@@ -20,6 +20,7 @@ import app.meeplebook.feature.collection.reducer.CollectionReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -182,12 +183,16 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
+    private var refreshJob : Job? = null
+
     /**
      * Enqueues collection sync through the app-level sync manager.
      */
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
-        observeSyncState(SyncType.COLLECTION)
+
+        refreshJob?.cancel()
+        refreshJob = observeSyncState(SyncType.COLLECTION)
             .observeRefreshCompletion(viewModelScope) {
                 updateBaseState { it.copy(isRefreshing = false) }
             }
