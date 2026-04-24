@@ -27,7 +27,7 @@
 - Search uses debounced flows (`searchableFlow` in `core/ui/flow/SearchableFlow.kt`, and direct debounce in collection).
 - Avoid infinite wall-clock reactive flows with `while(true)+delay`; compute time-dependent values on demand (see `.github/copilot-instructions.md`).
 - `UiText` is the app-level text abstraction (`core/ui/UiText.kt`); render via `UiTextText` or `asString()` helpers.
-- Sync chrome on Overview/Collection/Plays should be derived from persisted `SyncState` observers (`ObserveFullSyncStateUseCase` / `ObserveSyncStateUseCase`), not from direct sync results or local refresh jobs.
+- Sync chrome on Overview/Collection/Plays should be derived from persisted `SyncState` observers (`ObserveFullSyncStateUseCase` / `ObserveSyncStateUseCase`), not from direct sync results or local refresh jobs. Pull-to-refresh indicators are stricter: show them only for user-initiated refresh actions, let them follow the observed work to completion, and do not auto-show them just because equivalent work was started elsewhere.
 - Shared reducer/effect screen abstractions live in `core/ui/architecture/`:
   - `Reducer<State, Event>`
   - `EffectProducer<State, Event, DomainEffect, UiEffect>`

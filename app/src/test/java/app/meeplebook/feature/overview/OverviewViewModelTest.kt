@@ -1,5 +1,6 @@
 package app.meeplebook.feature.overview
 
+import app.cash.turbine.test
 import app.meeplebook.R
 import app.meeplebook.core.collection.FakeCollectionRepository
 import app.meeplebook.core.collection.domain.ObserveCollectionHighlightsUseCase
@@ -21,6 +22,7 @@ import app.meeplebook.feature.overview.effect.OverviewEffectProducer
 import app.meeplebook.feature.overview.effect.OverviewUiEffect
 import app.meeplebook.feature.overview.reducer.OverviewReducer
 import app.meeplebook.testutils.assertState
+import app.meeplebook.testutils.awaitItemMatching
 import app.meeplebook.testutils.awaitUiStateMatching
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,19 +88,19 @@ class OverviewViewModelTest {
         )
         val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
         val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
-        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository)
+        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository, fakeSyncManager)
 
         val observeOverviewUseCase = ObserveOverviewUseCase(
             observeStats = observeStats,
             observeRecentPlays = observeRecentPlays,
-            observeHighlights = observeHighlights,
-            observeFullSyncState = observeFullSyncState
+            observeHighlights = observeHighlights
         )
 
         viewModel = OverviewViewModel(
             reducer = OverviewReducer(),
             effectProducer = OverviewEffectProducer(),
             observeOverviewUseCase = observeOverviewUseCase,
+            observeFullSyncState = observeFullSyncState,
             syncManager = fakeSyncManager
         )
     }
@@ -164,35 +166,90 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `persisted full sync state drives refreshing`() = runTest {
-        fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
+    fun `background full sync does not auto show refresh indicator`() = runTest {
+        fakeSyncManager.setFullSyncRunning(true)
+        advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel) { it.isRefreshing }
-        assertTrue(state.isRefreshing)
+        val state = awaitContentUiState(viewModel)
+        assertFalse(state.isRefreshing)
+    }
+
+    @Test
+    fun `manual refresh shows indicator until full sync work completes`() = runTest {
+        viewModel.uiState.test {
+            advanceUntilIdle()
+
+            awaitItemMatching<OverviewUiState, OverviewUiState.Content>()
+
+            viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
+            advanceUntilIdle()
+
+            val refreshingState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> { it.isRefreshing }
+            assertTrue(refreshingState.isRefreshing)
+
+            fakeSyncManager.setFullSyncRunning(true)
+            advanceUntilIdle()
+
+            fakeSyncManager.setFullSyncRunning(false)
+            advanceUntilIdle()
+
+            val finalState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> { !it.isRefreshing }
+            assertFalse(finalState.isRefreshing)
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
     fun `failed full sync updates overview sync status text`() = runTest {
-        fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "NetworkError")
-        advanceUntilIdle()
+        viewModel.uiState.test {
+            advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel)
-        assertEquals(
-            "Failed to sync data. Please try again.",
-            state.syncStatusUiText.asString(fakeStringProvider)
-        )
+            awaitItemMatching<OverviewUiState, OverviewUiState.Content>()
+
+            fakeSyncTimeRepository.markFailed(SyncType.COLLECTION, "NetworkError")
+            advanceUntilIdle()
+
+            val failedState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> {
+                    it.syncStatusUiText.asString(fakeStringProvider) ==
+                        "Failed to sync data. Please try again."
+                }
+
+            assertEquals(
+                "Failed to sync data. Please try again.",
+                failedState.syncStatusUiText.asString(fakeStringProvider)
+            )
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
     fun `completed full sync updates overview sync status text`() = runTest {
-        fakeSyncTimeRepository.updateFullSyncTime(Instant.now())
-        advanceUntilIdle()
+        viewModel.uiState.test {
+            advanceUntilIdle()
 
-        val state = awaitContentUiState(viewModel)
-        assertEquals(
-            "Last synced: just now",
-            state.syncStatusUiText.asString(fakeStringProvider)
-        )
+            awaitItemMatching<OverviewUiState, OverviewUiState.Content>()
+
+            fakeSyncTimeRepository.updateFullSyncTime(Instant.now())
+            advanceUntilIdle()
+
+            val syncedState =
+                awaitItemMatching<OverviewUiState, OverviewUiState.Content> {
+                    it.syncStatusUiText.asString(fakeStringProvider) ==
+                        "Last synced: just now"
+                }
+
+            assertEquals(
+                "Last synced: just now",
+                syncedState.syncStatusUiText.asString(fakeStringProvider)
+            )
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

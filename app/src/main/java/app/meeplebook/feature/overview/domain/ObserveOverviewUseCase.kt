@@ -7,7 +7,6 @@ import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
 import app.meeplebook.core.plays.domain.toDomain
 import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
 import app.meeplebook.core.stats.domain.toDomain
-import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
@@ -15,24 +14,24 @@ import javax.inject.Inject
 class ObserveOverviewUseCase @Inject constructor(
     private val observeStats: ObserveCollectionPlayStatsUseCase,
     private val observeRecentPlays: ObserveRecentPlaysUseCase,
-    private val observeHighlights: ObserveCollectionHighlightsUseCase,
-    private val observeFullSyncState: ObserveFullSyncStateUseCase
+    private val observeHighlights: ObserveCollectionHighlightsUseCase
 ) {
 
+    /**
+     * Combines overview domain sources only; sync status is observed separately by the ViewModel.
+     */
     operator fun invoke(): Flow<DomainOverview> =
         combine(
             observeStats(),
             observeRecentPlays(),
-            observeHighlights(),
-            observeFullSyncState()
-        ) { stats, recentPlays, highlights, syncState ->
+            observeHighlights()
+        ) { stats, recentPlays, highlights ->
 
             DomainOverview(
                 stats = stats.toDomain(),
                 recentPlays = recentPlays.map { play -> play.toDomain() },
                 recentlyAddedGame = highlights.recentlyAdded?.toDomainGameHighlight(HighlightType.RECENTLY_ADDED),
-                suggestedGame = highlights.suggested?.toDomainGameHighlight(HighlightType.SUGGESTED),
-                syncState = syncState
+                suggestedGame = highlights.suggested?.toDomainGameHighlight(HighlightType.SUGGESTED)
             )
         }
 }

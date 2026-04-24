@@ -8,6 +8,7 @@ import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
 import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.model.SyncType
+import app.meeplebook.core.sync.model.observeRefreshCompletion
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.core.ui.flow.searchableFlow
 import app.meeplebook.core.util.DebounceDurations
@@ -19,6 +20,7 @@ import app.meeplebook.feature.collection.reducer.CollectionReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,7 +51,7 @@ class CollectionViewModel @Inject constructor(
     effectProducer: CollectionEffectProducer,
     observeCollectionSummary: ObserveCollectionSummaryUseCase,
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
-    observeSyncState: ObserveSyncStateUseCase,
+    private val observeSyncState: ObserveSyncStateUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<CollectionBaseState, CollectionEvent, CollectionEffect, CollectionUiEffect>(
     initialState = CollectionBaseState(),
@@ -128,15 +130,12 @@ class CollectionViewModel @Inject constructor(
             observeCollectionDomainSections(query)
         }
 
-    private val syncStateFlow = observeSyncState(SyncType.COLLECTION)
-
     val uiState: StateFlow<CollectionUiState> =
         combine(
             baseState,
             domainSectionsFlow,
-            observeCollectionSummary(),
-            syncStateFlow
-        ) { state, domainSections, summary, syncState ->
+            observeCollectionSummary()
+        ) { state, domainSections, summary ->
             val uiSections = domainSections.map { it.toCollectionSection() }
 
             val common = CollectionCommonState(
@@ -144,7 +143,7 @@ class CollectionViewModel @Inject constructor(
                 activeQuickFilter = state.quickFilter,
                 totalGameCount = summary.totalGames,
                 unplayedGameCount = summary.unplayedGames,
-                isRefreshing = syncState.isSyncing
+                isRefreshing = state.isRefreshing
             )
 
             if (uiSections.isEmpty()) {
@@ -184,10 +183,19 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
+    private var refreshJob : Job? = null
+
     /**
      * Enqueues collection sync through the app-level sync manager.
      */
     private fun refresh() {
+        updateBaseState { it.copy(isRefreshing = true) }
+
+        refreshJob?.cancel()
+        refreshJob = observeSyncState(SyncType.COLLECTION)
+            .observeRefreshCompletion(viewModelScope) {
+                updateBaseState { it.copy(isRefreshing = false) }
+            }
         syncManager.enqueueCollectionSync()
     }
 

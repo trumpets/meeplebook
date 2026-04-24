@@ -1056,3 +1056,68 @@ PR Link: N/A
   - `OverviewViewModel` now schedules periodic sync and enqueues an immediate full sync in `init`, so tests using `FakeSyncManager` must account for an initial full-sync count before asserting manual refresh behavior
   - Collection screen tests should assert the current `CollectionCommonState` surface only; sync status text is no longer part of collection common UI state, but subtitle mapping still needs `FakeStringProvider`
 ---
+
+## 2026-04-23T12:18:26+02:00
+PR Link: N/A
+- Fixed tests after the manual-refresh-indicator refactor and updated the refresh KDoc to match the new behavior
+- Updated sync fakes and observer tests for the new `SyncManager.observeFullSyncRunning()` dependency, removed stale sync assertions from `ObserveOverviewUseCaseTest`, and rewrote Overview/Collection/Plays manual-refresh tests to keep an active `StateFlow` subscription while asserting the spinner lifecycle
+- Added explicit coverage that background sync state alone must not auto-show pull-to-refresh, while user-initiated refresh does show and stays visible until the observed work completes
+- Files changed:
+  - `app/src/test/java/app/meeplebook/core/sync/manager/FakeSyncManager.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/domain/ObserveOverviewUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncExtensions.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/manager/SyncManager.kt`
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ObserveFullSyncStateUseCase.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewBaseState.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/domain/ObserveOverviewUseCase.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Refresh-indicator tests for `WhileSubscribed` `StateFlow`s must keep an active collector during the entire refresh sequence; asserting `uiState.value` after the collector has stopped can miss state updates
+  - Background sync may update status text, but pull-to-refresh spinners are manual-only UI state and should be tested separately from sync-status observers
+  - `ObserveFullSyncStateUseCase` now reads `isSyncing` from `SyncManager.observeFullSyncRunning()` rather than inferring it from persisted domain sync rows, so fakes/tests must model both the work-running signal and the persisted timestamps/errors
+---
+
+## 2026-04-23T12:30:00+02:00
+PR Link: N/A
+- Fixed the androidTest sync-worker fake after the `SyncManager.observeFullSyncRunning()` interface change so instrumented tests compile against the current sync contract
+- Verified the full androidTest suite now runs green without further refresh-indicator fallout
+- Files changed:
+  - `app/src/androidTest/java/app/meeplebook/core/sync/work/SyncWorkerTestDoubles.kt`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - When `SyncManager` adds a new method, update both unit-test and androidTest fakes; worker test doubles can return a simple inert flow when the new signal is irrelevant to the scenario under test
+  - After fixing androidTest compile drift, rerun the full connected suite rather than stopping at compile success because interface updates can hide runtime wiring regressions
+---
+
+## 2026-04-23T13:12:00+02:00
+PR Link: N/A
+- Added a reusable Turbine helper for waiting on the next typed emission from an already-active collector and refactored the OverviewViewModel sync-status tests to use it
+- Replaced the hand-rolled `do/while` loops in the Overview refresh/sync-status tests with `awaitItemMatching(...)` so the tests stay concise while preserving the required active subscription
+- Files changed:
+  - `app/src/test/java/app/meeplebook/testutils/TurbineExtensions.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Use `awaitUiStateMatching(...)` for one-shot `StateFlow` assertions, but use `ReceiveTurbine.awaitItemMatching(...)` when the collector must stay open across subsequent state changes
+  - If a ViewModel test needs to observe a transition after triggering an event, prefer a reusable Turbine helper over repeating local `do/while` drains in each test
+---
+
+## 2026-04-24T12:45:00+02:00
+PR Link: N/A
+- Fixed the `observeRefreshCompletion` timeout regression that left manual refresh indicators stuck in Overview, Collection, and Plays tests after adding `withTimeoutOrNull`
+- Moved the completion callback out of the `withTimeoutOrNull` block so both the normal true->false transition and the timeout fallback clear the refresh state, and added dedicated unit coverage for both paths
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/model/SyncExtensions.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/model/SyncExtensionsTest.kt` (new)
+  - `progress.md`
+- **Learnings for future iterations:**
+  - When adding `withTimeoutOrNull` around shared async helpers, keep post-timeout cleanup outside the timeout block or the fallback path will silently skip required state resets
+  - Shared refresh helpers deserve focused unit tests for both the success path and the timeout fallback because a small coroutine refactor can break multiple screen tests at once
+---

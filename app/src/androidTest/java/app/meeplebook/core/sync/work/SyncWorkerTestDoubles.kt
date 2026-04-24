@@ -150,6 +150,8 @@ internal class FakeWorkerSyncManager : SyncManager {
         override fun getState() = throw UnsupportedOperationException("Not used in this test")
     }
 
+    override fun observeFullSyncRunning(): Flow<Boolean> = flowOf(false)
+
     override fun enqueuePendingPlaysSync() = throw UnsupportedOperationException("Not used in this test")
 
     override fun enqueuePlaysSync() = throw UnsupportedOperationException("Not used in this test")

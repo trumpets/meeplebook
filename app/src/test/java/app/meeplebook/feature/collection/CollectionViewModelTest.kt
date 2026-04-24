@@ -627,7 +627,7 @@ class CollectionViewModelTest {
     }
 
     @Test
-    fun `persisted sync state drives collection refresh indicator`() = runTest {
+    fun `background collection sync does not auto show refresh indicator`() = runTest {
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
         awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
@@ -635,16 +635,46 @@ class CollectionViewModelTest {
         fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
         advanceUntilIdle()
 
-        val refreshingState = awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel) {
-            (it as? CollectionUiState.Content)?.common?.isRefreshing == true
+        val state = viewModel.uiState.value as CollectionUiState.Content
+        assertFalse(state.common.isRefreshing)
+    }
+
+    @Test
+    fun `manual refresh shows collection indicator until sync completes`() = runTest {
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        
+        viewModel.uiState.test {
+            advanceUntilIdle()
+
+            var state: CollectionUiState
+            do {
+                state = awaitItem()
+            } while (state is CollectionUiState.Loading)
+
+            viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
+            advanceUntilIdle()
+
+            var refreshingState: CollectionUiState.Content
+            do {
+                refreshingState = awaitItem().assertState()
+            } while (!refreshingState.common.isRefreshing)
+            assertTrue(refreshingState.common.isRefreshing)
+
+            fakeSyncTimeRepository.markStarted(SyncType.COLLECTION)
+            advanceUntilIdle()
+
+            fakeSyncTimeRepository.markCompleted(SyncType.COLLECTION, testClock.instant())
+            advanceUntilIdle()
+
+            var finalState: CollectionUiState.Content
+            do {
+                finalState = awaitItem().assertState()
+            } while (finalState.common.isRefreshing)
+            assertFalse(finalState.common.isRefreshing)
+
+            cancelAndIgnoreRemainingEvents()
         }
-        assertTrue(refreshingState.common.isRefreshing)
-
-        fakeSyncTimeRepository.markCompleted(SyncType.COLLECTION, testClock.instant())
-        advanceUntilIdle()
-
-        val finalState = viewModel.uiState.value as CollectionUiState.Content
-        assertFalse(finalState.common.isRefreshing)
     }
 
     // Helper function to create test collection items

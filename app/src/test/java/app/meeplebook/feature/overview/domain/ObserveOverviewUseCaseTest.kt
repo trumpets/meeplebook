@@ -9,8 +9,6 @@ import app.meeplebook.core.plays.FakePlaysRepository
 import app.meeplebook.core.plays.PlayTestFactory.createPlay
 import app.meeplebook.core.plays.domain.ObserveRecentPlaysUseCase
 import app.meeplebook.core.stats.domain.ObserveCollectionPlayStatsUseCase
-import app.meeplebook.core.sync.FakeSyncTimeRepository
-import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -29,7 +27,6 @@ class ObserveOverviewUseCaseTest {
 
     private lateinit var fakeCollectionRepository: FakeCollectionRepository
     private lateinit var fakePlaysRepository: FakePlaysRepository
-    private lateinit var fakeSyncTimeRepository: FakeSyncTimeRepository
     private lateinit var useCase: ObserveOverviewUseCase
 
     private val testClock = Clock.fixed(
@@ -41,7 +38,6 @@ class ObserveOverviewUseCaseTest {
     fun setUp() {
         fakeCollectionRepository = FakeCollectionRepository()
         fakePlaysRepository = FakePlaysRepository()
-        fakeSyncTimeRepository = FakeSyncTimeRepository()
 
         val observeStats = ObserveCollectionPlayStatsUseCase(
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
@@ -50,13 +46,11 @@ class ObserveOverviewUseCaseTest {
         )
         val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
         val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
-        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository)
 
         useCase = ObserveOverviewUseCase(
             observeStats = observeStats,
             observeRecentPlays = observeRecentPlays,
-            observeHighlights = observeHighlights,
-            observeFullSyncState = observeFullSyncState
+            observeHighlights = observeHighlights
         )
     }
 
@@ -103,9 +97,6 @@ class ObserveOverviewUseCaseTest {
         )
         fakePlaysRepository.setRecentPlays(recentPlays)
 
-        val syncTime = Instant.parse("2024-01-15T10:00:00Z")
-        fakeSyncTimeRepository.updateFullSyncTime(syncTime)
-
         // When
         val overview = useCase().first()
 
@@ -123,8 +114,6 @@ class ObserveOverviewUseCaseTest {
 
         assertNotNull(overview.suggestedGame)
         assertEquals("Wingspan", overview.suggestedGame?.gameName)
-
-        assertEquals(syncTime, overview.syncState.lastSyncedAt)
     }
 
     @Test
@@ -143,7 +132,6 @@ class ObserveOverviewUseCaseTest {
         assertEquals(0, overview.recentPlays.size)
         assertNull(overview.recentlyAddedGame)
         assertNull(overview.suggestedGame)
-        assertNull(overview.syncState.lastSyncedAt)
     }
 
     @Test
@@ -177,7 +165,6 @@ class ObserveOverviewUseCaseTest {
         // Then
         assertEquals(30L, overview.stats.gamesCount)
         assertEquals(1, overview.recentPlays.size)
-        assertNull(overview.syncState.lastSyncedAt)
     }
 
     @Test

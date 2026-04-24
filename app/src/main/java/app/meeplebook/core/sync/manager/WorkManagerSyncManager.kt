@@ -15,6 +15,9 @@ import app.meeplebook.core.sync.work.SyncCollectionWorker
 import app.meeplebook.core.sync.work.SyncPendingPlaysWorker
 import app.meeplebook.core.sync.work.SyncPeriodicFullSyncWorker
 import app.meeplebook.core.sync.work.SyncPlaysWorker
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -27,6 +30,14 @@ import javax.inject.Inject
 class WorkManagerSyncManager @Inject constructor(
     private val workManager: WorkManager
 ) : SyncManager {
+
+    override fun observeFullSyncRunning(): Flow<Boolean> =
+        workManager
+            .getWorkInfosForUniqueWorkFlow(SyncWorkNames.FULL_SYNC)
+            .map { workInfos ->
+                workInfos.any { !it.state.isFinished }
+            }
+            .distinctUntilChanged()
 
     override fun enqueuePendingPlaysSync(): Operation =
         enqueueUniqueWork(
