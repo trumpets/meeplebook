@@ -7,6 +7,9 @@ package app.meeplebook.feature.plays.effect
  * use-case work that should not run inside the reducer itself.
  */
 sealed interface PlaysEffect {
+    /** Perform screen-open sync orchestration for Plays. */
+    data object ScreenOpened : PlaysEffect
+
     /** Perform a plays sync/refresh operation. */
     data object Refresh : PlaysEffect
 }

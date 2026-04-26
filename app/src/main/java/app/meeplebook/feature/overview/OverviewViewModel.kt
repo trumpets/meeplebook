@@ -2,8 +2,10 @@ package app.meeplebook.feature.overview
 
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.sync.domain.ObserveFullSyncStateUseCase
+import app.meeplebook.core.sync.domain.ShouldAutoSyncOnScreenEnterUseCase
 import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.model.SyncState
+import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.sync.model.observeRefreshCompletion
 import app.meeplebook.core.ui.architecture.ReducerViewModel
 import app.meeplebook.feature.overview.domain.ObserveOverviewUseCase
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -32,17 +35,13 @@ class OverviewViewModel @Inject constructor(
     effectProducer: OverviewEffectProducer,
     observeOverviewUseCase: ObserveOverviewUseCase,
     observeFullSyncState: ObserveFullSyncStateUseCase,
+    private val shouldAutoSyncOnScreenEnter: ShouldAutoSyncOnScreenEnterUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<OverviewBaseState, OverviewEvent, OverviewEffect, OverviewUiEffect>(
     initialState = OverviewBaseState(),
     reducer = reducer,
     effectProducer = effectProducer
 ) {
-
-    init {
-        syncManager.schedulePeriodicFullSync()
-        syncManager.enqueueFullSync()
-    }
 
     private val syncState: StateFlow<SyncState> = observeFullSyncState()
         .stateIn(
@@ -75,12 +74,29 @@ class OverviewViewModel @Inject constructor(
 
     override fun handleDomainEffect(effect: OverviewEffect) {
         when (effect) {
+            OverviewEffect.ScreenOpened -> onScreenOpened()
             OverviewEffect.Refresh -> refresh()
+        }
+    }
+
+    private fun onScreenOpened() {
+        syncManager.schedulePeriodicFullSync()
+        viewModelScope.launch {
+            if (shouldAutoSyncOnScreenEnter(SyncType.COLLECTION, SyncType.PLAYS)) {
+                syncManager.enqueueFullSync()
+            }
         }
     }
 
     private var refreshJob : Job? = null
 
+    /**
+     * Enqueues full sync through the app-level sync manager.
+     *
+     * Manual refresh always runs immediately; only the screen-entry auto sync triggered by
+     * [OverviewEffect.ScreenOpened] in [onScreenOpened] is guarded by
+     * [ShouldAutoSyncOnScreenEnterUseCase].
+     */
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
 

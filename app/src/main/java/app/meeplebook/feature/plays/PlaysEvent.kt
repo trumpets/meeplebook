@@ -25,6 +25,9 @@ sealed interface PlaysEvent {
      * Action-style events that typically trigger effects rather than direct base-state mutation.
      */
     sealed interface ActionEvent : PlaysEvent {
+        /** Signals that the Plays screen entered composition and should run screen-open work. */
+        data object ScreenOpened : ActionEvent
+
         /** User tapped a play row and wants to open that play. */
         data class PlayClicked(val playId: PlayId) : ActionEvent
 

@@ -78,7 +78,7 @@ class FakeSyncTimeRepository : SyncTimeRepository {
         }
     }
 
-    fun getSyncState(type: SyncType): SyncState = states.getValue(type).value
+    override suspend fun getSyncState(type: SyncType): SyncState = states.getValue(type).value
 
     fun getLastSync(type: SyncType): Instant? = states.getValue(type).value.lastSyncedAt
 
@@ -94,10 +94,6 @@ class FakeSyncTimeRepository : SyncTimeRepository {
         markCompleted(SyncType.COLLECTION, time)
         markCompleted(SyncType.PLAYS, time)
     }
-
-    fun getCollectionSyncState(): SyncState = getSyncState(SyncType.COLLECTION)
-
-    fun getPlaysSyncState(): SyncState = getSyncState(SyncType.PLAYS)
 
     fun getLastCollectionSync(): Instant? = getLastSync(SyncType.COLLECTION)
 

@@ -7,6 +7,9 @@ package app.meeplebook.feature.collection.effect
  * directly in the reducer.
  */
 sealed interface CollectionEffect {
+    /** Perform screen-open sync orchestration for Collection. */
+    data object ScreenOpened : CollectionEffect
+
     /** Perform a collection sync/refresh operation. */
     data object Refresh : CollectionEffect
 
