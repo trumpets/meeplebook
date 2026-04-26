@@ -11,6 +11,7 @@ import app.meeplebook.core.collection.model.GameSubtype
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.domain.ShouldAutoSyncOnScreenEnterUseCase
 import app.meeplebook.core.sync.manager.FakeSyncManager
 import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.ui.FakeStringProvider
@@ -103,6 +104,7 @@ class CollectionViewModelTest {
             observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
             observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
             observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
             syncManager = fakeSyncManager
         )
     }
@@ -119,7 +121,35 @@ class CollectionViewModelTest {
     }
 
     @Test
-    fun `init enqueues collection screen-open sync`() {
+    fun `init enqueues collection screen-open sync when stale`() = runTest {
+        advanceUntilIdle()
+
+        assertEquals(1, fakeSyncManager.collectionSyncEnqueueCount)
+    }
+
+    @Test
+    fun `init skips collection screen-open sync when last sync is recent`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.COLLECTION,
+            testClock.instant().minusSeconds(5 * 60)
+        )
+
+        viewModel = CollectionViewModel(
+            reducer = CollectionReducer(
+                searchReducer = CollectionSearchReducer(),
+                filterReducer = CollectionFilterReducer(),
+                displayReducer = CollectionDisplayReducer()
+            ),
+            effectProducer = CollectionEffectProducer(),
+            observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
+            observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
+            syncManager = fakeSyncManager
+        )
+
+        advanceUntilIdle()
+
         assertEquals(1, fakeSyncManager.collectionSyncEnqueueCount)
     }
 
@@ -619,11 +649,45 @@ class CollectionViewModelTest {
         val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
         fakeCollectionRepository.setCollection(items)
         awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        advanceUntilIdle()
 
         viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         assertEquals(2, fakeSyncManager.collectionSyncEnqueueCount)
+    }
+
+    @Test
+    fun `Refresh event enqueues collection sync even when recent auto sync is skipped`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.COLLECTION,
+            testClock.instant().minusSeconds(5 * 60)
+        )
+        fakeSyncManager = FakeSyncManager()
+        viewModel = CollectionViewModel(
+            reducer = CollectionReducer(
+                searchReducer = CollectionSearchReducer(),
+                filterReducer = CollectionFilterReducer(),
+                displayReducer = CollectionDisplayReducer()
+            ),
+            effectProducer = CollectionEffectProducer(),
+            observeCollectionDomainSections = observeCollectionDomainSectionsUseCase,
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
+            observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
+            syncManager = fakeSyncManager
+        )
+        val items = listOf(createCollectionItem(gameId = 1, name = "Azul"))
+        fakeCollectionRepository.setCollection(items)
+        awaitUiStateAfterDebounce<CollectionUiState.Content>(viewModel)
+        advanceUntilIdle()
+
+        assertEquals(0, fakeSyncManager.collectionSyncEnqueueCount)
+
+        viewModel.onEvent(CollectionEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
+
+        assertEquals(1, fakeSyncManager.collectionSyncEnqueueCount)
     }
 
     @Test

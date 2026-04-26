@@ -8,6 +8,7 @@ import app.meeplebook.core.plays.domain.ObservePlaysUseCase
 import app.meeplebook.core.plays.model.PlayId
 import app.meeplebook.core.sync.FakeSyncTimeRepository
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.domain.ShouldAutoSyncOnScreenEnterUseCase
 import app.meeplebook.core.sync.manager.FakeSyncManager
 import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.util.DebounceDurations
@@ -89,6 +90,7 @@ class PlaysViewModelTest {
             effectProducer = PlaysEffectProducer(),
             observePlaysScreenData = observePlaysScreenDataUseCase,
             observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
             syncManager = fakeSyncManager
         )
     }
@@ -105,7 +107,30 @@ class PlaysViewModelTest {
     }
 
     @Test
-    fun `init enqueues plays screen-open sync`() {
+    fun `init enqueues plays screen-open sync when stale`() = runTest {
+        advanceUntilIdle()
+
+        assertEquals(1, fakeSyncManager.playsSyncEnqueueCount)
+    }
+
+    @Test
+    fun `init skips plays screen-open sync when last sync is recent`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.PLAYS,
+            testClock.instant().minusSeconds(5 * 60)
+        )
+
+        viewModel = PlaysViewModel(
+            reducer = PlaysReducer(),
+            effectProducer = PlaysEffectProducer(),
+            observePlaysScreenData = observePlaysScreenDataUseCase,
+            observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
+            syncManager = fakeSyncManager
+        )
+
+        advanceUntilIdle()
+
         assertEquals(1, fakeSyncManager.playsSyncEnqueueCount)
     }
 
@@ -336,11 +361,42 @@ class PlaysViewModelTest {
         fakePlaysRepository.setTotalPlaysCount(1)
         fakePlaysRepository.setUniqueGamesCount(1)
         awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
+        advanceUntilIdle()
 
         viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
         assertEquals(2, fakeSyncManager.playsSyncEnqueueCount)
+    }
+
+    @Test
+    fun `Refresh event enqueues plays sync even when recent auto sync is skipped`() = runTest {
+        fakeSyncTimeRepository.markCompleted(
+            SyncType.PLAYS,
+            testClock.instant().minusSeconds(5 * 60)
+        )
+        fakeSyncManager = FakeSyncManager()
+        viewModel = PlaysViewModel(
+            reducer = PlaysReducer(),
+            effectProducer = PlaysEffectProducer(),
+            observePlaysScreenData = observePlaysScreenDataUseCase,
+            observeSyncState = ObserveSyncStateUseCase(fakeSyncTimeRepository),
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
+            syncManager = fakeSyncManager
+        )
+        val plays = listOf(createPlay(localPlayId = 1, gameName = "Azul"))
+        fakePlaysRepository.setPlays(plays)
+        fakePlaysRepository.setTotalPlaysCount(1)
+        fakePlaysRepository.setUniqueGamesCount(1)
+        awaitUiStateAfterDebounce<PlaysUiState.Content>(viewModel)
+        advanceUntilIdle()
+
+        assertEquals(0, fakeSyncManager.playsSyncEnqueueCount)
+
+        viewModel.onEvent(PlaysEvent.ActionEvent.Refresh)
+        advanceUntilIdle()
+
+        assertEquals(1, fakeSyncManager.playsSyncEnqueueCount)
     }
 
     @Test

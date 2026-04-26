@@ -2,6 +2,7 @@ package app.meeplebook.feature.plays
 
 import androidx.lifecycle.viewModelScope
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.domain.ShouldAutoSyncOnScreenEnterUseCase
 import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.sync.model.observeRefreshCompletion
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -47,6 +49,7 @@ class PlaysViewModel @Inject constructor(
     effectProducer: PlaysEffectProducer,
     private val observePlaysScreenData: ObservePlaysScreenDataUseCase,
     private val observeSyncState: ObserveSyncStateUseCase,
+    private val shouldAutoSyncOnScreenEnter: ShouldAutoSyncOnScreenEnterUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<PlaysBaseState, PlaysEvent, PlaysEffect, PlaysUiEffect>(
     initialState = PlaysBaseState(),
@@ -55,7 +58,11 @@ class PlaysViewModel @Inject constructor(
 ) {
 
     init {
-        syncManager.enqueuePlaysSync()
+        viewModelScope.launch {
+            if (shouldAutoSyncOnScreenEnter(SyncType.PLAYS)) {
+                syncManager.enqueuePlaysSync()
+            }
+        }
     }
 
     private val searchQueryFlow =
@@ -102,6 +109,12 @@ class PlaysViewModel @Inject constructor(
 
     private var refreshJob : Job? = null
 
+    /**
+     * Enqueues plays sync through the app-level sync manager.
+     *
+     * Manual refresh always runs immediately; only screen-entry auto sync is guarded by
+     * [ShouldAutoSyncOnScreenEnterUseCase].
+     */
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
 

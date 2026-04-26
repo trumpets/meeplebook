@@ -6,6 +6,7 @@ import app.meeplebook.core.collection.model.CollectionDataQuery
 import app.meeplebook.core.collection.model.CollectionSort
 import app.meeplebook.core.collection.model.QuickFilter
 import app.meeplebook.core.sync.domain.ObserveSyncStateUseCase
+import app.meeplebook.core.sync.domain.ShouldAutoSyncOnScreenEnterUseCase
 import app.meeplebook.core.sync.manager.SyncManager
 import app.meeplebook.core.sync.model.SyncType
 import app.meeplebook.core.sync.model.observeRefreshCompletion
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -52,6 +54,7 @@ class CollectionViewModel @Inject constructor(
     observeCollectionSummary: ObserveCollectionSummaryUseCase,
     private val observeCollectionDomainSections: ObserveCollectionDomainSectionsUseCase,
     private val observeSyncState: ObserveSyncStateUseCase,
+    private val shouldAutoSyncOnScreenEnter: ShouldAutoSyncOnScreenEnterUseCase,
     private val syncManager: SyncManager
 ) : ReducerViewModel<CollectionBaseState, CollectionEvent, CollectionEffect, CollectionUiEffect>(
     initialState = CollectionBaseState(),
@@ -59,7 +62,11 @@ class CollectionViewModel @Inject constructor(
     effectProducer = effectProducer
 ) {
     init {
-        syncManager.enqueueCollectionSync()
+        viewModelScope.launch {
+            if (shouldAutoSyncOnScreenEnter(SyncType.COLLECTION)) {
+                syncManager.enqueueCollectionSync()
+            }
+        }
     }
 
     /**
@@ -187,6 +194,9 @@ class CollectionViewModel @Inject constructor(
 
     /**
      * Enqueues collection sync through the app-level sync manager.
+     *
+     * Manual refresh always runs immediately; only screen-entry auto sync is guarded by
+     * [ShouldAutoSyncOnScreenEnterUseCase].
      */
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }

@@ -15,6 +15,11 @@ interface SyncTimeRepository {
     fun observeSyncState(type: SyncType): Flow<SyncState>
 
     /**
+     * Gets the current sync execution state for a single [type].
+     */
+    suspend fun getSyncState(type: SyncType): SyncState
+
+    /**
      * Marks the sync [type] as started.
      */
     suspend fun markStarted(type: SyncType)

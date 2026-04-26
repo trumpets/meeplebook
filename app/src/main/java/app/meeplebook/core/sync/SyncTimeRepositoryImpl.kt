@@ -20,6 +20,10 @@ class SyncTimeRepositoryImpl @Inject constructor(
             entity?.toModel() ?: SyncState()
         }
 
+    override suspend fun getSyncState(type: SyncType): SyncState {
+        return syncDao.getSyncState(type)?.let { return it.toModel() } ?: SyncState()
+    }
+
     override suspend fun markStarted(type: SyncType) {
         syncDao.markStarted(type)
     }

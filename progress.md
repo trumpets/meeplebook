@@ -1121,3 +1121,37 @@ PR Link: N/A
   - When adding `withTimeoutOrNull` around shared async helpers, keep post-timeout cleanup outside the timeout block or the fallback path will silently skip required state resets
   - Shared refresh helpers deserve focused unit tests for both the success path and the timeout fallback because a small coroutine refactor can break multiple screen tests at once
 ---
+
+## 2026-04-24T13:20:00+02:00
+PR Link: N/A
+- Added a shared screen-entry sync safeguard so Collection and Plays only auto-sync on screen entry when their domain is not already syncing and has not synced successfully in the last 15 minutes
+- Kept manual pull-to-refresh and Overview/periodic full-sync behavior unchanged, and added unit coverage for both the guard use case and the “manual refresh still enqueues even when auto-sync is skipped” behavior
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/sync/domain/ShouldAutoSyncOnScreenEnterUseCase.kt` (new)
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ShouldAutoSyncOnScreenEnterUseCaseTest.kt` (new)
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Screen-entry sync throttling belongs in shared sync-domain logic, not duplicated inside each ViewModel, so the eventual settings-backed interval can swap in without touching trigger sites
+  - Use persisted `SyncState.isSyncing` plus `lastSyncedAt` to gate navigation-triggered syncs, but keep manual refresh unguarded so the user can always force a sync immediately
+---
+
+## 2026-04-26T23:25:00+02:00
+PR Link: N/A
+- Extended the shared screen-entry sync safeguard to Overview full sync, so the immediate auto full-sync now skips when both Collection and Plays are recent and runs when either domain is stale
+- Added OverviewViewModel coverage for both-domain-recent skip, one-domain-stale enqueue, and manual refresh still forcing a full sync, plus new `SyncTimeRepositoryImplTest` coverage for the added `getSyncState()` mapping/default behavior
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/domain/ShouldAutoSyncOnScreenEnterUseCaseTest.kt`
+  - `app/src/test/java/app/meeplebook/core/sync/SyncTimeRepositoryImplTest.kt` (new)
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Full-sync auto-trigger decisions should be based on the combined freshness of Collection and Plays: run when either domain is stale, skip only when both are fresh, and skip while any domain is already syncing
+  - When adding a new repository method that is part of sync orchestration, add focused repository-level tests for default/null-row mapping in addition to the higher-level use case and ViewModel coverage
+---
