@@ -47,6 +47,9 @@ sealed interface CollectionEvent {
 
     /** Events that trigger one-shot UI work or domain work. */
     sealed interface ActionEvent : CollectionEvent {
+        /** Signals that the Collection screen entered composition and should run screen-open work. */
+        data object ScreenOpened : ActionEvent
+
         /** Navigate to a collection game's detail screen. */
         data class GameClicked(val gameId: Long) : ActionEvent
 

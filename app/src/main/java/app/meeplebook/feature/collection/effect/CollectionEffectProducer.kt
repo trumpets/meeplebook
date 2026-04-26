@@ -26,6 +26,9 @@ class CollectionEffectProducer @Inject constructor() :
         val uiEffects = mutableListOf<CollectionUiEffect>()
 
         when (event) {
+            CollectionEvent.ActionEvent.ScreenOpened ->
+                effects += CollectionEffect.ScreenOpened
+
             is CollectionEvent.ActionEvent.GameClicked ->
                 uiEffects += CollectionUiEffect.NavigateToGame(event.gameId)
 

@@ -104,6 +104,10 @@ fun CollectionScreen(
     val resources = LocalResources.current
 
     LaunchedEffect(viewModel) {
+        viewModel.onEvent(CollectionEvent.ActionEvent.ScreenOpened)
+    }
+
+    LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
 

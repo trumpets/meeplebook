@@ -1155,3 +1155,33 @@ PR Link: N/A
   - Full-sync auto-trigger decisions should be based on the combined freshness of Collection and Plays: run when either domain is stale, skip only when both are fresh, and skip while any domain is already syncing
   - When adding a new repository method that is part of sync orchestration, add focused repository-level tests for default/null-row mapping in addition to the higher-level use case and ViewModel coverage
 ---
+
+## 2026-04-26T23:55:00+02:00
+PR Link: N/A
+- Moved Overview, Collection, and Plays screen-entry sync orchestration out of ViewModel `init` and into a new explicit `ScreenOpened` event dispatched by each screen Composable
+- Added new `ScreenOpened` action/domain-effect wiring for the three features, updated the screen call sites to dispatch it with `LaunchedEffect`, and rewrote the ViewModel tests so auto-sync assertions are driven by explicit events rather than construction side effects
+- Files changed:
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/effect/OverviewEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/overview/OverviewViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/effect/CollectionEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/collection/CollectionViewModel.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysScreen.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysEvent.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffect.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/effect/PlaysEffectProducer.kt`
+  - `app/src/main/java/app/meeplebook/feature/plays/PlaysViewModel.kt`
+  - `app/src/test/java/app/meeplebook/feature/overview/OverviewViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/collection/CollectionViewModelTest.kt`
+  - `app/src/test/java/app/meeplebook/feature/plays/PlaysViewModelTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Screen-entry work should be triggered by an explicit event from the Composable (`ScreenOpened`), not hidden in ViewModel initialization, so lifecycle behavior stays testable and intentional
+  - When moving work out of `init`, rewrite count-based tests to dispatch the new event explicitly; manual-refresh tests can then assert only the work they trigger instead of inheriting setup side effects
+---

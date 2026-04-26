@@ -7,6 +7,9 @@ package app.meeplebook.feature.overview.effect
  * outside the synchronous reducer step.
  */
 sealed interface OverviewEffect {
+    /** Perform screen-open sync orchestration for Overview. */
+    data object ScreenOpened : OverviewEffect
+
     /**
      * Synchronizes user data and updates reducer-owned refresh/error state from the result.
      */

@@ -26,6 +26,9 @@ class OverviewEffectProducer @Inject constructor() :
         val uiEffects = mutableListOf<OverviewUiEffect>()
 
         when (event) {
+            OverviewEvent.ActionEvent.ScreenOpened ->
+                effects += OverviewEffect.ScreenOpened
+
             OverviewEvent.ActionEvent.Refresh ->
                 effects += OverviewEffect.Refresh
 

@@ -57,14 +57,6 @@ class PlaysViewModel @Inject constructor(
     effectProducer = effectProducer
 ) {
 
-    init {
-        viewModelScope.launch {
-            if (shouldAutoSyncOnScreenEnter(SyncType.PLAYS)) {
-                syncManager.enqueuePlaysSync()
-            }
-        }
-    }
-
     private val searchQueryFlow =
         baseState
             .map { it.searchQuery }
@@ -103,7 +95,16 @@ class PlaysViewModel @Inject constructor(
 
     override fun handleDomainEffect(effect: PlaysEffect) {
         when (effect) {
+            PlaysEffect.ScreenOpened -> onScreenOpened()
             PlaysEffect.Refresh -> refresh()
+        }
+    }
+
+    private fun onScreenOpened() {
+        viewModelScope.launch {
+            if (shouldAutoSyncOnScreenEnter(SyncType.PLAYS)) {
+                syncManager.enqueuePlaysSync()
+            }
         }
     }
 

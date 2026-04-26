@@ -83,6 +83,10 @@ fun PlaysScreen(
     val resources = LocalResources.current
 
     LaunchedEffect(viewModel) {
+        viewModel.onEvent(PlaysEvent.ActionEvent.ScreenOpened)
+    }
+
+    LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
 

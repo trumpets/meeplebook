@@ -31,6 +31,9 @@ class PlaysEffectProducer @Inject constructor() :
         val uiEffects = mutableListOf<PlaysUiEffect>()
 
         when (event) {
+            PlaysEvent.ActionEvent.ScreenOpened ->
+                effects += PlaysEffect.ScreenOpened
+
             is PlaysEvent.ActionEvent.PlayClicked ->
                 uiEffects += PlaysUiEffect.NavigateToPlay(event.playId)
 

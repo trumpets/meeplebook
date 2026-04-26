@@ -58,6 +58,10 @@ fun OverviewScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {
+        viewModel.onEvent(OverviewEvent.ActionEvent.ScreenOpened)
+    }
+
+    LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 OverviewUiEffect.OpenAddPlay ->

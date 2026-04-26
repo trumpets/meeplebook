@@ -83,7 +83,29 @@ class OverviewViewModelTest {
             setString(R.string.sync_just_now, "just now")
         }
 
-        viewModel = createViewModel()
+        val observeStats = ObserveCollectionPlayStatsUseCase(
+            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
+            playsRepository = fakePlaysRepository,
+            clock = testClock
+        )
+        val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
+        val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
+        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository, fakeSyncManager)
+
+        val observeOverviewUseCase = ObserveOverviewUseCase(
+            observeStats = observeStats,
+            observeRecentPlays = observeRecentPlays,
+            observeHighlights = observeHighlights
+        )
+
+        viewModel = OverviewViewModel(
+            reducer = OverviewReducer(),
+            effectProducer = OverviewEffectProducer(),
+            observeOverviewUseCase = observeOverviewUseCase,
+            observeFullSyncState = observeFullSyncState,
+            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
+            syncManager = fakeSyncManager
+        )
     }
 
     @After
@@ -97,7 +119,8 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `init schedules periodic sync and enqueues full sync when either domain is stale`() = runTest {
+    fun `ScreenOpened schedules periodic sync and enqueues full sync when either domain is stale`() = runTest {
+        viewModel.onEvent(OverviewEvent.ActionEvent.ScreenOpened)
         advanceUntilIdle()
 
         assertEquals(1, fakeSyncManager.periodicFullSyncScheduleCount)
@@ -105,7 +128,7 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `init schedules periodic sync and skips full sync when both domains are recent`() = runTest {
+    fun `ScreenOpened schedules periodic sync and skips full sync when both domains are recent`() = runTest {
         fakeSyncTimeRepository.markCompleted(
             SyncType.COLLECTION,
             testClock.instant().minusSeconds(5 * 60)
@@ -114,9 +137,8 @@ class OverviewViewModelTest {
             SyncType.PLAYS,
             testClock.instant().minusSeconds(5 * 60)
         )
-        fakeSyncManager = FakeSyncManager()
-        viewModel = createViewModel()
 
+        viewModel.onEvent(OverviewEvent.ActionEvent.ScreenOpened)
         advanceUntilIdle()
 
         assertEquals(1, fakeSyncManager.periodicFullSyncScheduleCount)
@@ -124,7 +146,7 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `init enqueues full sync when one domain is stale even if the other is recent`() = runTest {
+    fun `ScreenOpened enqueues full sync when one domain is stale even if the other is recent`() = runTest {
         fakeSyncTimeRepository.markCompleted(
             SyncType.COLLECTION,
             testClock.instant().minusSeconds(5 * 60)
@@ -135,9 +157,8 @@ class OverviewViewModelTest {
                 ShouldAutoSyncOnScreenEnterUseCase.AUTO_SYNC_MIN_INTERVAL.seconds + 60
             )
         )
-        fakeSyncManager = FakeSyncManager()
-        viewModel = createViewModel()
 
+        viewModel.onEvent(OverviewEvent.ActionEvent.ScreenOpened)
         advanceUntilIdle()
 
         assertEquals(1, fakeSyncManager.fullSyncEnqueueCount)
@@ -181,12 +202,10 @@ class OverviewViewModelTest {
 
     @Test
     fun `refresh event enqueues full sync`() = runTest {
-        advanceUntilIdle()
-
         viewModel.onEvent(OverviewEvent.ActionEvent.Refresh)
         advanceUntilIdle()
 
-        assertEquals(2, fakeSyncManager.fullSyncEnqueueCount)
+        assertEquals(1, fakeSyncManager.fullSyncEnqueueCount)
     }
 
     @Test
@@ -199,9 +218,8 @@ class OverviewViewModelTest {
             SyncType.PLAYS,
             testClock.instant().minusSeconds(5 * 60)
         )
-        fakeSyncManager = FakeSyncManager()
-        viewModel = createViewModel()
 
+        viewModel.onEvent(OverviewEvent.ActionEvent.ScreenOpened)
         advanceUntilIdle()
 
         assertEquals(0, fakeSyncManager.fullSyncEnqueueCount)
@@ -357,32 +375,6 @@ class OverviewViewModelTest {
         return awaitUiStateMatching(viewModel.uiState) {
             (it as? OverviewUiState.Content)?.let(predicate) == true
         }.assertState()
-    }
-
-    private fun createViewModel(): OverviewViewModel {
-        val observeStats = ObserveCollectionPlayStatsUseCase(
-            observeCollectionSummary = ObserveCollectionSummaryUseCase(fakeCollectionRepository),
-            playsRepository = fakePlaysRepository,
-            clock = testClock
-        )
-        val observeRecentPlays = ObserveRecentPlaysUseCase(fakePlaysRepository)
-        val observeHighlights = ObserveCollectionHighlightsUseCase(fakeCollectionRepository)
-        val observeFullSyncState = ObserveFullSyncStateUseCase(fakeSyncTimeRepository, fakeSyncManager)
-
-        val observeOverviewUseCase = ObserveOverviewUseCase(
-            observeStats = observeStats,
-            observeRecentPlays = observeRecentPlays,
-            observeHighlights = observeHighlights
-        )
-
-        return OverviewViewModel(
-            reducer = OverviewReducer(),
-            effectProducer = OverviewEffectProducer(),
-            observeOverviewUseCase = observeOverviewUseCase,
-            observeFullSyncState = observeFullSyncState,
-            shouldAutoSyncOnScreenEnter = ShouldAutoSyncOnScreenEnterUseCase(fakeSyncTimeRepository, testClock),
-            syncManager = fakeSyncManager
-        )
     }
 
 }

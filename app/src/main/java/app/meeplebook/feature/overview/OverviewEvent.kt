@@ -11,6 +11,11 @@ sealed interface OverviewEvent {
      */
     sealed interface ActionEvent : OverviewEvent {
         /**
+         * Signals that the Overview screen entered composition and should run its screen-open work.
+         */
+        data object ScreenOpened : ActionEvent
+
+        /**
          * Requests a sync refresh of the user's data.
          */
         data object Refresh : ActionEvent

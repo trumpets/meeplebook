@@ -43,15 +43,6 @@ class OverviewViewModel @Inject constructor(
     effectProducer = effectProducer
 ) {
 
-    init {
-        syncManager.schedulePeriodicFullSync()
-        viewModelScope.launch {
-            if (shouldAutoSyncOnScreenEnter(SyncType.COLLECTION, SyncType.PLAYS)) {
-                syncManager.enqueueFullSync()
-            }
-        }
-    }
-
     private val syncState: StateFlow<SyncState> = observeFullSyncState()
         .stateIn(
             viewModelScope,
@@ -83,7 +74,17 @@ class OverviewViewModel @Inject constructor(
 
     override fun handleDomainEffect(effect: OverviewEffect) {
         when (effect) {
+            OverviewEffect.ScreenOpened -> onScreenOpened()
             OverviewEffect.Refresh -> refresh()
+        }
+    }
+
+    private fun onScreenOpened() {
+        syncManager.schedulePeriodicFullSync()
+        viewModelScope.launch {
+            if (shouldAutoSyncOnScreenEnter(SyncType.COLLECTION, SyncType.PLAYS)) {
+                syncManager.enqueueFullSync()
+            }
         }
     }
 

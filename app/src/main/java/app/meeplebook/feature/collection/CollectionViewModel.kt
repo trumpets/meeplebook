@@ -61,13 +61,6 @@ class CollectionViewModel @Inject constructor(
     reducer = reducer,
     effectProducer = effectProducer
 ) {
-    init {
-        viewModelScope.launch {
-            if (shouldAutoSyncOnScreenEnter(SyncType.COLLECTION)) {
-                syncManager.enqueueCollectionSync()
-            }
-        }
-    }
 
     /**
      * Raw search query derived from reducer state.
@@ -185,8 +178,17 @@ class CollectionViewModel @Inject constructor(
 
     override fun handleDomainEffect(effect: CollectionEffect) {
         when (effect) {
+            CollectionEffect.ScreenOpened -> onScreenOpened()
             CollectionEffect.Refresh -> refresh()
             is CollectionEffect.ResolveJumpToLetter -> resolveJumpToLetter(effect.letter)
+        }
+    }
+
+    private fun onScreenOpened() {
+        viewModelScope.launch {
+            if (shouldAutoSyncOnScreenEnter(SyncType.COLLECTION)) {
+                syncManager.enqueueCollectionSync()
+            }
         }
     }
 

@@ -21,7 +21,7 @@ class SyncTimeRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getSyncState(type: SyncType): SyncState {
-        return syncDao.getSyncState(type)?.let { return it.toModel() } ?: SyncState()
+        return syncDao.getSyncState(type)?.toModel() ?: SyncState()
     }
 
     override suspend fun markStarted(type: SyncType) {

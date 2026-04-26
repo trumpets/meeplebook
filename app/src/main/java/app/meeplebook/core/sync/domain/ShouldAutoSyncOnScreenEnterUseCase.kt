@@ -36,6 +36,10 @@ class ShouldAutoSyncOnScreenEnterUseCase @Inject constructor(
         val now = Instant.now(clock)
         return states.any { state ->
             val lastSyncedAt = state.lastSyncedAt ?: return@any true
+            if (lastSyncedAt.isAfter(now)) {
+                return@any true
+            }
+
             Duration.between(lastSyncedAt, now) >= AUTO_SYNC_MIN_INTERVAL
         }
     }
