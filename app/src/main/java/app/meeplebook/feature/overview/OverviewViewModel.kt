@@ -93,8 +93,9 @@ class OverviewViewModel @Inject constructor(
     /**
      * Enqueues full sync through the app-level sync manager.
      *
-     * Manual refresh always runs immediately; only the screen-entry auto sync in [init] is guarded
-     * by [ShouldAutoSyncOnScreenEnterUseCase].
+     * Manual refresh always runs immediately; only the screen-entry auto sync triggered by
+     * [OverviewEffect.ScreenOpened] in [onScreenOpened] is guarded by
+     * [ShouldAutoSyncOnScreenEnterUseCase].
      */
     private fun refresh() {
         updateBaseState { it.copy(isRefreshing = true) }
