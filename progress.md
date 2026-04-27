@@ -1185,3 +1185,17 @@ PR Link: N/A
   - Screen-entry work should be triggered by an explicit event from the Composable (`ScreenOpened`), not hidden in ViewModel initialization, so lifecycle behavior stays testable and intentional
   - When moving work out of `init`, rewrite count-based tests to dispatch the new event explicitly; manual-refresh tests can then assert only the work they trigger instead of inheriting setup side effects
 ---
+
+## 2026-04-27T18:24:10+0200
+PR Link: N/A
+- Implemented Step 1 of the Play Timer plan: added the pure `ActivePlayTimer` model, elapsed-time derivation, and pure start/pause/resume/reset state-machine logic.
+- Added focused unit coverage for transition behavior, initial-state no-ops, and negative-duration guarding.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/timer/model/ActivePlayTimer.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/timer/domain/PlayTimerStateMachine.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/timer/domain/PlayTimerStateMachineTest.kt` (new)
+- **Learnings for future iterations:**
+  - The timer model needs an explicit `hasStarted` flag so the app can distinguish "never started" from a paused timer with `0` accumulated duration.
+  - Keep `computeElapsed(timer, now)` as the single elapsed-time derivation path; state-machine transitions should reuse it instead of duplicating duration math.
+  - Step 1 stays intentionally pure: no Room, service, or UI wiring should be mixed into the timer domain slice.
+---
