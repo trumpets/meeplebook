@@ -36,12 +36,16 @@ class PlayTimerActionReceiver : BroadcastReceiver() {
     ) {
         val pendingResult = goAsync()
         applicationScope.launch {
-            when (intent.action) {
-                ACTION_PAUSE -> pausePlayTimer()
-                ACTION_RESUME -> resumePlayTimer()
-                ACTION_RESET -> resetPlayTimer()
+            try {
+                when (intent.action) {
+                    ACTION_PAUSE -> pausePlayTimer()
+                    ACTION_RESUME -> resumePlayTimer()
+                    ACTION_RESET -> resetPlayTimer()
+                    else -> Unit
+                }
+            } finally {
+                pendingResult.finish()
             }
-            pendingResult.finish()
         }
     }
 

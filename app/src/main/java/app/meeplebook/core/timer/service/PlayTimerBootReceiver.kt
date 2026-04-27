@@ -35,10 +35,13 @@ class PlayTimerBootReceiver : BroadcastReceiver() {
 
         val pendingResult = goAsync()
         applicationScope.launch {
-            if (getActivePlayTimer().shouldShowPersistentNotification()) {
-                serviceController.ensureServiceRunning()
+            try {
+                if (getActivePlayTimer().shouldShowPersistentNotification()) {
+                    serviceController.ensureServiceRunning()
+                }
+            } finally {
+                pendingResult.finish()
             }
-            pendingResult.finish()
         }
     }
 }

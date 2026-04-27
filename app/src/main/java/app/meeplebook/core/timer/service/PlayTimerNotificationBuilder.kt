@@ -23,10 +23,8 @@ import javax.inject.Inject
 class PlayTimerNotificationBuilder @Inject constructor(
     @ApplicationContext private val context: Context,
     private val clock: Clock,
+    private val notificationManager: NotificationManager,
 ) {
-    @Inject
-    lateinit var notificationManager: NotificationManager
-
     fun buildPlaceholder(): Notification {
         ensureChannel()
         return NotificationCompat.Builder(context, CHANNEL_ID)
