@@ -7,8 +7,10 @@ import app.meeplebook.core.database.converters.DateTimeConverters
 import app.meeplebook.core.database.converters.SyncTypeConverters
 import app.meeplebook.core.database.dao.CollectionItemDao
 import app.meeplebook.core.database.dao.PlayDao
+import app.meeplebook.core.database.dao.PlayTimerDao
 import app.meeplebook.core.database.dao.PlayerDao
 import app.meeplebook.core.database.dao.SyncDao
+import app.meeplebook.core.database.entity.ActivePlayTimerEntity
 import app.meeplebook.core.database.entity.CollectionItemEntity
 import app.meeplebook.core.database.entity.PlayEntity
 import app.meeplebook.core.database.entity.PlayerEntity
@@ -19,6 +21,7 @@ import app.meeplebook.core.database.entity.SyncStateEntity
  */
 @Database(
     entities = [
+        ActivePlayTimerEntity::class,
         CollectionItemEntity::class,
         PlayEntity::class,
         PlayerEntity::class,
@@ -31,6 +34,7 @@ import app.meeplebook.core.database.entity.SyncStateEntity
 abstract class MeepleBookDatabase : RoomDatabase() {
     abstract fun collectionItemDao(): CollectionItemDao
     abstract fun playDao(): PlayDao
+    abstract fun playTimerDao(): PlayTimerDao
     abstract fun playerDao(): PlayerDao
     abstract fun syncDao(): SyncDao
 }

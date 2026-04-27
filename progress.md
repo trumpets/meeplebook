@@ -1196,6 +1196,25 @@ PR Link: N/A
   - `app/src/test/java/app/meeplebook/core/timer/domain/PlayTimerStateMachineTest.kt` (new)
 - **Learnings for future iterations:**
   - The timer model needs an explicit `hasStarted` flag so the app can distinguish "never started" from a paused timer with `0` accumulated duration.
-  - Keep `computeElapsed(timer, now)` as the single elapsed-time derivation path; state-machine transitions should reuse it instead of duplicating duration math.
-  - Step 1 stays intentionally pure: no Room, service, or UI wiring should be mixed into the timer domain slice.
+    - Keep `computeElapsed(timer, now)` as the single elapsed-time derivation path; state-machine transitions should reuse it instead of duplicating duration math.
+    - Step 1 stays intentionally pure: no Room, service, or UI wiring should be mixed into the timer domain slice.
+---
+## 2026-04-27T18:38:34+0200
+PR Link: N/A
+- Implemented Step 2 of the Play Timer plan: added Room persistence for the singleton timer row plus the `TimerRepository` boundary and Room-backed implementation.
+- Added repository-level unit coverage and a focused DAO androidTest for the timer row; the DAO test compiled successfully but could not execute in this environment because no device/emulator was connected.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/database/entity/ActivePlayTimerEntity.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/database/dao/PlayTimerDao.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/database/MeepleBookDatabase.kt`
+  - `app/src/main/java/app/meeplebook/core/database/DatabaseModule.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/TimerRepository.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/timer/TimerRepositoryImpl.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/timer/TimerModule.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/timer/TimerRepositoryImplTest.kt` (new)
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayTimerDaoTest.kt` (new)
+- **Learnings for future iterations:**
+    - Model the persisted timer as a singleton Room row keyed by a constant primary key, not as a history table or multi-row log.
+    - Keep Room simple here: the DAO only needs observe/get/upsert because start/pause/resume/reset semantics belong in the repository and reuse the pure state machine.
+    - Repository mutations should be serialized with a `Mutex` so timer transitions stay deterministic even if multiple callers hit the boundary close together.
 ---
