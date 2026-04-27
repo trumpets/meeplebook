@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import app.meeplebook.core.database.dao.CollectionItemDao
 import app.meeplebook.core.database.dao.PlayDao
+import app.meeplebook.core.database.dao.PlayTimerDao
 import app.meeplebook.core.database.dao.PlayerDao
 import app.meeplebook.core.database.dao.SyncDao
 import dagger.Module
@@ -37,6 +38,11 @@ object DatabaseModule {
     @Provides
     fun providePlayDao(database: MeepleBookDatabase): PlayDao {
         return database.playDao()
+    }
+
+    @Provides
+    fun providePlayTimerDao(database: MeepleBookDatabase): PlayTimerDao {
+        return database.playTimerDao()
     }
 
     @Provides

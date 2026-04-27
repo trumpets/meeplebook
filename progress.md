@@ -6,6 +6,7 @@
 - Keep BGG wire dates on `yyyy-MM-dd` and UI dates on `dd/MM/yyyy`; do not reuse the EU UI formatter for remote XML parsing or serialization.
 - Keep WorkManager workers in `core/sync/work` as thin `@HiltWorker` `CoroutineWorker`s that delegate to sync use cases/repositories, use `HiltWorkerFactory` from `MeepleBookApp`, retry only retryable network failures, fail on max-retries-exceeded, and treat logged-out runs as no-op success.
 - Manual refresh and sync-status UI in Overview/Collection/Plays should go through `SyncManager` and observed persisted `SyncState`; do not drive those screens from direct sync use-case results or local refresh jobs.
+- Global play-timer Android plumbing lives in `core/timer/service`; keep `MeepleBookApp` responsible for eager coordinator startup, receivers/services thin, and use `specialUse` foreground-service declaration plus an Android-13 notification-permission guard for notification updates.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -1184,4 +1185,70 @@ PR Link: N/A
 - **Learnings for future iterations:**
   - Screen-entry work should be triggered by an explicit event from the Composable (`ScreenOpened`), not hidden in ViewModel initialization, so lifecycle behavior stays testable and intentional
   - When moving work out of `init`, rewrite count-based tests to dispatch the new event explicitly; manual-refresh tests can then assert only the work they trigger instead of inheriting setup side effects
+---
+
+## 2026-04-27T18:24:10+0200
+PR Link: N/A
+- Implemented Step 1 of the Play Timer plan: added the pure `ActivePlayTimer` model, elapsed-time derivation, and pure start/pause/resume/reset state-machine logic.
+- Added focused unit coverage for transition behavior, initial-state no-ops, and negative-duration guarding.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/timer/model/ActivePlayTimer.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/timer/domain/PlayTimerStateMachine.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/timer/domain/PlayTimerStateMachineTest.kt` (new)
+- **Learnings for future iterations:**
+  - The timer model needs an explicit `hasStarted` flag so the app can distinguish "never started" from a paused timer with `0` accumulated duration.
+    - Keep `computeElapsed(timer, now)` as the single elapsed-time derivation path; state-machine transitions should reuse it instead of duplicating duration math.
+    - Step 1 stays intentionally pure: no Room, service, or UI wiring should be mixed into the timer domain slice.
+---
+## 2026-04-27T18:38:34+0200
+PR Link: N/A
+- Implemented Step 2 of the Play Timer plan: added Room persistence for the singleton timer row plus the `TimerRepository` boundary and Room-backed implementation.
+- Added repository-level unit coverage and a focused DAO androidTest for the timer row; the DAO test compiled successfully but could not execute in this environment because no device/emulator was connected.
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/database/entity/ActivePlayTimerEntity.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/database/dao/PlayTimerDao.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/database/MeepleBookDatabase.kt`
+  - `app/src/main/java/app/meeplebook/core/database/DatabaseModule.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/TimerRepository.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/timer/TimerRepositoryImpl.kt` (new)
+  - `app/src/main/java/app/meeplebook/core/timer/TimerModule.kt` (new)
+  - `app/src/test/java/app/meeplebook/core/timer/TimerRepositoryImplTest.kt` (new)
+  - `app/src/androidTest/java/app/meeplebook/core/database/dao/PlayTimerDaoTest.kt` (new)
+- **Learnings for future iterations:**
+    - Model the persisted timer as a singleton Room row keyed by a constant primary key, not as a history table or multi-row log.
+    - Keep Room simple here: the DAO only needs observe/get/upsert because start/pause/resume/reset semantics belong in the repository and reuse the pure state machine.
+    - Repository mutations should be serialized with a `Mutex` so timer transitions stay deterministic even if multiple callers hit the boundary close together.
+---
+
+## 2026-04-27T21:45:20+02:00
+PR Link: pending
+- Implemented Step 3 of the play timer feature: foreground-service infrastructure only
+- Added timer use cases for observe/get/start/pause/resume/reset, notification formatter/builder, foreground service, service controller/coordinator, notification action receiver, boot receiver, manifest wiring, and focused timer-service unit tests
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/timer/domain/GetActivePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/ObserveActivePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/PausePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/ResetPlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/ResumePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/StartPlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerActionReceiver.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerBootReceiver.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerForegroundService.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerNotificationBuilder.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerNotificationFormatter.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerServiceController.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerServiceCoordinator.kt`
+  - `app/src/main/java/app/meeplebook/MeepleBookApp.kt`
+  - `app/src/main/AndroidManifest.xml`
+  - `app/src/main/res/drawable/ic_play_timer_notification.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/test/java/app/meeplebook/core/timer/FakeTimerRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/timer/service/PlayTimerNotificationFormatterTest.kt`
+  - `app/src/test/java/app/meeplebook/core/timer/service/PlayTimerServiceCoordinatorTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Keep play-timer Android plumbing in `core/timer/service` and start the coordinator eagerly from `MeepleBookApp` so service lifecycle follows persisted timer state instead of UI visibility.
+  - For the boot-restored timer service, `foregroundServiceType="specialUse"` plus `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` avoids the Android 15 `BOOT_COMPLETED` restrictions that would block a `dataSync`-style foreground service.
+  - Android 13 lint requires explicit notification-permission handling even for guarded service updates; keep the runtime permission check and the narrow `NotificationPermission` suppression on the already-guarded `notify()` helper.
 ---

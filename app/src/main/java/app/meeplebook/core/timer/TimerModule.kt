@@ -1,4 +1,4 @@
-package app.meeplebook.core.sync.manager
+package app.meeplebook.core.timer
 
 import dagger.Binds
 import dagger.Module
@@ -7,15 +7,15 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /**
- * Hilt bindings for background sync orchestration.
+ * Hilt bindings for timer persistence components.
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SyncManagerBindingsModule {
+abstract class TimerModule {
 
     @Binds
     @Singleton
-    abstract fun bindSyncManager(
-        impl: WorkManagerSyncManager
-    ): SyncManager
+    abstract fun bindTimerRepository(
+        impl: TimerRepositoryImpl,
+    ): TimerRepository
 }
