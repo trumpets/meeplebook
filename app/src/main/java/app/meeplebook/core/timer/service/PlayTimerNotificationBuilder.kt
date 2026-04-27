@@ -10,7 +10,6 @@ import androidx.core.app.NotificationCompat
 import app.meeplebook.MainActivity
 import app.meeplebook.R
 import app.meeplebook.core.timer.model.ActivePlayTimer
-import app.meeplebook.core.timer.model.computeElapsed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
 import java.time.Duration
@@ -43,7 +42,7 @@ class PlayTimerNotificationBuilder @Inject constructor(
     ): Notification {
         ensureChannel()
 
-        val elapsed = computeElapsed(timer, now)
+        val timing = buildPlayTimerNotificationTiming(timer, now)
         val titleRes =
             if (timer.isRunning) {
                 R.string.play_timer_notification_title_running
@@ -54,11 +53,14 @@ class PlayTimerNotificationBuilder @Inject constructor(
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_play_timer_notification)
             .setContentTitle(context.getString(titleRes))
-            .setContentText(formatPlayTimerElapsed(elapsed))
+            .setContentText(timing.contentText)
             .setContentIntent(openAppPendingIntent())
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setOngoing(true)
+            .setWhen(timing.whenMillis)
+            .setShowWhen(true)
+            .setUsesChronometer(timing.usesChronometer)
             .addAction(
                 if (timer.isRunning) {
                     buildPauseAction()

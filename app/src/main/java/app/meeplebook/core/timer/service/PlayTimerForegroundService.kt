@@ -17,25 +17,15 @@ import app.meeplebook.core.timer.model.ActivePlayTimer
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Foreground service that keeps the play timer notification up to date.
  */
 @AndroidEntryPoint
-@OptIn(ExperimentalCoroutinesApi::class)
 class PlayTimerForegroundService : Service() {
     @Inject
     lateinit var observeActivePlayTimer: ObserveActivePlayTimerUseCase
@@ -59,7 +49,7 @@ class PlayTimerForegroundService : Service() {
         )
 
         serviceScope.launch {
-            observeNotificationUpdates().collect { timer ->
+            observeActivePlayTimer().collect { timer ->
                 if (!timer.shouldShowPersistentNotification()) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
@@ -85,26 +75,6 @@ class PlayTimerForegroundService : Service() {
         serviceScope.cancel()
         super.onDestroy()
     }
-
-    private fun observeNotificationUpdates(): Flow<ActivePlayTimer> {
-        return observeActivePlayTimer().flatMapLatest { timer ->
-            when {
-                !timer.shouldShowPersistentNotification() -> flowOf(timer)
-                timer.isRunning -> tickerFlow().map { timer }
-                else -> flowOf(timer)
-            }
-        }
-    }
-
-    private fun tickerFlow(): Flow<Unit> = flow {
-        emit(Unit)
-        while (currentCoroutineContext().isActive) {
-            delay(1.seconds)
-            emit(Unit)
-        }
-    }
-
-    private fun <T> flowOf(value: T): Flow<T> = flow { emit(value) }
 
     @SuppressLint("NotificationPermission")
     private fun updateNotification(timer: ActivePlayTimer) {
