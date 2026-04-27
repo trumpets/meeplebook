@@ -11,7 +11,7 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SyncManagerBindingsModule {
+abstract class SyncManagerModule {
 
     @Binds
     @Singleton

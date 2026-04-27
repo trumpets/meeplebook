@@ -1,5 +1,6 @@
-package app.meeplebook.core.sync.manager
+package app.meeplebook.core.di
 
+import android.app.NotificationManager
 import android.content.Context
 import androidx.work.WorkManager
 import dagger.Module
@@ -9,12 +10,16 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-/**
- * Hilt providers for background sync orchestration.
- */
 @Module
 @InstallIn(SingletonComponent::class)
-object SyncManagerProvidersModule {
+object SystemServicesModule {
+
+    @Provides
+    @Singleton
+    fun provideNotificationManager(
+        @ApplicationContext context: Context
+    ): NotificationManager =
+        context.getSystemService(NotificationManager::class.java)
 
     @Provides
     @Singleton

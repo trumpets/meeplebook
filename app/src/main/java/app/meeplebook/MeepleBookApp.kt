@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import app.meeplebook.core.timer.service.PlayTimerServiceCoordinator
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -17,6 +18,9 @@ class MeepleBookApp : Application(), SingletonImageLoader.Factory, Configuration
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject
+    lateinit var playTimerServiceCoordinator: PlayTimerServiceCoordinator
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return customImageLoader

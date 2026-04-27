@@ -6,7 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
 import androidx.work.testing.TestListenableWorkerBuilder
 import app.meeplebook.core.sync.manager.SyncManager
-import app.meeplebook.core.sync.manager.SyncManagerBindingsModule
+import app.meeplebook.core.sync.manager.SyncManagerModule
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -21,7 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @HiltAndroidTest
-@UninstallModules(SyncManagerBindingsModule::class)
+@UninstallModules(SyncManagerModule::class)
 @RunWith(AndroidJUnit4::class)
 class SyncPeriodicFullSyncWorkerTest {
 

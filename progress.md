@@ -6,6 +6,7 @@
 - Keep BGG wire dates on `yyyy-MM-dd` and UI dates on `dd/MM/yyyy`; do not reuse the EU UI formatter for remote XML parsing or serialization.
 - Keep WorkManager workers in `core/sync/work` as thin `@HiltWorker` `CoroutineWorker`s that delegate to sync use cases/repositories, use `HiltWorkerFactory` from `MeepleBookApp`, retry only retryable network failures, fail on max-retries-exceeded, and treat logged-out runs as no-op success.
 - Manual refresh and sync-status UI in Overview/Collection/Plays should go through `SyncManager` and observed persisted `SyncState`; do not drive those screens from direct sync use-case results or local refresh jobs.
+- Global play-timer Android plumbing lives in `core/timer/service`; keep `MeepleBookApp` responsible for eager coordinator startup, receivers/services thin, and use `specialUse` foreground-service declaration plus an Android-13 notification-permission guard for notification updates.
 
 ## 2026-01-29T20:05:00Z
 PR Link: https://github.com/trumpets/meeplebook/pull/71
@@ -1217,4 +1218,37 @@ PR Link: N/A
     - Model the persisted timer as a singleton Room row keyed by a constant primary key, not as a history table or multi-row log.
     - Keep Room simple here: the DAO only needs observe/get/upsert because start/pause/resume/reset semantics belong in the repository and reuse the pure state machine.
     - Repository mutations should be serialized with a `Mutex` so timer transitions stay deterministic even if multiple callers hit the boundary close together.
+---
+
+## 2026-04-27T21:45:20+02:00
+PR Link: pending
+- Implemented Step 3 of the play timer feature: foreground-service infrastructure only
+- Added timer use cases for observe/get/start/pause/resume/reset, notification formatter/builder, foreground service, service controller/coordinator, notification action receiver, boot receiver, manifest wiring, and focused timer-service unit tests
+- Files changed:
+  - `app/src/main/java/app/meeplebook/core/timer/domain/GetActivePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/ObserveActivePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/PausePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/ResetPlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/ResumePlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/domain/StartPlayTimerUseCase.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerActionReceiver.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerBootReceiver.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerForegroundService.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerNotificationBuilder.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerNotificationFormatter.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerServiceController.kt`
+  - `app/src/main/java/app/meeplebook/core/timer/service/PlayTimerServiceCoordinator.kt`
+  - `app/src/main/java/app/meeplebook/MeepleBookApp.kt`
+  - `app/src/main/AndroidManifest.xml`
+  - `app/src/main/res/drawable/ic_play_timer_notification.xml`
+  - `app/src/main/res/values/strings.xml`
+  - `app/src/test/java/app/meeplebook/core/timer/FakeTimerRepository.kt`
+  - `app/src/test/java/app/meeplebook/core/timer/service/PlayTimerNotificationFormatterTest.kt`
+  - `app/src/test/java/app/meeplebook/core/timer/service/PlayTimerServiceCoordinatorTest.kt`
+  - `AGENTS.md`
+  - `progress.md`
+- **Learnings for future iterations:**
+  - Keep play-timer Android plumbing in `core/timer/service` and start the coordinator eagerly from `MeepleBookApp` so service lifecycle follows persisted timer state instead of UI visibility.
+  - For the boot-restored timer service, `foregroundServiceType="specialUse"` plus `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` avoids the Android 15 `BOOT_COMPLETED` restrictions that would block a `dataSync`-style foreground service.
+  - Android 13 lint requires explicit notification-permission handling even for guarded service updates; keep the runtime permission check and the narrow `NotificationPermission` suppression on the already-guarded `notify()` helper.
 ---

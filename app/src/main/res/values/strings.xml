@@ -157,4 +157,14 @@
     <string name="color_picker_title">Pick a color</string>
     <string name="color_picker_more">More</string>
 
-</resources>
+    <!-- Play timer -->
+    <string name="play_timer_action_pause">Pause</string>
+    <string name="play_timer_action_resume">Resume</string>
+    <string name="play_timer_action_reset">Reset</string>
+    <string name="play_timer_notification_channel_name">Play timer</string>
+    <string name="play_timer_notification_channel_description">Keeps the global play timer visible while it is active.</string>
+    <string name="play_timer_notification_title_running">Play timer running</string>
+    <string name="play_timer_notification_title_paused">Play timer paused</string>
+    <string name="play_timer_special_use_subtype">Persistent board game play timer controls</string>
+
+ </resources>
